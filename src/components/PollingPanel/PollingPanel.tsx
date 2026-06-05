@@ -15,6 +15,8 @@ interface PollingPanelProps {
   onConnect: () => void
   onDisconnect: () => void
   onClearMessages: () => void
+  keySaved?: boolean
+  onClearSavedKey?: () => void
   className?: string
 }
 
@@ -36,6 +38,8 @@ export const PollingPanel = ({
   onConnect,
   onDisconnect,
   onClearMessages,
+  keySaved = false,
+  onClearSavedKey,
   className = '',
 }: PollingPanelProps) => {
   const [inputValue, setInputValue] = useState('')
@@ -89,18 +93,37 @@ export const PollingPanel = ({
 
         {/* API Key Input */}
         <div>
-          <label className="block text-sm text-gray-400 mb-1" htmlFor="api-key">
-            YouTube API Key
-          </label>
-          <input
-            id="api-key"
-            type="password"
-            value={apiKey}
-            onChange={(e) => onApiKeyChange(e.target.value)}
-            placeholder="AIzaSy..."
-            className="w-full bg-[#0a0e27] border border-gray-600 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            disabled={isConnected}
-          />
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm text-gray-400" htmlFor="api-key">
+              YouTube API Key
+            </label>
+            {keySaved && (
+              <button
+                onClick={onClearSavedKey}
+                className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                title="Forget saved key"
+                disabled={isConnected}
+              >
+                Forget
+              </button>
+            )}
+          </div>
+          <div className="relative">
+            <input
+              id="api-key"
+              type="password"
+              value={apiKey}
+              onChange={(e) => onApiKeyChange(e.target.value)}
+              placeholder="AIzaSy..."
+              className="w-full bg-[#0a0e27] border border-gray-600 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 pr-16"
+              disabled={isConnected}
+            />
+            {keySaved && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-green-500">
+                Saved
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Video ID Input */}
