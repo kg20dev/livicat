@@ -2,6 +2,7 @@
   "name": "livicat",
   "private": true,
   "version": "0.1.0",
+  "description": "YouTube Live Chat editor for OBS browser source overlay — real-time chat display with visual customization, API key storage, and stream validation.",
   "type": "module",
   "scripts": {
     "dev": "vite",
