@@ -140,7 +140,7 @@ export class ChatPollingService {
 
         this.currentPageToken = result.nextPageToken
 
-        const pollingInterval = result.pollingIntervalMillis + (this.options.pollingBuffer || 1000)
+        const pollingInterval = result.pollingIntervalMillis + (this.options.pollingBuffer ?? 1000)
         await this.sleep(pollingInterval)
       } catch (error) {
         console.error('Error in polling loop:', error)
