@@ -1,56 +1,71 @@
 # Branch Protection Setup Guide
 
-The branch protection rules couldn't be set up automatically via API due to GitHub's complex schema. Please configure them manually in the GitHub repository settings.
+Branch protection rules need to be configured manually in GitHub settings. The API approach has compatibility issues, so manual setup is recommended.
 
 ## Manual Setup Steps
 
-1. Go to: https://github.com/kg20dev/livicat/settings/branches
-2. Click "Add rule" for the `main` branch
-3. Configure the following settings:
+1. **Navigate to Settings:**
+   - Go to: https://github.com/kg20dev/livicat/settings/branches
 
-### Branch Protection Settings for `main`
+2. **Create Branch Rule:**
+   - Click "Add rule" for the `main` branch
+   - In "Branch name pattern", type: `main`
 
-**Require pull request reviews before merging**
-- ✅ Require at least one approval
-- Dismiss stale reviews when new commits are pushed
+3. **Configure Protection Settings:**
 
-**Require status checks to pass before merging**
-- ✅ Require branches to be up to date before merging
-- Required checks:
-  - `CI` (from our workflow)
+   **☑️ Require pull request reviews before merging**
+   - ✅ Require at least one approval
+   - ✅ Dismiss stale reviews when new commits are pushed
 
-**Restrict who can push to matching branches**
-- ✅ Only allow: `migorengx`
+   **☑️ Require status checks to pass before merging**
+   - ✅ Require branches to be up to date before merging
+   - Required checks:
+     - Type: `CI`
+     - Click "Add check" and enter: `CI`
 
-**Do not allow bypassing the above settings**
-- ✅ Enable this option
+   **☑️ Restrict who can push to matching branches**
+   - Click "Add access restriction"
+   - Add: `migorengx`
 
-## Alternative: GitHub CLI Setup
+   **☑️ Do not allow bypassing the above settings**
+   - ✅ Enable this option
 
-If you prefer command-line setup, try this simplified version:
-
-```bash
-gh api repos/kg20dev/livicat/branches/main/protection \
-  --method PUT \
-  --field required_pull_request_reviews='{"required_approving_review_count":1}' \
-  --field enforce_admins=false \
-  --field required_status_checks='{"strict":true,"checks":[{"context":"CI"}]}' \
-  --field restrictions=null
-```
+4. **Save Changes:**
+   - Click "Create" or "Save changes"
 
 ## Verification
 
-After setup, verify with:
+After setup, verify the rules are active:
+
 ```bash
+# Check if branch protection is enabled
 gh api repos/kg20dev/livicat/branches/main/protection
 ```
+
+Expected response should include protection rules (not "Branch not protected").
 
 ## Current Workflow Protection
 
 Our `.github/workflows/ci.yml` creates a `CI` status check that includes:
-- Lint (ESLint)
-- Type Check (TypeScript)
-- Tests
-- Build verification
+- **Lint:** ESLint and Prettier
+- **Type Check:** TypeScript compilation
+- **Tests:** Jest test suite
+- **Build:** Production build verification
 
 This ensures all PRs are quality-checked before merging to main.
+
+## Important Notes
+
+⚠️ **Setup Required:** Branch protection must be configured manually before main development begins.
+
+⚠️ **CI Status Check:** The `CI` check will only be active after the first CI workflow runs successfully.
+
+⚠️ **Review Requirements:** All PRs to main require at least 1 approval from migorengx.
+
+## Troubleshooting
+
+If branch protection isn't working:
+1. Verify the `CI` status check exists (check recent commits/PRs)
+2. Ensure you're using the correct branch name (`main`)
+3. Check that migorengx has proper permissions
+4. Verify GitHub Actions are enabled for the repository
