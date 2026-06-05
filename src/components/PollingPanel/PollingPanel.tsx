@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { ConnectionStatus } from '../../services/YouTubeService'
 import { Card, Button } from '../shared'
 
+export type StreamStatus = 'idle' | 'validating' | 'live' | 'ended' | 'private' | 'not_found' | 'invalid'
+
 interface PollingPanelProps {
   apiKey: string
   videoId: string
@@ -17,6 +19,8 @@ interface PollingPanelProps {
   onClearMessages: () => void
   keySaved?: boolean
   onClearSavedKey?: () => void
+  streamStatus?: StreamStatus
+  streamStatusText?: string
   className?: string
 }
 
@@ -40,6 +44,8 @@ export const PollingPanel = ({
   onClearMessages,
   keySaved = false,
   onClearSavedKey,
+  streamStatus = 'idle',
+  streamStatusText = '',
   className = '',
 }: PollingPanelProps) => {
   const [inputValue, setInputValue] = useState('')
@@ -140,6 +146,47 @@ export const PollingPanel = ({
             className="w-full bg-[#0a0e27] border border-gray-600 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
             disabled={isConnected}
           />
+          {/* Stream Status Indicator */}
+          {streamStatus !== 'idle' && inputValue && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {streamStatus === 'validating' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-[10px] text-blue-400">{streamStatusText}</span>
+                </>
+              )}
+              {streamStatus === 'live' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-green-400" />
+                  <span className="text-[10px] text-green-400">{streamStatusText}</span>
+                </>
+              )}
+              {streamStatus === 'ended' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                  <span className="text-[10px] text-yellow-400">{streamStatusText}</span>
+                </>
+              )}
+              {streamStatus === 'private' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                  <span className="text-[10px] text-yellow-400">{streamStatusText}</span>
+                </>
+              )}
+              {streamStatus === 'not_found' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-[10px] text-red-400">{streamStatusText}</span>
+                </>
+              )}
+              {streamStatus === 'invalid' && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-[10px] text-red-400">{streamStatusText}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Controls */}
