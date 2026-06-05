@@ -3,13 +3,14 @@ import ChatDisplay from './components/ChatDisplay'
 import PollingPanel from './components/PollingPanel'
 import { Card } from './components/shared'
 import { useYouTubeChat } from './hooks/useYouTubeChat'
+import { useApiKey } from './hooks/useApiKey'
 import './App.css'
 
 // Test data for development without a live stream
 const DEMO_MESSAGES = false
 
 function App() {
-  const [apiKey, setApiKey] = useState('')
+  const { apiKey, setApiKey, clearSavedKey, keySaved } = useApiKey()
   const [videoId, setVideoId] = useState('')
 
   const hook = useYouTubeChat(apiKey, videoId)
@@ -58,6 +59,8 @@ function App() {
                 onConnect={handleConnect}
                 onDisconnect={hook.stopPolling}
                 onClearMessages={hook.clearMessages}
+                keySaved={keySaved}
+                onClearSavedKey={clearSavedKey}
               />
             </div>
           </div>
