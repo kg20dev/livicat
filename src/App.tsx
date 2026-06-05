@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ChatDisplay from './components/ChatDisplay'
 import PollingPanel from './components/PollingPanel'
+import type { StreamStatus } from './components/PollingPanel/PollingPanel'
 import { Card } from './components/shared'
 import { useYouTubeChat } from './hooks/useYouTubeChat'
 import { useApiKey } from './hooks/useApiKey'
+import { YouTubeService } from './services/YouTubeService'
 import './App.css'
 
 // Test data for development without a live stream
@@ -17,6 +19,66 @@ function App() {
 
   // Track the raw input for parsing on connection
   const [pendingVideoId, setPendingVideoId] = useState('')
+
+  // Stream validation state
+  const [streamStatus, setStreamStatus] = useState<StreamStatus>('idle')
+  const [streamStatusText, setStreamStatusText] = useState('')
+  const youtubeServiceRef = useRef<YouTubeService | null>(null)
+  const validateTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  // Create YouTubeService instance when API key changes
+  useEffect(() => {
+    youtubeServiceRef.current = apiKey ? new YouTubeService(apiKey) : null
+  }, [apiKey])
+
+  // Debounced stream validation when video input changes
+  useEffect(() => {
+    if (validateTimerRef.current) {
+      clearTimeout(validateTimerRef.current)
+    }
+
+    if (!pendingVideoId || !youtubeServiceRef.current) {
+      setStreamStatus('idle')
+      setStreamStatusText('')
+      return
+    }
+
+    const service = youtubeServiceRef.current
+    const parsedId = service.extractVideoId(pendingVideoId)
+
+    if (!parsedId) {
+      setStreamStatus('invalid')
+      setStreamStatusText('Invalid video ID or URL format')
+      return
+    }
+
+    // Show validating state
+    setStreamStatus('validating')
+    setStreamStatusText('Checking stream status...')
+
+    // Debounce API call to avoid excessive requests while typing
+    validateTimerRef.current = setTimeout(async () => {
+      try {
+        const isLive = await service.isStreamLive(parsedId)
+        if (isLive) {
+          setStreamStatus('live')
+          setStreamStatusText('Stream is live')
+        } else {
+          setStreamStatus('ended')
+          setStreamStatusText('Stream is not currently live')
+        }
+      } catch {
+        setStreamStatus('not_found')
+        setStreamStatusText('Could not verify stream status')
+      }
+    }, 800)
+
+    return () => {
+      if (validateTimerRef.current) {
+        clearTimeout(validateTimerRef.current)
+      }
+    }
+  }, [pendingVideoId, apiKey])
 
   const handleConnect = async () => {
     setVideoId(pendingVideoId)
@@ -61,6 +123,8 @@ function App() {
                 onClearMessages={hook.clearMessages}
                 keySaved={keySaved}
                 onClearSavedKey={clearSavedKey}
+                streamStatus={streamStatus}
+                streamStatusText={streamStatusText}
               />
             </div>
           </div>
