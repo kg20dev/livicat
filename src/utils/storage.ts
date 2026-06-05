@@ -1,5 +1,6 @@
 const STORAGE_KEYS = {
   API_KEY: 'livicat_api_key',
+  CHAT_SETTINGS: 'livicat_chat_settings',
 } as const
 
 /**

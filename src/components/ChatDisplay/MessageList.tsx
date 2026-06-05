@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, memo } from 'react'
 import type { YouTubeChatMessage } from '../../types/youtube'
 import { ChatMessage } from './ChatMessage'
+import type { MessageSpacing, AnimationSpeed } from '../../hooks/useYouTubeChat'
 
 interface MessageListProps {
   messages: YouTubeChatMessage[]
@@ -9,6 +10,10 @@ interface MessageListProps {
   showTimestamps?: boolean
   autoScroll?: boolean
   className?: string
+  fontSize?: number
+  messageSpacing?: MessageSpacing
+  usernameColor?: string
+  animationSpeed?: AnimationSpeed
 }
 
 /**
@@ -31,12 +36,22 @@ export const MessageList = memo(function MessageList({
   showTimestamps = true,
   autoScroll = true,
   className = '',
+  fontSize = 14,
+  messageSpacing = 'normal',
+  usernameColor = '#60a5fa',
+  animationSpeed = 'normal',
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const isUserScrolledUp = useRef(false)
   const prevMessageCount = useRef(0)
 
   const displayMessages = messages.slice(-maxMessages)
+
+  // Get padding class based on spacing
+  const spacingClass = messageSpacing === 'compact' ? 'py-1' : messageSpacing === 'comfortable' ? 'py-3' : 'py-2'
+
+  // Get animation duration
+  const animationDuration = animationSpeed === 'slow' ? '500ms' : animationSpeed === 'normal' ? '300ms' : '0ms'
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -101,6 +116,10 @@ export const MessageList = memo(function MessageList({
           message={msg}
           showAvatar={showAvatars}
           showTimestamp={showTimestamps}
+          fontSize={fontSize}
+          spacingClass={spacingClass}
+          usernameColor={usernameColor}
+          animationDuration={animationDuration}
         />
       ))}
     </div>

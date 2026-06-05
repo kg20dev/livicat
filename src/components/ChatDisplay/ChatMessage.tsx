@@ -6,6 +6,10 @@ interface ChatMessageProps {
   showAvatar?: boolean
   showTimestamp?: boolean
   style?: React.CSSProperties
+  fontSize?: number
+  spacingClass?: string
+  usernameColor?: string
+  animationDuration?: string
 }
 
 /**
@@ -17,6 +21,10 @@ export const ChatMessage = memo(function ChatMessage({
   showAvatar = true,
   showTimestamp = true,
   style,
+  fontSize = 14,
+  spacingClass = 'py-2',
+  usernameColor = '#60a5fa',
+  animationDuration = '300ms',
 }: ChatMessageProps) {
   const formatTime = (isoString: string): string => {
     const date = new Date(isoString)
@@ -25,8 +33,8 @@ export const ChatMessage = memo(function ChatMessage({
 
   return (
     <div
-      style={style}
-      className="flex gap-3 px-4 py-2 border-b border-gray-700/30 hover:bg-white/[0.02] transition-colors"
+      style={{ ...style, transitionDuration: animationDuration }}
+      className={`flex gap-3 px-4 ${spacingClass} border-b border-gray-700/30 hover:bg-white/[0.02] transition-colors`}
     >
       {/* Avatar */}
       {showAvatar && (
@@ -41,7 +49,10 @@ export const ChatMessage = memo(function ChatMessage({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-semibold text-blue-400 truncate">
+          <span 
+            className="font-semibold truncate"
+            style={{ color: usernameColor, fontSize: `${fontSize}px` }}
+          >
             {message.authorDetails.displayName}
           </span>
           {showTimestamp && (
@@ -50,7 +61,10 @@ export const ChatMessage = memo(function ChatMessage({
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-200 break-words leading-relaxed">
+        <p 
+          className="text-gray-200 break-words leading-relaxed"
+          style={{ fontSize: `${fontSize}px` }}
+        >
           {message.snippet.displayMessage}
         </p>
       </div>
