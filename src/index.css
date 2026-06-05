@@ -1,12 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-obs-background: #0a0e27;
+  --color-obs-surface: #151932;
+  --color-obs-text: #ffffff;
+  --color-obs-accent: #3b82f6;
+  --color-obs-muted: #6b7280;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark light;
-
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,10 +29,10 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-obs-background);
+  color: var(--color-obs-text);
 }
 
 #root {
