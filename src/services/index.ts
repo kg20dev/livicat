@@ -1,1 +1,4 @@
-export { YouTubeService as default } from './YouTubeService'
+export { YouTubeService, ConnectionStatus } from './YouTubeService'
+export type { ChatFetchResult } from './YouTubeService'
+export { ChatPollingService } from './ChatPollingService'
+export type { PollingOptions, PollingResult } from './ChatPollingService'
