@@ -13,6 +13,7 @@ interface ChatDisplayProps {
   showTimestamps?: boolean
   autoScroll?: boolean
   maxMessages?: number
+  transparent?: boolean
 }
 
 /**
@@ -34,6 +35,7 @@ export const ChatDisplay = ({
   showTimestamps = true,
   autoScroll = true,
   maxMessages = 100,
+  transparent = false,
 }: ChatDisplayProps) => {
   const isLoading = connectionStatus === ConnectionStatus.CONNECTING
   const isError = connectionStatus === ConnectionStatus.ERROR || error !== null
@@ -82,7 +84,11 @@ export const ChatDisplay = ({
 
   return (
     <div
-      className={`bg-[#151932] rounded-lg shadow-xl border border-gray-600 flex flex-col h-[550px] overflow-hidden ${className}`}
+      className={`${
+        transparent
+          ? 'bg-transparent border border-gray-600/20'
+          : 'bg-[#151932] shadow-xl border border-gray-600'
+      } rounded-lg flex flex-col h-[550px] overflow-hidden ${className}`}
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-600 flex items-center justify-between flex-shrink-0">

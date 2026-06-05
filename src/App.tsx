@@ -14,6 +14,7 @@ const DEMO_MESSAGES = false
 function App() {
   const { apiKey, setApiKey, clearSavedKey, keySaved } = useApiKey()
   const [videoId, setVideoId] = useState('')
+  const [transparentBg, setTransparentBg] = useState(false)
 
   const hook = useYouTubeChat(apiKey, videoId)
 
@@ -103,11 +104,37 @@ function App() {
                 connectionStatus={hook.connectionStatus}
                 error={hook.error}
                 messageCount={hook.messages.length}
+                transparent={transparentBg}
               />
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4">
+              {/* OBS Theme Toggle */}
+              <Card title="OBS Mode">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-sm text-gray-300">Transparent Background</span>
+                  <button
+                    onClick={() => setTransparentBg(!transparentBg)}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      transparentBg ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                    title="Toggle transparent background for OBS overlay"
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        transparentBg ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
+                <p className="text-[10px] text-gray-500 mt-2">
+                  {transparentBg
+                    ? 'Chat background is transparent — overlay on your stream'
+                    : 'Solid dark background for standalone viewing'}
+                </p>
+              </Card>
+
               <PollingPanel
                 apiKey={apiKey}
                 videoId={videoId}
