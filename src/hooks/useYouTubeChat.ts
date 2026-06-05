@@ -1,31 +1,129 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { YouTubeService, ConnectionStatus } from '../services/YouTubeService'
+import { ChatPollingService } from '../services/ChatPollingService'
+import type { YouTubeChatMessage } from '../types/youtube'
 
 /**
- * Custom hook for managing YouTube Live Chat connection
+ * Custom hook for managing YouTube Live Chat connection and polling
  */
-export const useYouTubeChat = (apiKey: string, streamId: string) => {
+export const useYouTubeChat = (apiKey: string, videoId: string) => {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [messages, setMessages] = useState<YouTubeChatMessage[]>([])
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED)
 
+  // Use refs to avoid stale closures
+  const pollingServiceRef = useRef<ChatPollingService | null>(null)
+  const youtubeServiceRef = useRef<YouTubeService | null>(null)
+
+  // Initialize services when API key changes
   useEffect(() => {
-    // TODO: Implement YouTube API connection logic
-    // setError will be used when API calls fail
-    const connectToChat = async () => {
-      try {
-        // Future: await apiConnection
-        if (apiKey && streamId) {
-          setIsConnected(true)
+    if (!apiKey) return
+
+    const youtubeService = new YouTubeService(apiKey)
+    youtubeServiceRef.current = youtubeService
+
+    youtubeService.onConnectionStatusChange((status) => {
+      setConnectionStatus(status)
+      setIsConnected(status === ConnectionStatus.CONNECTED)
+    })
+
+    youtubeService.validateApiKey()
+      .then(isValid => {
+        if (!isValid) {
+          setError('Invalid API key')
         }
-      } catch (err) {
-        setError('Failed to connect to chat')
-        setIsConnected(false)
-      }
+      })
+      .catch(() => {
+        setError('Failed to validate API key')
+      })
+
+    return () => {
+      youtubeService.disconnect()
+      pollingServiceRef.current?.stopPolling()
+    }
+  }, [apiKey])
+
+  /**
+   * Start polling for chat messages
+   */
+  const startPolling = useCallback(async () => {
+    if (!youtubeServiceRef.current || !videoId) {
+      setError('YouTube service not initialized or no video ID provided')
+      return
     }
 
-    connectToChat()
-  }, [apiKey, streamId])
+    if (pollingServiceRef.current) {
+      pollingServiceRef.current.stopPolling()
+    }
 
-  return { isConnected, error }
+    const pollingService = new ChatPollingService(youtubeServiceRef.current, {
+      onError: (errorMessage) => {
+        setError(errorMessage)
+      },
+      onNewMessages: (newMessages) => {
+        setMessages(prev => [...prev, ...newMessages])
+      },
+      pollingBuffer: 1000,
+    })
+
+    pollingServiceRef.current = pollingService
+
+    const success = await pollingService.startPolling(videoId)
+
+    if (!success) {
+      setError('Failed to start polling')
+    }
+  }, [videoId])
+
+  /**
+   * Stop polling for chat messages
+   */
+  const stopPolling = useCallback(() => {
+    if (pollingServiceRef.current) {
+      pollingServiceRef.current.stopPolling()
+      pollingServiceRef.current = null
+    }
+  }, [])
+
+  /**
+   * Clear all messages
+   */
+  const clearMessages = useCallback(() => {
+    if (pollingServiceRef.current) {
+      pollingServiceRef.current.clearMessages()
+    }
+    setMessages([])
+  }, [])
+
+  /**
+   * Get connection status text
+   */
+  const getConnectionStatusText = useCallback((): string => {
+    switch (connectionStatus) {
+      case ConnectionStatus.CONNECTED:
+        return 'Connected'
+      case ConnectionStatus.CONNECTING:
+        return 'Connecting...'
+      case ConnectionStatus.ERROR:
+        return 'Error'
+      case ConnectionStatus.DISCONNECTED:
+        return 'Disconnected'
+      default:
+        return 'Unknown'
+    }
+  }, [connectionStatus])
+
+  return {
+    isConnected,
+    error,
+    messages,
+    connectionStatus,
+    getConnectionStatusText,
+    startPolling,
+    stopPolling,
+    clearMessages,
+  }
 }
 
 /**
@@ -37,11 +135,13 @@ export const useChatSettings = () => {
     showAvatars: true,
     showTimestamps: true,
     autoScroll: true,
+    fontSize: 14,
+    theme: 'dark',
   })
 
   const updateSetting = <K extends keyof typeof settings>(
     key: K,
-    value: typeof settings[K]
+    value: (typeof settings)[K]
   ) => {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
