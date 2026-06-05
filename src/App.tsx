@@ -1,9 +1,37 @@
+import { useState } from 'react'
 import ChatDisplay from './components/ChatDisplay'
+import PollingPanel from './components/PollingPanel'
 import SettingsPanel from './components/SettingsPanel'
 import { Card } from './components/shared'
+import { useYouTubeChat } from './hooks/useYouTubeChat'
 import './App.css'
 
 function App() {
+  const [apiKey, setApiKey] = useState('')
+  const [videoId, setVideoId] = useState('')
+
+  const {
+    messages,
+    error,
+    messageCount,
+    connectionStatus,
+    isStreamEnded,
+    getConnectionStatusText,
+    startPolling,
+    stopPolling,
+    clearMessages,
+  } = useYouTubeChat(apiKey, videoId)
+
+  // Track the raw input for parsing on connection
+  const [pendingVideoId, setPendingVideoId] = useState('')
+
+  const handleConnect = async () => {
+    setVideoId(pendingVideoId)
+    // Small delay to let state propagate
+    await new Promise(r => setTimeout(r, 50))
+    await startPolling()
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0e27] text-white">
       <div className="container mx-auto px-4 py-8">
@@ -11,40 +39,42 @@ function App() {
           <h1 className="text-4xl font-bold text-center mb-8 text-blue-500">
             Livicat - YouTube Live Chat Editor
           </h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Chat Display Section */}
-            <div>
-              <ChatDisplay />
-              <Card title="Component Status" className="mt-6">
-                <ul className="space-y-2 text-sm">
-                  <li className="text-green-400">✓ ChatDisplay component created</li>
-                  <li className="text-green-400">✓ SettingsPanel component created</li>
-                  <li className="text-green-400">✓ Shared components (Button, Card)</li>
-                  <li className="text-green-400">✓ Hooks folder structure</li>
-                  <li className="text-green-400">✓ Services folder structure</li>
-                  <li className="text-green-400">✓ Types folder structure</li>
-                  <li className="text-green-400">✓ Utils folder structure</li>
-                </ul>
-              </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Chat Display */}
+            <div className="lg:col-span-2">
+              <ChatDisplay messages={messages} />
             </div>
 
-            {/* Settings Panel Section */}
-            <div>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <PollingPanel
+                apiKey={apiKey}
+                videoId={videoId}
+                connectionStatus={connectionStatus}
+                messageCount={messageCount}
+                isStreamEnded={isStreamEnded}
+                error={error}
+                getConnectionStatusText={getConnectionStatusText}
+                onApiKeyChange={setApiKey}
+                onVideoInputChange={(input) => setPendingVideoId(input)}
+                onConnect={handleConnect}
+                onDisconnect={stopPolling}
+                onClearMessages={clearMessages}
+              />
               <SettingsPanel />
-              <Card title="Architecture Ready" className="mt-6">
-                <p className="text-gray-400 mb-4">Component structure established:</p>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-blue-400">components/ChatDisplay</span> - Chat interface</p>
-                  <p><span className="text-blue-400">components/SettingsPanel</span> - Configuration UI</p>
-                  <p><span className="text-blue-400">components/shared</span> - Reusable components</p>
-                  <p><span className="text-blue-400">hooks/</span> - Custom React hooks</p>
-                  <p><span className="text-blue-400">services/</span> - API integrations</p>
-                  <p><span className="text-blue-400">types/</span> - TypeScript definitions</p>
-                  <p><span className="text-blue-400">utils/</span> - Helper functions</p>
-                </div>
-              </Card>
             </div>
+          </div>
+
+          {/* Status footer */}
+          <div className="mt-8">
+            <Card title="Connection Log">
+              <div className="text-sm text-gray-400 space-y-1">
+                <p>Status: {getConnectionStatusText()}</p>
+                <p>Messages received: {messageCount}</p>
+                {videoId && <p>Video: {videoId}</p>}
+              </div>
+            </Card>
           </div>
         </div>
       </div>

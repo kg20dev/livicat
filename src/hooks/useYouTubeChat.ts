@@ -10,15 +10,31 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [messages, setMessages] = useState<YouTubeChatMessage[]>([])
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED)
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
+    ConnectionStatus.DISCONNECTED
+  )
+  const [isStreamEnded, setIsStreamEnded] = useState(false)
 
-  // Use refs to avoid stale closures
   const pollingServiceRef = useRef<ChatPollingService | null>(null)
   const youtubeServiceRef = useRef<YouTubeService | null>(null)
 
+  // Reset function for when apiKey changes
+  const resetState = useCallback(() => {
+    setError(null)
+    setMessages([])
+    setIsStreamEnded(false)
+    setConnectionStatus(ConnectionStatus.DISCONNECTED)
+    setIsConnected(false)
+  }, [])
+
   // Initialize services when API key changes
   useEffect(() => {
-    if (!apiKey) return
+    if (!apiKey) {
+      resetState()
+      return
+    }
+
+    resetState()
 
     const youtubeService = new YouTubeService(apiKey)
     youtubeServiceRef.current = youtubeService
@@ -31,7 +47,7 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
     youtubeService.validateApiKey()
       .then(isValid => {
         if (!isValid) {
-          setError('Invalid API key')
+          setError('Invalid API key — check your key and try again')
         }
       })
       .catch(() => {
@@ -42,6 +58,7 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
       youtubeService.disconnect()
       pollingServiceRef.current?.stopPolling()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey])
 
   /**
@@ -53,9 +70,13 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
       return
     }
 
+    // Stop existing polling
     if (pollingServiceRef.current) {
       pollingServiceRef.current.stopPolling()
     }
+
+    setIsStreamEnded(false)
+    setError(null)
 
     const pollingService = new ChatPollingService(youtubeServiceRef.current, {
       onError: (errorMessage) => {
@@ -63,6 +84,16 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
       },
       onNewMessages: (newMessages) => {
         setMessages(prev => [...prev, ...newMessages])
+      },
+      onStreamEnd: () => {
+        setIsStreamEnded(true)
+        setError('Live stream has ended')
+      },
+      onPollingStart: () => {
+        setError(null)
+      },
+      onPollingStop: () => {
+        setIsStreamEnded(false)
       },
       pollingBuffer: 1000,
     })
@@ -72,7 +103,7 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
     const success = await pollingService.startPolling(videoId)
 
     if (!success) {
-      setError('Failed to start polling')
+      setError('Failed to start polling — stream may not be live')
     }
   }, [videoId])
 
@@ -100,6 +131,7 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
    * Get connection status text
    */
   const getConnectionStatusText = useCallback((): string => {
+    if (isStreamEnded) return 'Stream ended'
     switch (connectionStatus) {
       case ConnectionStatus.CONNECTED:
         return 'Connected'
@@ -112,17 +144,20 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
       default:
         return 'Unknown'
     }
-  }, [connectionStatus])
+  }, [connectionStatus, isStreamEnded])
 
   return {
     isConnected,
     error,
     messages,
+    messageCount: messages.length,
     connectionStatus,
+    isStreamEnded,
     getConnectionStatusText,
     startPolling,
     stopPolling,
     clearMessages,
+    resetState,
   }
 }
 
