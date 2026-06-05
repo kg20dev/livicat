@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import ChatDisplay from './components/ChatDisplay'
-import { Card, Button } from './components/shared'
+import PollingPanel from './components/PollingPanel'
+import { Card } from './components/shared'
 import { useYouTubeChat } from './hooks/useYouTubeChat'
-import { ConnectionStatus } from './services/YouTubeService'
 import './App.css'
 
 // Test data for development without a live stream
@@ -14,21 +14,14 @@ function App() {
 
   const hook = useYouTubeChat(apiKey, videoId)
 
-  const handleConnect = async () => {
-    if (!apiKey || !videoId) return
-    await hook.startPolling()
-  }
+  // Track the raw input for parsing on connection
+  const [pendingVideoId, setPendingVideoId] = useState('')
 
-  const handleVideoIdChange = (input: string) => {
-    // Try to extract video ID from URL
-    const urlMatch = input.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
-    )
-    if (urlMatch) {
-      setVideoId(urlMatch[1])
-    } else {
-      setVideoId(input)
-    }
+  const handleConnect = async () => {
+    setVideoId(pendingVideoId)
+    // Small delay to let state propagate
+    await new Promise(r => setTimeout(r, 50))
+    await hook.startPolling()
   }
 
   return (
@@ -50,106 +43,34 @@ function App() {
               />
             </div>
 
-            {/* Controls */}
-            <div className="space-y-4">
-              <Card title="Connection">
-                <div className="space-y-3">
-                  {/* Status */}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        hook.connectionStatus === ConnectionStatus.CONNECTED
-                          ? 'bg-green-400'
-                          : hook.connectionStatus === ConnectionStatus.CONNECTING
-                            ? 'bg-yellow-400 animate-pulse'
-                            : hook.connectionStatus === ConnectionStatus.ERROR
-                              ? 'bg-red-400'
-                              : 'bg-gray-500'
-                      }`}
-                    />
-                    <span className="text-sm text-gray-300">
-                      {hook.getConnectionStatusText()}
-                    </span>
-                  </div>
-
-                  {/* Error */}
-                  {hook.error && (
-                    <div className="bg-red-900/30 border border-red-700 rounded px-3 py-2 text-xs text-red-300">
-                      {hook.error}
-                    </div>
-                  )}
-
-                  {/* API Key */}
-                  <div>
-                    <label
-                      className="block text-xs text-gray-400 mb-1"
-                      htmlFor="api-key"
-                    >
-                      YouTube API Key
-                    </label>
-                    <input
-                      id="api-key"
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="AIzaSy..."
-                      className="w-full bg-[#0a0e27] border border-gray-600 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                      disabled={hook.isConnected}
-                    />
-                  </div>
-
-                  {/* Video ID */}
-                  <div>
-                    <label
-                      className="block text-xs text-gray-400 mb-1"
-                      htmlFor="video-id"
-                    >
-                      Video ID or URL
-                    </label>
-                    <input
-                      id="video-id"
-                      type="text"
-                      value={videoId}
-                      onChange={(e) => handleVideoIdChange(e.target.value)}
-                      placeholder="dQw4w9WgXcQ"
-                      className="w-full bg-[#0a0e27] border border-gray-600 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                      disabled={hook.isConnected}
-                    />
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex gap-2">
-                    {!hook.isConnected ? (
-                      <Button
-                        onClick={handleConnect}
-                        disabled={!apiKey || !videoId || hook.connectionStatus === ConnectionStatus.CONNECTING}
-                        variant="primary"
-                        className="flex-1"
-                      >
-                        {hook.connectionStatus === ConnectionStatus.CONNECTING
-                          ? 'Connecting...'
-                          : 'Connect'}
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={hook.stopPolling}
-                        variant="secondary"
-                        className="flex-1"
-                      >
-                        Disconnect
-                      </Button>
-                    )}
-                    <Button
-                      onClick={hook.clearMessages}
-                      disabled={hook.messages.length === 0}
-                      variant="secondary"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <PollingPanel
+                apiKey={apiKey}
+                videoId={videoId}
+                connectionStatus={hook.connectionStatus}
+                messageCount={hook.messages.length}
+                isStreamEnded={hook.isStreamEnded ?? false}
+                error={hook.error}
+                getConnectionStatusText={hook.getConnectionStatusText}
+                onApiKeyChange={setApiKey}
+                onVideoInputChange={(input) => setPendingVideoId(input)}
+                onConnect={handleConnect}
+                onDisconnect={hook.stopPolling}
+                onClearMessages={hook.clearMessages}
+              />
             </div>
+          </div>
+
+          {/* Status footer */}
+          <div className="mt-8">
+            <Card title="Connection Log">
+              <div className="text-sm text-gray-400 space-y-1">
+                <p>Status: {hook.getConnectionStatusText()}</p>
+                <p>Messages received: {hook.messages.length}</p>
+                {videoId && <p>Video: {videoId}</p>}
+              </div>
+            </Card>
           </div>
         </div>
       </div>

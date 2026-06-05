@@ -1,6 +1,10 @@
 /**
  * Chat Polling Service
- * Handles polling of YouTube Live Chat messages with proper rate limiting and error handling
+ * Handles polling of YouTube Live Chat messages with:
+ * - Exponential backoff for transient errors
+ * - Stream lifecycle detection (start/end)
+ * - Message deduplication via cache
+ * - Configurable polling buffer
  */
 
 import { YouTubeService } from './YouTubeService'
@@ -9,7 +13,10 @@ import type { YouTubeChatMessage } from '../types/youtube'
 export interface PollingOptions {
   onError?: (error: string) => void
   onNewMessages?: (messages: YouTubeChatMessage[]) => void
-  pollingBuffer?: number // Add buffer time to polling interval (ms)
+  onStreamEnd?: () => void        // Called when the live stream ends
+  onPollingStart?: () => void     // Called when polling begins
+  onPollingStop?: () => void      // Called when polling stops (intentional or error)
+  pollingBuffer?: number          // Additional buffer time beyond YouTube's interval (ms)
 }
 
 export interface PollingResult {
@@ -29,13 +36,19 @@ export class ChatPollingService {
   private messageCache: Map<string, YouTubeChatMessage> = new Map()
   private messageIds: string[] = []
 
+  // Exponential backoff
+  private retryDelay = 1000
+  private readonly maxRetryDelay = 60000
+  private readonly backoffMultiplier = 2
+
   constructor(youtubeService: YouTubeService, options: PollingOptions = {}) {
     this.youtubeService = youtubeService
     this.options = options
   }
 
   /**
-   * Start polling for chat messages
+   * Start polling for chat messages from a live stream video.
+   * Returns false if the stream is not live or chat is unavailable.
    */
   async startPolling(videoId: string): Promise<boolean> {
     if (this.isPolling) {
@@ -45,6 +58,7 @@ export class ChatPollingService {
 
     try {
       this.isPolling = true
+      this.retryDelay = 1000 // Reset backoff on fresh start
 
       const liveChatId = await this.youtubeService.getLiveChatId(videoId)
 
@@ -56,23 +70,29 @@ export class ChatPollingService {
 
       this.liveChatId = liveChatId
       this.currentPageToken = undefined
+      this.options.onPollingStart?.()
 
       // Start the polling loop (non-blocking)
       this.pollingLoop()
 
       return true
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start polling'
       console.error('Failed to start polling:', error)
-      this.options.onError?.('Failed to start polling')
+      this.options.onError?.(message)
       this.isPolling = false
       return false
     }
   }
 
   /**
-   * Stop polling for chat messages
+   * Stop polling and reset state
    */
   stopPolling(): void {
+    if (this.isPolling) {
+      this.options.onPollingStop?.()
+    }
+
     this.isPolling = false
 
     if (this.pollingTimer) {
@@ -82,34 +102,38 @@ export class ChatPollingService {
 
     this.liveChatId = null
     this.currentPageToken = undefined
+    this.retryDelay = 1000
   }
 
-  /**
-   * Get current polling status
-   */
+  /** Get current polling status */
   isActive(): boolean {
     return this.isPolling
   }
 
-  /**
-   * Get all cached messages in order
-   */
+  /** Get all cached messages in order */
   getMessages(): YouTubeChatMessage[] {
     return this.messageIds
       .map(id => this.messageCache.get(id))
       .filter((msg): msg is YouTubeChatMessage => msg !== undefined)
   }
 
-  /**
-   * Clear message cache
-   */
+  /** Get total cached message count */
+  getMessageCount(): number {
+    return this.messageIds.length
+  }
+
+  /** Clear message cache */
   clearMessages(): void {
     this.messageCache.clear()
     this.messageIds = []
   }
 
   /**
-   * Main polling loop
+   * Main polling loop with:
+   * - Message deduplication
+   * - Exponential backoff on transient errors
+   * - Automatic stop on fatal errors (stream ended, quota exceeded)
+   * - Respects YouTube's pollingIntervalMillis
    */
   private async pollingLoop(): Promise<void> {
     while (this.isPolling && this.liveChatId) {
@@ -122,16 +146,27 @@ export class ChatPollingService {
         if (result.error) {
           this.options.onError?.(result.error)
 
-          if (result.error.includes('not found') || result.error.includes('quota')) {
+          // Fatal errors — stop polling
+          if (
+            result.error.toLowerCase().includes('live chat not found') ||
+            result.error.toLowerCase().includes('not found') ||
+            result.error.toLowerCase().includes('quota')
+          ) {
+            this.options.onStreamEnd?.()
             this.stopPolling()
             return
           }
 
-          // Wait before retry on error
-          await this.sleep(5000)
+          // Transient error — retry with exponential backoff
+          await this.sleep(this.retryDelay)
+          this.retryDelay = Math.min(this.retryDelay * this.backoffMultiplier, this.maxRetryDelay)
           continue
         }
 
+        // Success — reset backoff
+        this.retryDelay = 1000
+
+        // Add new messages to cache
         const newMessages = this.filterNewMessages(result.messages)
 
         if (newMessages.length > 0) {
@@ -140,18 +175,25 @@ export class ChatPollingService {
 
         this.currentPageToken = result.nextPageToken
 
-        const pollingInterval = result.pollingIntervalMillis + (this.options.pollingBuffer ?? 1000)
+        // Calculate polling interval with buffer
+        const pollingInterval =
+          result.pollingIntervalMillis + (this.options.pollingBuffer ?? 1000)
+
         await this.sleep(pollingInterval)
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Polling error'
         console.error('Error in polling loop:', error)
-        this.options.onError?.('Polling error occurred')
-        await this.sleep(5000)
+        this.options.onError?.(message)
+
+        // Retry with exponential backoff
+        await this.sleep(this.retryDelay)
+        this.retryDelay = Math.min(this.retryDelay * this.backoffMultiplier, this.maxRetryDelay)
       }
     }
   }
 
   /**
-   * Filter out already seen messages
+   * Filter out already seen messages and add new ones to cache
    */
   private filterNewMessages(messages: YouTubeChatMessage[]): YouTubeChatMessage[] {
     const newMessages: YouTubeChatMessage[] = []
@@ -167,9 +209,7 @@ export class ChatPollingService {
     return newMessages
   }
 
-  /**
-   * Sleep helper function
-   */
+  /** Sleep helper */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
