@@ -239,4 +239,71 @@ The `main` branch has the following protection rules:
    gh issue develop 1
    ```
 
+## ⚠️ Critical Lessons Learned
+
+### Pre-Flight Checklist (MANDATORY)
+
+**Before ANY git work, ALWAYS verify:**
+
+```bash
+# 1. Check git config is correct
+git config user.name    # Must be: migorengx
+git config user.email   # Must be: 144900892+migorengx@users.noreply.github.com
+
+# 2. Verify GitHub auth account
+gh auth status           # Active account must be: migorengx
+
+# 3. Switch to correct account if needed
+gh auth switch -u migorengx
+
+# 4. Verify before committing
+git log --format='%an %ae' -1   # Last commit must show migorengx
+```
+
+### Workflow Discipline
+
+**ALWAYS follow this order:**
+1. **Understand** - What needs to be done
+2. **Verify** - Check git config, GitHub auth, environment
+3. **Plan** - Design the approach
+4. **Execute** - Implement with verified setup
+5. **Verify Results** - Ensure correctness before pushing
+
+**NEVER skip verification steps.**
+
+### Critical Rules
+
+1. **Never assume configuration is correct** - Always verify before work
+2. **Never rush into execution** - Check prerequisites first
+3. **Never commit without verification** - Check git log before pushing
+4. **Always use migorengx account** - For all GitHub operations
+5. **Test before executing** - Ensure setup works properly
+
+### Common Mistakes to Avoid
+
+- ❌ Assuming git config is correct without checking
+- ❌ Making commits before verifying authorship
+- ❌ Pushing without reviewing commit history
+- ❌ Skipping pre-flight checks
+- ❌ Rushing execution without proper planning
+
+### Recovery Procedures
+
+**If wrong author detected:**
+
+```bash
+# Stop immediately, do not push
+# Fix git config:
+git config user.name "migorengx"
+git config user.email "144900892+migorengx@users.noreply.github.com"
+
+# Amend commit if not pushed:
+git commit --amend --reset-author
+
+# If already pushed, create new branch with correct commits
+# Better to be safe than create cleanup work
+```
+
+**Key Principle:** Prevention over correction. 1 minute of verification saves hours of cleanup.
+
 Happy coding! 🚀
