@@ -111,8 +111,19 @@ describe('ChatDisplay', () => {
     render(
       <ChatDisplay
         messages={messages}
-        maxMessages={100}
         messageCount={150}
+        settings={{
+          showAvatars: true,
+          showTimestamps: true,
+          autoScroll: true,
+          maxMessages: 100,
+          fontSize: 14,
+          theme: 'dark',
+          messageSpacing: 'normal',
+          usernameColor: '#60a5fa',
+          bgOpacity: 100,
+          animationSpeed: 'normal',
+        }}
       />
     )
     expect(screen.getByText(/Showing last 100 of 150 messages/)).toBeInTheDocument()

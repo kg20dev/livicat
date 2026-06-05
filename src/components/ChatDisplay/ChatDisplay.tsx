@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { YouTubeChatMessage } from '../../types/youtube'
 import { MessageList } from './MessageList'
 import { ConnectionStatus } from '../../services/YouTubeService'
+import type { ChatSettings } from '../../hooks/useYouTubeChat'
 
 interface ChatDisplayProps {
   messages?: YouTubeChatMessage[]
@@ -9,11 +10,8 @@ interface ChatDisplayProps {
   error?: string | null
   messageCount?: number
   className?: string
-  showAvatars?: boolean
-  showTimestamps?: boolean
-  autoScroll?: boolean
-  maxMessages?: number
   transparent?: boolean
+  settings?: ChatSettings
 }
 
 /**
@@ -31,12 +29,19 @@ export const ChatDisplay = ({
   error = null,
   messageCount = 0,
   className = '',
-  showAvatars = true,
-  showTimestamps = true,
-  autoScroll = true,
-  maxMessages = 100,
   transparent = false,
+  settings,
 }: ChatDisplayProps) => {
+  // Extract settings with defaults
+  const showAvatars = settings?.showAvatars ?? true
+  const showTimestamps = settings?.showTimestamps ?? true
+  const autoScroll = settings?.autoScroll ?? true
+  const maxMessages = settings?.maxMessages ?? 100
+  const bgOpacity = settings?.bgOpacity ?? 100
+  const fontSize = settings?.fontSize ?? 14
+  const messageSpacing = settings?.messageSpacing ?? 'normal'
+  const animationSpeed = settings?.animationSpeed ?? 'normal'
+  const usernameColor = settings?.usernameColor ?? '#60a5fa'
   const isLoading = connectionStatus === ConnectionStatus.CONNECTING
   const isError = connectionStatus === ConnectionStatus.ERROR || error !== null
 
@@ -82,12 +87,21 @@ export const ChatDisplay = ({
   const showEmptyState =
     !isLoading && !isError && messages.length === 0 && messageCount === 0
 
+  // Calculate background opacity
+  const bgStyle = transparent
+    ? { backgroundColor: `rgba(21, 25, 50, ${bgOpacity / 100})` }
+    : { backgroundColor: `rgba(21, 25, 50, ${bgOpacity / 100})` }
+
+  // Animation duration based on speed
+  const animationDuration = animationSpeed === 'slow' ? '500ms' : animationSpeed === 'normal' ? '300ms' : '0ms'
+
   return (
     <div
+      style={{ ...bgStyle, transitionDuration: animationDuration }}
       className={`${
         transparent
-          ? 'bg-transparent border border-gray-600/20'
-          : 'bg-[#151932] shadow-xl border border-gray-600'
+          ? 'border border-gray-600/20'
+          : 'shadow-xl border border-gray-600'
       } rounded-lg flex flex-col h-[550px] overflow-hidden ${className}`}
     >
       {/* Header */}
@@ -127,15 +141,19 @@ export const ChatDisplay = ({
             </div>
           </div>
         ) : (
-          <div className="h-full">
-            <MessageList
-              messages={messages}
-              maxMessages={maxMessages}
-              showAvatars={showAvatars}
-              showTimestamps={showTimestamps}
-              autoScroll={autoScroll}
-            />
-          </div>
+           <div className="h-full">
+             <MessageList
+               messages={messages}
+               maxMessages={maxMessages}
+               showAvatars={showAvatars}
+               showTimestamps={showTimestamps}
+               autoScroll={autoScroll}
+               fontSize={fontSize}
+               messageSpacing={messageSpacing}
+               usernameColor={usernameColor}
+               animationSpeed={animationSpeed}
+             />
+           </div>
         )}
       </div>
 

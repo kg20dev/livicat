@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import ChatDisplay from './components/ChatDisplay'
 import PollingPanel from './components/PollingPanel'
+import SettingsPanel from './components/SettingsPanel'
 import type { StreamStatus } from './components/PollingPanel/PollingPanel'
 import { Card } from './components/shared'
-import { useYouTubeChat } from './hooks/useYouTubeChat'
+import { useYouTubeChat, useChatSettings } from './hooks/useYouTubeChat'
 import { useApiKey } from './hooks/useApiKey'
 import { YouTubeService } from './services/YouTubeService'
 import './App.css'
@@ -17,6 +18,7 @@ function App() {
   const [transparentBg, setTransparentBg] = useState(false)
 
   const hook = useYouTubeChat(apiKey, videoId)
+  const { settings, updateSetting, applyPreset, resetToDefaults, savedIndicator, presets } = useChatSettings()
 
   // Track the raw input for parsing on connection
   const [pendingVideoId, setPendingVideoId] = useState('')
@@ -99,13 +101,14 @@ function App() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Chat Display */}
             <div className="lg:col-span-2">
-              <ChatDisplay
-                messages={DEMO_MESSAGES ? generateDemoMessages() : hook.messages}
-                connectionStatus={hook.connectionStatus}
-                error={hook.error}
-                messageCount={hook.messages.length}
-                transparent={transparentBg}
-              />
+               <ChatDisplay
+                 messages={DEMO_MESSAGES ? generateDemoMessages() : hook.messages}
+                 connectionStatus={hook.connectionStatus}
+                 error={hook.error}
+                 messageCount={hook.messages.length}
+                 transparent={transparentBg}
+                 settings={settings}
+               />
             </div>
 
             {/* Sidebar */}
@@ -135,24 +138,33 @@ function App() {
                 </p>
               </Card>
 
-              <PollingPanel
-                apiKey={apiKey}
-                videoId={videoId}
-                connectionStatus={hook.connectionStatus}
-                messageCount={hook.messages.length}
-                isStreamEnded={hook.isStreamEnded ?? false}
-                error={hook.error}
-                getConnectionStatusText={hook.getConnectionStatusText}
-                onApiKeyChange={setApiKey}
-                onVideoInputChange={(input) => setPendingVideoId(input)}
-                onConnect={handleConnect}
-                onDisconnect={hook.stopPolling}
-                onClearMessages={hook.clearMessages}
-                keySaved={keySaved}
-                onClearSavedKey={clearSavedKey}
-                streamStatus={streamStatus}
-                streamStatusText={streamStatusText}
-              />
+               <PollingPanel
+                 apiKey={apiKey}
+                 videoId={videoId}
+                 connectionStatus={hook.connectionStatus}
+                 messageCount={hook.messages.length}
+                 isStreamEnded={hook.isStreamEnded ?? false}
+                 error={hook.error}
+                 getConnectionStatusText={hook.getConnectionStatusText}
+                 onApiKeyChange={setApiKey}
+                 onVideoInputChange={(input) => setPendingVideoId(input)}
+                 onConnect={handleConnect}
+                 onDisconnect={hook.stopPolling}
+                 onClearMessages={hook.clearMessages}
+                 keySaved={keySaved}
+                 onClearSavedKey={clearSavedKey}
+                 streamStatus={streamStatus}
+                 streamStatusText={streamStatusText}
+               />
+
+               <SettingsPanel
+                 settings={settings}
+                 onUpdateSetting={updateSetting}
+                 onApplyPreset={applyPreset}
+                 onResetDefaults={resetToDefaults}
+                 savedIndicator={savedIndicator}
+                 presets={presets}
+               />
             </div>
           </div>
 

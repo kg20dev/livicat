@@ -163,22 +163,181 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
 /**
  * Custom hook for managing chat settings
  */
-export const useChatSettings = () => {
-  const [settings, setSettings] = useState({
-    maxMessages: 100,
+
+export type MessageSpacing = 'compact' | 'normal' | 'comfortable'
+export type AnimationSpeed = 'none' | 'slow' | 'normal'
+
+export interface ChatSettings {
+  showAvatars: boolean
+  showTimestamps: boolean
+  autoScroll: boolean
+  maxMessages: number
+  fontSize: number
+  theme: 'dark' | 'light'
+  messageSpacing: MessageSpacing
+  usernameColor: string
+  bgOpacity: number
+  animationSpeed: AnimationSpeed
+}
+
+const STORAGE_KEY = 'livicat_chat_settings'
+
+const DEFAULT_SETTINGS: ChatSettings = {
+  showAvatars: true,
+  showTimestamps: true,
+  autoScroll: true,
+  maxMessages: 100,
+  fontSize: 14,
+  theme: 'dark',
+  messageSpacing: 'normal',
+  usernameColor: '#60a5fa',
+  bgOpacity: 100,
+  animationSpeed: 'normal',
+}
+
+/**
+ * Load settings from localStorage
+ */
+function loadSettings(): ChatSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Merge with defaults to ensure all fields exist
+      return { ...DEFAULT_SETTINGS, ...parsed }
+    }
+  } catch {
+    // Storage unavailable or corrupted
+  }
+  return DEFAULT_SETTINGS
+}
+
+/**
+ * Save settings to localStorage
+ */
+function saveSettings(settings: ChatSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+  } catch {
+    // Storage full or unavailable
+  }
+}
+
+/**
+ * Preset themes
+ */
+export const PRESET_THEMES: Record<string, ChatSettings> = {
+  default: {
     showAvatars: true,
     showTimestamps: true,
     autoScroll: true,
+    maxMessages: 100,
     fontSize: 14,
     theme: 'dark',
-  })
+    messageSpacing: 'normal',
+    usernameColor: '#60a5fa',
+    bgOpacity: 100,
+    animationSpeed: 'normal',
+  },
+  minimal: {
+    showAvatars: false,
+    showTimestamps: false,
+    autoScroll: true,
+    maxMessages: 100,
+    fontSize: 13,
+    theme: 'dark',
+    messageSpacing: 'compact',
+    usernameColor: '#94a3b8',
+    bgOpacity: 95,
+    animationSpeed: 'none',
+  },
+  compact: {
+    showAvatars: true,
+    showTimestamps: false,
+    autoScroll: true,
+    maxMessages: 150,
+    fontSize: 12,
+    theme: 'dark',
+    messageSpacing: 'compact',
+    usernameColor: '#818cf8',
+    bgOpacity: 90,
+    animationSpeed: 'normal',
+  },
+  large: {
+    showAvatars: true,
+    showTimestamps: true,
+    autoScroll: true,
+    maxMessages: 100,
+    fontSize: 20,
+    theme: 'dark',
+    messageSpacing: 'comfortable',
+    usernameColor: '#34d399',
+    bgOpacity: 100,
+    animationSpeed: 'slow',
+  },
+  stream: {
+    showAvatars: true,
+    showTimestamps: true,
+    autoScroll: true,
+    maxMessages: 100,
+    fontSize: 16,
+    theme: 'dark',
+    messageSpacing: 'normal',
+    usernameColor: '#f472b6',
+    bgOpacity: 80,
+    animationSpeed: 'normal',
+  },
+}
 
-  const updateSetting = <K extends keyof typeof settings>(
-    key: K,
-    value: (typeof settings)[K]
-  ) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+export const useChatSettings = () => {
+  const [settings, setSettings] = useState<ChatSettings>(loadSettings)
+  const [savedIndicator, setSavedIndicator] = useState(false)
+
+  // Update a single setting
+  const updateSetting = useCallback(
+    <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
+      setSettings(prev => {
+        const newSettings = { ...prev, [key]: value }
+        saveSettings(newSettings)
+        return newSettings
+      })
+      
+      // Show "Saved" indicator briefly
+      setSavedIndicator(true)
+      setTimeout(() => setSavedIndicator(false), 1500)
+    },
+    []
+  )
+
+  // Apply a preset theme
+  const applyPreset = useCallback((presetName: string) => {
+    const preset = PRESET_THEMES[presetName]
+    if (preset) {
+      setSettings(preset)
+      saveSettings(preset)
+      
+      // Show "Saved" indicator briefly
+      setSavedIndicator(true)
+      setTimeout(() => setSavedIndicator(false), 1500)
+    }
+  }, [])
+
+  // Reset to defaults
+  const resetToDefaults = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS)
+    saveSettings(DEFAULT_SETTINGS)
+    
+    // Show "Saved" indicator briefly
+    setSavedIndicator(true)
+    setTimeout(() => setSavedIndicator(false), 1500)
+  }, [])
+
+  return {
+    settings,
+    updateSetting,
+    applyPreset,
+    resetToDefaults,
+    savedIndicator,
+    presets: PRESET_THEMES,
   }
-
-  return { settings, updateSetting }
 }

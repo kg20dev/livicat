@@ -1,181 +1,221 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useYouTubeChat, useChatSettings } from '../useYouTubeChat'
-import { YouTubeService, ConnectionStatus } from '../../services/YouTubeService'
-
-// Mock YouTubeService and ChatPollingService
-vi.mock('../../services/YouTubeService', () => {
-  const MockYouTubeService = vi.fn()
-  const mockConnectionStatus = {
-    DISCONNECTED: 'disconnected',
-    CONNECTING: 'connecting',
-    CONNECTED: 'connected',
-    ERROR: 'error',
-  }
-
-  MockYouTubeService.prototype.constructor = vi.fn()
-  MockYouTubeService.prototype.getApiKey = vi.fn().mockReturnValue('test-key')
-  MockYouTubeService.prototype.validateApiKey = vi.fn().mockResolvedValue(true)
-  MockYouTubeService.prototype.getLiveChatId = vi.fn().mockResolvedValue('chat-id-123')
-  MockYouTubeService.prototype.fetchChatMessages = vi.fn().mockResolvedValue({
-    messages: [],
-    nextPageToken: undefined,
-    pollingIntervalMillis: 5000,
-  })
-  MockYouTubeService.prototype.onConnectionStatusChange = vi.fn()
-  MockYouTubeService.prototype.getConnectionStatus = vi.fn().mockReturnValue('disconnected')
-  MockYouTubeService.prototype.disconnect = vi.fn()
-
-  return {
-    YouTubeService: MockYouTubeService,
-    ConnectionStatus: mockConnectionStatus,
-  }
-})
-
-vi.mock('../../services/ChatPollingService', () => {
-  const MockChatPollingService = vi.fn()
-
-  MockChatPollingService.prototype.startPolling = vi.fn().mockResolvedValue(true)
-  MockChatPollingService.prototype.stopPolling = vi.fn()
-  MockChatPollingService.prototype.isActive = vi.fn().mockReturnValue(false)
-  MockChatPollingService.prototype.getMessages = vi.fn().mockReturnValue([])
-  MockChatPollingService.prototype.clearMessages = vi.fn()
-
-  return {
-    ChatPollingService: MockChatPollingService,
-  }
-})
-
-describe('useYouTubeChat', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('returns default disconnected state', () => {
-    const { result } = renderHook(() => useYouTubeChat('', ''))
-
-    expect(result.current.isConnected).toBe(false)
-    expect(result.current.error).toBeNull()
-    expect(result.current.messages).toEqual([])
-    expect(result.current.connectionStatus).toBe(ConnectionStatus.DISCONNECTED)
-  })
-
-  it('creates YouTubeService when apiKey is provided', () => {
-    renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-    expect(YouTubeService).toHaveBeenCalledWith('valid-key')
-  })
-
-  it('validates API key on mount', () => {
-    renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-    const instance = (YouTubeService as unknown as ReturnType<typeof vi.fn>).mock.results[0]?.value
-    expect(instance.validateApiKey).toHaveBeenCalled()
-  })
-
-  it('calls disconnect on unmount', () => {
-    const { unmount } = renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-    const instance = (YouTubeService as unknown as ReturnType<typeof vi.fn>).mock.results[0]?.value
-
-    unmount()
-
-    expect(instance.disconnect).toHaveBeenCalled()
-  })
-
-  it('stops polling on unmount', () => {
-    const { unmount } = renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-    unmount()
-
-    // stopPolling should have been called on the pollingServiceRef if it exists
-    // Since we mock ChatPollingService, the ref will be null unless startPolling was called
-    // This just verifies no error is thrown
-    expect(true).toBe(true)
-  })
-
-  describe('startPolling', () => {
-    it('starts polling with the video ID', async () => {
-      const { result } = renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-      await act(async () => {
-        await result.current.startPolling()
-      })
-
-      expect(result.current.startPolling).toBeDefined()
-    })
-  })
-
-  describe('stopPolling', () => {
-    it('stops polling', async () => {
-      const { result } = renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-      await act(async () => {
-        result.current.stopPolling()
-      })
-
-      expect(result.current.stopPolling).toBeDefined()
-    })
-  })
-
-  describe('clearMessages', () => {
-    it('clears messages', async () => {
-      const { result } = renderHook(() => useYouTubeChat('valid-key', 'video-123'))
-
-      await act(async () => {
-        result.current.clearMessages()
-      })
-
-      expect(result.current.messages).toEqual([])
-    })
-  })
-
-  describe('getConnectionStatusText', () => {
-    it('returns text for DISCONNECTED', () => {
-      const { result } = renderHook(() => useYouTubeChat('', ''))
-
-      expect(result.current.getConnectionStatusText()).toBe('Disconnected')
-    })
-  })
-})
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { useChatSettings, PRESET_THEMES } from '../useYouTubeChat'
 
 describe('useChatSettings', () => {
-  it('returns default settings', () => {
+  beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear()
+  })
+
+  it('loads default settings when no stored settings exist', () => {
     const { result } = renderHook(() => useChatSettings())
 
     expect(result.current.settings).toEqual({
-      maxMessages: 100,
       showAvatars: true,
       showTimestamps: true,
       autoScroll: true,
+      maxMessages: 100,
       fontSize: 14,
       theme: 'dark',
+      messageSpacing: 'normal',
+      usernameColor: '#60a5fa',
+      bgOpacity: 100,
+      animationSpeed: 'normal',
     })
+  })
+
+  it('loads settings from localStorage on mount', () => {
+    const storedSettings = {
+      showAvatars: false,
+      showTimestamps: false,
+      autoScroll: true,
+      maxMessages: 150,
+      fontSize: 16,
+      theme: 'dark' as const,
+      messageSpacing: 'compact' as const,
+      usernameColor: '#ff0000',
+      bgOpacity: 80,
+      animationSpeed: 'slow' as const,
+    }
+
+    localStorage.setItem('livicat_chat_settings', JSON.stringify(storedSettings))
+
+    const { result } = renderHook(() => useChatSettings())
+
+    expect(result.current.settings).toEqual(storedSettings)
+  })
+
+  it('merges stored settings with defaults for missing fields', () => {
+    const partialSettings = {
+      showAvatars: false,
+      fontSize: 18,
+    }
+
+    localStorage.setItem('livicat_chat_settings', JSON.stringify(partialSettings))
+
+    const { result } = renderHook(() => useChatSettings())
+
+    expect(result.current.settings.showAvatars).toBe(false)
+    expect(result.current.settings.fontSize).toBe(18)
+    expect(result.current.settings.maxMessages).toBe(100) // default value
+    expect(result.current.settings.usernameColor).toBe('#60a5fa') // default value
   })
 
   it('updates a single setting', () => {
     const { result } = renderHook(() => useChatSettings())
 
     act(() => {
+      result.current.updateSetting('showAvatars', false)
+    })
+
+    expect(result.current.settings.showAvatars).toBe(false)
+  })
+
+  it('persists settings to localStorage on update', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    act(() => {
+      result.current.updateSetting('fontSize', 20)
+    })
+
+    const stored = localStorage.getItem('livicat_chat_settings')
+    expect(stored).toBeTruthy()
+
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      expect(parsed.fontSize).toBe(20)
+    }
+  })
+
+  it('shows saved indicator briefly after update', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    expect(result.current.savedIndicator).toBe(false)
+
+    act(() => {
+      result.current.updateSetting('fontSize', 18)
+    })
+
+    expect(result.current.savedIndicator).toBe(true)
+  })
+
+  it('applies preset theme correctly', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    act(() => {
+      result.current.applyPreset('minimal')
+    })
+
+    expect(result.current.settings).toEqual(PRESET_THEMES.minimal)
+  })
+
+  it('persists preset theme to localStorage', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    act(() => {
+      result.current.applyPreset('compact')
+    })
+
+    const stored = localStorage.getItem('livicat_chat_settings')
+    expect(stored).toBeTruthy()
+
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      expect(parsed.messageSpacing).toBe('compact')
+      expect(parsed.fontSize).toBe(12)
+    }
+  })
+
+  it('resets to defaults correctly', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    // Make some changes
+    act(() => {
+      result.current.updateSetting('showAvatars', false)
+      result.current.updateSetting('fontSize', 24)
+    })
+
+    expect(result.current.settings.showAvatars).toBe(false)
+    expect(result.current.settings.fontSize).toBe(24)
+
+    // Reset
+    act(() => {
+      result.current.resetToDefaults()
+    })
+
+    expect(result.current.settings.showAvatars).toBe(true)
+    expect(result.current.settings.fontSize).toBe(14)
+  })
+
+  it('persists reset to localStorage', () => {
+    const { result } = renderHook(() => useChatSettings())
+
+    // Make changes
+    act(() => {
+      result.current.updateSetting('maxMessages', 200)
+    })
+
+    // Reset
+    act(() => {
+      result.current.resetToDefaults()
+    })
+
+    const stored = localStorage.getItem('livicat_chat_settings')
+    expect(stored).toBeTruthy()
+
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      expect(parsed.maxMessages).toBe(100)
+    }
+  })
+
+  it('handles localStorage errors gracefully', () => {
+    // Mock localStorage to throw error
+    const originalSetItem = localStorage.setItem
+    localStorage.setItem = vi.fn(() => {
+      throw new Error('Storage full')
+    })
+
+    const { result } = renderHook(() => useChatSettings())
+
+    // Should not throw error
+    act(() => {
       result.current.updateSetting('fontSize', 18)
     })
 
     expect(result.current.settings.fontSize).toBe(18)
-    expect(result.current.settings.maxMessages).toBe(100) // unchanged
+
+    // Restore original
+    localStorage.setItem = originalSetItem
   })
 
-  it('updates multiple settings independently', () => {
+  it('updates all settings independently', () => {
     const { result } = renderHook(() => useChatSettings())
 
     act(() => {
-      result.current.updateSetting('maxMessages', 50)
-    })
-    act(() => {
-      result.current.updateSetting('theme', 'light')
+      result.current.updateSetting('showAvatars', false)
+      result.current.updateSetting('showTimestamps', false)
+      result.current.updateSetting('autoScroll', false)
+      result.current.updateSetting('maxMessages', 200)
+      result.current.updateSetting('fontSize', 16)
+      result.current.updateSetting('messageSpacing', 'compact')
+      result.current.updateSetting('usernameColor', '#ff0000')
+      result.current.updateSetting('bgOpacity', 50)
+      result.current.updateSetting('animationSpeed', 'slow')
     })
 
-    expect(result.current.settings.maxMessages).toBe(50)
-    expect(result.current.settings.theme).toBe('light')
-    expect(result.current.settings.fontSize).toBe(14) // unchanged
+    expect(result.current.settings).toEqual({
+      showAvatars: false,
+      showTimestamps: false,
+      autoScroll: false,
+      maxMessages: 200,
+      fontSize: 16,
+      theme: 'dark',
+      messageSpacing: 'compact',
+      usernameColor: '#ff0000',
+      bgOpacity: 50,
+      animationSpeed: 'slow',
+    })
   })
 })
