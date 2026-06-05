@@ -1,3 +1,17 @@
+# AGENTS.md
+
+⚠️ **REQUIRED READING ORDER**
+
+All AI agents MUST read these files in this exact order before starting work:
+
+1. **AGENTS_KARPATHY.md** — Universal AI agent principles (non-negotiables, behavioral rules)
+2. **CODING_RULES.md** — Project-specific coding standards
+3. **AGENTS.md** (this file) — Project context, commands, workflows
+
+**The Karpathy AGENTS_KARPATHY.md contains foundational rules** (no flattery, never fabricate, surgical changes) that override everything else. **Read it first.**
+
+---
+
 # Livicat Project - Development Workflow
 
 ## Project Overview
