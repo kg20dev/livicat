@@ -6,4 +6,5 @@ export {
   DEFAULT_SETTINGS,
   PRESETS,
 } from './useChatSettings'
+export { useElectronPreview } from './useElectronPreview'
 export type { ChatSettings, Preset, MessageSpacing, AnimationSpeed, Theme } from '../types'

@@ -7,6 +7,7 @@
 export type Theme = 'dark' | 'light'
 export type MessageSpacing = 'compact' | 'normal' | 'comfortable'
 export type AnimationSpeed = 'none' | 'slow' | 'normal'
+export type AnimationStyle = 'default' | 'blink' | 'glowing' | 'fade' | 'slide' | 'bounce'
 
 /* ─── Chat Settings ─────────────────────────────────────────────── */
 
@@ -20,6 +21,10 @@ export interface ChatSettings {
   /* Display toggles */
   showAvatars: boolean
   showTimestamps: boolean
+  showHeader: boolean
+  showScrollButton: boolean
+  showEngagementMessages: boolean
+  showChatDisclaimer: boolean
   autoScroll: boolean
   maxMessages: number
 
@@ -52,10 +57,17 @@ export interface ChatSettings {
   scrollbarWidth: number
   scrollbarColor: string
 
+  /* Scroll button */
+  scrollButtonBackground: string
+  scrollButtonColor: string
+  scrollButtonBorderRadius: number
+  scrollButtonOpacity: number
+
   /* Other */
   messageSpacing: MessageSpacing
   theme: Theme
   animationSpeed: AnimationSpeed
+  newMessageAnimation: AnimationStyle
 }
 
 /* ─── Preset ────────────────────────────────────────────────────── */

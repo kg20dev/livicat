@@ -288,4 +288,92 @@ describe('generateChatCSS', () => {
       }
     })
   })
+
+  describe('animation settings', () => {
+    it('generates blink animation keyframes and rules', () => {
+      const css = generateChatCSS({
+        animation: { style: 'blink', speed: 'normal' },
+      })
+      expect(css).toContain('@keyframes livicat-blink')
+      expect(css).toContain('yt-live-chat-text-message-renderer')
+      expect(css).toContain('animation: livicat-blink 0.8s ease-out')
+    })
+
+    it('generates glowing animation keyframes and rules', () => {
+      const css = generateChatCSS({
+        animation: { style: 'glowing', speed: 'normal' },
+      })
+      expect(css).toContain('@keyframes livicat-glowing')
+      expect(css).toContain('yt-live-chat-text-message-renderer')
+      expect(css).toContain('animation: livicat-glowing 0.8s ease-out')
+    })
+
+    it('generates fade animation keyframes and rules', () => {
+      const css = generateChatCSS({
+        animation: { style: 'fade', speed: 'normal' },
+      })
+      expect(css).toContain('@keyframes livicat-fade')
+      expect(css).toContain('yt-live-chat-text-message-renderer')
+      expect(css).toContain('animation: livicat-fade 0.8s ease-out')
+    })
+
+    it('generates slide animation keyframes and rules', () => {
+      const css = generateChatCSS({
+        animation: { style: 'slide', speed: 'normal' },
+      })
+      expect(css).toContain('@keyframes livicat-slide')
+      expect(css).toContain('yt-live-chat-text-message-renderer')
+      expect(css).toContain('animation: livicat-slide 0.8s ease-out')
+    })
+
+    it('generates bounce animation keyframes and rules', () => {
+      const css = generateChatCSS({
+        animation: { style: 'bounce', speed: 'normal' },
+      })
+      expect(css).toContain('@keyframes livicat-bounce')
+      expect(css).toContain('yt-live-chat-text-message-renderer')
+      expect(css).toContain('animation: livicat-bounce 0.8s ease-out')
+    })
+
+    it('respects animation speed setting', () => {
+      const slowCss = generateChatCSS({
+        animation: { style: 'blink', speed: 'slow' },
+      })
+      expect(slowCss).toContain('animation: livicat-blink 1.5s ease-out')
+
+      const noneCss = generateChatCSS({
+        animation: { style: 'blink', speed: 'none' },
+      })
+      expect(noneCss).toContain('animation: livicat-blink 0s ease-out')
+    })
+
+    it('does not generate animation for default style', () => {
+      const css = generateChatCSS({
+        animation: { style: 'default', speed: 'normal' },
+      })
+      expect(css).not.toContain('@keyframes')
+      expect(css).not.toContain('animation:')
+    })
+
+    it('includes fade-specific transform property', () => {
+      const css = generateChatCSS({
+        animation: { style: 'fade', speed: 'normal' },
+      })
+      expect(css).toContain('transform: translateZ(0)')
+    })
+
+    it('includes slide-specific transform property', () => {
+      const css = generateChatCSS({
+        animation: { style: 'slide', speed: 'normal' },
+      })
+      expect(css).toContain('transform: translateZ(0)')
+    })
+
+    it('includes glowing-specific transition property', () => {
+      const css = generateChatCSS({
+        animation: { style: 'glowing', speed: 'normal' },
+      })
+      expect(css).toContain('transition: box-shadow 0.8s ease-out')
+    })
+  })
 })

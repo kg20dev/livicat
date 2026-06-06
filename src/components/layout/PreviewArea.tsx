@@ -1,12 +1,11 @@
-import { createContext, useContext, useMemo, useState, useCallback } from 'react'
+import { createContext, useContext, useMemo, useCallback, useState, useEffect } from 'react'
 import ChatPreview, { type Message } from '../chat/ChatPreview'
-import ChatIframe from '../chat/ChatIframe'
-import type { ChatIframeError } from '../chat/ChatIframe'
-import ErrorBoundary from '../ui/ErrorBoundary'
-import LiveBadge from '../ui/LiveBadge'
 import UrlInputBar, { type ChatMode } from '../ui/UrlInputBar'
-import ControlButtons from '../ui/ControlButtons'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
+import { useElectronPreview } from '../../hooks/useElectronPreview'
+import type { YouTubeVideoInfo } from '../../utils/youtubeMetadata'
+
+type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
 /* ─── Context ────────────────────────────────────────────────────── */
 
@@ -19,14 +18,13 @@ interface PreviewAreaContext {
   urlError: string | null
   isEmpty: boolean
   injectedCSS: string
-  iframeError: ChatIframeError | null
+  videoInfo: YouTubeVideoInfo | null
+  fetchStatus: FetchStatus
+  fetchError: string | null
   onTabChange: (tab: string) => void
   onUrlChange: (url: string) => void
   onFetch: () => void
-  onRandomize: () => void
-  onToggle: () => void
-  onIframeError: (error: ChatIframeError) => void
-  onSwitchToTesting: () => void
+  onRetryFetch: () => void
 }
 
 const PreviewAreaContext = createContext<PreviewAreaContext | null>(null)
@@ -44,12 +42,14 @@ interface PreviewAreaRootProps {
   mode?: ChatMode
   activeTab?: string
   url?: string
+  submittedUrl?: string
+  videoInfo?: YouTubeVideoInfo | null
+  fetchStatus?: FetchStatus
+  fetchError?: string | null
   injectedCSS?: string
   onTabChange?: (tab: string) => void
   onUrlChange?: (url: string) => void
   onFetch?: () => void
-  onRandomize?: () => void
-  onToggle?: () => void
   children: React.ReactNode
   className?: string
 }
@@ -59,38 +59,31 @@ export default function PreviewArea({
   mode = 'live',
   activeTab = 'Live/Past Video',
   url = '',
+  submittedUrl = '',
+  videoInfo = null,
+  fetchStatus = 'idle',
+  fetchError = null,
   injectedCSS = '',
   onTabChange = () => {},
   onUrlChange = () => {},
   onFetch = () => {},
-  onRandomize = () => {},
-  onToggle = () => {},
   children,
   className = '',
 }: PreviewAreaRootProps) {
-  // Track iframe-level errors for fallback UX
-  const [iframeError, setIframeError] = useState<ChatIframeError | null>(null)
+  // Determine if chat should be empty (no submitted URL in live mode)
+  const isEmpty = mode === 'live' && !submittedUrl
 
-  // Determine if chat should be empty (no URL in live mode)
-  const isEmpty = mode === 'live' && !url
+  // Validate the submitted YouTube URL (only after user clicks Fetch)
+  const validation = useMemo(() => validateYouTubeUrl(submittedUrl), [submittedUrl])
+  const urlError = validation.isValid || !submittedUrl ? null : (validation.errorMessage ?? null)
 
-  // Validate the YouTube URL
-  const validation = useMemo(() => validateYouTubeUrl(url), [url])
-  const urlError = validation.isValid || !url ? null : (validation.errorMessage ?? null)
-
-  // Use validated videoId when the URL is valid
+  // Use validated videoId when the submitted URL is valid
   const videoId = validation.isValid ? validation.videoId : null
 
-  // Handle iframe errors
-  const onIframeError = useCallback((error: ChatIframeError) => {
-    setIframeError(error)
-  }, [])
-
-  // Fallback: switch to testing/demo mode
-  const onSwitchToTesting = useCallback(() => {
-    setIframeError(null)
-    onTabChange('Testing Mode')
-  }, [onTabChange])
+  // Retry fetch
+  const onRetryFetch = useCallback(() => {
+    onFetch()
+  }, [onFetch])
 
   const contextValue: PreviewAreaContext = {
     messages,
@@ -101,14 +94,13 @@ export default function PreviewArea({
     urlError,
     isEmpty,
     injectedCSS,
-    iframeError,
+    videoInfo,
+    fetchStatus,
+    fetchError,
     onTabChange,
     onUrlChange,
     onFetch,
-    onRandomize,
-    onToggle,
-    onIframeError,
-    onSwitchToTesting,
+    onRetryFetch,
   }
 
   return (
@@ -144,20 +136,85 @@ PreviewArea.ToolBar = function PreviewAreaToolBar() {
   )
 }
 
-PreviewArea.LiveBadge = function PreviewAreaLiveBadge() {
-  return <LiveBadge className="right-6 left-auto" />
+PreviewArea.VideoInfo = function PreviewAreaVideoInfo() {
+  const { videoInfo, fetchStatus, onRetryFetch } = usePreviewAreaContext()
+
+  if (!videoInfo || fetchStatus !== 'success') return null
+
+  return (
+    <div className="absolute top-20 left-6 right-6 z-10 flex items-center gap-4 bg-surface-container-lowest/90 backdrop-blur-sm border border-outline-variant rounded-xl p-3">
+      <img
+        src={videoInfo.thumbnailUrl}
+        alt={videoInfo.title}
+        className="w-16 h-9 rounded-lg object-cover flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-label-md font-bold text-on-surface truncate">{videoInfo.title}</p>
+        <a
+          href={videoInfo.authorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-label-sm text-primary hover:underline"
+        >
+          {videoInfo.authorName}
+        </a>
+      </div>
+      <button
+        onClick={onRetryFetch}
+        className="text-label-sm text-primary hover:underline flex-shrink-0"
+      >
+        Refresh
+      </button>
+    </div>
+  )
 }
 
 PreviewArea.Chat = function PreviewAreaChat() {
-  const { messages, mode, videoId, urlError, isEmpty, injectedCSS, onIframeError } =
+  const { messages, mode, videoId, urlError, isEmpty, fetchStatus, fetchError, injectedCSS } =
     usePreviewAreaContext()
 
-  // Live mode with valid video ID → show the actual YouTube iframe
-  if (mode === 'live' && videoId) {
+  // Loading state (fetching video metadata from oEmbed API)
+  if (mode === 'live' && fetchStatus === 'loading') {
     return (
-      <ErrorBoundary onError={(err) => onIframeError({ type: 'unknown', message: err.message })}>
-        <ChatIframe videoId={videoId} injectedCSS={injectedCSS} onError={onIframeError} />
-      </ErrorBoundary>
+      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-label-md text-on-surface-variant">Fetching video info...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state (oEmbed API failed)
+  if (mode === 'live' && fetchStatus === 'error') {
+    return (
+      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+        <span className="material-symbols-outlined text-warning text-[48px] mb-4">link_off</span>
+        <p className="text-body-md text-on-surface font-bold text-center mb-2">
+          Could not load video info
+        </p>
+        <p className="text-label-md text-on-surface-variant text-center max-w-[280px] mb-6">
+          {fetchError}
+        </p>
+      </div>
+    )
+  }
+
+  // Live mode with successful fetch → show available preview options
+  if (mode === 'live' && fetchStatus === 'success' && videoId) {
+    return (
+      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+        <span className="material-symbols-outlined text-primary text-[48px] mb-4">live_tv</span>
+        <p className="text-body-md text-on-surface font-bold text-center mb-2">Live Chat Loaded</p>
+        <p className="text-label-md text-on-surface-variant text-center max-w-[280px] mb-4">
+          Click <span className="font-bold text-on-surface">Live Preview</span> below to open a
+          native Electron window with YouTube's live chat and your CSS injected.
+        </p>
+        <div className="flex items-center gap-2 text-label-sm text-outline">
+          <span className="material-symbols-outlined text-[16px]">info</span>
+          <span>Or use Demo Mode to preview your CSS with mock messages</span>
+        </div>
+      </div>
     )
   }
 
@@ -178,7 +235,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
 
   // Testing mode or no valid video ID → show the preview
   return (
-    <ChatPreview messages={messages} isEmpty={isEmpty}>
+    <ChatPreview messages={messages} isEmpty={isEmpty} css={injectedCSS}>
       <ChatPreview.Header />
       <ChatPreview.Messages />
     </ChatPreview>
@@ -186,22 +243,51 @@ PreviewArea.Chat = function PreviewAreaChat() {
 }
 
 PreviewArea.Actions = function PreviewAreaActions() {
-  const { onRandomize, onToggle, iframeError, onSwitchToTesting } = usePreviewAreaContext()
+  const { fetchStatus, mode, videoId, injectedCSS } = usePreviewAreaContext()
+  const { isElectron, openPreview, updateCSS, closePreview } = useElectronPreview()
+  const [previewOpen, setPreviewOpen] = useState(false)
+
+  // Listen for Electron preview window closing (by user or main process)
+  useEffect(() => {
+    const handleClosed = () => setPreviewOpen(false)
+    window.addEventListener('electron-preview-closed', handleClosed)
+    return () => window.removeEventListener('electron-preview-closed', handleClosed)
+  }, [])
+
+  // Auto-sync CSS to the preview window as the user edits settings (debounced)
+  useEffect(() => {
+    if (!previewOpen || !injectedCSS) return
+    const timer = setTimeout(() => updateCSS(injectedCSS), 300)
+    return () => clearTimeout(timer)
+  }, [previewOpen, injectedCSS, updateCSS])
+
+  const handleLivePreview = useCallback(() => {
+    if (previewOpen) {
+      closePreview()
+      setPreviewOpen(false)
+    } else if (videoId) {
+      openPreview(videoId, injectedCSS)
+      setPreviewOpen(true)
+    }
+  }, [previewOpen, videoId, injectedCSS, openPreview, closePreview])
 
   return (
     <div className="absolute bottom-6 right-6 flex items-center gap-2">
-      {iframeError && (
-        <button
-          onClick={onSwitchToTesting}
-          className="bg-surface-container-lowest border border-outline-variant py-2 px-4 rounded-lg text-label-md font-bold hover:bg-surface-container transition-colors"
-        >
-          Demo Mode
-        </button>
+      {mode === 'live' && fetchStatus === 'success' && (
+        <>
+          {isElectron && (
+            <button
+              onClick={handleLivePreview}
+              className="flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-full text-label-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {previewOpen ? 'close' : 'visibility'}
+              </span>
+              {previewOpen ? 'Close' : 'Live Chat'}
+            </button>
+          )}
+        </>
       )}
-      <ControlButtons onRandomize={onRandomize} onToggle={onToggle}>
-        <ControlButtons.Randomize />
-        <ControlButtons.Toggle />
-      </ControlButtons>
     </div>
   )
 }

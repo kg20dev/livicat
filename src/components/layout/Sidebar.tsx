@@ -44,8 +44,8 @@ export default function Sidebar({
 /* ─── Sub-components (exact HTML classes) ────────────────────────── */
 
 Sidebar.Header = function SidebarHeader({
-  title = 'StreamStyle',
-  subtitle = 'OBS Pro v2.4',
+  title = 'Livicat',
+  subtitle = '0.5',
 }: {
   title?: string
   subtitle?: string

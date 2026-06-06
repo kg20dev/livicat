@@ -153,3 +153,136 @@
     'GRAD' 0,
     'opsz' 24;
 }
+
+/* ─── Enhanced slider styling ────────────────────────────────────── */
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(214, 186, 255, 0.4);
+  transition: all 0.2s ease;
+  border: 2px solid #fff;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(214, 186, 255, 0.6);
+}
+
+.slider-thumb::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(214, 186, 255, 0.4);
+  transition: all 0.2s ease;
+  border: 2px solid #fff;
+}
+
+.slider-thumb::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(214, 186, 255, 0.6);
+}
+
+.slider-thumb::-moz-range-thumb:active {
+  transform: scale(1.1);
+}
+
+/* ─── YouTube chat custom elements (demo mode) ───────────────────── */
+/* Base styles mirror YouTube's production live chat DOM structure.
+   These ensure the demo preview behaves identically to real YouTube chat
+   when CSS injection is applied. */
+
+/* Outer message container — flex row: avatar | content */
+yt-live-chat-text-message-renderer {
+  display: flex;
+  gap: 12px;
+  padding: 4px 24px;
+  align-items: flex-start;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Avatar: yt-img-shadow#author-photo.no-transition > img#img */
+yt-img-shadow#author-photo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+yt-img-shadow#author-photo img#img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Content wrapper: flex column with timestamp, chip, message */
+#content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Timestamp — inline before author chip */
+#timestamp {
+  font-size: 11px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+/* Author chip — inline flex row with name + badges */
+yt-live-chat-author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#author-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+#chat-badges {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Message text */
+#message {
+  font-size: 13px;
+  color: #fff;
+  word-break: break-word;
+}
+
+/* Container structure */
+#chat {
+  overflow-y: auto;
+  height: 100%;
+}
+
+#contents {
+  height: 100%;
+}
+
+#items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

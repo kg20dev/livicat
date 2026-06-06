@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 /* ─── Constants ──────────────────────────────────────────────────── */
 
 /** How long to wait before considering the iframe load as timed out (ms) */
-const IFRAME_TIMEOUT = 30_000
+const IFRAME_TIMEOUT = 10_000
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 
@@ -16,6 +16,8 @@ export type ChatIframeError =
 
 interface ChatIframeProps {
   videoId: string
+  /** Optional custom iframe src URL (used with CORS proxy to bypass X-Frame-Options) */
+  srcUrl?: string
   injectedCSS?: string
   /** Timeout in ms before considering the iframe unresponsive */
   timeout?: number
@@ -32,7 +34,6 @@ function getErrorDisplay(
   onRetry: () => void,
   onSwitchToDemo: () => void
 ): React.ReactElement {
-  const icon = 'error_outline'
   let title: string
   let description: string
 
@@ -64,7 +65,7 @@ function getErrorDisplay(
 
   return (
     <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
-      <span className="material-symbols-outlined text-error text-[48px] mb-4">{icon}</span>
+      <span className="material-symbols-outlined text-error text-[48px] mb-4">error_outline</span>
       <p className="text-body-md text-on-surface font-bold text-center mb-2">{title}</p>
       <p className="text-label-md text-on-surface-variant text-center mb-6 max-w-[280px]">
         {description}
@@ -87,10 +88,9 @@ function getErrorDisplay(
   )
 }
 
-/* ─── Component ──────────────────────────────────────────────────── */
-
 export default function ChatIframe({
   videoId,
+  srcUrl,
   injectedCSS = '',
   timeout = IFRAME_TIMEOUT,
   onLoad,
@@ -227,7 +227,8 @@ export default function ChatIframe({
       >
         <span className="material-symbols-outlined text-outline text-[48px] mb-4">chat_bubble</span>
         <p className="text-body-md text-on-surface-variant text-center">
-          Enter a YouTube URL to load chat
+          Enter a YouTube URL and click{' '}
+          <span className="font-bold text-on-surface">Fetch Chat</span> to load the live chat
         </p>
       </div>
     )
@@ -252,12 +253,15 @@ export default function ChatIframe({
     )
   }
 
+  // Build iframe src: use custom proxy URL if provided, otherwise direct YouTube URL
+  const iframeSrc = srcUrl || `https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`
+
   // Render iframe (keyed by retryCount to force re-mount on retry)
   return (
     <iframe
       key={retryCount}
       ref={iframeRef}
-      src={`https://www.youtube.com/live_chat?v=${videoId}`}
+      src={iframeSrc}
       className={`w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl overflow-hidden ${className}`}
       title="YouTube Live Chat"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
