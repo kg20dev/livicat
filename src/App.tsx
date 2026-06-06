@@ -68,6 +68,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
+  const [generatedCSS, setGeneratedCSS] = useState('')
 
   // Determine mode based on active tab
   const mode: ChatMode = useMemo(() => {
@@ -111,6 +112,7 @@ export default function App() {
               mode={mode}
               activeTab={activeTab}
               url={url}
+              injectedCSS={generatedCSS}
               onTabChange={setActiveTab}
               onUrlChange={setUrl}
               onFetch={() => {
@@ -127,9 +129,7 @@ export default function App() {
             </PreviewArea>
 
             {/* Styling Panel */}
-            <StylingPanel
-              onCSSChange={(css) => console.log('CSS generated:', css.slice(0, 50) + '...')}
-            >
+            <StylingPanel onCSSChange={setGeneratedCSS}>
               <StylingPanel.Header />
               <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-8">
                 {/* Section: Presets */}
