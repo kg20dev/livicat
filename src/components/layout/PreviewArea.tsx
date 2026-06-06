@@ -1,17 +1,65 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import ChatPreview, { type Message } from '../chat/ChatPreview'
+import ChatIframe from '../chat/ChatIframe'
 import LiveBadge from '../ui/LiveBadge'
 import UrlInputBar, { type ChatMode } from '../ui/UrlInputBar'
 import ControlButtons from '../ui/ControlButtons'
 
-/* ─── Context ──────────────────────────────────────────────────── */
+/* ─── Video ID Extraction ───────────────────────────────────────── */
+
+/**
+ * Extract the YouTube video ID from a URL or return the string as-is
+ * if it looks like a short video ID (11 chars, alphanumeric + _-).
+ */
+function extractVideoId(url: string): string | null {
+  if (!url) return null
+
+  const trimmed = url.trim()
+
+  // If it's just an 11-character video ID (standard YouTube ID length)
+  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed
+  }
+
+  try {
+    // Handle full URLs
+    const u = new URL(trimmed)
+
+    // youtube.com/watch?v=VIDEO_ID
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+      // youtu.be/VIDEO_ID
+      if (u.hostname === 'youtu.be') {
+        return u.pathname.slice(1).split('/')[0] || null
+      }
+
+      // youtube.com/watch?v=VIDEO_ID
+      const v = u.searchParams.get('v')
+      if (v) return v
+
+      // youtube.com/embed/VIDEO_ID or youtube.com/live/VIDEO_ID
+      const pathParts = u.pathname.split('/').filter(Boolean)
+      const embedIndex = pathParts.indexOf('embed')
+      if (embedIndex !== -1) return pathParts[embedIndex + 1] || null
+      const liveIndex = pathParts.indexOf('live')
+      if (liveIndex !== -1) return pathParts[liveIndex + 1] || null
+    }
+  } catch {
+    // Not a valid URL, return null
+  }
+
+  return null
+}
+
+/* ─── Context ────────────────────────────────────────────────────── */
 
 interface PreviewAreaContext {
   messages: Message[]
   mode: ChatMode
   activeTab: string
   url: string
+  videoId: string | null
   isEmpty: boolean
+  injectedCSS: string
   onTabChange: (tab: string) => void
   onUrlChange: (url: string) => void
   onFetch: () => void
@@ -27,13 +75,14 @@ function usePreviewAreaContext() {
   return ctx
 }
 
-/* ─── Root ──────────────────────────────────────────────────────── */
+/* ─── Root ────────────────────────────────────────────────────────── */
 
 interface PreviewAreaRootProps {
   messages?: Message[]
   mode?: ChatMode
   activeTab?: string
   url?: string
+  injectedCSS?: string
   onTabChange?: (tab: string) => void
   onUrlChange?: (url: string) => void
   onFetch?: () => void
@@ -48,6 +97,7 @@ export default function PreviewArea({
   mode = 'live',
   activeTab = 'Live/Past Video',
   url = '',
+  injectedCSS = '',
   onTabChange = () => {},
   onUrlChange = () => {},
   onFetch = () => {},
@@ -59,6 +109,9 @@ export default function PreviewArea({
   // Determine if chat should be empty
   const isEmpty = mode === 'live' && !url
 
+  // Extract video ID from URL
+  const videoId = useMemo(() => extractVideoId(url), [url])
+
   return (
     <PreviewAreaContext.Provider
       value={{
@@ -66,7 +119,9 @@ export default function PreviewArea({
         mode,
         activeTab,
         url,
+        videoId,
         isEmpty,
+        injectedCSS,
         onTabChange,
         onUrlChange,
         onFetch,
@@ -83,7 +138,7 @@ export default function PreviewArea({
   )
 }
 
-/* ─── Sub-components (exact HTML classes) ────────────────────────── */
+/* ─── Sub-components ──────────────────────────────────────────────── */
 
 PreviewArea.ToolBar = function PreviewAreaToolBar() {
   const { mode, activeTab, url, onTabChange, onUrlChange, onFetch } = usePreviewAreaContext()
@@ -110,8 +165,14 @@ PreviewArea.LiveBadge = function PreviewAreaLiveBadge() {
 }
 
 PreviewArea.Chat = function PreviewAreaChat() {
-  const { messages, isEmpty } = usePreviewAreaContext()
+  const { messages, mode, videoId, isEmpty, injectedCSS } = usePreviewAreaContext()
 
+  // Live mode with valid video ID → show the actual YouTube iframe
+  if (mode === 'live' && videoId) {
+    return <ChatIframe videoId={videoId} injectedCSS={injectedCSS} />
+  }
+
+  // Testing mode or no valid video ID → show the preview
   return (
     <ChatPreview messages={messages} isEmpty={isEmpty}>
       <ChatPreview.Header />
