@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.5.0",
   "description": "YouTube Live Chat styling editor for OBS browser source overlay — CSS customization, Electron preview, and export tools.",
+  "author": "kg20dev <migorengx@users.noreply.github.com>",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -16,10 +17,11 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "electron": "electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:dev": "./scripts/dev.sh",
     "electron:build": "npm run build && electron-builder",
     "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:win": "npm run build && electron-builder --win"
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:prod": "npm run build && electron ."
   },
   "dependencies": {
     "react": "^18.2.0",
