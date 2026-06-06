@@ -126,184 +126,182 @@ export default function App() {
               <PreviewArea.Actions />
             </PreviewArea>
 
-            {/* Styling Panel (line 364-571) */}
-            <StylingPanel onReset={() => {}} onApply={() => {}}>
+            {/* Styling Panel */}
+            <StylingPanel
+              onCSSChange={(css) => console.log('CSS generated:', css.slice(0, 50) + '...')}
+            >
               <StylingPanel.Header />
               <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-8">
-                {/* Section: Container Styling (line 371-391) */}
-                <StylingPanel.Section icon="settings_overscan" title="Container Styling">
+                {/* Section: Presets */}
+                <StylingPanel.Section icon="auto_awesome" title="Quick Presets">
+                  <StylingPanel.PresetSelector />
+                </StylingPanel.Section>
+
+                {/* Section: Display */}
+                <StylingPanel.Section icon="visibility" title="Display">
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-label-md text-on-surface-variant">Border Glow</span>
-                      <div className="w-10 h-5 bg-primary/20 rounded-full relative cursor-pointer">
-                        <div className="absolute right-1 top-1 w-3 h-3 bg-primary rounded-full" />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-label-md text-on-surface-variant">Drop Shadow</span>
-                      <select className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2 py-1 text-code-sm text-on-surface outline-none">
-                        <option>None</option>
-                        <option selected>Soft XL</option>
-                        <option>Hard</option>
-                      </select>
-                    </div>
+                    <StylingPanel.Toggle settingKey="showAvatars" label="Show Avatars" />
+                    <StylingPanel.Toggle settingKey="showTimestamps" label="Show Timestamps" />
+                    <StylingPanel.Toggle settingKey="autoScroll" label="Auto-scroll" />
+                    <StylingPanel.Toggle settingKey="showGlow" label="Glow Effect" />
+                    <StylingPanel.NumberField
+                      settingKey="maxMessages"
+                      label="Max Messages"
+                      min={10}
+                      max={500}
+                    />
                   </div>
                 </StylingPanel.Section>
 
-                {/* Section: Header Styling (line 392-409) */}
-                <StylingPanel.Section icon="dock_to_bottom" title="Header Styling">
-                  <div className="grid grid-cols-2 gap-3">
-                    <StylingPanel.Field label="Bg Opacity">
-                      <input
-                        type="number"
-                        defaultValue={100}
-                        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none"
-                      />
-                    </StylingPanel.Field>
-                    <StylingPanel.Field label="Text Align">
-                      <div className="flex border border-outline-variant rounded-lg overflow-hidden">
-                        <button className="flex-1 p-1 bg-surface-container-highest">
-                          <span className="material-symbols-outlined text-[18px]">
-                            format_align_left
-                          </span>
-                        </button>
-                        <button className="flex-1 p-1">
-                          <span className="material-symbols-outlined text-[18px]">
-                            format_align_center
-                          </span>
-                        </button>
-                      </div>
-                    </StylingPanel.Field>
-                  </div>
-                </StylingPanel.Section>
-
-                {/* Section: Typography (line 410-440) */}
-                <StylingPanel.Section icon="text_fields" title="Typography">
-                  <div className="space-y-3">
-                    <StylingPanel.Field label="Primary Font">
-                      <select className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all">
-                        <option>Inter</option>
-                        <option>Roboto</option>
-                        <option>JetBrains Mono</option>
-                        <option>Open Sans</option>
-                      </select>
-                    </StylingPanel.Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <StylingPanel.Field label="Size">
-                        <input
-                          type="number"
-                          defaultValue={14}
-                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all"
-                        />
-                      </StylingPanel.Field>
-                      <StylingPanel.Field label="Weight">
-                        <select className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all">
-                          <option>Regular</option>
-                          <option selected>Medium</option>
-                          <option>Bold</option>
-                        </select>
-                      </StylingPanel.Field>
-                    </div>
-                  </div>
-                </StylingPanel.Section>
-
-                {/* Section: Color Palette (line 441-476) */}
+                {/* Section: Color Palette */}
                 <StylingPanel.Section icon="colorize" title="Color Palette">
                   <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { label: 'User Color', color: 'bg-primary', hex: '#A970FF' },
-                      { label: 'Text Color', color: 'bg-white', hex: '#FFFFFF' },
-                      { label: 'Bg Color', color: 'bg-surface', hex: '#131313' },
-                      { label: 'Accent', color: 'bg-red-500', hex: '#FF5555' },
-                    ].map((item) => (
-                      <div key={item.label} className="space-y-2">
-                        <span className="text-label-md text-on-surface-variant block">
-                          {item.label}
-                        </span>
-                        <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
-                          <div className={`w-6 h-6 rounded ${item.color}`} />
-                          <span className="text-code-sm font-code-sm uppercase">{item.hex}</span>
-                        </div>
-                      </div>
-                    ))}
+                    <StylingPanel.ColorField settingKey="backgroundColor" label="Background" />
+                    <StylingPanel.ColorField
+                      settingKey="messageBackgroundColor"
+                      label="Message BG"
+                    />
+                    <StylingPanel.ColorField settingKey="usernameColor" label="Username" />
+                    <StylingPanel.ColorField settingKey="messageColor" label="Message" />
+                    <StylingPanel.ColorField settingKey="timestampColor" label="Timestamp" />
+                    <StylingPanel.ColorField settingKey="accentColor" label="Accent" />
                   </div>
                 </StylingPanel.Section>
 
-                {/* Section: Message Box Styling (line 477-499) */}
-                <StylingPanel.Section icon="chat_bubble" title="Message Box Styling">
+                {/* Section: Typography */}
+                <StylingPanel.Section icon="text_fields" title="Typography">
+                  <div className="space-y-3">
+                    <StylingPanel.Select
+                      settingKey="fontFamily"
+                      label="Font Family"
+                      options={[
+                        { value: 'Inter, sans-serif', label: 'Inter' },
+                        { value: 'Roboto, sans-serif', label: 'Roboto' },
+                        { value: '"JetBrains Mono", monospace', label: 'JetBrains Mono' },
+                        { value: '"Open Sans", sans-serif', label: 'Open Sans' },
+                      ]}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <StylingPanel.NumberField
+                        settingKey="messageFontSize"
+                        label="Message Size"
+                        min={8}
+                        max={48}
+                      />
+                      <StylingPanel.Select
+                        settingKey="usernameFontWeight"
+                        label="Username Weight"
+                        options={[
+                          { value: '400', label: 'Regular' },
+                          { value: '500', label: 'Medium' },
+                          { value: '600', label: 'Semi Bold' },
+                          { value: '700', label: 'Bold' },
+                        ]}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <StylingPanel.NumberField
+                        settingKey="usernameFontSize"
+                        label="Username Size"
+                        min={8}
+                        max={48}
+                      />
+                      <StylingPanel.NumberField
+                        settingKey="timestampFontSize"
+                        label="Timestamp Size"
+                        min={8}
+                        max={48}
+                      />
+                    </div>
+                  </div>
+                </StylingPanel.Section>
+
+                {/* Section: Message Styling */}
+                <StylingPanel.Section icon="chat_bubble" title="Message Styling">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <StylingPanel.Field label="Bubble Radius">
-                        <input
-                          type="number"
-                          defaultValue={8}
-                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none"
-                        />
-                      </StylingPanel.Field>
-                      <StylingPanel.Field label="Border Width">
-                        <input
-                          type="number"
-                          defaultValue={1}
-                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none"
-                        />
-                      </StylingPanel.Field>
+                      <StylingPanel.NumberField
+                        settingKey="messagePadding"
+                        label="Padding"
+                        min={0}
+                        max={32}
+                      />
+                      <StylingPanel.NumberField
+                        settingKey="messageBorderRadius"
+                        label="Border Radius"
+                        min={0}
+                        max={32}
+                      />
                     </div>
-                    <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
-                      <div className="w-6 h-6 rounded bg-primary/10 border border-primary/20" />
-                      <span className="text-code-sm font-code-sm uppercase">#A970FF1A</span>
-                      <span className="text-label-md text-on-surface-variant ml-auto">
-                        Bubble BG
-                      </span>
-                    </div>
+                    <StylingPanel.Select
+                      settingKey="messageSpacing"
+                      label="Spacing"
+                      options={[
+                        { value: 'compact', label: 'Compact' },
+                        { value: 'normal', label: 'Normal' },
+                        { value: 'comfortable', label: 'Comfortable' },
+                      ]}
+                    />
+                    <StylingPanel.Slider
+                      settingKey="messageOpacity"
+                      label="Opacity"
+                      unit="%"
+                      min={0}
+                      max={100}
+                    />
                   </div>
                 </StylingPanel.Section>
 
-                {/* Section: Background (line 500-511) */}
-                <StylingPanel.Section icon="image" title="Background">
-                  <div className="bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors group">
-                    <span className="material-symbols-outlined text-outline group-hover:text-primary mb-2 text-[32px] transition-colors">
-                      cloud_upload
-                    </span>
-                    <p className="text-body-md font-medium">Upload Image</p>
-                    <p className="text-label-md text-on-surface-variant mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-                </StylingPanel.Section>
-
-                {/* Section: Spacing & Radius (line 512-541) */}
-                <StylingPanel.Section icon="space_bar" title="Spacing & Radius">
-                  <div className="space-y-6">
-                    <StylingPanel.Slider label="Message Padding" value={9} unit="px" />
-                    <StylingPanel.Slider label="Corner Radius" value={23} unit="px" />
-                    <StylingPanel.Slider label="Bubble Transparency" value={80} unit="%" />
-                  </div>
-                </StylingPanel.Section>
-
-                {/* Advanced CSS Editor (line 542-547) */}
-                <div className="pt-6 border-t border-outline-variant">
-                  <button className="w-full flex items-center justify-between group text-on-surface-variant hover:text-on-surface transition-colors">
-                    <span className="font-bold">Advanced CSS Editor</span>
-                    <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-
-                {/* Section: Frame & Assets (line 548-563) */}
-                <StylingPanel.Section icon="frame_inspect" title="Frame & Assets">
+                {/* Section: Avatar */}
+                <StylingPanel.Section icon="face" title="Avatar">
                   <div className="space-y-3">
-                    <div className="bg-surface-container-lowest border border-dashed border-outline-variant rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
-                      <span className="material-symbols-outlined text-outline mb-1 text-[24px]">
-                        add_photo_alternate
-                      </span>
-                      <p className="text-label-md font-medium">Import Frame Image</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-label-md text-on-surface-variant">Single Item BG</span>
-                      <button className="text-primary text-label-md font-bold">
-                        Browse Assets
-                      </button>
-                    </div>
+                    <StylingPanel.NumberField
+                      settingKey="avatarSize"
+                      label="Avatar Size"
+                      min={16}
+                      max={64}
+                    />
                   </div>
+                </StylingPanel.Section>
+
+                {/* Section: Scrollbar */}
+                <StylingPanel.Section icon="scroll" title="Scrollbar">
+                  <div className="space-y-3">
+                    <StylingPanel.Slider
+                      settingKey="scrollbarWidth"
+                      label="Width"
+                      unit="px"
+                      min={2}
+                      max={16}
+                    />
+                    <StylingPanel.ColorField settingKey="scrollbarColor" label="Thumb Color" />
+                  </div>
+                </StylingPanel.Section>
+
+                {/* Section: Container */}
+                <StylingPanel.Section icon="settings_overscan" title="Container">
+                  <div className="space-y-3">
+                    <StylingPanel.Slider
+                      settingKey="containerOpacity"
+                      label="Opacity"
+                      unit="%"
+                      min={0}
+                      max={100}
+                    />
+                  </div>
+                </StylingPanel.Section>
+
+                {/* Section: Animation */}
+                <StylingPanel.Section icon="animation" title="Animation">
+                  <StylingPanel.Select
+                    settingKey="animationSpeed"
+                    label="Speed"
+                    options={[
+                      { value: 'none', label: 'None' },
+                      { value: 'slow', label: 'Slow' },
+                      { value: 'normal', label: 'Normal' },
+                    ]}
+                  />
                 </StylingPanel.Section>
               </div>
               <StylingPanel.Actions />
