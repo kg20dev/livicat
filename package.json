@@ -1,7 +1,7 @@
 {
   "name": "livicat",
   "private": true,
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "YouTube Live Chat styling editor for OBS browser source overlay — CSS customization, Electron preview, and export tools.",
   "author": "kg20dev <migorengx@users.noreply.github.com>",
   "type": "module",
@@ -72,7 +72,9 @@
     "icon": "electron-icons/icon.png",
     "asar": true,
     "compression": "maximum",
-    "electronLanguages": ["en"],
+    "electronLanguages": [
+      "en"
+    ],
     "mac": {
       "icon": "electron-icons/macos/icon.icns",
       "category": "public.app-category.utilities",
