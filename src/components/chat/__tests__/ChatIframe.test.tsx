@@ -48,18 +48,14 @@ describe('ChatIframe', () => {
   })
 
   it('applies custom className', () => {
-    const { container } = render(
-      <ChatIframe videoId="test123" className="custom-class" />
-    )
+    const { container } = render(<ChatIframe videoId="test123" className="custom-class" />)
 
     const wrapper = container.querySelector('.glass-panel')
     expect(wrapper?.classList.contains('custom-class')).toBe(true)
   })
 
   it('handles CSS re-injection when CSS changes', () => {
-    const { rerender } = render(
-      <ChatIframe videoId="test123" injectedCSS="body { color: red; }" />
-    )
+    const { rerender } = render(<ChatIframe videoId="test123" injectedCSS="body { color: red; }" />)
 
     // Re-render with different CSS
     rerender(<ChatIframe videoId="test123" injectedCSS="body { color: blue; }" />)
