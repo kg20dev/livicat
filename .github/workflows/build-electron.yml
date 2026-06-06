@@ -39,7 +39,7 @@ jobs:
         id: check_release
         run: |
           SHOULD_RELEASE="false"
-          if [[ "${{ github.ref }}" == refs/tags/v* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.create_release }}" == "true" ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/v* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.create_release }}" == "true" ]] || [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
             SHOULD_RELEASE="true"
           fi
           echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
