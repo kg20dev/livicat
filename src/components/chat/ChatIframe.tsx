@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 interface ChatIframeProps {
   videoId: string
+  injectedCSS?: string
   onLoad?: () => void
   onError?: (error: Error) => void
   className?: string
@@ -11,7 +12,13 @@ interface ChatIframeProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 
-export default function ChatIframe({ videoId, onLoad, onError, className = '' }: ChatIframeProps) {
+export default function ChatIframe({
+  videoId,
+  injectedCSS = '',
+  onLoad,
+  onError,
+  className = '',
+}: ChatIframeProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -26,6 +33,48 @@ export default function ChatIframe({ videoId, onLoad, onError, className = '' }:
     setIsLoading(true)
     setHasError(false)
   }, [videoId])
+
+  // Inject CSS into iframe when it loads
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe || !videoId || !injectedCSS) return
+
+    const injectCSS = () => {
+      try {
+        const doc = iframe.contentWindow?.document
+        if (!doc) {
+          console.warn('Cannot access iframe document (cross-origin)')
+          return
+        }
+
+        // Remove existing style element if present
+        const existingStyle = doc.head.querySelector('#injected-chat-css')
+        if (existingStyle) {
+          doc.head.removeChild(existingStyle)
+        }
+
+        // Create new style element
+        const styleElement = doc.createElement('style')
+        styleElement.id = 'injected-chat-css'
+        styleElement.textContent = injectedCSS
+
+        // Append to head
+        doc.head.appendChild(styleElement)
+
+        console.log('CSS injected successfully into iframe')
+      } catch (error) {
+        console.error('Failed to inject CSS into iframe:', error)
+        onError?.(error as Error)
+      }
+    }
+
+    // Inject CSS after iframe loads
+    iframe.addEventListener('load', injectCSS, { once: true })
+
+    return () => {
+      iframe.removeEventListener('load', injectCSS)
+    }
+  }, [videoId, injectedCSS, onError])
 
   // Handle iframe load
   useEffect(() => {
