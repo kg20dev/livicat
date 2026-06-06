@@ -1,0 +1,635 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>StreamStyle | YouTube Live Chat CSS Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#292a2a",
+                        "surface-tint": "#d6baff",
+                        "outline": "#968d9f",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "primary-fixed-dim": "#d6baff",
+                        "on-error-container": "#ffdad6",
+                        "inverse-on-surface": "#313030",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c8c6c6",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-error": "#690005",
+                        "surface-bright": "#393939",
+                        "on-tertiary": "#303030",
+                        "tertiary-fixed": "#e4e2e1",
+                        "on-background": "#e5e2e1",
+                        "on-primary": "#430089",
+                        "on-secondary-container": "#b6b5b4",
+                        "surface": "#131313",
+                        "surface-dim": "#131313",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "secondary": "#c8c6c6",
+                        "tertiary-container": "#919090",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "background": "#131313",
+                        "on-primary-fixed": "#280056",
+                        "on-secondary": "#303030",
+                        "on-primary-container": "#3a0078",
+                        "tertiary": "#c8c6c6",
+                        "primary-fixed": "#ecdcff",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-highest": "#353534",
+                        "secondary-container": "#474747",
+                        "primary-container": "#ab73ff",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#201f1f",
+                        "on-surface-variant": "#cdc3d6",
+                        "outline-variant": "#4b4453",
+                        "on-primary-fixed-variant": "#5e1ab1",
+                        "primary": "#d6baff",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-variant": "#353534",
+                        "inverse-primary": "#763bca",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "panel-padding": "12px",
+                        "stack-gap": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "code-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3F3F3F; border-radius: 2px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #555; }
+        
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .inner-glow-stroke {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-preview-container {
+            background-image: linear-gradient(to bottom right, rgba(20, 20, 20, 1), rgba(10, 10, 10, 1));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-preview-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(169, 112, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md overflow-hidden h-screen select-none">
+<!-- SideNavBar -->
+<aside class="h-screen w-[280px] fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col py-panel-padding z-[60]">
+<div class="px-gutter mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">StreamStyle</h1>
+<p class="text-on-surface-variant font-label-md text-label-md">OBS Pro v2.4</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-2 border-primary bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+<span class="">Workspace</span>
+</a>
+
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-colors duration-200 active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span class="">Assets</span>
+</a>
+
+
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-95">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                Export CSS
+            </button>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="h-16 fixed top-0 right-0 left-[280px] z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin">
+<div class="flex items-center gap-4">
+<span class="font-headline-sm text-headline-sm font-black text-on-surface">Live Chat Studio</span>
+<div class="h-6 w-px bg-outline-variant"></div>
+<div class="flex items-center bg-surface-container-high px-3 py-1.5 rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none outline-none text-body-md w-48 placeholder:text-on-surface-variant" placeholder="Search templates..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-bold hover:opacity-90 active:opacity-80 transition-all">
+                Go Live
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[280px] pt-16 h-screen flex">
+<!-- Left Column: Live Preview Area -->
+<section class="flex-1 chat-preview-container flex flex-col items-center justify-center p-container-margin relative"><div class="absolute top-16 left-0 right-0 px-6 flex flex-col gap-3 z-10">
+    <div class="flex items-center justify-between bg-surface-container-low/80 backdrop-blur-md border border-outline-variant p-1.5 rounded-xl w-full max-w-[600px] mx-auto shadow-lg">
+        <div class="flex bg-surface-container-highest rounded-lg p-1 gap-1">
+            <button class="px-4 py-1.5 rounded-md text-label-md font-bold bg-primary text-on-primary transition-all">Live/Past Video</button>
+            <button class="px-4 py-1.5 rounded-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all">Testing Mode</button>
+        </div>
+        <div class="flex-1 flex items-center gap-2 ml-4">
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">link</span>
+                <input type="text" placeholder="Paste YouTube URL..." class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-3 py-1.5 text-body-md outline-none focus:border-primary transition-colors">
+            </div>
+            <button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-1.5 rounded-lg text-label-md font-bold transition-all border border-primary/20">Fetch Chat</button>
+        </div>
+    </div>
+</div>
+<div class="absolute top-4 left-6 flex items-center gap-3">
+<span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+<span class="text-label-md font-bold text-white tracking-widest">LIVE PREVIEW</span>
+</div>
+<!-- Simulated Chat Box -->
+<div class="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col overflow-hidden">
+<div class="p-4 border-b border-white/5 flex items-center justify-between">
+<span class="font-bold text-on-surface">Top Chat</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" id="chat-messages"><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=58" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">NeonNights</span>
+                    <p class="text-body-md text-on-surface mt-0.5">How do I save this theme?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=16" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">NeonNights</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=70" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">StreamKing</span>
+                    <p class="text-body-md text-on-surface mt-0.5">This editor is a lifesaver!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=82" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">StreamKing</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Can we get more animations?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=5" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">GamerPro_99</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Can we get more animations?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=33" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">NeonNights</span>
+                    <p class="text-body-md text-on-surface mt-0.5">This editor is a lifesaver!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=11" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">GamerPro_99</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=26" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=80" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Can we get more animations?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=13" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">This editor is a lifesaver!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=25" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">StreamKing</span>
+                    <p class="text-body-md text-on-surface mt-0.5">This editor is a lifesaver!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=90" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">GamerPro_99</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=75" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Can we get more animations?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=40" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">GamerPro_99</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=85" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">CodeMaster</span>
+                    <p class="text-body-md text-on-surface mt-0.5">This editor is a lifesaver!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=46" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">StreamKing</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Can we get more animations?</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=96" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">CodeMaster</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=11" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=70" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">StreamKing</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=38" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">NeonNights</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=92" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">VibeCheck</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Check out my new stream setup!</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=85" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">CodeMaster</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div><div class="flex gap-3 items-start group transition-all duration-500">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">NeonNights</span>
+                    <p class="text-body-md text-on-surface mt-0.5">Loving the typography options.</p>
+                </div>
+            </div></div>
+</div>
+<div class="flex gap-4 mt-4">
+<button class="bg-surface-container hover:bg-surface-container-high px-4 py-2 rounded border border-outline-variant flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+                    Randomize Chat
+                </button>
+<button class="bg-surface-container hover:bg-surface-container-high px-4 py-2 rounded border border-outline-variant flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+                    Toggle UI
+                </button>
+</div>
+</section>
+<!-- Right Column: Styling Panel -->
+<aside class="w-[360px] bg-surface-container border-l border-outline-variant flex flex-col h-full overflow-hidden">
+<div class="p-gutter border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-title-lg text-title-lg text-on-surface">Styling Panel</h2>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-icon="history">history</span>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-8">
+<!-- Section: Typography -->
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">settings_overscan</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Container Styling</h3>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-label-md text-on-surface-variant">Border Glow</span>
+<div class="w-10 h-5 bg-primary/20 rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-3 h-3 bg-primary rounded-full"></div>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-label-md text-on-surface-variant">Drop Shadow</span>
+<select class="bg-surface-container-lowest border border-outline-variant rounded-lg px-2 py-1 text-code-sm text-on-surface outline-none">
+<option>None</option>
+<option selected="">Soft XL</option>
+<option>Hard</option>
+</select>
+</div>
+</div>
+</div><div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">dock_to_bottom</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Header Styling</h3>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Bg Opacity</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none" type="number" value="100">
+</label>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Text Align</span>
+<div class="flex border border-outline-variant rounded-lg overflow-hidden">
+<button class="flex-1 p-1 bg-surface-container-highest"><span class="material-symbols-outlined text-[18px]">format_align_left</span></button>
+<button class="flex-1 p-1"><span class="material-symbols-outlined text-[18px]">format_align_center</span></button>
+</div>
+</label>
+</div>
+</div><div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="text_fields">text_fields</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Typography</h3>
+</div>
+<div class="space-y-3">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Primary Font</span>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all">
+<option>Inter</option>
+<option>Roboto</option>
+<option>JetBrains Mono</option>
+<option>Open Sans</option>
+</select>
+</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Size</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all" type="number" value="14">
+</label>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Weight</span>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all">
+<option>Regular</option>
+<option selected="">Medium</option>
+<option>Bold</option>
+</select>
+</label>
+</div>
+</div>
+</div>
+<!-- Section: Colors -->
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="colorize">colorize</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Color Palette</h3>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<span class="text-label-md text-on-surface-variant block">User Color</span>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+<div class="w-6 h-6 rounded bg-primary"></div>
+<span class="text-code-sm font-code-sm uppercase">#A970FF</span>
+</div>
+</div>
+<div class="space-y-2">
+<span class="text-label-md text-on-surface-variant block">Text Color</span>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+<div class="w-6 h-6 rounded bg-white"></div>
+<span class="text-code-sm font-code-sm uppercase">#FFFFFF</span>
+</div>
+</div>
+<div class="space-y-2">
+<span class="text-label-md text-on-surface-variant block">Bg Color</span>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+<div class="w-6 h-6 rounded bg-surface"></div>
+<span class="text-code-sm font-code-sm uppercase">#131313</span>
+</div>
+</div>
+<div class="space-y-2">
+<span class="text-label-md text-on-surface-variant block">Accent</span>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+<div class="w-6 h-6 rounded bg-red-500"></div>
+<span class="text-code-sm font-code-sm uppercase">#FF5555</span>
+</div>
+</div>
+</div>
+</div><div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">chat_bubble</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Message Box Styling</h3>
+</div>
+<div class="space-y-3">
+<div class="grid grid-cols-2 gap-3">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Bubble Radius</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none" type="number" value="8">
+</label>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Border Width</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface outline-none" type="number" value="1">
+</label>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+<div class="w-6 h-6 rounded bg-primary/10 border border-primary/20"></div>
+<span class="text-code-sm font-code-sm uppercase">#A970FF1A</span>
+<span class="text-label-md text-on-surface-variant ml-auto">Bubble BG</span>
+</div>
+</div>
+</div>
+<!-- Section: Background -->
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="image">image</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Background</h3>
+</div>
+<div class="bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors group">
+<span class="material-symbols-outlined text-outline group-hover:text-primary mb-2 text-[32px] transition-colors" data-icon="cloud_upload">cloud_upload</span>
+<p class="text-body-md font-medium">Upload Image</p>
+<p class="text-label-md text-on-surface-variant mt-1">PNG, JPG up to 5MB</p>
+</div>
+</div>
+<!-- Section: Spacing -->
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="space_bar">space_bar</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Spacing &amp; Radius</h3>
+</div>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-label-md text-on-surface-variant">Message Padding</span>
+<span class="text-label-md font-bold text-primary">9px</span>
+</div>
+<input class="w-full accent-primary bg-outline-variant h-1 rounded-full appearance-none cursor-pointer" type="range">
+</div>
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-label-md text-on-surface-variant">Corner Radius</span>
+<span class="text-label-md font-bold text-primary">23px</span>
+</div>
+<input class="w-full accent-primary bg-outline-variant h-1 rounded-full appearance-none cursor-pointer" type="range">
+</div>
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-label-md text-on-surface-variant">Bubble Transparency</span>
+<span class="text-label-md font-bold text-primary">80%</span>
+</div>
+<input class="w-full accent-primary bg-outline-variant h-1 rounded-full appearance-none cursor-pointer" type="range">
+</div>
+</div>
+</div>
+<!-- Section: Advanced -->
+<div class="pt-6 border-t border-outline-variant">
+<button class="w-full flex items-center justify-between group text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="font-bold">Advanced CSS Editor</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="chevron_right">chevron_right</span>
+</button>
+</div><div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">frame_inspect</span>
+<h3 class="text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Frame &amp; Assets</h3>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-container-lowest border border-dashed border-outline-variant rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-outline mb-1 text-[24px]">add_photo_alternate</span>
+<p class="text-label-md font-medium">Import Frame Image</p>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-label-md text-on-surface-variant">Single Item BG</span>
+<button class="text-primary text-label-md font-bold">Browse Assets</button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-gutter bg-surface-container-high border-t border-outline-variant">
+<div class="flex gap-2">
+<button class="flex-1 bg-surface-container-lowest border border-outline-variant py-2.5 rounded-lg font-bold hover:bg-surface-container transition-colors">Reset</button>
+<button class="flex-1 bg-primary text-on-primary py-2.5 rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">Apply</button>
+</div>
+</div>
+</aside>
+</main>
+<script>
+        // Micro-interactions and simulation logic
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const val = e.target.value;
+                const display = e.target.parentElement.querySelector('span:last-child');
+                if (display) {
+                    if (e.target.parentElement.innerText.includes('Transparency')) {
+                        display.innerText = val + '%';
+                    } else {
+                        display.innerText = (val / 4).toFixed(0) + 'px';
+                    }
+                }
+            });
+        });
+
+        // Simulating incoming chat messages periodically
+        const names = ['StreamKing', 'VibeCheck', 'CodeMaster', 'GamerPro_99', 'NeonNights'];
+        const messages = [
+            'How do I save this theme?',
+            'This editor is a lifesaver!',
+            'Loving the typography options.',
+            'Can we get more animations?',
+            'Check out my new stream setup!'
+        ];
+
+        function addMessage() {
+            const chatBox = document.getElementById('chat-messages');
+            if (!chatBox) return;
+
+            const name = names[Math.floor(Math.random() * names.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            const avatarId = Math.floor(Math.random() * 100);
+
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 items-start group opacity-0 translate-y-2 transition-all duration-500';
+            div.innerHTML = `
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarId}" class="w-8 h-8 rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-label-md font-bold text-on-surface-variant">${name}</span>
+                    <p class="text-body-md text-on-surface mt-0.5">${message}</p>
+                </div>
+            `;
+            
+            chatBox.appendChild(div);
+            
+            // Trigger animation
+            setTimeout(() => {
+                div.classList.remove('opacity-0', 'translate-y-2');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 50);
+
+            // Limit messages to 10
+            if (chatBox.children.length > 10) {
+                chatBox.removeChild(chatBox.firstChild);
+            }
+        }
+
+        setInterval(addMessage, 8000);
+    </script>
+
+
+</body></html>

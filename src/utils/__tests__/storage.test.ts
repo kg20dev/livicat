@@ -30,14 +30,18 @@ describe('storage', () => {
 
     it('returns null when localStorage is unavailable', () => {
       const originalGetItem = Storage.prototype.getItem
-      Storage.prototype.getItem = () => { throw new Error('Storage unavailable') }
+      Storage.prototype.getItem = () => {
+        throw new Error('Storage unavailable')
+      }
       expect(getStoredApiKey()).toBeNull()
       Storage.prototype.getItem = originalGetItem
     })
 
     it('handles setItem errors gracefully', () => {
       const originalSetItem = Storage.prototype.setItem
-      Storage.prototype.setItem = () => { throw new Error('Quota exceeded') }
+      Storage.prototype.setItem = () => {
+        throw new Error('Quota exceeded')
+      }
       expect(() => storeApiKey('test-key')).not.toThrow()
       Storage.prototype.setItem = originalSetItem
     })

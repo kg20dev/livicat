@@ -96,9 +96,7 @@ describe('ChatPollingService', () => {
 
       await service.startPolling('video-id')
 
-      expect(onError).toHaveBeenCalledWith(
-        expect.stringContaining('not live')
-      )
+      expect(onError).toHaveBeenCalledWith(expect.stringContaining('not live'))
     })
 
     it('returns true and starts polling when chat is available', async () => {

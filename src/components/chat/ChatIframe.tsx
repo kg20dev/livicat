@@ -11,12 +11,7 @@ interface ChatIframeProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 
-export default function ChatIframe({
-  videoId,
-  onLoad,
-  onError,
-  className = '',
-}: ChatIframeProps) {
+export default function ChatIframe({ videoId, onLoad, onError, className = '' }: ChatIframeProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -63,9 +58,7 @@ export default function ChatIframe({
       <div
         className={`w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center ${className}`}
       >
-        <span className="material-symbols-outlined text-outline text-[48px] mb-4">
-          chat_bubble
-        </span>
+        <span className="material-symbols-outlined text-outline text-[48px] mb-4">chat_bubble</span>
         <p className="text-body-md text-on-surface-variant text-center">
           Enter a YouTube URL to load chat
         </p>
@@ -79,9 +72,7 @@ export default function ChatIframe({
       <div
         className={`w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center ${className}`}
       >
-        <span className="material-symbols-outlined text-error text-[48px] mb-4">
-          error_outline
-        </span>
+        <span className="material-symbols-outlined text-error text-[48px] mb-4">error_outline</span>
         <p className="text-body-md text-on-surface-variant text-center">
           Failed to load YouTube chat
         </p>

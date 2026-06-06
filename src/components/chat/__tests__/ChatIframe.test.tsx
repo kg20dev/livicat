@@ -39,9 +39,7 @@ describe('ChatIframe', () => {
   })
 
   it('applies custom className', () => {
-    const { container } = render(
-      <ChatIframe videoId="test123" className="custom-class" />
-    )
+    const { container } = render(<ChatIframe videoId="test123" className="custom-class" />)
 
     const wrapper = container.querySelector('.glass-panel')
     expect(wrapper?.classList.contains('custom-class')).toBe(true)

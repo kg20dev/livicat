@@ -13,10 +13,10 @@ import type { YouTubeChatMessage } from '../types/youtube'
 export interface PollingOptions {
   onError?: (error: string) => void
   onNewMessages?: (messages: YouTubeChatMessage[]) => void
-  onStreamEnd?: () => void        // Called when the live stream ends
-  onPollingStart?: () => void     // Called when polling begins
-  onPollingStop?: () => void      // Called when polling stops (intentional or error)
-  pollingBuffer?: number          // Additional buffer time beyond YouTube's interval (ms)
+  onStreamEnd?: () => void // Called when the live stream ends
+  onPollingStart?: () => void // Called when polling begins
+  onPollingStop?: () => void // Called when polling stops (intentional or error)
+  pollingBuffer?: number // Additional buffer time beyond YouTube's interval (ms)
 }
 
 export interface PollingResult {
@@ -113,7 +113,7 @@ export class ChatPollingService {
   /** Get all cached messages in order */
   getMessages(): YouTubeChatMessage[] {
     return this.messageIds
-      .map(id => this.messageCache.get(id))
+      .map((id) => this.messageCache.get(id))
       .filter((msg): msg is YouTubeChatMessage => msg !== undefined)
   }
 
@@ -176,8 +176,7 @@ export class ChatPollingService {
         this.currentPageToken = result.nextPageToken
 
         // Calculate polling interval with buffer
-        const pollingInterval =
-          result.pollingIntervalMillis + (this.options.pollingBuffer ?? 1000)
+        const pollingInterval = result.pollingIntervalMillis + (this.options.pollingBuffer ?? 1000)
 
         await this.sleep(pollingInterval)
       } catch (error) {
@@ -211,7 +210,7 @@ export class ChatPollingService {
 
   /** Sleep helper */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 
