@@ -11,3 +11,4 @@ export {
   type ScrollbarSettings,
   type GeneralSettings,
 } from './cssGenerator'
+export { generateOBSCSS, downloadCSSFile } from './cssExport'
