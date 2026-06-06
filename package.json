@@ -23,12 +23,11 @@
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:prod": "npm run build && electron ."
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.17.0"
-  },
-  "devDependencies": {
+    "react-router-dom": "^7.17.0",
     "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -72,6 +71,8 @@
     ],
     "icon": "electron-icons/icon.png",
     "asar": true,
+    "compression": "maximum",
+    "electronLanguages": ["en"],
     "mac": {
       "icon": "electron-icons/macos/icon.icns",
       "category": "public.app-category.utilities",
