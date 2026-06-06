@@ -258,11 +258,7 @@ export default function App() {
                 <StylingPanel.Header />
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-1">
                   {/* Hero Section: Quick Presets */}
-                  <StylingPanel.HeroSection
-                    icon="auto_awesome"
-                    title="Quick Presets"
-
-                  >
+                  <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets">
                     <StylingPanel.PresetSelector />
                   </StylingPanel.HeroSection>
 
@@ -293,187 +289,184 @@ export default function App() {
                   {/* Section: Body */}
                   <StylingPanel.Section icon="view_stream" title="Body">
                     <div className="space-y-2">
-                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                         <StylingPanel.Toggle
-                           settingKey="showScrollButton"
-                           label="Show Scroll Button"
-                         />
-                         <StylingPanel.Toggle settingKey="autoScroll" label="Auto-scroll" />
-                       </div>
-                       <StylingPanel.ColorField
-                         settingKey="scrollButtonBackground"
-                         label="Scroll Button Background"
-                       />
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.ColorField settingKey="scrollButtonColor" label="Icon" />
-                         <StylingPanel.Slider
-                           settingKey="scrollButtonBorderRadius"
-                           label="Rounded"
-                           unit="px"
-                           min={0}
-                           max={30}
-                         />
-                       </div>
-                       <StylingPanel.Slider
-                         settingKey="scrollButtonOpacity"
-                         label="Opacity"
-                         unit="%"
-                         min={0}
-                         max={100}
-                       />
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <StylingPanel.Toggle
+                          settingKey="showScrollButton"
+                          label="Show Scroll Button"
+                        />
+                        <StylingPanel.Toggle settingKey="autoScroll" label="Auto-scroll" />
+                      </div>
+                      <StylingPanel.ColorField
+                        settingKey="scrollButtonBackground"
+                        label="Scroll Button Background"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.ColorField settingKey="scrollButtonColor" label="Icon" />
+                        <StylingPanel.Slider
+                          settingKey="scrollButtonBorderRadius"
+                          label="Rounded"
+                          unit="px"
+                          min={0}
+                          max={30}
+                        />
+                      </div>
+                      <StylingPanel.Slider
+                        settingKey="scrollButtonOpacity"
+                        label="Opacity"
+                        unit="%"
+                        min={0}
+                        max={100}
+                      />
                     </div>
                   </StylingPanel.Section>
 
-                   {/* Section: Message */}
-                   <StylingPanel.Section icon="chat_bubble" title="Message">
-                     <div className="space-y-2">
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.ColorField
-                           settingKey="messageBackgroundColor"
-                           label="Background"
-                         />
-                         <StylingPanel.ColorField settingKey="messageColor" label="Text" />
-                       </div>
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.NumberField
-                           settingKey="messagePadding"
-                           label="Padding"
-                           min={0}
-                           max={32}
-                         />
-                         <StylingPanel.NumberField
-                           settingKey="messageBorderRadius"
-                           label="Radius"
-                           min={0}
-                           max={32}
-                         />
-                       </div>
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.Select
-                           settingKey="messageSpacing"
-                           label="Spacing"
-                           options={[
-                             { value: 'compact', label: 'Compact' },
-                             { value: 'normal', label: 'Normal' },
-                             { value: 'comfortable', label: 'Comfortable' },
-                           ]}
-                         />
-                         <StylingPanel.Slider
-                           settingKey="messageOpacity"
-                           label="Opacity"
-                           unit="%"
-                           min={0}
-                           max={100}
-                         />
-                       </div>
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.Toggle settingKey="showAvatars" label="Avatars" />
-                         <StylingPanel.Toggle settingKey="showTimestamps" label="Timestamps" />
-                         <StylingPanel.Toggle
-                           settingKey="showEngagementMessages"
-                           label="Engagement"
-                         />
-                         <StylingPanel.Toggle
-                           settingKey="showChatDisclaimer"
-                           label="Disclaimer"
-                         />
-                       </div>
-                       <StylingPanel.NumberField
-                         settingKey="maxMessages"
-                         label="Max Messages"
-                         min={10}
-                         max={500}
-                       />
-                     </div>
-                   </StylingPanel.Section>
-
-                   {/* Section: Avatar */}
-                   <StylingPanel.Section icon="face" title="Avatar">
-                     <div className="space-y-2">
-                       <StylingPanel.NumberField
-                         settingKey="avatarSize"
-                         label="Avatar Size"
-                         min={16}
-                         max={64}
-                       />
-                     </div>
-                   </StylingPanel.Section>
-
-                   {/* Section: Typography */}
-                   <StylingPanel.Section icon="text_fields" title="Typography">
-                     <div className="space-y-2">
-                       <StylingPanel.Select
-                         settingKey="fontFamily"
-                         label="Font Family"
-                         options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
-                       />
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.ColorField settingKey="usernameColor" label="Username" />
-                         <StylingPanel.ColorField settingKey="timestampColor" label="Timestamp" />
-                       </div>
-                       <div className="grid grid-cols-2 gap-3">
-                         <StylingPanel.NumberField
-                           settingKey="messageFontSize"
-                           label="Message"
-                           min={8}
-                           max={48}
-                         />
-                         <StylingPanel.NumberField
-                           settingKey="usernameFontSize"
-                           label="Username"
-                           min={8}
-                           max={48}
-                         />
-                         <StylingPanel.NumberField
-                           settingKey="timestampFontSize"
-                           label="Timestamp"
-                           min={8}
-                           max={48}
-                         />
-                         <StylingPanel.Select
-                           settingKey="usernameFontWeight"
-                           label="Username Weight"
-                           options={[
-                             { value: '400', label: 'Regular' },
-                             { value: '500', label: 'Medium' },
-                             { value: '600', label: 'Semi Bold' },
-                             { value: '700', label: 'Bold' },
-                           ]}
-                         />
-                       </div>
-                     </div>
-                   </StylingPanel.Section>
-
-                   {/* Section: Scrollbar */}
-                   <StylingPanel.Section icon="scroll" title="Scrollbar">
-                     <div className="space-y-2">
-                       <StylingPanel.Slider
-                         settingKey="scrollbarWidth"
-                         label="Width"
-                         unit="px"
-                         min={2}
-                         max={16}
-                       />
-                       <StylingPanel.ColorField settingKey="scrollbarColor" label="Thumb Color" />
-                     </div>
-                   </StylingPanel.Section>
-
-                    {/* Section: Animation */}
-                    <StylingPanel.Section icon="animation" title="Animation">
-                      <div className="space-y-2">
-                        <StylingPanel.Toggle settingKey="showGlow" label="Glow Effect" />
+                  {/* Section: Message */}
+                  <StylingPanel.Section icon="chat_bubble" title="Message">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.ColorField
+                          settingKey="messageBackgroundColor"
+                          label="Background"
+                        />
+                        <StylingPanel.ColorField settingKey="messageColor" label="Text" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.NumberField
+                          settingKey="messagePadding"
+                          label="Padding"
+                          min={0}
+                          max={32}
+                        />
+                        <StylingPanel.NumberField
+                          settingKey="messageBorderRadius"
+                          label="Radius"
+                          min={0}
+                          max={32}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
                         <StylingPanel.Select
-                          settingKey="animationSpeed"
-                          label="Speed"
+                          settingKey="messageSpacing"
+                          label="Spacing"
                           options={[
-                            { value: 'none', label: 'None' },
-                            { value: 'slow', label: 'Slow' },
+                            { value: 'compact', label: 'Compact' },
                             { value: 'normal', label: 'Normal' },
+                            { value: 'comfortable', label: 'Comfortable' },
                           ]}
                         />
-                        <StylingPanel.AnimationStyleSelector />
+                        <StylingPanel.Slider
+                          settingKey="messageOpacity"
+                          label="Opacity"
+                          unit="%"
+                          min={0}
+                          max={100}
+                        />
                       </div>
-                    </StylingPanel.Section>
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.Toggle settingKey="showAvatars" label="Avatars" />
+                        <StylingPanel.Toggle settingKey="showTimestamps" label="Timestamps" />
+                        <StylingPanel.Toggle
+                          settingKey="showEngagementMessages"
+                          label="Engagement"
+                        />
+                        <StylingPanel.Toggle settingKey="showChatDisclaimer" label="Disclaimer" />
+                      </div>
+                      <StylingPanel.NumberField
+                        settingKey="maxMessages"
+                        label="Max Messages"
+                        min={10}
+                        max={500}
+                      />
+                    </div>
+                  </StylingPanel.Section>
+
+                  {/* Section: Avatar */}
+                  <StylingPanel.Section icon="face" title="Avatar">
+                    <div className="space-y-2">
+                      <StylingPanel.NumberField
+                        settingKey="avatarSize"
+                        label="Avatar Size"
+                        min={16}
+                        max={64}
+                      />
+                    </div>
+                  </StylingPanel.Section>
+
+                  {/* Section: Typography */}
+                  <StylingPanel.Section icon="text_fields" title="Typography">
+                    <div className="space-y-2">
+                      <StylingPanel.Select
+                        settingKey="fontFamily"
+                        label="Font Family"
+                        options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.ColorField settingKey="usernameColor" label="Username" />
+                        <StylingPanel.ColorField settingKey="timestampColor" label="Timestamp" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <StylingPanel.NumberField
+                          settingKey="messageFontSize"
+                          label="Message"
+                          min={8}
+                          max={48}
+                        />
+                        <StylingPanel.NumberField
+                          settingKey="usernameFontSize"
+                          label="Username"
+                          min={8}
+                          max={48}
+                        />
+                        <StylingPanel.NumberField
+                          settingKey="timestampFontSize"
+                          label="Timestamp"
+                          min={8}
+                          max={48}
+                        />
+                        <StylingPanel.Select
+                          settingKey="usernameFontWeight"
+                          label="Username Weight"
+                          options={[
+                            { value: '400', label: 'Regular' },
+                            { value: '500', label: 'Medium' },
+                            { value: '600', label: 'Semi Bold' },
+                            { value: '700', label: 'Bold' },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </StylingPanel.Section>
+
+                  {/* Section: Scrollbar */}
+                  <StylingPanel.Section icon="scroll" title="Scrollbar">
+                    <div className="space-y-2">
+                      <StylingPanel.Slider
+                        settingKey="scrollbarWidth"
+                        label="Width"
+                        unit="px"
+                        min={2}
+                        max={16}
+                      />
+                      <StylingPanel.ColorField settingKey="scrollbarColor" label="Thumb Color" />
+                    </div>
+                  </StylingPanel.Section>
+
+                  {/* Section: Animation */}
+                  <StylingPanel.Section icon="animation" title="Animation">
+                    <div className="space-y-2">
+                      <StylingPanel.Toggle settingKey="showGlow" label="Glow Effect" />
+                      <StylingPanel.Select
+                        settingKey="animationSpeed"
+                        label="Speed"
+                        options={[
+                          { value: 'none', label: 'None' },
+                          { value: 'slow', label: 'Slow' },
+                          { value: 'normal', label: 'Normal' },
+                        ]}
+                      />
+                      <StylingPanel.AnimationStyleSelector />
+                    </div>
+                  </StylingPanel.Section>
                 </div>
               </StylingPanel>
             </>

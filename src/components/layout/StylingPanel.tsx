@@ -34,8 +34,7 @@ export default function StylingPanel({
   children,
   className = '',
 }: StylingPanelRootProps) {
-  const { settings, updateSetting, updateSettings, savedIndicator } =
-    useChatSettings()
+  const { settings, updateSetting, updateSettings, savedIndicator } = useChatSettings()
 
   const currentCSS = useMemo(() => settingsToCSS(settings), [settings])
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
@@ -116,7 +115,9 @@ StylingPanel.Section = function StylingPanelSection({
     <div className="relative">
       {/* Section header - minimal */}
       <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{icon}</span>
+        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+          {icon}
+        </span>
         <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
       </div>
 
@@ -138,7 +139,9 @@ StylingPanel.Field = function StylingPanelField({
 }) {
   return (
     <label className="block cursor-pointer">
-      <span className="text-label-md text-on-surface-variant mb-1.5 block font-medium">{label}</span>
+      <span className="text-label-md text-on-surface-variant mb-1.5 block font-medium">
+        {label}
+      </span>
       {children}
     </label>
   )
@@ -156,7 +159,9 @@ StylingPanel.ControlGroup = function StylingPanelControlGroup({
     <div className="space-y-2">
       {label && (
         <div className="flex items-center gap-1.5 py-1">
-          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/70">tune</span>
+          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/70">
+            tune
+          </span>
           <span className="text-label-sm font-medium text-on-surface-variant/80 uppercase tracking-wide">
             {label}
           </span>
@@ -234,7 +239,9 @@ StylingPanel.Toggle = function StylingPanelToggle({
       <button
         onClick={() => updateSetting(settingKey, !value as ChatSettings[typeof settingKey])}
         className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-200 ease-out ${
-          value ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-surface-container-highest hover:bg-outline'
+          value
+            ? 'bg-primary shadow-lg shadow-primary/30'
+            : 'bg-surface-container-highest hover:bg-outline'
         }`}
       >
         <div
@@ -315,7 +322,12 @@ StylingPanel.Select = function StylingPanelSelect({
           updateSetting(settingKey, e.target.value as ChatSettings[typeof settingKey])
         }
         className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer relative"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23cdc3d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23cdc3d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 8px center',
+          backgroundSize: '16px',
+        }}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -346,7 +358,12 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
         {animationOptions.map((option) => (
           <button
             key={option.value}
-            onClick={() => updateSetting('newMessageAnimation', option.value as ChatSettings['newMessageAnimation'])}
+            onClick={() =>
+              updateSetting(
+                'newMessageAnimation',
+                option.value as ChatSettings['newMessageAnimation']
+              )
+            }
             className={`p-2.5 rounded-lg border transition-all duration-200 text-left ${
               value === option.value
                 ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
@@ -354,7 +371,9 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="material-symbols-outlined text-[18px] text-primary">{option.icon}</span>
+              <span className="material-symbols-outlined text-[18px] text-primary">
+                {option.icon}
+              </span>
               <span className="text-label-sm font-medium text-on-surface">{option.label}</span>
             </div>
             {value === option.value && (
@@ -422,7 +441,9 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-[16px] text-primary">auto_awesome</span>
+              <span className="material-symbols-outlined text-[16px] text-primary">
+                auto_awesome
+              </span>
               <span className="text-label-sm font-medium text-on-surface">{preset.label}</span>
             </div>
             <span className="text-label-sm text-on-surface-variant/70 block leading-tight">
@@ -449,7 +470,9 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
     <div className="relative mb-4">
       {/* Hero header - minimal */}
       <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{icon}</span>
+        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+          {icon}
+        </span>
         <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
       </div>
 

@@ -433,7 +433,7 @@ function buildAnimationRules(settings: AnimationSettings): string {
   // Apply animation based on style
   if (settings.style && settings.style !== 'default') {
     const animationName = `livicat-${settings.style}`
-    
+
     // Add keyframes
     if (keyframes[settings.style]) {
       parts.push(keyframes[settings.style])
@@ -441,10 +441,10 @@ function buildAnimationRules(settings: AnimationSettings): string {
 
     // Build animation rule
     const rules: string[] = []
-    
+
     // Base animation properties
     rules.push(`  animation: ${animationName} ${duration} ease-out !important;`)
-    
+
     // Style-specific additions
     if (settings.style === 'glowing') {
       rules.push(`  transition: box-shadow ${duration} ease-out !important;`)
