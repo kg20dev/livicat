@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, shell } = require('electron')
 const path = require('path')
+const fs = require('fs')
 
 /* ─── Constants ──────────────────────────────────────────────────── */
 
-const isDev = !app.isPackaged
+const isPackaged = app.isPackaged
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs')
 
 /* ─── Main Window (app UI) ──────────────────────────────────────── */
@@ -18,6 +19,7 @@ function createMainWindow() {
     minWidth: 800,
     minHeight: 500,
     title: 'Livicat',
+    show: false, // Prevent white flash — show on ready-to-show
     webPreferences: {
       preload: PRELOAD_PATH,
       contextIsolation: true,
@@ -25,11 +27,56 @@ function createMainWindow() {
     },
   })
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000')
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
+  mainWindow.on('ready-to-show', () => {
+    mainWindow.show()
+  })
+
+  // Block navigation to external URLs in the main window
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const allowed = url.startsWith('file://') || url.startsWith('http://localhost:')
+    if (!allowed) {
+      event.preventDefault()
+      console.warn('[Livicat] Blocked navigation to:', url)
+    }
+  })
+
+  // Open external links in system browser instead of new Electron window
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://')) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
+
+  // Disable DevTools in production
+  if (isPackaged) {
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (input.key === 'F12' || (input.control && input.shift && input.key === 'I')) {
+        event.preventDefault()
+      }
+    })
+  }
+
+  // Load the app
+  if (!isPackaged) {
+    // Development mode
+    const distPath = path.join(__dirname, '../dist/index.html')
+    if (fs.existsSync(distPath) && process.env.LIVICAT_PROD === 'true') {
+      mainWindow.loadFile(distPath)
+      console.log('[Livicat] Running in production build mode')
+    } else if (fs.existsSync(distPath)) {
+      mainWindow.loadFile(distPath)
+      console.log('[Livicat] Auto-detected production build, loading from dist/')
+    } else {
+      mainWindow.loadURL('http://localhost:3000')
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+      console.log('[Livicat] Running in dev server mode')
+    }
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    // Packaged app — dist is placed via extraResources outside app.asar
+    const distPath = path.join(process.resourcesPath, 'dist', 'index.html')
+    mainWindow.loadFile(distPath)
+    console.log('[Livicat] Running in packaged mode')
   }
 
   mainWindow.on('closed', () => {
@@ -67,8 +114,9 @@ function openPreviewWindow(videoId, css) {
     title: 'Livicat — Live Chat Preview',
     alwaysOnTop: true,
     webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
+      contextIsolation: true, // SECURITY: never disable
+      sandbox: true, // SECURITY: never disable
+      nodeIntegration: false, // SECURITY: never enable
     },
   })
 
@@ -104,22 +152,16 @@ function injectCSSToPreview(css) {
   }
 
   console.log('[Livicat] Injecting CSS, length:', css.length)
-  console.log('[Livicat] CSS preview:', css.substring(0, 200))
-
-  // Append a debug rule to prove injection works (bright red border on body)
-  const debugCSS =
-    '\n/* livicat-debug */ body { outline: 3px solid red !important; outline-offset: -3px !important; }'
-  const fullCSS = css + debugCSS
 
   const script = `
     (function() {
       try {
         var existing = document.getElementById('livicat-css');
         if (existing) existing.remove();
-        if (!${JSON.stringify(fullCSS)}) return;
+        if (!${JSON.stringify(css)}) return;
         var style = document.createElement('style');
         style.id = 'livicat-css';
-        style.textContent = ${JSON.stringify(fullCSS)};
+        style.textContent = ${JSON.stringify(css)};
         document.head.appendChild(style);
         console.log('[Livicat] CSS injected successfully');
       } catch(e) {
@@ -130,77 +172,6 @@ function injectCSSToPreview(css) {
   previewWindow.webContents.executeJavaScript(script).catch((err) => {
     console.error('[Livicat] executeJavaScript failed:', err.message)
   })
-
-  // Dump DOM structure for debugging selectors
-  dumpPreviewDOM()
-}
-
-/** Log the key DOM structure of YouTube's chat page for selector debugging */
-function dumpPreviewDOM() {
-  if (!previewWindow || previewWindow.isDestroyed()) return
-
-  const dumpScript = `
-    (function() {
-      var lines = ['--- YouTube Chat DOM Structure ---'];
-      // Top-level chat elements
-      var chatApp = document.querySelector('yt-live-chat-app');
-      lines.push('yt-live-chat-app: ' + (chatApp ? 'found' : 'NOT FOUND'));
-
-      var header = document.querySelector('yt-live-chat-header-renderer');
-      lines.push('yt-live-chat-header-renderer: ' + (header ? 'found' : 'NOT FOUND'));
-
-      var items = document.querySelector('#items');
-      lines.push('#items: ' + (items ? 'found' : 'NOT FOUND'));
-
-      var messages = document.querySelectorAll('yt-live-chat-text-message-renderer');
-      lines.push('yt-live-chat-text-message-renderer count: ' + messages.length);
-
-      if (messages.length > 0) {
-        var first = messages[0];
-        lines.push('--- First message inner elements ---');
-        var childEls = first.querySelectorAll('*');
-        var seen = new Set();
-        childEls.forEach(function(el) {
-          var tag = el.tagName.toLowerCase();
-          var id = el.id ? '#' + el.id : '';
-          var cls = el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.') : '';
-          var key = tag + id;
-          if (!seen.has(key)) {
-            seen.add(key);
-            lines.push('  ' + tag + id + cls);
-          }
-        });
-      }
-
-      // Check for icon buttons (scroll-to-bottom)
-      var iconButtons = document.querySelectorAll('yt-icon-button');
-      lines.push('yt-icon-button count: ' + iconButtons.length);
-
-      var scrollButtons = document.querySelectorAll('#chat-scroll-button, yt-live-chat-renderer yt-icon-button');
-      lines.push('scroll buttons: ' + scrollButtons.length);
-
-      // Check scrollable area
-      var scrollers = document.querySelectorAll('#item-scroller, #chat-messages, yt-live-chat-item-list-renderer');
-      lines.push('scrollers (#item-scroller, #chat-messages, yt-live-chat-item-list-renderer): ' + scrollers.length);
-
-      // Dump first 40 chars of each for reference
-      var chatContainer = document.querySelector('#chat, yt-live-chat-renderer, #contents');
-      lines.push('chat container (#chat, yt-live-chat-renderer, #contents): ' + (chatContainer ? chatContainer.tagName + (chatContainer.id ? '#' + chatContainer.id : '') : 'NOT FOUND'));
-
-      console.log(lines.join('\\\\n'));
-      return lines.join('\\\\n');
-    })();
-  `
-  previewWindow.webContents
-    .executeJavaScript(dumpScript)
-    .then((result) => {
-      console.log('[Livicat] DOM dump:')
-      const lines = result.split('\\n')
-      lines.forEach((l) => console.log('  ' + l))
-    })
-    .catch((err) => {
-      console.error('[Livicat] DOM dump failed:', err.message)
-    })
 }
 
 function closePreviewWindow() {
@@ -211,13 +182,21 @@ function closePreviewWindow() {
   currentVideoId = null
 }
 
-/* ─── IPC Handlers ──────────────────────────────────────────────── */
+/* ─── IPC Handlers (with argument validation) ───────────────────── */
 
-ipcMain.on('open-chat-preview', (_event, { videoId, css }) => {
-  if (videoId) openPreviewWindow(videoId, css)
+ipcMain.on('open-chat-preview', (_event, args) => {
+  // Validate arguments
+  if (!args || typeof args !== 'object') return
+  const { videoId, css } = args
+  if (typeof videoId !== 'string' || videoId.length === 0 || videoId.length > 20) return
+  if (css !== undefined && typeof css !== 'string') return
+  openPreviewWindow(videoId, css || '')
 })
 
-ipcMain.on('update-chat-css', (_event, { css }) => {
+ipcMain.on('update-chat-css', (_event, args) => {
+  if (!args || typeof args !== 'object') return
+  const { css } = args
+  if (typeof css !== 'string') return
   injectCSSToPreview(css)
 })
 
