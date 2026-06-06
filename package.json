@@ -63,7 +63,9 @@
       "electron/**/*",
       "package.json"
     ],
+    "icon": "electron-icons/icon.png",
     "mac": {
+      "icon": "electron-icons/macos/icon.icns",
       "category": "public.app-category.utilities",
       "target": [
         {
@@ -73,12 +75,17 @@
       ]
     },
     "win": {
+      "icon": "electron-icons/windows/icon.ico",
       "target": [
         {
           "target": "nsis",
           "arch": ["x64"]
         }
       ]
+    },
+    "linux": {
+      "icon": "electron-icons/linux/icons/512x512.png",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,
