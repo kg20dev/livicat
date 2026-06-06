@@ -1,54 +1,12 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo, useState, useCallback } from 'react'
 import ChatPreview, { type Message } from '../chat/ChatPreview'
 import ChatIframe from '../chat/ChatIframe'
+import type { ChatIframeError } from '../chat/ChatIframe'
+import ErrorBoundary from '../ui/ErrorBoundary'
 import LiveBadge from '../ui/LiveBadge'
 import UrlInputBar, { type ChatMode } from '../ui/UrlInputBar'
 import ControlButtons from '../ui/ControlButtons'
-
-/* ─── Video ID Extraction ───────────────────────────────────────── */
-
-/**
- * Extract the YouTube video ID from a URL or return the string as-is
- * if it looks like a short video ID (11 chars, alphanumeric + _-).
- */
-function extractVideoId(url: string): string | null {
-  if (!url) return null
-
-  const trimmed = url.trim()
-
-  // If it's just an 11-character video ID (standard YouTube ID length)
-  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) {
-    return trimmed
-  }
-
-  try {
-    // Handle full URLs
-    const u = new URL(trimmed)
-
-    // youtube.com/watch?v=VIDEO_ID
-    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
-      // youtu.be/VIDEO_ID
-      if (u.hostname === 'youtu.be') {
-        return u.pathname.slice(1).split('/')[0] || null
-      }
-
-      // youtube.com/watch?v=VIDEO_ID
-      const v = u.searchParams.get('v')
-      if (v) return v
-
-      // youtube.com/embed/VIDEO_ID or youtube.com/live/VIDEO_ID
-      const pathParts = u.pathname.split('/').filter(Boolean)
-      const embedIndex = pathParts.indexOf('embed')
-      if (embedIndex !== -1) return pathParts[embedIndex + 1] || null
-      const liveIndex = pathParts.indexOf('live')
-      if (liveIndex !== -1) return pathParts[liveIndex + 1] || null
-    }
-  } catch {
-    // Not a valid URL, return null
-  }
-
-  return null
-}
+import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 
 /* ─── Context ────────────────────────────────────────────────────── */
 
@@ -58,13 +16,17 @@ interface PreviewAreaContext {
   activeTab: string
   url: string
   videoId: string | null
+  urlError: string | null
   isEmpty: boolean
   injectedCSS: string
+  iframeError: ChatIframeError | null
   onTabChange: (tab: string) => void
   onUrlChange: (url: string) => void
   onFetch: () => void
   onRandomize: () => void
   onToggle: () => void
+  onIframeError: (error: ChatIframeError) => void
+  onSwitchToTesting: () => void
 }
 
 const PreviewAreaContext = createContext<PreviewAreaContext | null>(null)
@@ -106,29 +68,51 @@ export default function PreviewArea({
   children,
   className = '',
 }: PreviewAreaRootProps) {
-  // Determine if chat should be empty
+  // Track iframe-level errors for fallback UX
+  const [iframeError, setIframeError] = useState<ChatIframeError | null>(null)
+
+  // Determine if chat should be empty (no URL in live mode)
   const isEmpty = mode === 'live' && !url
 
-  // Extract video ID from URL
-  const videoId = useMemo(() => extractVideoId(url), [url])
+  // Validate the YouTube URL
+  const validation = useMemo(() => validateYouTubeUrl(url), [url])
+  const urlError = validation.isValid || !url ? null : (validation.errorMessage ?? null)
+
+  // Use validated videoId when the URL is valid
+  const videoId = validation.isValid ? validation.videoId : null
+
+  // Handle iframe errors
+  const onIframeError = useCallback((error: ChatIframeError) => {
+    setIframeError(error)
+  }, [])
+
+  // Fallback: switch to testing/demo mode
+  const onSwitchToTesting = useCallback(() => {
+    setIframeError(null)
+    onTabChange('Testing Mode')
+  }, [onTabChange])
+
+  const contextValue: PreviewAreaContext = {
+    messages,
+    mode,
+    activeTab,
+    url,
+    videoId,
+    urlError,
+    isEmpty,
+    injectedCSS,
+    iframeError,
+    onTabChange,
+    onUrlChange,
+    onFetch,
+    onRandomize,
+    onToggle,
+    onIframeError,
+    onSwitchToTesting,
+  }
 
   return (
-    <PreviewAreaContext.Provider
-      value={{
-        messages,
-        mode,
-        activeTab,
-        url,
-        videoId,
-        isEmpty,
-        injectedCSS,
-        onTabChange,
-        onUrlChange,
-        onFetch,
-        onRandomize,
-        onToggle,
-      }}
-    >
+    <PreviewAreaContext.Provider value={contextValue}>
       <section
         className={`flex-1 chat-preview-container flex flex-col items-center justify-center p-container-margin relative ${className}`}
       >
@@ -165,11 +149,31 @@ PreviewArea.LiveBadge = function PreviewAreaLiveBadge() {
 }
 
 PreviewArea.Chat = function PreviewAreaChat() {
-  const { messages, mode, videoId, isEmpty, injectedCSS } = usePreviewAreaContext()
+  const { messages, mode, videoId, urlError, isEmpty, injectedCSS, onIframeError } =
+    usePreviewAreaContext()
 
   // Live mode with valid video ID → show the actual YouTube iframe
   if (mode === 'live' && videoId) {
-    return <ChatIframe videoId={videoId} injectedCSS={injectedCSS} />
+    return (
+      <ErrorBoundary onError={(err) => onIframeError({ type: 'unknown', message: err.message })}>
+        <ChatIframe videoId={videoId} injectedCSS={injectedCSS} onError={onIframeError} />
+      </ErrorBoundary>
+    )
+  }
+
+  // Live mode with URL but invalid → show URL error
+  if (mode === 'live' && urlError) {
+    return (
+      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+        <span className="material-symbols-outlined text-warning text-[48px] mb-4">link_off</span>
+        <p className="text-body-md text-on-surface font-bold text-center mb-2">
+          Invalid YouTube URL
+        </p>
+        <p className="text-label-md text-on-surface-variant text-center max-w-[280px] whitespace-pre-line">
+          {urlError}
+        </p>
+      </div>
+    )
   }
 
   // Testing mode or no valid video ID → show the preview
@@ -182,13 +186,23 @@ PreviewArea.Chat = function PreviewAreaChat() {
 }
 
 PreviewArea.Actions = function PreviewAreaActions() {
-  const { onRandomize, onToggle } = usePreviewAreaContext()
+  const { onRandomize, onToggle, iframeError, onSwitchToTesting } = usePreviewAreaContext()
 
   return (
-    <ControlButtons onRandomize={onRandomize} onToggle={onToggle}>
-      <ControlButtons.Randomize />
-      <ControlButtons.Toggle />
-    </ControlButtons>
+    <div className="absolute bottom-6 right-6 flex items-center gap-2">
+      {iframeError && (
+        <button
+          onClick={onSwitchToTesting}
+          className="bg-surface-container-lowest border border-outline-variant py-2 px-4 rounded-lg text-label-md font-bold hover:bg-surface-container transition-colors"
+        >
+          Demo Mode
+        </button>
+      )}
+      <ControlButtons onRandomize={onRandomize} onToggle={onToggle}>
+        <ControlButtons.Randomize />
+        <ControlButtons.Toggle />
+      </ControlButtons>
+    </div>
   )
 }
 
