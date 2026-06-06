@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
 import AssetsPage, { type AssetItem } from './components/layout/AssetsPage'
 import type { ChatMode } from './components/layout/PreviewArea'
+import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 
 /* ─── Demo data ──────────────────────────────────────────────────── */
 
@@ -70,6 +71,27 @@ export default function App() {
   const [url, setUrl] = useState('')
   const [generatedCSS, setGeneratedCSS] = useState('')
 
+  // Export CSS handler
+  const handleExportCSS = useCallback(() => {
+    if (!generatedCSS) return
+    const obsCSS = generateOBSCSS(generatedCSS, {
+      themeName: 'livicat-custom',
+    })
+    downloadCSSFile(obsCSS, 'youtube-chat-custom')
+  }, [generatedCSS])
+
+  // Keyboard shortcut: Ctrl+Shift+E to export CSS
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+        e.preventDefault()
+        handleExportCSS()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [handleExportCSS])
+
   // Determine mode based on active tab
   const mode: ChatMode = useMemo(() => {
     return activeTab === 'Testing Mode' ? 'testing' : 'live'
@@ -93,7 +115,7 @@ export default function App() {
       <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
         <Sidebar.Header />
         <Sidebar.Nav />
-        <Sidebar.ExportButton />
+        <Sidebar.ExportButton onExport={handleExportCSS} />
       </Sidebar>
 
       {/* TopBar (line 163-183) */}
