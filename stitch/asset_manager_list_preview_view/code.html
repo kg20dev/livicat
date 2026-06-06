@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StreamStyle Asset Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style id="tailwind-config">
+        /* Inclusion of the provided Tailwind Config logic via the script tag above is handled, 
+           but I will apply the theme-specific tokens manually in the classes. */
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#292a2a",
+                        "surface-tint": "#d6baff",
+                        "outline": "#968d9f",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "primary-fixed-dim": "#d6baff",
+                        "on-error-container": "#ffdad6",
+                        "inverse-on-surface": "#313030",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c8c6c6",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-error": "#690005",
+                        "surface-bright": "#393939",
+                        "on-tertiary": "#303030",
+                        "tertiary-fixed": "#e4e2e1",
+                        "on-background": "#e5e2e1",
+                        "on-primary": "#430089",
+                        "on-secondary-container": "#b6b5b4",
+                        "surface": "#131313",
+                        "surface-dim": "#131313",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "secondary": "#c8c6c6",
+                        "tertiary-container": "#919090",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "background": "#131313",
+                        "on-primary-fixed": "#280056",
+                        "on-secondary": "#303030",
+                        "on-primary-container": "#3a0078",
+                        "tertiary": "#c8c6c6",
+                        "primary-fixed": "#ecdcff",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-highest": "#353534",
+                        "secondary-container": "#474747",
+                        "primary-container": "#ab73ff",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#201f1f",
+                        "on-surface-variant": "#cdc3d6",
+                        "outline-variant": "#4b4453",
+                        "on-primary-fixed-variant": "#5e1ab1",
+                        "primary": "#d6baff",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-variant": "#353534",
+                        "inverse-primary": "#763bca",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error-container": "#93000a"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b4453;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #d6baff;
+        }
+        .asset-card:hover .asset-actions {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+<!-- Side Navigation Shell -->
+<aside class="h-screen w-[280px] fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col py-panel-padding z-50">
+<div class="px-6 mb-8 mt-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">StreamStyle</h1>
+<p class="text-on-surface-variant font-label-md text-label-md opacity-60">OBS Pro v2.4</p>
+</div>
+<nav class="flex-1 px-3 space-y-1"><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-colors duration-200" href="#"><span class="material-symbols-outlined">edit_square</span><span class="font-body-md">Workspace</span></a><a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container-high text-primary font-bold transition-colors duration-200" href="#"><span class="material-symbols-outlined">grid_view</span><span class="font-body-md">Assets</span></a></nav>
+<div class="px-4 py-6 border-t border-outline-variant/30">
+<button class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined">file_upload</span>
+<span class="">Export CSS</span>
+</button>
+</div>
+</aside>
+<!-- Top Navigation Shell -->
+<header class="h-16 fixed top-0 right-0 left-[280px] z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin">
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded-full pl-10 pr-4 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-primary/50 text-body-md transition-all" placeholder="Search assets..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-opacity p-2">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-opacity p-2">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<button class="bg-primary text-on-primary font-bold px-6 py-2 rounded-full active:opacity-80 transition-opacity">
+                Go Live
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[280px] mt-16 h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar p-container-margin">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Asset Manager</h2>
+<p class="text-on-surface-variant text-body-md mt-1">Manage your custom graphics, stream frames, and backgrounds.</p>
+</div>
+<div class="flex gap-2 bg-surface-container rounded-lg p-1">
+<button class="px-4 py-1.5 rounded-md bg-surface-container-high text-primary font-bold text-label-md">All Assets</button>
+<button class="px-4 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface transition-colors text-label-md">Recent</button>
+<button class="px-4 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface transition-colors text-label-md">Starred</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6 h-full min-h-[600px]">
+<!-- Left Column: Asset List -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<button class="flex-1 bg-primary text-on-primary font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add_circle</span>
+<span>Upload New Asset</span>
+</button>
+</div>
+<div class="glass-panel rounded-2xl flex-1 overflow-hidden flex flex-col">
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-low flex items-center justify-between text-label-md text-outline uppercase tracking-wider">
+<span>File Name</span>
+<div class="flex gap-8">
+<span class="w-16">Type</span>
+<span class="w-16">Size</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- List Item 1 -->
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-high cursor-pointer transition-colors border-b border-outline-variant/10 group bg-surface-container-highest/20">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS7lyPEyXcw3F5wGHSLfjxNcOcWYUAjyH_1Sr-yaQ7vOUXwuNK5JO3LNq_UhGI7iP5teIAzqd1eyXJq8lMlE8xzIslabKlXwRXo_k9s2l2xWPuT5oW2gN3KT2ADTcQmchLqmBuNaAMIztYkLD0ylLwRJQtYMMur56vcKAFx47N1eY3IFzRisbJsyOQlP4uwxS30S1Z-HMgq9fxsS6pAMVvn18Tf3yK2PgmaT4xtTuoYtwcpuEFUg66VM_hdWd1sTVCAUAj4X9zjcc"/>
+</div>
+<div>
+<p class="text-on-surface font-medium truncate max-w-[180px]">Neon_Void_Loop</p>
+<p class="text-outline text-code-sm">1920x1080</p>
+</div>
+</div>
+<div class="flex gap-8 text-body-md text-on-surface-variant">
+<span class="w-16">.webp</span>
+<span class="w-16">2.4MB</span>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-high cursor-pointer transition-colors border-b border-outline-variant/10 group">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTBzoj-WC6aXvqt34vaRX2suPpfTFro2P3063edKMDVUNWDzHrcgcNezN60h3q4N2s1wgt--A6EDPA06cqSpfmyPQGAfgsYlhM_f9tvf-Ts63iQQYdfTKG2LtBjDpE_3CHUqXP_cgJsRJuNp6oR1p3l0H7DOBq2v1tJiV3WbnSekyQdvKujuh16AzS9EsJvvjTt1KJDYu4bK_HDDUHHSiyQGe08quX-MClBz_aoAjmO7NXEeL9POtI9jOMfIYy50eonmBJBq3aHGE"/>
+</div>
+<div>
+<p class="text-on-surface font-medium truncate max-w-[180px]">Minimalist_Dark</p>
+<p class="text-outline text-code-sm">1920x1080</p>
+</div>
+</div>
+<div class="flex gap-8 text-body-md text-on-surface-variant">
+<span class="w-16">.png</span>
+<span class="w-16">1.8MB</span>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-high cursor-pointer transition-colors border-b border-outline-variant/10 group">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB-Eu67Iil4WFMvhL2UsEHzKHw5jOUhuNfBcQ00rEcPefnU-hKo1AnVreqt6iSftFZTO_zMfdoypCY1rl_KiAYOePc3jQsHf6BjsjqNz9cxYwhRih10l8kt4pdoux-9L6L81zFr2JihUnW7Lu72Ufw2QnPMKLDmxeHWmuc8bpyC0O7XZAWG6_HVy9vADEr4F3XqlJfMq_oRXEvG1kTEBtSQK7VoFyu-5q4Brh0UVwz74F5LY2um8QGBxHmp9y4AbSgYkHRNEPuux8"/>
+</div>
+<div>
+<p class="text-on-surface font-medium truncate max-w-[180px]">Studio_Matte_V2</p>
+<p class="text-outline text-code-sm">1920x1080</p>
+</div>
+</div>
+<div class="flex gap-8 text-body-md text-on-surface-variant">
+<span class="w-16">.jpg</span>
+<span class="w-16">3.1MB</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Asset Preview -->
+<div class="col-span-12 lg:col-span-7">
+<div class="glass-panel rounded-2xl h-full flex flex-col overflow-hidden">
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-low flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg text-on-surface">Asset Preview</h3>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-error-container/20 text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-6">
+<div class="aspect-video rounded-xl overflow-hidden border border-outline-variant/30 bg-black flex items-center justify-center">
+<img class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS7lyPEyXcw3F5wGHSLfjxNcOcWYUAjyH_1Sr-yaQ7vOUXwuNK5JO3LNq_UhGI7iP5teIAzqd1eyXJq8lMlE8xzIslabKlXwRXo_k9s2l2xWPuT5oW2gN3KT2ADTcQmchLqmBuNaAMIztYkLD0ylLwRJQtYMMur56vcKAFx47N1eY3IFzRisbJsyOQlP4uwxS30S1Z-HMgq9fxsS6pAMVvn18Tf3yK2PgmaT4xtTuoYtwcpuEFUg66VM_hdWd1sTVCAUAj4X9zjcc"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-high p-4 rounded-xl">
+<p class="text-outline text-label-md uppercase mb-1">Dimensions</p>
+<p class="text-on-surface font-medium">1920 x 1080 px</p>
+</div>
+<div class="bg-surface-container-high p-4 rounded-xl">
+<p class="text-outline text-label-md uppercase mb-1">Aspect Ratio</p>
+<p class="text-on-surface font-medium">16:9</p>
+</div>
+<div class="bg-surface-container-high p-4 rounded-xl">
+<p class="text-outline text-label-md uppercase mb-1">Created</p>
+<p class="text-on-surface font-medium">Oct 24, 2023</p>
+</div>
+<div class="bg-surface-container-high p-4 rounded-xl">
+<p class="text-outline text-label-md uppercase mb-1">Last Modified</p>
+<p class="text-on-surface font-medium">2 hours ago</p>
+</div>
+</div>
+<div class="mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl active:scale-95 transition-transform">
+            Apply to Workspace
+          </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- System Stats Footer -->
+<footer class="mt-12 flex items-center justify-between py-6 border-t border-outline-variant/30 text-on-surface-variant font-code-sm text-code-sm uppercase tracking-tighter opacity-60">
+<div class="flex gap-8">
+<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Storage Used: 4.2GB / 10GB</span>
+<span class="">Assets: 124 Total</span>
+</div>
+<div class="flex gap-8">
+<span class="">CPU: 12%</span>
+<span class="">GPU: 28%</span>
+<span class="">FPS: 60.0</span>
+</div>
+</footer>
+</main>
+<!-- Contextual FAB (Only for appropriate screens) -->
+<!-- Suppressed on detailed manager screens according to rules -->
+<script>
+        // Simple micro-interaction for drag and drop zone
+        const dropZone = document.querySelector('.glass-panel.border-dashed');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-primary', 'bg-surface-container-high/30');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-primary', 'bg-surface-container-high/30');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary', 'bg-surface-container-high/30');
+            alert('File upload triggered (Simulated)');
+        });
+    </script>
+</body></html>

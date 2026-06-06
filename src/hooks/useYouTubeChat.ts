@@ -44,8 +44,9 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
       setIsConnected(status === ConnectionStatus.CONNECTED)
     })
 
-    youtubeService.validateApiKey()
-      .then(isValid => {
+    youtubeService
+      .validateApiKey()
+      .then((isValid) => {
         if (!isValid) {
           setError('Invalid API key')
         }
@@ -82,7 +83,7 @@ export const useYouTubeChat = (apiKey: string, videoId: string) => {
         setError(errorMessage)
       },
       onNewMessages: (newMessages) => {
-        setMessages(prev => [...prev, ...newMessages])
+        setMessages((prev) => [...prev, ...newMessages])
       },
       onStreamEnd: () => {
         setIsStreamEnded(true)
@@ -190,7 +191,7 @@ const DEFAULT_SETTINGS: ChatSettings = {
   fontSize: 14,
   theme: 'dark',
   messageSpacing: 'normal',
-  usernameColor: '#60a5fa',
+  usernameColor: '#d6baff', // Stitch primary
   bgOpacity: 100,
   animationSpeed: 'normal',
 }
@@ -235,7 +236,7 @@ export const PRESET_THEMES: Record<string, ChatSettings> = {
     fontSize: 14,
     theme: 'dark',
     messageSpacing: 'normal',
-    usernameColor: '#60a5fa',
+    usernameColor: '#d6baff', // Stitch primary
     bgOpacity: 100,
     animationSpeed: 'normal',
   },
@@ -247,7 +248,7 @@ export const PRESET_THEMES: Record<string, ChatSettings> = {
     fontSize: 13,
     theme: 'dark',
     messageSpacing: 'compact',
-    usernameColor: '#94a3b8',
+    usernameColor: '#c8c6c6', // Stitch secondary (muted)
     bgOpacity: 95,
     animationSpeed: 'none',
   },
@@ -259,7 +260,7 @@ export const PRESET_THEMES: Record<string, ChatSettings> = {
     fontSize: 12,
     theme: 'dark',
     messageSpacing: 'compact',
-    usernameColor: '#818cf8',
+    usernameColor: '#ab73ff', // Stitch primary container
     bgOpacity: 90,
     animationSpeed: 'normal',
   },
@@ -271,7 +272,7 @@ export const PRESET_THEMES: Record<string, ChatSettings> = {
     fontSize: 20,
     theme: 'dark',
     messageSpacing: 'comfortable',
-    usernameColor: '#34d399',
+    usernameColor: '#ecdcff', // Stitch primary fixed (light purple)
     bgOpacity: 100,
     animationSpeed: 'slow',
   },
@@ -283,7 +284,7 @@ export const PRESET_THEMES: Record<string, ChatSettings> = {
     fontSize: 16,
     theme: 'dark',
     messageSpacing: 'normal',
-    usernameColor: '#f472b6',
+    usernameColor: '#763bca', // Stitch inverse primary (darker purple for visibility)
     bgOpacity: 80,
     animationSpeed: 'normal',
   },
@@ -296,12 +297,12 @@ export const useChatSettings = () => {
   // Update a single setting
   const updateSetting = useCallback(
     <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
-      setSettings(prev => {
+      setSettings((prev) => {
         const newSettings = { ...prev, [key]: value }
         saveSettings(newSettings)
         return newSettings
       })
-      
+
       // Show "Saved" indicator briefly
       setSavedIndicator(true)
       setTimeout(() => setSavedIndicator(false), 1500)
@@ -315,7 +316,7 @@ export const useChatSettings = () => {
     if (preset) {
       setSettings(preset)
       saveSettings(preset)
-      
+
       // Show "Saved" indicator briefly
       setSavedIndicator(true)
       setTimeout(() => setSavedIndicator(false), 1500)
@@ -326,7 +327,7 @@ export const useChatSettings = () => {
   const resetToDefaults = useCallback(() => {
     setSettings(DEFAULT_SETTINGS)
     saveSettings(DEFAULT_SETTINGS)
-    
+
     // Show "Saved" indicator briefly
     setSavedIndicator(true)
     setTimeout(() => setSavedIndicator(false), 1500)

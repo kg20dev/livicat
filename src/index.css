@@ -1,41 +1,155 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @theme {
-  --color-obs-background: #0a0e27;
-  --color-obs-surface: #151932;
-  --color-obs-text: #ffffff;
-  --color-obs-accent: #3b82f6;
-  --color-obs-muted: #6b7280;
+  /* ─── Colors (from stitch tailwind.config) ──────────────────────── */
+  --color-on-tertiary-container: #292a2a;
+  --color-surface-tint: #d6baff;
+  --color-outline: #968d9f;
+  --color-secondary-fixed-dim: #c8c6c6;
+  --color-primary-fixed-dim: #d6baff;
+  --color-on-error-container: #ffdad6;
+  --color-inverse-on-surface: #313030;
+  --color-error: #ffb4ab;
+  --color-tertiary-fixed-dim: #c8c6c6;
+  --color-on-tertiary-fixed: #1b1c1c;
+  --color-secondary-fixed: #e4e2e1;
+  --color-on-error: #690005;
+  --color-surface-bright: #393939;
+  --color-on-tertiary: #303030;
+  --color-tertiary-fixed: #e4e2e1;
+  --color-on-background: #e5e2e1;
+  --color-on-primary: #430089;
+  --color-on-secondary-container: #b6b5b4;
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-on-secondary-fixed-variant: #474747;
+  --color-on-tertiary-fixed-variant: #474747;
+  --color-secondary: #c8c6c6;
+  --color-tertiary-container: #919090;
+  --color-inverse-surface: #e5e2e1;
+  --color-on-secondary-fixed: #1b1c1c;
+  --color-background: #131313;
+  --color-on-primary-fixed: #280056;
+  --color-on-secondary: #303030;
+  --color-on-primary-container: #3a0078;
+  --color-tertiary: #c8c6c6;
+  --color-primary-fixed: #ecdcff;
+  --color-on-surface: #e5e2e1;
+  --color-surface-container-highest: #353534;
+  --color-secondary-container: #474747;
+  --color-primary-container: #ab73ff;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container: #201f1f;
+  --color-on-surface-variant: #cdc3d6;
+  --color-outline-variant: #4b4453;
+  --color-on-primary-fixed-variant: #5e1ab1;
+  --color-primary: #d6baff;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-variant: #353534;
+  --color-inverse-primary: #763bca;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-error-container: #93000a;
+
+  /* ─── Font families (matches HTML fontFamily config) ─────────────── */
+  --font-body-lg: 'Inter', sans-serif;
+  --font-code-sm: 'JetBrains Mono', monospace;
+  --font-headline-lg: 'Inter', sans-serif;
+  --font-headline-md: 'Inter', sans-serif;
+  --font-headline-sm: 'Inter', sans-serif;
+  --font-title-lg: 'Inter', sans-serif;
+  --font-label-md: 'Inter', sans-serif;
+  --font-body-md: 'Inter', sans-serif;
+  --font-display-lg: 'Inter', sans-serif;
+
+  /* ─── Font sizes (matches HTML fontSize config) ──────────────────── */
+  --font-size-body-lg: 16px;
+  --line-height-body-lg: 24px;
+  --font-size-code-sm: 12px;
+  --line-height-code-sm: 16px;
+  --font-size-headline-lg: 32px;
+  --line-height-headline-lg: 40px;
+  --font-size-headline-md: 24px;
+  --line-height-headline-md: 32px;
+  --font-size-headline-sm: 20px;
+  --line-height-headline-sm: 28px;
+  --font-size-title-lg: 18px;
+  --line-height-title-lg: 24px;
+  --font-size-label-md: 12px;
+  --line-height-label-md: 16px;
+  --font-size-body-md: 14px;
+  --line-height-body-md: 20px;
+  --font-size-display-lg: 48px;
+  --line-height-display-lg: 56px;
+
+  /* ─── Spacing (matches HTML spacing config) ──────────────────────── */
+  --spacing-unit: 4px;
+  --spacing-gutter: 16px;
+  --spacing-container-margin: 24px;
+  --spacing-panel-padding: 12px;
+  --spacing-stack-gap: 8px;
+
+  /* ─── Border radius (matches HTML borderRadius config) ───────────── */
+  --radius-sm: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
 }
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: dark light;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ─── Custom scrollbar ──────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: var(--color-obs-background);
-  color: var(--color-obs-text);
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3f3f3f;
+  border-radius: 2px;
 }
 
-#root {
-  width: 100%;
-  margin: 0 auto;
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+/* ─── Glass panel ───────────────────────────────────────────────── */
+.glass-panel {
+  background: rgba(30, 30, 30, 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Inner glow stroke ─────────────────────────────────────────── */
+.inner-glow-stroke {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Chat preview container ────────────────────────────────────── */
+.chat-preview-container {
+  background-image: linear-gradient(to bottom right, rgba(20, 20, 20, 1), rgba(10, 10, 10, 1));
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-preview-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(169, 112, 255, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Material symbols ──────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }

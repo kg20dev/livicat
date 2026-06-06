@@ -95,10 +95,7 @@ export class YouTubeService {
    * Fetch live chat messages with pagination support.
    * Respects YouTube's pollingIntervalMillis and enforces client-side rate limiting.
    */
-  async fetchChatMessages(
-    liveChatId: string,
-    pageToken?: string
-  ): Promise<ChatFetchResult> {
+  async fetchChatMessages(liveChatId: string, pageToken?: string): Promise<ChatFetchResult> {
     await this.enforceRateLimit()
 
     try {
@@ -123,7 +120,7 @@ export class YouTubeService {
         return { messages: [], pollingIntervalMillis: 5000, error: message }
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         items?: Array<{
           id: string
           snippet: {
@@ -171,7 +168,7 @@ export class YouTubeService {
     try {
       const url = `${YOUTUBE_API_BASE}/videos?part=liveStreamingDetails&id=${videoId}&key=${this.apiKey}`
       const response = await fetch(url)
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         items?: Array<{
           liveStreamingDetails?: {
             actualStartTime?: string
@@ -238,7 +235,7 @@ export class YouTubeService {
 
   /** Sleep helper */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 

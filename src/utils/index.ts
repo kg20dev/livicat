@@ -1,6 +1,1 @@
-export {
-  formatTimestamp,
-  sanitizeMessage,
-  truncateText,
-  formatViewerCount
-} from './formatters'
+export { formatTimestamp, sanitizeMessage, truncateText, formatViewerCount } from './formatters'

@@ -19,7 +19,7 @@ describe('useChatSettings', () => {
       fontSize: 14,
       theme: 'dark',
       messageSpacing: 'normal',
-      usernameColor: '#60a5fa',
+      usernameColor: '#d6baff', // Stitch primary
       bgOpacity: 100,
       animationSpeed: 'normal',
     })
@@ -59,7 +59,7 @@ describe('useChatSettings', () => {
     expect(result.current.settings.showAvatars).toBe(false)
     expect(result.current.settings.fontSize).toBe(18)
     expect(result.current.settings.maxMessages).toBe(100) // default value
-    expect(result.current.settings.usernameColor).toBe('#60a5fa') // default value
+    expect(result.current.settings.usernameColor).toBe('#d6baff') // Stitch primary
   })
 
   it('updates a single setting', () => {

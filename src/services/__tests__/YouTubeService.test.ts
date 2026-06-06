@@ -72,10 +72,7 @@ describe('YouTubeService', () => {
       const result = await service.validateApiKey()
 
       expect(result).toBe(true)
-      expect(statuses).toEqual([
-        ConnectionStatus.CONNECTING,
-        ConnectionStatus.CONNECTED,
-      ])
+      expect(statuses).toEqual([ConnectionStatus.CONNECTING, ConnectionStatus.CONNECTED])
       expect(service.getConnectionStatus()).toBe(ConnectionStatus.CONNECTED)
     })
 
@@ -108,9 +105,7 @@ describe('YouTubeService', () => {
     it('accepts optional pageToken parameter', async () => {
       const result = await service.fetchChatMessages('chat-id-123', 'page-token-abc')
       expect(result.messages).toEqual([])
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('pageToken=page-token-abc')
-      )
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('pageToken=page-token-abc'))
     })
 
     it('parses chat messages from API response', async () => {
@@ -251,18 +246,19 @@ describe('YouTubeService', () => {
 
   describe('extractVideoId', () => {
     it('extracts video ID from youtube.com/watch URL', () => {
-      expect(service.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
-        .toBe('dQw4w9WgXcQ')
+      expect(service.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
+        'dQw4w9WgXcQ'
+      )
     })
 
     it('extracts video ID from youtu.be short URL', () => {
-      expect(service.extractVideoId('https://youtu.be/dQw4w9WgXcQ'))
-        .toBe('dQw4w9WgXcQ')
+      expect(service.extractVideoId('https://youtu.be/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ')
     })
 
     it('extracts video ID from youtube.com/embed URL', () => {
-      expect(service.extractVideoId('https://www.youtube.com/embed/dQw4w9WgXcQ'))
-        .toBe('dQw4w9WgXcQ')
+      expect(service.extractVideoId('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe(
+        'dQw4w9WgXcQ'
+      )
     })
 
     it('accepts a raw 11-character video ID', () => {
@@ -279,8 +275,7 @@ describe('YouTubeService', () => {
     })
 
     it('trims whitespace from input', () => {
-      expect(service.extractVideoId('  https://youtu.be/dQw4w9WgXcQ  '))
-        .toBe('dQw4w9WgXcQ')
+      expect(service.extractVideoId('  https://youtu.be/dQw4w9WgXcQ  ')).toBe('dQw4w9WgXcQ')
     })
   })
 

@@ -1,9 +1,5 @@
 import { useState, useCallback } from 'react'
-import {
-  getStoredApiKey,
-  storeApiKey,
-  clearStoredApiKey,
-} from '../utils/storage'
+import { getStoredApiKey, storeApiKey, clearStoredApiKey } from '../utils/storage'
 
 /**
  * Hook for managing the YouTube API key with localStorage persistence.

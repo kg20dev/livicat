@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OBS Integration Guide - StreamStyle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#292a2a",
+                    "surface-tint": "#d6baff",
+                    "outline": "#968d9f",
+                    "secondary-fixed-dim": "#c8c6c6",
+                    "primary-fixed-dim": "#d6baff",
+                    "on-error-container": "#ffdad6",
+                    "inverse-on-surface": "#313030",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#c8c6c6",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "secondary-fixed": "#e4e2e1",
+                    "on-error": "#690005",
+                    "surface-bright": "#393939",
+                    "on-tertiary": "#303030",
+                    "tertiary-fixed": "#e4e2e1",
+                    "on-background": "#e5e2e1",
+                    "on-primary": "#430089",
+                    "on-secondary-container": "#b6b5b4",
+                    "surface": "#131313",
+                    "surface-dim": "#131313",
+                    "on-secondary-fixed-variant": "#474747",
+                    "on-tertiary-fixed-variant": "#474747",
+                    "secondary": "#c8c6c6",
+                    "tertiary-container": "#919090",
+                    "inverse-surface": "#e5e2e1",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "background": "#131313",
+                    "on-primary-fixed": "#280056",
+                    "on-secondary": "#303030",
+                    "on-primary-container": "#3a0078",
+                    "tertiary": "#c8c6c6",
+                    "primary-fixed": "#ecdcff",
+                    "on-surface": "#e5e2e1",
+                    "surface-container-highest": "#353534",
+                    "secondary-container": "#474747",
+                    "primary-container": "#ab73ff",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-container": "#201f1f",
+                    "on-surface-variant": "#cdc3d6",
+                    "outline-variant": "#4b4453",
+                    "on-primary-fixed-variant": "#5e1ab1",
+                    "primary": "#d6baff",
+                    "surface-container-low": "#1c1b1b",
+                    "surface-variant": "#353534",
+                    "inverse-primary": "#763bca",
+                    "surface-container-lowest": "#0e0e0e",
+                    "error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "container-margin": "24px",
+                    "panel-padding": "12px",
+                    "stack-gap": "8px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "code-sm": ["JetBrains Mono"],
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "code-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .inner-glow {
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3F3F3F; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d6baff; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Shared SideNav Component -->
+<aside class="h-screen w-[280px] fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col py-panel-padding z-50">
+<div class="px-container-margin mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">StreamStyle</h1>
+<p class="text-on-surface-variant font-label-md text-label-md opacity-70">OBS Pro v2.4</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+<span>Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Assets</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all">
+                Export CSS
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] h-screen overflow-y-auto bg-surface flex flex-col">
+<!-- TopNavBar Component -->
+<header class="h-16 sticky top-0 right-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin">
+<div class="flex items-center gap-4">
+<span class="font-headline-sm text-headline-sm font-black text-on-surface">Live Chat Studio</span>
+<div class="h-6 w-px bg-outline-variant"></div>
+<div class="flex items-center text-on-surface-variant font-body-md text-body-md">
+<span class="material-symbols-outlined mr-2" data-icon="integration_instructions">integration_instructions</span>
+                    OBS Integration Guide
+                </div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-full font-bold text-label-md hover:opacity-90 active:scale-95 transition-all">
+                    Go Live
+                </button>
+</div>
+</header>
+<!-- Guide Content -->
+<div class="p-container-margin max-w-6xl mx-auto w-full">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left: Instructions -->
+<div class="lg:col-span-5 space-y-8">
+<div class="space-y-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Connect to OBS</h2>
+<p class="text-on-surface-variant font-body-lg text-body-lg">Follow these steps to integrate your custom chat theme directly into your broadcast environment.</p>
+</div>
+<div class="space-y-6">
+<!-- Step 1 -->
+<div class="flex gap-4 items-start group">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 group-hover:border-primary transition-colors">
+<span class="text-primary font-bold">1</span>
+</div>
+<div>
+<h4 class="font-title-lg text-title-lg text-on-surface mb-1">Open OBS Studio</h4>
+<p class="text-on-surface-variant font-body-md text-body-md">Navigate to your 'Sources' panel and click the <span class="text-primary">+</span> icon.</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex gap-4 items-start group">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 group-hover:border-primary transition-colors">
+<span class="text-primary font-bold">2</span>
+</div>
+<div>
+<h4 class="font-title-lg text-title-lg text-on-surface mb-1">Add Browser Source</h4>
+<p class="text-on-surface-variant font-body-md text-body-md">Select <span class="font-medium text-on-surface">Browser</span> from the list and name it "Stream Chat".</p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex gap-4 items-start group">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 group-hover:border-primary transition-colors">
+<span class="text-primary font-bold">3</span>
+</div>
+<div>
+<h4 class="font-title-lg text-title-lg text-on-surface mb-1">Paste Custom CSS</h4>
+<p class="text-on-surface-variant font-body-md text-body-md">Paste the generated code from the right panel into the <span class="font-medium text-on-surface">Custom CSS</span> box.</p>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="flex gap-4 items-start group">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 group-hover:border-primary transition-colors">
+<span class="text-primary font-bold">4</span>
+</div>
+<div>
+<h4 class="font-title-lg text-title-lg text-on-surface mb-1">Apply &amp; Preview</h4>
+<p class="text-on-surface-variant font-body-md text-body-md">Click <span class="font-medium text-on-surface">OK</span>. Your chat will now appear with the StreamStyle theme applied.</p>
+</div>
+</div>
+</div>
+<!-- Visual Aid Image -->
+<div class="relative rounded-xl overflow-hidden glass-panel aspect-video inner-glow mt-8">
+<img alt="OBS UI Interface" class="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700" data-alt="A cinematic, high-detail macro shot of a professional streaming setup interface. The screen displays the complex controls of OBS Studio, featuring dark charcoal panels and vibrant purple accents. Soft violet ambient light reflects off the monitor's edge, creating a tech-focused, high-performance atmosphere. The mood is sophisticated and focused, emphasizing precision creative work in a dark room." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB22IDBMKLXcSy1OHvi5Ag_Rfq8twWI947Fq-11YZzO-mQNHgNYjO5IiBMJCazMbfDsBKEkJ-3J5TfETlxpVl2dPbKzYRqEcTM6Bn0oe0h1PcExGwi57JA_7PvBih_Rdqp-Vctr8KRfP84jGAcVR-VCrkQ_Sn1Tcm7lPsJ0ApYSUkfXrpg3HJL7eqvOvkw4CJnHqyiAcjgkadStD2_B0riPqtIxeqq5bI0WEcsUUmHOVQCagDn8R3ChfBGYAsgVyN5ReaEgNRYSYC4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-2 bg-surface/80 px-3 py-1.5 rounded-full border border-white/10">
+<span class="material-symbols-outlined text-primary scale-75" data-icon="visibility">visibility</span>
+<span class="text-label-md font-label-md text-on-surface">Visual Reference</span>
+</div>
+</div>
+</div>
+<!-- Right: Code Block -->
+<div class="lg:col-span-7">
+<div class="flex flex-col h-full glass-panel rounded-xl overflow-hidden inner-glow">
+<!-- Code Header -->
+<div class="flex items-center justify-between px-6 py-4 bg-surface-container-highest/50 border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="code">code</span>
+<span class="font-title-lg text-title-lg">Generated CSS</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-[10px] font-black uppercase tracking-wider">v2.4 Stable</span>
+</div>
+</div>
+<!-- Code Content -->
+<div class="relative flex-1 group">
+<pre class="p-6 font-code-sm text-code-sm text-on-surface-variant h-[500px] overflow-y-auto leading-relaxed selection:bg-primary selection:text-on-primary"><span class="text-primary">/* StreamStyle Generated Layout */</span>
+<span class="text-surface-tint">body</span> {
+  <span class="text-outline">background-color</span>: rgba(0, 0, 0, 0);
+  <span class="text-outline">margin</span>: 0px <span class="text-primary">auto</span>;
+  <span class="text-outline">overflow</span>: hidden;
+}
+
+<span class="text-surface-tint">#chat_container</span> {
+  <span class="text-outline">font-family</span>: <span class="text-primary">'Inter', sans-serif</span>;
+  <span class="text-outline">border-radius</span>: 12px;
+  <span class="text-outline">backdrop-filter</span>: blur(20px);
+  <span class="text-outline">border</span>: 1px solid rgba(255, 255, 255, 0.1);
+  <span class="text-outline">animation</span>: slideUp 0.4s ease-out;
+}
+
+<span class="text-surface-tint">.message</span> {
+  <span class="text-outline">background</span>: rgba(30, 30, 30, 0.8);
+  <span class="text-outline">margin-bottom</span>: 8px;
+  <span class="text-outline">padding</span>: 12px 16px;
+  <span class="text-outline">border-left</span>: 4px solid #A970FF;
+}
+
+<span class="text-surface-tint">.username</span> {
+  <span class="text-outline">color</span>: #d6baff;
+  <span class="text-outline">font-weight</span>: 700;
+  <span class="text-outline">text-transform</span>: uppercase;
+  <span class="text-outline">font-size</span>: 12px;
+}
+
+<span class="text-surface-tint">@keyframes</span> slideUp {
+  <span class="text-outline">from</span> { opacity: 0; transform: translateY(10px); }
+  <span class="text-outline">to</span> { opacity: 1; transform: translateY(0); }
+}
+
+<span class="text-primary">/* Interactive Gauges */</span>
+<span class="text-surface-tint">.level-meter</span> {
+  <span class="text-outline">height</span>: 4px;
+  <span class="text-outline">background</span>: linear-gradient(90deg, #A970FF 0%, #763bca 100%);
+}
+                            </pre>
+<!-- Floating Action Overlay -->
+<div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 bg-surface-container rounded-lg border border-outline-variant hover:bg-primary hover:text-on-primary transition-all active:scale-90" onclick="copyToClipboard()" title="Copy to Clipboard">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Code Footer / Actions -->
+<div class="p-6 bg-surface-container-low border-t border-outline-variant grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-3 bg-surface-container-high border border-outline-variant rounded-lg font-bold hover:bg-surface-bright transition-colors active:scale-[0.98]" id="copyBtn" onclick="copyToClipboard()">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+                                Copy to Clipboard
+                            </button>
+<button class="flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-lg font-bold hover:opacity-90 transition-opacity active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                                Download .css
+                            </button>
+</div>
+</div>
+<!-- Pro Tip Card -->
+<div class="mt-6 p-4 bg-primary-container/20 border border-primary/20 rounded-xl flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="auto_awesome" data-weight="fill">auto_awesome</span>
+</div>
+<div>
+<h5 class="font-title-lg text-primary text-body-md font-bold">Pro Tip: Refresh on Scene Change</h5>
+<p class="text-on-surface-variant text-body-md">Enable "Shutdown source when not visible" in OBS to ensure the CSS reloads fresh when switching scenes.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Success Toast (Hidden by default) -->
+<div class="fixed bottom-8 right-8 translate-y-20 opacity-0 transition-all duration-300 bg-primary text-on-primary px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-[100]" id="toast">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+<span class="font-bold">Copied to clipboard!</span>
+</div>
+</main>
+<script>
+        function copyToClipboard() {
+            const btn = document.getElementById('copyBtn');
+            const toast = document.getElementById('toast');
+            
+            // Visual feedback on button
+            btn.classList.add('bg-primary', 'text-on-primary');
+            btn.innerHTML = `<span class="material-symbols-outlined">check</span> Copied!`;
+            
+            // Show toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                btn.classList.remove('bg-primary', 'text-on-primary');
+                btn.innerHTML = `<span class="material-symbols-outlined">content_copy</span> Copy to Clipboard`;
+                
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+            
+            // Real copy logic
+            const code = document.querySelector('pre').innerText;
+            navigator.clipboard.writeText(code);
+        }
+
+        // Lightweight atmospheric effect: Mouse tracking highlight on glass panels
+        document.addEventListener('mousemove', (e) => {
+            const panels = document.querySelectorAll('.glass-panel');
+            panels.forEach(panel => {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                panel.style.setProperty('--mouse-x', `${x}px`);
+                panel.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>
