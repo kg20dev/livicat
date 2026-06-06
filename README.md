@@ -1,9 +1,34 @@
+<p align="center">
+  <img src="livicat-icon.png" alt="Livicat Icon" width="128" height="128">
+</p>
+
 # Livicat — YouTube Live Chat Styling Editor
 
 A desktop Electron app for customizing YouTube Live Chat appearance for OBS browser source overlays.
 
-![Version](https://img.shields.io/badge/version-0.5.0-blue)
+![Version](https://img.shields.io/badge/version-0.5.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Size](https://img.shields.io/badge/binary%20size-103%20MB-orange)
+
+---
+
+## What's New in v0.5.3
+
+🔒 **Security Hardening**
+- Navigation blocking to prevent external URL redirects
+- IPC argument validation (type checking, length limits)
+- DevTools disabled in production builds
+- `webviewTag` disabled for attack surface reduction
+
+🐛 **Bug Fixes**
+- Fixed blank screen issue caused by `sandbox: true` restriction
+- Fixed Vite asset paths for `file://` protocol loading (added `base: './'`)
+
+📦 **Size Optimization** (115 MB → 103 MB)
+- Moved React dependencies to `devDependencies` (not needed by Electron main process)
+- Enabled maximum DMG compression
+- Stripped unused Chromium locale files
+- ~12 MB reduction (10% smaller)
 
 ---
 
@@ -174,9 +199,9 @@ git push -u origin release/app
 
 ### Downloading Releases
 Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) to download:
-- **macOS Intel**: `Livicat-x.x.x.dmg`
-- **macOS Apple Silicon**: `Livicat-x.x.x-arm64.dmg`
-- **Windows**: `Livicat Setup x.x.x.exe`
+- **macOS Intel**: `Livicat-0.5.3.dmg` (104 MB)
+- **macOS Apple Silicon**: `Livicat-0.5.3-arm64.dmg` (103 MB)
+- **Windows**: `Livicat Setup 0.5.3.exe`
 
 ## Building Electron Apps
 
@@ -228,36 +253,45 @@ Builds appear in the `release/` folder.
 ```
 src/
 ├── components/
-│   ├── chat/               # Chat preview components
-│   ├── layout/             # Sidebar, styling panel, preview area
-│   └── ui/                 # Reusable UI components
+│   ├── chat/               # Chat preview components (ChatDisplay, ChatMessage)
+│   ├── layout/             # Sidebar, styling panel, preview area (StylingPanel, PreviewArea)
+│   └── ui/                 # Reusable UI components (Button, Input, Select)
 ├── hooks/
 │   ├── useChatSettings.ts  # Settings persistence + CSS generation
 │   └── useElectronPreview.ts # Electron window management
+├── services/
+│   └── youtubeMetadata.ts  # Video metadata (oEmbed API)
 ├── utils/
 │   ├── cssGenerator.ts     # Converts settings to CSS
 │   ├── cssExport.ts        # OBS export utilities
 │   ├── fonts.ts            # Google Fonts integration
-│   └── youtubeMetadata.ts  # Video metadata (oEmbed API)
+│   ├── youtubePolling.ts   # Chat message polling
+│   └── debounce.ts         # Utility function
+├── types/
+│   └── app.ts              # TypeScript type definitions
+└── test/
+    └── setup.ts            # Vitest test configuration
 electron/
-├── main.cjs                # Electron main process
-└── preload.cjs             # IPC bridge
+├── main.cjs                # Electron main process (window management, IPC handlers)
+└── preload.cjs             # IPC bridge (contextBridge expose)
 ```
 
 ---
 
 ## How It Works (Technical)
 
-- **CSS Generation**: Your settings → CSS variables → YouTube chat selectors
-- **Electron Injection**: Popup loads YouTube chat → CSS injected via `executeJavaScript`
+- **CSS Generation**: Your settings → CSS variables → YouTube chat selectors (via `cssGenerator.ts`)
+- **Electron Injection**: Popup loads YouTube chat → CSS injected via IPC → `executeJavaScript`
+- **IPC Bridge**: `contextBridge` exposes `window.electronAPI` for secure renderer ↔ main communication
 - **oEmbed API**: Fetches video metadata without API key (public endpoint)
-- **No YouTube Data API**: Uses native YouTube chat, not custom message polling
+- **Vite + React**: Frontend built with Vite, React 18, TypeScript, TailwindCSS
+- **No YouTube Data API**: Uses native YouTube live chat in iframe, not custom message polling
 
 ---
 
 ## Features
 
-### ✅ Implemented (v0.5.0)
+### ✅ Implemented (v0.5.3)
 
 - ✅ Electron desktop app with always-on-top popup
 - ✅ 7 preset themes + full customization
@@ -268,6 +302,8 @@ electron/
 - ✅ Video metadata fetch (oEmbed API)
 - ✅ Settings persistence (localStorage)
 - ✅ Keyboard shortcut (`Ctrl+Shift+E` to export)
+- ✅ Security hardening (navigation blocking, IPC validation)
+- ✅ Optimized bundle size (103 MB DMG)
 
 ### 🚧 Planned
 
@@ -275,6 +311,7 @@ electron/
 - [ ] Dark/light mode toggle
 - [ ] More animation styles
 - [ ] Chat replay support for VODs
+- [ ] Tauri migration for smaller binary (~10 MB)
 
 ---
 
