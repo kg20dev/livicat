@@ -61,11 +61,17 @@
       "output": "release"
     },
     "files": [
-      "dist/**/*",
       "electron/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist"
+      }
+    ],
     "icon": "electron-icons/icon.png",
+    "asar": true,
     "mac": {
       "icon": "electron-icons/macos/icon.icns",
       "category": "public.app-category.utilities",
