@@ -6,6 +6,7 @@ import ChatMessage from './ChatMessage'
 interface ChatPreviewContext {
   messages: Message[]
   showHeader: boolean
+  showTimestamps: boolean
   isEmpty?: boolean
 }
 
@@ -24,12 +25,14 @@ export interface Message {
   username: string
   message: string
   avatarSeed: string | number
+  timestamp?: string
 }
 
 interface ChatPreviewRootProps {
   messages?: Message[]
   showHeader?: boolean
   isEmpty?: boolean
+  css?: string
   children: React.ReactNode
   className?: string
 }
@@ -38,14 +41,18 @@ export default function ChatPreview({
   messages = [],
   showHeader = true,
   isEmpty = false,
+  css = '',
   children,
   className = '',
 }: ChatPreviewRootProps) {
+  // React-level fallback: derive timestamp visibility from injected CSS
+  const showTimestamps = !css.includes('--chat-timestamp-display: none;')
   return (
-    <ChatPreviewContext.Provider value={{ messages, showHeader, isEmpty }}>
+    <ChatPreviewContext.Provider value={{ messages, showHeader, showTimestamps, isEmpty }}>
       <div
         className={`w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col overflow-hidden ${className}`}
       >
+        {css && <style key={css} dangerouslySetInnerHTML={{ __html: css }} />}
         {children}
       </div>
     </ChatPreviewContext.Provider>
@@ -69,7 +76,7 @@ ChatPreview.Header = function ChatPreviewHeader() {
 }
 
 ChatPreview.Messages = function ChatPreviewMessages() {
-  const { messages, isEmpty } = useChatPreviewContext()
+  const { messages, showTimestamps, isEmpty } = useChatPreviewContext()
 
   // Empty state
   if (isEmpty || messages.length === 0) {
@@ -77,22 +84,27 @@ ChatPreview.Messages = function ChatPreviewMessages() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <span className="material-symbols-outlined text-outline text-[48px] mb-4">chat_bubble</span>
         <p className="text-body-md text-on-surface-variant text-center">
-          {isEmpty ? 'Enter a YouTube URL to load chat messages' : 'No messages yet'}
+          {isEmpty ? 'Enter a YouTube URL, then click Fetch Chat' : 'No messages yet'}
         </p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-      {messages.map((msg) => (
-        <ChatMessage
-          key={msg.id}
-          username={msg.username}
-          message={msg.message}
-          avatarSeed={msg.avatarSeed}
-        />
-      ))}
+    <div id="chat" className="flex-1 overflow-y-auto">
+      <div id="contents" className="h-full">
+        <div id="items" className="p-4 space-y-4">
+          {messages.map((msg) => (
+            <ChatMessage
+              key={msg.id}
+              username={msg.username}
+              message={msg.message}
+              avatarSeed={msg.avatarSeed}
+              timestamp={showTimestamps ? msg.timestamp : undefined}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

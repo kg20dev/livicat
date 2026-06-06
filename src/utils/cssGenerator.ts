@@ -64,15 +64,46 @@ export interface GeneralSettings {
   backgroundColor?: string
 }
 
+export interface HeaderSettings {
+  display?: string
+}
+
+export interface ScrollButtonSettings {
+  display?: string
+  background?: string
+  color?: string
+  borderRadius?: string
+  opacity?: number
+}
+
+export interface EngagementMessagesSettings {
+  display?: string
+}
+
+export interface ChatDisclaimerSettings {
+  display?: string
+}
+
+export interface AnimationSettings {
+  style?: 'default' | 'blink' | 'glowing' | 'fade' | 'slide' | 'bounce'
+  speed?: 'none' | 'slow' | 'normal'
+}
+
 export interface ChatCSSSettings {
+  fontUrl?: string
   container?: ContainerSettings
   message?: MessageSettings
   username?: UsernameSettings
   messageText?: MessageTextSettings
   avatar?: AvatarSettings
   timestamp?: TimestampSettings
+  header?: HeaderSettings
+  scrollButton?: ScrollButtonSettings
+  engagementMessages?: EngagementMessagesSettings
+  chatDisclaimer?: ChatDisclaimerSettings
   scrollbar?: ScrollbarSettings
   general?: GeneralSettings
+  animation?: AnimationSettings
 }
 
 /* ─── CSS Variable Helpers ─────────────────────────────────────── */
@@ -295,6 +326,139 @@ function buildScrollbarRules(settings: ScrollbarSettings): string {
   return `#chat::-webkit-scrollbar {\n  width: var(--chat-scrollbar-width, 8px) !important;\n}\n${parts.join('\n')}\n`
 }
 
+function buildHeaderRules(settings: HeaderSettings): string {
+  const rules: string[] = []
+
+  if (settings.display) rules.push(`  display: ${settings.display} !important;`)
+
+  if (rules.length === 0) return ''
+
+  return `yt-live-chat-header-renderer {\n${rules.join('\n')}\n}\n`
+}
+
+function buildScrollButtonRules(settings: ScrollButtonSettings): string {
+  const rules: string[] = []
+  if (settings.display) rules.push(`  display: ${settings.display} !important;`)
+  if (settings.background) rules.push(`  background: ${settings.background} !important;`)
+  if (settings.color) rules.push(`  color: ${settings.color} !important;`)
+  if (settings.borderRadius) rules.push(`  border-radius: ${settings.borderRadius} !important;`)
+  if (settings.opacity !== undefined) rules.push(`  opacity: ${settings.opacity} !important;`)
+  if (rules.length === 0) return ''
+  return `yt-live-chat-renderer yt-icon-button,\n#chat-scroll-button {\n${rules.join('\n')}\n}\n`
+}
+
+function buildEngagementMessagesRules(settings: EngagementMessagesSettings): string {
+  const rules: string[] = []
+
+  if (settings.display) rules.push(`  display: ${settings.display} !important;`)
+
+  if (rules.length === 0) return ''
+
+  return `yt-live-chat-viewer-engagement-message-renderer {\n${rules.join('\n')}\n}\n`
+}
+
+function buildChatDisclaimerRules(settings: ChatDisclaimerSettings): string {
+  const rules: string[] = []
+
+  if (settings.display) rules.push(`  display: ${settings.display} !important;`)
+
+  if (rules.length === 0) return ''
+
+  return `#input-panel.style-scope.yt-live-chat-renderer {\n${rules.join('\n')}\n}\n`
+}
+
+function buildAnimationRules(settings: AnimationSettings): string {
+  const parts: string[] = []
+
+  // Map animation speeds to durations
+  const speedMap: Record<string, string> = {
+    none: '0s',
+    slow: '1.5s',
+    normal: '0.8s',
+  }
+
+  const duration = settings.speed ? speedMap[settings.speed] : '0.8s'
+
+  // Define keyframes for each animation style
+  const keyframes: Record<string, string> = {
+    blink: `@keyframes livicat-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}`,
+    glowing: `@keyframes livicat-glowing {
+  0% { 
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+  100% { 
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+  }
+}`,
+    fade: `@keyframes livicat-fade {
+  from { 
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: var(--chat-msg-opacity, 1);
+    transform: translateY(0);
+  }
+}`,
+    slide: `@keyframes livicat-slide {
+  from { 
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to { 
+    transform: translateX(0);
+    opacity: var(--chat-msg-opacity, 1);
+  }
+}`,
+    bounce: `@keyframes livicat-bounce {
+  0% { 
+    transform: scale(0.95);
+  }
+  50% { 
+    transform: scale(1.02);
+  }
+  100% { 
+    transform: scale(1);
+  }
+}`,
+  }
+
+  // Apply animation based on style
+  if (settings.style && settings.style !== 'default') {
+    const animationName = `livicat-${settings.style}`
+    
+    // Add keyframes
+    if (keyframes[settings.style]) {
+      parts.push(keyframes[settings.style])
+    }
+
+    // Build animation rule
+    const rules: string[] = []
+    
+    // Base animation properties
+    rules.push(`  animation: ${animationName} ${duration} ease-out !important;`)
+    
+    // Style-specific additions
+    if (settings.style === 'glowing') {
+      rules.push(`  transition: box-shadow ${duration} ease-out !important;`)
+    }
+    if (settings.style === 'fade' || settings.style === 'slide') {
+      rules.push(`  transform: translateZ(0) !important;`) // Enable hardware acceleration
+    }
+
+    parts.push(`yt-live-chat-text-message-renderer {\n${rules.join('\n')}\n}`)
+  }
+
+  return parts.join('\n\n')
+}
+
 /* ─── Main Generator ───────────────────────────────────────────── */
 
 /**
@@ -314,6 +478,11 @@ function buildScrollbarRules(settings: ScrollbarSettings): string {
  */
 export function generateChatCSS(settings: ChatCSSSettings): string {
   const parts: string[] = []
+
+  // Font @import must come before any CSS variable or rule blocks
+  if (settings.fontUrl) {
+    parts.push(`@import url('${settings.fontUrl}');\n`)
+  }
 
   const variables = buildCSSVariables(settings)
   if (variables) parts.push(variables)
@@ -350,6 +519,31 @@ export function generateChatCSS(settings: ChatCSSSettings): string {
 
   if (settings.scrollbar) {
     const rules = buildScrollbarRules(settings.scrollbar)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.header) {
+    const rules = buildHeaderRules(settings.header)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.scrollButton) {
+    const rules = buildScrollButtonRules(settings.scrollButton)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.engagementMessages) {
+    const rules = buildEngagementMessagesRules(settings.engagementMessages)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.chatDisclaimer) {
+    const rules = buildChatDisclaimerRules(settings.chatDisclaimer)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.animation) {
+    const rules = buildAnimationRules(settings.animation)
     if (rules) parts.push(rules)
   }
 
