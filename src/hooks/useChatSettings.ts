@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { ChatSettings, Preset } from '../types'
 import type { ChatCSSSettings } from '../utils/cssGenerator'
 import { generateChatCSS } from '../utils/cssGenerator'
+import { getFontUrl } from '../utils/fonts'
 
 /* ─── Storage Key ───────────────────────────────────────────────── */
 
@@ -13,6 +14,10 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   /* Display toggles */
   showAvatars: true,
   showTimestamps: true,
+  showHeader: true,
+  showScrollButton: true,
+  showEngagementMessages: true,
+  showChatDisclaimer: true,
   autoScroll: true,
   maxMessages: 100,
 
@@ -45,10 +50,17 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   scrollbarWidth: 4,
   scrollbarColor: '#444444',
 
+  /* Scroll button */
+  scrollButtonBackground: '#333333',
+  scrollButtonColor: '#ffffff',
+  scrollButtonBorderRadius: 20,
+  scrollButtonOpacity: 90,
+
   /* Other */
   messageSpacing: 'normal',
   theme: 'dark',
   animationSpeed: 'normal',
+  newMessageAnimation: 'default',
 }
 
 /* ─── Presets ───────────────────────────────────────────────────── */
@@ -72,6 +84,8 @@ export const PRESETS: Preset[] = [
       messageSpacing: 'compact',
       messageOpacity: 95,
       animationSpeed: 'none',
+      newMessageAnimation: 'default',
+      scrollButtonOpacity: 70,
     },
   },
   {
@@ -87,6 +101,8 @@ export const PRESETS: Preset[] = [
       messagePadding: 6,
       avatarSize: 20,
       messageSpacing: 'compact',
+      scrollButtonBackground: '#2a2a2a',
+      scrollButtonBorderRadius: 4,
     },
   },
   {
@@ -102,6 +118,9 @@ export const PRESETS: Preset[] = [
       avatarSize: 32,
       messageSpacing: 'comfortable',
       animationSpeed: 'slow',
+      scrollButtonBackground: '#444444',
+      scrollButtonBorderRadius: 24,
+      scrollButtonOpacity: 100,
     },
   },
   {
@@ -115,6 +134,9 @@ export const PRESETS: Preset[] = [
       messageOpacity: 90,
       messageFontSize: 16,
       showGlow: true,
+      scrollButtonBackground: 'rgba(0, 0, 0, 0.5)',
+      scrollButtonColor: '#ffffff',
+      scrollButtonOpacity: 70,
     },
   },
   {
@@ -132,6 +154,11 @@ export const PRESETS: Preset[] = [
       showGlow: true,
       messageOpacity: 95,
       scrollbarColor: '#ff00ff',
+      scrollButtonBackground: '#ff00ff',
+      scrollButtonColor: '#000000',
+      scrollButtonBorderRadius: 20,
+      scrollButtonOpacity: 100,
+      newMessageAnimation: 'glowing',
     },
   },
   {
@@ -147,6 +174,9 @@ export const PRESETS: Preset[] = [
       accentColor: '#6200ea',
       theme: 'light',
       scrollbarColor: '#cccccc',
+      scrollButtonBackground: '#e0e0e0',
+      scrollButtonColor: '#333333',
+      scrollButtonOpacity: 100,
     },
   },
   {
@@ -164,6 +194,10 @@ export const PRESETS: Preset[] = [
       usernameFontWeight: '700',
       messageBorderRadius: 0,
       showGlow: true,
+      scrollButtonBackground: '#003300',
+      scrollButtonColor: '#00ff41',
+      scrollButtonBorderRadius: 0,
+      scrollButtonOpacity: 95,
     },
   },
 ]
@@ -197,7 +231,15 @@ function saveSettings(settings: ChatSettings): void {
  * Convert user-friendly ChatSettings to the CSS generator format.
  */
 export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
+  // Map messageSpacing to margin value
+  const spacingMap: Record<string, string> = {
+    compact: '2px',
+    normal: '6px',
+    comfortable: '12px',
+  }
+
   return {
+    fontUrl: getFontUrl(settings.fontFamily) || undefined,
     general: {
       backgroundColor: settings.backgroundColor || undefined,
       fontFamily: settings.fontFamily || undefined,
@@ -215,6 +257,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       borderRadius: settings.messageBorderRadius ? `${settings.messageBorderRadius}px` : undefined,
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
       opacity: settings.messageOpacity ? settings.messageOpacity / 100 : undefined,
+      margin: spacingMap[settings.messageSpacing] || undefined,
     },
     username: {
       color: settings.usernameColor || undefined,
@@ -236,9 +279,31 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       fontSize: settings.timestampFontSize ? `${settings.timestampFontSize}px` : undefined,
       display: settings.showTimestamps ? undefined : 'none',
     },
+    header: {
+      display: settings.showHeader ? undefined : 'none',
+    },
+    scrollButton: {
+      display: settings.showScrollButton ? undefined : 'none',
+      background: settings.showScrollButton ? settings.scrollButtonBackground : undefined,
+      color: settings.showScrollButton ? settings.scrollButtonColor : undefined,
+      borderRadius: settings.showScrollButton
+        ? `${settings.scrollButtonBorderRadius}px`
+        : undefined,
+      opacity: settings.showScrollButton ? settings.scrollButtonOpacity / 100 : undefined,
+    },
+    engagementMessages: {
+      display: settings.showEngagementMessages ? undefined : 'none',
+    },
+    chatDisclaimer: {
+      display: settings.showChatDisclaimer ? undefined : 'none',
+    },
     scrollbar: {
       width: settings.scrollbarWidth ? `${settings.scrollbarWidth}px` : undefined,
       thumbColor: settings.scrollbarColor || undefined,
+    },
+    animation: {
+      style: settings.newMessageAnimation || undefined,
+      speed: settings.animationSpeed || undefined,
     },
   }
 }

@@ -83,9 +83,6 @@ TopBar.Right = function TopBarRight({ children }: { children?: React.ReactNode }
           <button className="p-2 text-on-surface-variant hover:text-primary transition-opacity">
             <span className="material-symbols-outlined">help_outline</span>
           </button>
-          <button className="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-bold hover:opacity-90 active:opacity-80 transition-all">
-            Go Live
-          </button>
         </>
       )}
     </div>
