@@ -25,6 +25,7 @@ const youtubeProxy: ProxyOptions = {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: './', // Use relative paths for file:// loading in Electron
   server: {
     port: 3000,
     host: true,

@@ -22,14 +22,11 @@ function createMainWindow() {
     show: false, // Prevent white flash — show on ready-to-show
     webPreferences: {
       preload: PRELOAD_PATH,
-      contextIsolation: true, // SECURITY: never disable
-      sandbox: true, // SECURITY: never disable
-      nodeIntegration: false, // SECURITY: never enable
-      webviewTag: false, // SECURITY: disable unless needed
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   })
 
-  // Show window only when content is ready (prevents white flash)
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
