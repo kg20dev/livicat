@@ -112,5 +112,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     }
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.0"
   }
 }
