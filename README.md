@@ -134,9 +134,77 @@ npm test             # Run 157+ tests
 npm run type-check   # TypeScript check
 npm run lint         # ESLint
 npm run format       # Prettier
+./scripts/release.sh # Create release (builds + GitHub Release)
 ```
 
+## Release Workflow
+
+### Option 1: Using Release Script (Recommended)
+```bash
+./scripts/release.sh
+```
+The script will:
+- Check git status (must be clean)
+- Create `release/app` branch
+- Push to GitHub
+- Monitor GitHub Actions build
+- Auto-create GitHub Release with installers
+
+### Option 2: Manual Release
+```bash
+# 1. Update version in package.json
+npm version patch  # or minor, or major
+
+# 2. Create release branch
+git checkout -b release/app
+
+# 3. Push to GitHub
+git push -u origin release/app
+
+# 4. Watch GitHub Actions build
+# 5. Find release at: https://github.com/kg20dev/livicat/releases
+```
+
+### What Happens Automatically
+1. GitHub Actions detects push to `release/**`
+2. Builds macOS (Intel + ARM64) and Windows (x64) apps
+3. Creates GitHub Release with version tag
+4. Attaches DMG and EXE installers
+5. Generates release notes from commits
+
+### Downloading Releases
+Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) to download:
+- **macOS Intel**: `Livicat-x.x.x.dmg`
+- **macOS Apple Silicon**: `Livicat-x.x.x-arm64.dmg`
+- **Windows**: `Livicat Setup x.x.x.exe`
+
 ## Building Electron Apps
+
+### Automated Releases (Recommended)
+
+**Quick Release:**
+```bash
+# Run the release helper script
+./scripts/release.sh
+```
+
+This will:
+1. Create a `release/app` branch
+2. Push to GitHub
+3. Trigger automated builds for macOS + Windows
+4. Create a GitHub Release with installers
+
+**Manual Release:**
+```bash
+# Create and push release branch
+git checkout -b release/app
+git push -u origin release/app
+```
+
+GitHub Actions will automatically:
+- Build macOS DMG (Intel + Apple Silicon)
+- Build Windows EXE installer
+- Create GitHub Release with installers attached
 
 ### Local Testing
 
@@ -152,15 +220,6 @@ npm run electron:build
 ```
 
 Builds appear in the `release/` folder.
-
-### Automated Builds (GitHub Actions
-
-On every push to `main`:
-- ✅ macOS app builds (Intel + ARM64) → uploaded as artifacts
-- ✅ Windows app builds (x64) → uploaded as artifacts
-
-On version tags (e.g., `v0.5.0`):
-- ✅ GitHub Release created with `.dmg` and `.exe` installers
 
 ---
 
