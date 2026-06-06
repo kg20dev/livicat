@@ -20,6 +20,7 @@ build
 # Electron
 .electron
 *.electron.js
+release
 
 # Editor directories and files
 .vscode/*

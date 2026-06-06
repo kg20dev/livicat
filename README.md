@@ -25,7 +25,17 @@ Livicat is a **CSS styling tool** for YouTube Live Chat. It lets you:
 
 - **Node.js** 18+ and npm
 
-### Setup
+### Option 1: Download Pre-built Apps
+
+**macOS (Intel & Apple Silicon):**
+- Download the latest `.dmg` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
+- Open and drag Livicat to Applications
+
+**Windows:**
+- Download the latest `.exe` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
+- Run the installer
+
+### Option 2: Build from Source
 
 ```bash
 # Clone the repo
@@ -40,6 +50,9 @@ npm run dev
 
 # Or run Electron desktop app
 npm run electron
+
+# Build for production
+npm run build
 ```
 
 ---
@@ -122,6 +135,32 @@ npm run type-check   # TypeScript check
 npm run lint         # ESLint
 npm run format       # Prettier
 ```
+
+## Building Electron Apps
+
+### Local Testing
+
+```bash
+# Build for macOS (Intel + Apple Silicon)
+npm run electron:build:mac
+
+# Build for Windows
+npm run electron:build:win
+
+# Build for current platform only
+npm run electron:build
+```
+
+Builds appear in the `release/` folder.
+
+### Automated Builds (GitHub Actions
+
+On every push to `main`:
+- ✅ macOS app builds (Intel + ARM64) → uploaded as artifacts
+- ✅ Windows app builds (x64) → uploaded as artifacts
+
+On version tags (e.g., `v0.5.0`):
+- ✅ GitHub Release created with `.dmg` and `.exe` installers
 
 ---
 
