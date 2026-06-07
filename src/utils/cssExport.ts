@@ -7,6 +7,8 @@
  * - CSS variables for easy customization
  */
 
+import { trackEventAsync } from './analytics'
+
 /* ─── OBS Instructions Header ───────────────────────────────────── */
 
 function generateOBSHeader(options: { themeName?: string; videoId?: string }): string {
@@ -92,4 +94,11 @@ export function downloadCSSFile(
 
   // Revoke the object URL after the download has started
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+
+  // Track analytics event
+  trackEventAsync('css_exported', {
+    format: 'css',
+    method: 'download',
+    had_customizations: cssContent.length > 0,
+  })
 }

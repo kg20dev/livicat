@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
@@ -14,6 +14,7 @@ import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
 import { FONT_OPTIONS } from './utils/fonts'
+import { trackEventAsync } from './utils/analytics'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -149,6 +150,7 @@ export default function App() {
   const [showLoading, setShowLoading] = useState(true)
   const [showConsent, setShowConsent] = useState(false)
   const [loadingComplete, setLoadingComplete] = useState(false)
+  const sessionStartRef = useRef<number | null>(null)
 
   // Mark loading as complete on mount (2 second delay handled by LoadingScreen component)
   useEffect(() => {
@@ -156,6 +158,18 @@ export default function App() {
       setShowLoading(false)
     }, 2000)
     return () => clearTimeout(timer)
+  }, [])
+
+  // Track session duration
+  useEffect(() => {
+    sessionStartRef.current = Date.now()
+
+    return () => {
+      if (sessionStartRef.current) {
+        const duration = Math.round((Date.now() - sessionStartRef.current) / 1000)
+        trackEventAsync('session_duration', { duration_seconds: duration })
+      }
+    }
   }, [])
 
   // Handle tab change + clear all state

@@ -6,6 +6,8 @@
  * See: https://oembed.com/
  */
 
+import { trackEventAsync } from './analytics'
+
 /* ─── Types ──────────────────────────────────────────────────────── */
 
 export interface YouTubeVideoInfo {
@@ -38,8 +40,10 @@ export async function fetchYouTubeMetadata(videoId: string): Promise<YouTubeFetc
 
     if (!response.ok) {
       if (response.status === 404) {
+        trackEventAsync('youtube_fetched', { success: false, error_code: 'not_found' })
         return { success: false, error: 'Video not found. Check the URL and try again.' }
       }
+      trackEventAsync('youtube_fetched', { success: false, error_code: 'http_error' })
       return {
         success: false,
         error: `YouTube returned error ${response.status}. Try again later.`,
@@ -48,6 +52,7 @@ export async function fetchYouTubeMetadata(videoId: string): Promise<YouTubeFetc
 
     const data = await response.json()
 
+    trackEventAsync('youtube_fetched', { success: true, error_code: null })
     return {
       success: true,
       data: {
@@ -61,6 +66,7 @@ export async function fetchYouTubeMetadata(videoId: string): Promise<YouTubeFetc
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
+    trackEventAsync('youtube_fetched', { success: false, error_code: 'network' })
     return {
       success: false,
       error: `Could not fetch video info: ${message}`,
