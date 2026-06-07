@@ -1,9 +1,26 @@
-import { invoke } from '@tauri-apps/api/core'
+import { trackEvent as aptabaseTrackEvent } from '@aptabase/tauri'
 
 /**
  * Centralized analytics helper with consent checking and error handling
- * All events respect user consent and never block the UI
+ * Uses the official Aptabase Tauri plugin for event tracking.
+ * All events respect user consent and never block the UI.
  */
+
+const CONSENT_KEY = 'livicat_analytics_consent'
+
+/**
+ * Check if user has consented to analytics
+ */
+export function isAnalyticsEnabled(): boolean {
+  return localStorage.getItem(CONSENT_KEY) === 'true'
+}
+
+/**
+ * Set analytics consent status
+ */
+export function setAnalyticsEnabled(enabled: boolean): void {
+  localStorage.setItem(CONSENT_KEY, enabled ? 'true' : 'false')
+}
 
 /**
  * Track an analytics event if user has consented
@@ -12,17 +29,16 @@ import { invoke } from '@tauri-apps/api/core'
  */
 export async function trackEvent(name: string, props?: Record<string, unknown>): Promise<void> {
   try {
-    // Check if analytics is enabled
-    const enabled = await invoke<boolean>('is_analytics_enabled')
-    if (!enabled) {
+    if (!isAnalyticsEnabled()) {
+      console.log('[Analytics] Analytics disabled, skipping event:', name)
       return
     }
 
-    // Track the event
-    await invoke('track_event', {
-      name,
-      props: props || {},
-    })
+    console.log('[Analytics] Tracking event:', name, 'props:', props)
+
+    // Track via the official Aptabase plugin
+    await aptabaseTrackEvent(name, props)
+    console.log('[Analytics] Event tracked successfully')
   } catch (error) {
     // Silently fail - never break the app due to analytics errors
     console.error('[Analytics] Failed to track event:', name, error)

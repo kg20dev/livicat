@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { invoke } from '@tauri-apps/api/core'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
@@ -14,7 +13,7 @@ import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
 import { FONT_OPTIONS } from './utils/fonts'
-import { trackEventAsync } from './utils/analytics'
+import { trackEventAsync, isAnalyticsEnabled } from './utils/analytics'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -229,29 +228,21 @@ export default function App() {
 
   // Analytics consent flow
   useEffect(() => {
-    const checkConsent = async () => {
-      try {
-        const enabled = await invoke<boolean>('is_analytics_enabled')
-
-        // If consent is already set (either true or false), don't show modal
-        // Check sessionStorage to see if we've already asked in this session
-        const askedThisSession = sessionStorage.getItem('analytics_consent_asked')
-
-        if (enabled === false && !askedThisSession) {
-          // No consent yet and haven't asked this session - show modal after loading
-          const timer = setTimeout(() => {
-            setShowConsent(true)
-          }, 500) // Show 500ms after loading completes
-          return () => clearTimeout(timer)
-        }
-      } catch (error) {
-        console.error('Failed to check analytics consent:', error)
-      }
-    }
-
     // Only check consent after loading is complete
-    if (loadingComplete) {
-      checkConsent()
+    if (!loadingComplete) return
+
+    const enabled = isAnalyticsEnabled()
+
+    // If consent is already set (either true or false), don't show modal
+    // Check sessionStorage to see if we've already asked in this session
+    const askedThisSession = sessionStorage.getItem('analytics_consent_asked')
+
+    if (enabled === false && !askedThisSession) {
+      // No consent yet and haven't asked this session - show modal after loading
+      const timer = setTimeout(() => {
+        setShowConsent(true)
+      }, 500) // Show 500ms after loading completes
+      return () => clearTimeout(timer)
     }
   }, [loadingComplete])
 

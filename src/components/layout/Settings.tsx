@@ -1,48 +1,28 @@
 import { useState, useEffect } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { isAnalyticsEnabled, setAnalyticsEnabled, trackEventAsync } from '../../utils/analytics'
 import './Settings.css'
 
 /**
  * Settings panel with analytics toggle
  */
 export default function Settings() {
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
+  const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load current analytics consent status
-    const loadStatus = async () => {
-      try {
-        const enabled = await invoke<boolean>('is_analytics_enabled')
-        setAnalyticsEnabled(enabled)
-      } catch (error) {
-        console.error('Failed to load analytics status:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadStatus()
+    // Load current analytics consent status from localStorage
+    setAnalyticsEnabledState(isAnalyticsEnabled())
+    setIsLoading(false)
   }, [])
 
-  const handleToggle = async () => {
+  const handleToggle = () => {
     const newValue = !analyticsEnabled
+    setAnalyticsEnabledState(newValue)
     setAnalyticsEnabled(newValue)
 
-    try {
-      await invoke('set_analytics_enabled', { enabled: newValue })
-
-      // Track the toggle event
-      if (newValue) {
-        await invoke('track_event', {
-          name: 'analytics_enabled_in_settings',
-          props: {},
-        })
-      }
-    } catch (error) {
-      console.error('Failed to toggle analytics:', error)
-      // Revert on error
-      setAnalyticsEnabled(!newValue)
+    // Track the toggle event
+    if (newValue) {
+      trackEventAsync('analytics_enabled_in_settings')
     }
   }
 
