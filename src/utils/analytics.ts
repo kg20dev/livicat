@@ -37,7 +37,7 @@ export async function trackEvent(name: string, props?: Record<string, unknown>):
     console.log('[Analytics] Tracking event:', name, 'props:', props)
 
     // Track via the official Aptabase plugin
-    await aptabaseTrackEvent(name, props)
+    await aptabaseTrackEvent(name, props as Record<string, string | number>)
     console.log('[Analytics] Event tracked successfully')
   } catch (error) {
     // Silently fail - never break the app due to analytics errors
