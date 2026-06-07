@@ -16,18 +16,17 @@ describe('analytics', () => {
 
   describe('trackEvent', () => {
     it('should not track when analytics is disabled', async () => {
-      mockInvoke.mockResolvedValueOnce(false) // is_analytics_enabled returns false
+      mockInvoke.mockResolvedValueOnce(false)
 
       await trackEvent('test_event')
 
-      // Should only call is_analytics_enabled, not track_event
       expect(mockInvoke).toHaveBeenCalledTimes(1)
       expect(mockInvoke).toHaveBeenCalledWith('is_analytics_enabled')
     })
 
     it('should track when analytics is enabled', async () => {
-      mockInvoke.mockResolvedValueOnce(true) // is_analytics_enabled returns true
-      mockInvoke.mockResolvedValueOnce(undefined) // track_event succeeds
+      mockInvoke.mockResolvedValueOnce(true)
+      mockInvoke.mockResolvedValueOnce(undefined)
 
       await trackEvent('test_event', { key: 'value' })
 
@@ -51,31 +50,25 @@ describe('analytics', () => {
       })
     })
 
-    it('should silently handle errors', async () => {
+    it('should silently handle errors from is_analytics_enabled', async () => {
       mockInvoke.mockRejectedValueOnce(new Error('Tauri not available'))
 
-      // Should not throw
       await expect(trackEvent('test_event')).resolves.toBeUndefined()
     })
 
-    it('should handle track_event command failure', async () => {
-      mockInvoke.mockResolvedValueOnce(true) // is_analytics_enabled returns true
+    it('should silently handle errors from track_event', async () => {
+      mockInvoke.mockResolvedValueOnce(true)
       mockInvoke.mockRejectedValueOnce(new Error('Network error'))
 
-      // Should not throw
       await expect(trackEvent('test_event')).resolves.toBeUndefined()
     })
   })
 
   describe('trackEventAsync', () => {
-    it('should fire and forget without awaiting', () => {
+    it('should exist and be callable', () => {
       mockInvoke.mockResolvedValue(true)
 
-      // Should not throw even synchronously
-      trackEventAsync('test_event', { key: 'value' })
-
-      // The call is fire-and-forget, so we just verify it doesn't throw
-      expect(true).toBe(true)
+      expect(() => trackEventAsync('test_event', { key: 'value' })).not.toThrow()
     })
   })
 
@@ -90,15 +83,14 @@ describe('analytics', () => {
       })
 
       const trackCall = mockInvoke.mock.calls[1]
-      const props = trackCall?.[1] as Record<string, unknown>
+      const props = (trackCall?.[1] as { props: Record<string, unknown> })?.props
 
-      // Verify no URL-like values in props
       const propsStr = JSON.stringify(props)
       expect(propsStr).not.toMatch(/youtube\.com/)
       expect(propsStr).not.toMatch(/youtu\.be/)
     })
 
-    it('should never include PII in event props', async () => {
+    it('should never include PII keys in event props', async () => {
       mockInvoke.mockResolvedValueOnce(true)
       mockInvoke.mockResolvedValueOnce(undefined)
 
@@ -109,13 +101,12 @@ describe('analytics', () => {
       })
 
       const trackCall = mockInvoke.mock.calls[1]
-      const props = trackCall?.[1] as Record<string, unknown>
+      const props = (trackCall?.[1] as { props: Record<string, unknown> })?.props
 
-      // Verify no PII keys
-      expect(props).not.toHaveProperty('email')
-      expect(props).not.toHaveProperty('name')
-      expect(props).not.toHaveProperty('username')
-      expect(props).not.toHaveProperty('url')
+      expect(Object.keys(props)).not.toContain('email')
+      expect(Object.keys(props)).not.toContain('user_email')
+      expect(Object.keys(props)).not.toContain('username')
+      expect(Object.keys(props)).not.toContain('url')
     })
 
     it('should not include custom CSS values in events', async () => {
@@ -128,12 +119,11 @@ describe('analytics', () => {
       })
 
       const trackCall = mockInvoke.mock.calls[1]
-      const props = trackCall?.[1] as Record<string, unknown>
+      const props = (trackCall?.[1] as { props: Record<string, unknown> })?.props
 
-      // Verify no CSS values
-      expect(props).not.toHaveProperty('value')
-      expect(props).not.toHaveProperty('css')
-      expect(props).not.toHaveProperty('color_value')
+      expect(Object.keys(props)).not.toContain('value')
+      expect(Object.keys(props)).not.toContain('css')
+      expect(Object.keys(props)).not.toContain('color_value')
     })
   })
 })
