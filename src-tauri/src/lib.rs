@@ -1,6 +1,12 @@
 use tauri::{Manager, AppHandle, State};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
+use serde_json::json;
+
+#[cfg(test)]
+mod analytics_tests;
+
+mod analytics;
 
 const PREVIEW_USER_AGENT: &str =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -9,7 +15,12 @@ struct PreviewState {
     window_label: Option<String>,
 }
 
+struct AnalyticsState {
+    client: Option<analytics::AnalyticsClient>,
+}
+
 type SharedPreviewState = Arc<Mutex<PreviewState>>;
+type SharedAnalyticsState = Arc<Mutex<AnalyticsState>>;
 
 #[tauri::command]
 fn open_preview_window(
@@ -65,6 +76,36 @@ fn open_preview_window(
         }
     });
 
+    Ok(())
+}
+
+#[tauri::command]
+fn set_analytics_enabled(enabled: bool, app: AppHandle, state: State<SharedAnalyticsState>) -> Result<(), String> {
+    analytics::set_analytics_consent(&app, enabled)
+        .map_err(|e| format!("Failed to set consent: {}", e))?;
+
+    let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+    if let Some(ref mut client) = state_guard.client {
+        client.set_enabled(enabled);
+        println!("[Livicat Analytics] Analytics {}", if enabled { "enabled" } else { "disabled" });
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn is_analytics_enabled(state: State<SharedAnalyticsState>) -> Result<bool, String> {
+    let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+    Ok(state_guard.client.as_ref().map_or(false, |c: &analytics::AnalyticsClient| c.is_enabled()))
+}
+
+#[tauri::command]
+fn track_event(name: String, props: Option<serde_json::Value>, state: State<SharedAnalyticsState>) -> Result<(), String> {
+    let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+    if let Some(ref client) = state_guard.client {
+        client.track_event(&name, props);
+        println!("[Livicat Analytics] Event: {}", name);
+    }
     Ok(())
 }
 
@@ -130,9 +171,39 @@ pub fn run() {
         window_label: None,
     }));
 
+    let analytics_state: SharedAnalyticsState = Arc::new(Mutex::new(AnalyticsState {
+        client: None,
+    }));
+
+    // Load .env file if present (for local development)
+    dotenvy::dotenv().ok();
+
+    let app_key = std::env::var("APTABASE_APP_KEY").unwrap_or_else(|_| {
+        println!("[Livicat] APTABASE_APP_KEY not set, analytics disabled");
+        "".to_string()
+    });
+
     tauri::Builder::default()
         .setup(move |app| {
             app.manage(preview_state);
+            app.manage(analytics_state.clone());
+
+            // Initialize analytics if App Key is present
+            if !app_key.is_empty() {
+                let client = analytics::init_analytics(app.handle(), &app_key);
+                println!("[Livicat] Analytics initialized");
+                
+                // Track app launch event
+                client.track_event("app_launched", Some(json!({
+                    "platform": std::env::consts::OS,
+                    "version": env!("CARGO_PKG_VERSION")
+                })));
+                
+                // Update state with initialized client
+                let mut state_guard = analytics_state.lock().unwrap();
+                state_guard.client = Some(client);
+            }
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -145,7 +216,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             open_preview_window,
             inject_css,
-            close_preview_window
+            close_preview_window,
+            set_analytics_enabled,
+            is_analytics_enabled,
+            track_event
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

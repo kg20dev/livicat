@@ -47,3 +47,7 @@ coverage
 
 # AI agents
 .agents
+
+# Local planning / tracking files
+ANALYTICS_IMPLEMENTATION_PLAN.md
+APTABASE_SETUP_SUMMARY.md
