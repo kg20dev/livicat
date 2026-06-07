@@ -75,14 +75,44 @@ function SidebarNavItems({
   activeItem: string
   onNavigate: (item: string) => void
 }) {
-  const items = [
+  const mainItems = [
     { id: 'workspace', label: 'Workspace', icon: 'edit_square' },
     { id: 'assets', label: 'Assets', icon: 'folder_open' },
   ]
 
+  const settingsItems = [
+    { id: 'settings', label: 'Settings', icon: 'settings' },
+  ]
+
   return (
     <>
-      {items.map((item) => {
+      {mainItems.map((item) => {
+        const isActive = activeItem === item.id
+        return (
+          <a
+            key={item.id}
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate(item.id)
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+              isActive
+                ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
+                : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
+            }`}
+          >
+            <span className="material-symbols-outlined">{item.icon}</span>
+            <span>{item.label}</span>
+          </a>
+        )
+      })}
+
+      {/* Divider before settings */}
+      <div className="my-4 border-t border-outline-variant" />
+
+      {/* Settings items */}
+      {settingsItems.map((item) => {
         const isActive = activeItem === item.id
         return (
           <a
