@@ -2,6 +2,8 @@ use tauri::{Manager, AppHandle};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
 
+mod analytics;
+
 const PREVIEW_USER_AGENT: &str =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -142,16 +144,13 @@ pub fn run() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
 
-    // Note: Rust tauri-plugin-aptabase has Tokio runtime compatibility issues with Tauri v2
-    // We use @aptabase/tauri JavaScript package instead (no Rust plugin needed)
-    if !app_key.is_empty() {
-        println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
-        println!("[Livicat] Analytics enabled via @aptabase/tauri JS package");
-    }
-
     tauri::Builder::default()
         .setup(move |app| {
             app.manage(preview_state);
+
+            // Create analytics state
+            let analytics_state = crate::analytics::create_analytics_state();
+            app.manage(analytics_state);
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -166,6 +165,7 @@ pub fn run() {
             open_preview_window,
             inject_css,
             close_preview_window,
+            crate::analytics::track_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
