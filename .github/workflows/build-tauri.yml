@@ -67,6 +67,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Get version from Cargo.toml
+        shell: bash
         id: cargo-version
         run: |
           VERSION=$(node .github/scripts/get-cargo-version.cjs)
@@ -118,6 +119,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Get version from Cargo.toml
+        shell: bash
         id: cargo-version
         run: |
           VERSION=$(node .github/scripts/get-cargo-version.cjs)
