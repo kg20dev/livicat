@@ -159,6 +159,11 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Track app launch (runs once on mount)
+  useEffect(() => {
+    trackEventAsync('app_launched')
+  }, [])
+
   // Track session duration
   useEffect(() => {
     sessionStartRef.current = Date.now()

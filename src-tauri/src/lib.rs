@@ -144,13 +144,13 @@ pub fn run() {
     }
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(app_key.clone()).build())
         .setup(move |app| {
             app.manage(preview_state);
 
-            // Track app launch event via the official plugin
+            // Note: app.track_event() requires Tokio runtime context
+            // We'll track app_launched from frontend on mount instead
             if !app_key.is_empty() {
-                let _ = app.track_event("app_launched", None);
                 println!("[Livicat] Analytics initialized via tauri-plugin-aptabase");
             }
 
