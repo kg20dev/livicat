@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react'
 import { invoke, isTauri as checkIsTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-
 /**
  * Hook for communicating with Electron/Tauri to open/manage
  * a preview window of YouTube live chat with CSS injection.
@@ -51,27 +50,21 @@ export function useElectronPreview() {
     }
   }, [isElectron, isTauriRuntime])
 
-  const openPreview = useCallback(
-    async (videoId: string, css: string) => {
-      if (isElectron && electronApiRef.current) {
-        electronApiRef.current.openChatPreview(videoId, css)
-      } else if (isTauriRuntime) {
-        await invoke('open_preview_window', { videoId, css })
-      }
-    },
-    [isElectron, isTauriRuntime]
-  )
+  const openPreview = useCallback(async (videoId: string, css: string) => {
+    if (isElectron && electronApiRef.current) {
+      electronApiRef.current.openChatPreview(videoId, css)
+    } else if (isTauriRuntime) {
+      await invoke('open_preview_window', { videoId, css })
+    }
+  }, [])
 
-  const updateCSS = useCallback(
-    async (css: string) => {
-      if (isElectron && electronApiRef.current) {
-        electronApiRef.current.updateChatCSS(css)
-      } else if (isTauriRuntime) {
-        await invoke('inject_css', { css })
-      }
-    },
-    [isElectron, isTauriRuntime]
-  )
+  const updateCSS = useCallback(async (css: string) => {
+    if (isElectron && electronApiRef.current) {
+      electronApiRef.current.updateChatCSS(css)
+    } else if (isTauriRuntime) {
+      await invoke('inject_css', { css })
+    }
+  }, [])
 
   const closePreview = useCallback(() => {
     if (isElectron && electronApiRef.current) {
