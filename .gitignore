@@ -44,3 +44,6 @@ coverage
 .env
 .env.local
 .env.*.local
+
+# AI agents
+.agents

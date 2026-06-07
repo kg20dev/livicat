@@ -6,13 +6,18 @@
 
 A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser source overlays.
 
-![Version](https://img.shields.io/badge/version-0.5.4-blue)
+![Version](https://img.shields.io/badge/version-0.6.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
 
 ---
 
-## What's New in v0.5.4
+## What's New in v0.6.0
+
+🐛 **Critical Bug Fixes**
+- Fixed isTauri race condition — "Live Chat" button now appears reliably
+- Fixed YouTube "old browser" error — Chrome UA spoofing for preview window
+- Real-time CSS injection — styling changes update preview instantly
 
 🚀 **Tauri Migration Complete** (115 MB → 8 MB — 93% smaller)
 - Replaced Electron with [Tauri 2](https://v2.tauri.app/) (Rust backend + OS webview)
@@ -184,7 +189,7 @@ git push -u origin release/app
 ### Downloading Releases
 
 Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) to download:
-- **macOS Apple Silicon**: `Livicat_0.5.4_aarch64.dmg` (~4 MB)
+- **macOS Apple Silicon**: `Livicat_0.6.0_aarch64.dmg` (~4 MB)
 
 ## Building Tauri Apps
 
