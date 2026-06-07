@@ -1,12 +1,14 @@
-import { invoke } from '@tauri-apps/api/core'
+import { trackEvent as aptabaseTrackEvent } from '@aptabase/tauri'
 
 /**
  * Centralized analytics helper with consent checking and error handling
- * Uses custom Tauri command that sends events directly to Aptabase API.
+ * Uses the official Aptabase Tauri plugin for event tracking.
  * All events respect user consent and never block the UI.
  * 
- * Note: Using custom implementation (not tauri-plugin-aptabase) due to
- * Tokio runtime compatibility issues with Tauri v2.
+ * Note: Using official tauri-plugin-aptabase v1.0.0 with workaround:
+ * - Plugin registered in lib.rs without start_polling() to avoid Tokio runtime panic
+ * - Events flushed on app exit via flush_events_blocking()
+ * - Batching and automatic flushing handled by plugin (we skip polling, rely on exit flush)
  */
 
 const CONSENT_KEY = 'livicat_analytics_consent'
@@ -39,11 +41,8 @@ export async function trackEvent(name: string, props?: Record<string, unknown>):
 
     console.log('[Analytics] Tracking event:', name, 'props:', props)
 
-    // Track via our custom Tauri command
-    await invoke('track_event', {
-      name,
-      props: props || {},
-    })
+    // Track via the official Aptabase plugin
+    await aptabaseTrackEvent(name, props as Record<string, string | number>)
     console.log('[Analytics] Event tracked successfully')
   } catch (error) {
     // Silently fail - never break the app due to analytics errors

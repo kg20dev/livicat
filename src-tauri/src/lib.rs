@@ -1,8 +1,7 @@
 use tauri::{Manager, AppHandle};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
-
-mod analytics;
+use tauri_plugin_aptabase::EventTracker;
 
 const PREVIEW_USER_AGENT: &str =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -20,7 +19,6 @@ fn open_preview_window(
     app: AppHandle,
     state: tauri::State<SharedPreviewState>,
 ) -> Result<(), String> {
-    // Close existing preview window if any
     {
         let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
         if let Some(ref label) = state_guard.window_label {
@@ -35,13 +33,11 @@ fn open_preview_window(
 
     println!("[Livicat Tauri] Opening preview for video: {}", video_id);
 
-    // Store label in state
     {
         let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
         state_guard.window_label = Some(window_label.clone());
     }
 
-    // Create window
     let window = WebviewWindowBuilder::new(
         &app,
         &window_label,
@@ -57,7 +53,6 @@ fn open_preview_window(
 
     window.show().map_err(|e| format!("Failed to show window: {}", e))?;
 
-    // Inject CSS after a delay
     let window_clone = window;
     let css_clone = css;
     std::thread::spawn(move || {
@@ -144,13 +139,23 @@ pub fn run() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
 
+    // Create a Tokio runtime context before building the app.
+    // The Aptabase plugin calls tokio::spawn() during its setup(),
+    // which requires a Tokio runtime to be active.
+    let _runtime_guard = tokio::runtime::Runtime::new()
+        .expect("failed to create Tokio runtime")
+        .enter();
+
     tauri::Builder::default()
+        .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .setup(move |app| {
             app.manage(preview_state);
 
-            // Create analytics state
-            let analytics_state = crate::analytics::create_analytics_state();
-            app.manage(analytics_state);
+            // Track app launch event via the official plugin
+            if !app_key.is_empty() {
+                let _ = app.track_event("app_launched", None);
+                println!("[Livicat] Analytics initialized via tauri-plugin-aptabase");
+            }
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -165,7 +170,6 @@ pub fn run() {
             open_preview_window,
             inject_css,
             close_preview_window,
-            crate::analytics::track_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
