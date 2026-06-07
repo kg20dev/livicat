@@ -91,14 +91,80 @@ jobs:
             src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app
           retention-days: 30
 
-      - name: Create Release (if needed)
-        if: needs.setup.outputs.should_release == 'true'
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+    needs: setup
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Build Windows app
+        run: npm run tauri build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: livicat-windows
+          path: |
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+          retention-days: 30
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [setup, build-mac, build-windows]
+    if: needs.setup.outputs.should_release == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: livicat-macos
+          path: artifacts/macos
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: livicat-windows
+          path: artifacts/windows
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
           files: |
-            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            artifacts/macos/*.dmg
+            artifacts/windows/*.exe
+            artifacts/windows/*.msi
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -107,6 +173,7 @@ jobs:
 
             ### Downloads
             - **macOS (Apple Silicon)**: `Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg`
+            - **Windows (x64)**: `Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe` or `Livicat_${{ needs.setup.outputs.version }}_x64.msi`
 
             ### What's New
 
@@ -118,6 +185,11 @@ jobs:
             1. Download the appropriate `.dmg` file
             2. Open and drag Livicat to Applications
             3. Launch from Applications folder
+
+            **Windows**:
+            1. Download the `.exe` installer or `.msi` package
+            2. Run the installer
+            3. Launch Livicat from Start Menu
 
             ### 📚 Documentation
 
