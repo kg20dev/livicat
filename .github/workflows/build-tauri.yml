@@ -69,7 +69,7 @@ jobs:
       - name: Get version from Cargo.toml
         id: cargo-version
         run: |
-          VERSION=$(node .github/scripts/get-cargo-version.js)
+          VERSION=$(node .github/scripts/get-cargo-version.cjs)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Cargo version: $VERSION"
 
@@ -120,7 +120,7 @@ jobs:
       - name: Get version from Cargo.toml
         id: cargo-version
         run: |
-          VERSION=$(node .github/scripts/get-cargo-version.js)
+          VERSION=$(node .github/scripts/get-cargo-version.cjs)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Cargo version: $VERSION"
 
