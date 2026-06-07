@@ -173,9 +173,10 @@ jobs:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
           files: |
-            artifacts/macos/*.dmg
-            artifacts/windows/*.exe
-            artifacts/windows/*.msi
+            artifacts/macos/dmg/*.dmg
+            artifacts/macos/macos/*.app
+            artifacts/windows/nsis/*.exe
+            artifacts/windows/msi/*.msi
           draft: false
           prerelease: false
           generate_release_notes: true
