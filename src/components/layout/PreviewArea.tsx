@@ -208,7 +208,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
         <p className="text-body-md text-on-surface font-bold text-center mb-2">Live Chat Loaded</p>
         <p className="text-label-md text-on-surface-variant text-center max-w-[280px] mb-4">
           Click <span className="font-bold text-on-surface">Live Preview</span> below to open a
-          native Electron window with YouTube's live chat and your CSS injected.
+          native Tauri window with YouTube's live chat and your CSS injected.
         </p>
         <div className="flex items-center gap-2 text-label-sm text-outline">
           <span className="material-symbols-outlined text-[16px]">info</span>
@@ -244,7 +244,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
 
 PreviewArea.Actions = function PreviewAreaActions() {
   const { fetchStatus, mode, videoId, injectedCSS } = usePreviewAreaContext()
-  const { isElectron, openPreview, updateCSS, closePreview } = useElectronPreview()
+  const { isTauri, openPreview, updateCSS, closePreview } = useElectronPreview()
   const [previewOpen, setPreviewOpen] = useState(false)
 
   // Listen for Electron preview window closing (by user or main process)
@@ -275,7 +275,7 @@ PreviewArea.Actions = function PreviewAreaActions() {
     <div className="absolute bottom-6 right-6 flex items-center gap-2">
       {mode === 'live' && fetchStatus === 'success' && (
         <>
-          {isElectron && (
+          {isTauri && (
             <button
               onClick={handleLivePreview}
               className="flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-full text-label-sm font-medium hover:opacity-90 transition-opacity"

@@ -1,4 +1,4 @@
-name: Build Electron Apps
+name: Build Tauri App
 
 on:
   push:
@@ -30,14 +30,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Get version from package.json
         id: get_version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
-      
+
       - name: Check if should create release
         id: check_release
         run: |
@@ -52,118 +52,76 @@ jobs:
     name: Build macOS App
     runs-on: macos-latest
     needs: setup
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build production bundle
         run: npm run build
-      
-      - name: Build macOS app
-        run: npm run electron:build:mac
+
+      - name: Build macOS app (Apple Silicon)
+        run: npm run tauri:build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: livicat-macos
-          path: release/*.dmg
+          path: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app
           retention-days: 30
-      
+
       - name: Create Release (if needed)
         if: needs.setup.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
-          files: release/*.dmg
+          files: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
             ## 🎉 Livicat v${{ needs.setup.outputs.version }}
-            
+
             ### Downloads
-            - **macOS (Intel)**: `Livicat-${{ needs.setup.outputs.version }}.dmg`
-            - **macOS (Apple Silicon)**: `Livicat-${{ needs.setup.outputs.version }}-arm64.dmg`
-            - **Windows**: `Livicat Setup ${{ needs.setup.outputs.version }}.exe`
-            
+            - **macOS (Apple Silicon)**: `Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg`
+
             ### What's New
-            
+
             See the [commit history](https://github.com/kg20dev/livicat/commits/main) for details.
-            
+
             ### Installation
-            
+
             **macOS**:
             1. Download the appropriate `.dmg` file
             2. Open and drag Livicat to Applications
             3. Launch from Applications folder
-            
-            **Windows**:
-            1. Download the `.exe` installer
-            2. Run the installer
-            3. Launch from Start Menu
-            
+
             ### 📚 Documentation
-            
+
             For usage instructions, see the [README](https://github.com/kg20dev/livicat#readme)
-            
+
             ---
             **Made with ❤️ for streamers**
-
-  build-windows:
-    name: Build Windows App
-    runs-on: windows-latest
-    needs: setup
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build production bundle
-        run: npm run build
-      
-      - name: Build Windows app
-        run: npm run electron:build:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: livicat-windows
-          path: release/*.exe
-          retention-days: 30
-      
-      - name: Create Release (if needed)
-        if: needs.setup.outputs.should_release == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.setup.outputs.version }}
-          name: Livicat v${{ needs.setup.outputs.version }}
-          files: release/*.exe
-          draft: false
-          prerelease: false
-          generate_release_notes: false
-          body: |
-            Windows installer has been added to the release. See macOS job for full release notes.
