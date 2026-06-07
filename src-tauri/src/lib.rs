@@ -1,7 +1,6 @@
 use tauri::{Manager, AppHandle};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
-use tauri_plugin_aptabase::EventTracker;
 
 const PREVIEW_USER_AGENT: &str =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -144,7 +143,7 @@ pub fn run() {
     }
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_aptabase::Builder::new(app_key.clone()).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .setup(move |app| {
             app.manage(preview_state);
 
