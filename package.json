@@ -24,7 +24,7 @@
     "electron:prod": "npm run build && electron .",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:build:mac": "tauri build --target universal-apple-darwin"
+    "tauri:build:mac": "tauri build --target aarch64-apple-darwin"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
