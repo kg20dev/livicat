@@ -36,34 +36,30 @@ export function useElectronPreview() {
         window.dispatchEvent(new CustomEvent('electron-preview-closed'))
       })
       let unlisten: (() => void) | undefined
-      unlistenPromise.then((fn) => { unlisten = fn })
+      unlistenPromise.then((fn) => {
+        unlisten = fn
+      })
       return () => {
         unlisten?.()
       }
     }
   }, [])
 
-  const openPreview = useCallback(
-    async (videoId: string, css: string) => {
-      if (isElectron && electronApiRef.current) {
-        electronApiRef.current.openChatPreview(videoId, css)
-      } else if (isTauri) {
-        await invoke('open_preview_window', { videoId, css })
-      }
-    },
-    []
-  )
+  const openPreview = useCallback(async (videoId: string, css: string) => {
+    if (isElectron && electronApiRef.current) {
+      electronApiRef.current.openChatPreview(videoId, css)
+    } else if (isTauri) {
+      await invoke('open_preview_window', { videoId, css })
+    }
+  }, [])
 
-  const updateCSS = useCallback(
-    async (css: string) => {
-      if (isElectron && electronApiRef.current) {
-        electronApiRef.current.updateChatCSS(css)
-      } else if (isTauri) {
-        await invoke('inject_css', { css })
-      }
-    },
-    []
-  )
+  const updateCSS = useCallback(async (css: string) => {
+    if (isElectron && electronApiRef.current) {
+      electronApiRef.current.updateChatCSS(css)
+    } else if (isTauri) {
+      await invoke('inject_css', { css })
+    }
+  }, [])
 
   const closePreview = useCallback(() => {
     if (isElectron && electronApiRef.current) {
