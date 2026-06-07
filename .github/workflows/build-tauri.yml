@@ -68,10 +68,14 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: cargo-version
+        shell: node
         run: |
-          VERSION=$(grep -m 1 '^version = ' src-tauri/Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Cargo version: $VERSION"
+          const fs = require('fs');
+          const cargo = fs.readFileSync('src-tauri/Cargo.toml', 'utf8');
+          const match = cargo.match(/^version = "([^"]+)"/m);
+          const version = match ? match[1] : 'unknown';
+          console.log(`version=${version}`);
+          console.log(`Cargo version: ${version}`);
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -119,10 +123,14 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: cargo-version
+        shell: node
         run: |
-          VERSION=$(grep -m 1 '^version = ' src-tauri/Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Cargo version: $VERSION"
+          const fs = require('fs');
+          const cargo = fs.readFileSync('src-tauri/Cargo.toml', 'utf8');
+          const match = cargo.match(/^version = "([^"]+)"/m);
+          const version = match ? match[1] : 'unknown';
+          console.log(`version=${version}`);
+          console.log(`Cargo version: ${version}`);
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
