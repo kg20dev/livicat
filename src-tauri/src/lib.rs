@@ -1,6 +1,13 @@
 use tauri::{AppHandle};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 
+// Spoof a modern Chrome user agent on the preview webview. Tauri uses the
+// OS webview (WKWebView on macOS), which ships an outdated UA that YouTube's
+// chat detection rejects with "older version of your browser". Only the
+// preview window needs this — the main editor window keeps the default UA.
+const PREVIEW_USER_AGENT: &str =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
 #[tauri::command]
 fn open_preview_window(
     video_id: String,
@@ -10,9 +17,9 @@ fn open_preview_window(
     // Create new preview window
     let chat_url = format!("https://www.youtube.com/live_chat?is_popout=1&v={}", video_id);
     let window_label = format!("preview-{}", video_id);
-    
+
     println!("[Livicat Tauri] Opening preview for video: {}", video_id);
-    
+
     // Create window
     let window = WebviewWindowBuilder::new(
         &app,
@@ -23,6 +30,7 @@ fn open_preview_window(
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
     .always_on_top(true)
+    .user_agent(PREVIEW_USER_AGENT)
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
     
