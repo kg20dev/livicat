@@ -80,9 +80,7 @@ function SidebarNavItems({
     { id: 'assets', label: 'Assets', icon: 'folder_open' },
   ]
 
-  const settingsItems = [
-    { id: 'settings', label: 'Settings', icon: 'settings' },
-  ]
+  const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]
 
   return (
     <>

@@ -40,7 +40,9 @@
 .consent-modal.closing {
   transform: translate(-50%, -50%) scale(0.95);
   opacity: 0;
-  transition: transform 300ms ease-out, opacity 300ms ease-out;
+  transition:
+    transform 300ms ease-out,
+    opacity 300ms ease-out;
 }
 
 @keyframes slideIn {
@@ -79,7 +81,10 @@
 }
 
 .consent-title {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
@@ -187,7 +192,10 @@
   min-width: 140px;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;

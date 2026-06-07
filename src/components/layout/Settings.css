@@ -12,7 +12,10 @@
 }
 
 .settings-title {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
@@ -60,7 +63,10 @@
 }
 
 .settings-section-title {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
@@ -90,7 +96,10 @@
 }
 
 .settings-item-label {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.9375rem;
   font-weight: 500;
   color: #ffffff;

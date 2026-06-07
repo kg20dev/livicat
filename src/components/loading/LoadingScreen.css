@@ -50,7 +50,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.3));
   }
@@ -61,7 +62,10 @@
 }
 
 .livicat-title {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 2rem;
   font-weight: 600;
   color: #ffffff;

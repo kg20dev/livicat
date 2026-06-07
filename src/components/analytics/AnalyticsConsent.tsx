@@ -20,7 +20,7 @@ export default function AnalyticsConsent({ onDecision }: AnalyticsConsentProps) 
       await invoke('set_analytics_enabled', { enabled: true })
       await invoke('track_event', {
         name: 'analytics_consent_given',
-        props: { decision: 'allowed' }
+        props: { decision: 'allowed' },
       })
       setIsClosing(true)
       setTimeout(() => onDecision(true), 300)
@@ -51,11 +51,7 @@ export default function AnalyticsConsent({ onDecision }: AnalyticsConsentProps) 
     <>
       <div className={`consent-backdrop ${isClosing ? 'closing' : ''}`} />
       <div className={`consent-modal ${isClosing ? 'closing' : ''}`}>
-        <button
-          className="consent-close"
-          onClick={handleDismiss}
-          aria-label="Close"
-        >
+        <button className="consent-close" onClick={handleDismiss} aria-label="Close">
           ✕
         </button>
 
