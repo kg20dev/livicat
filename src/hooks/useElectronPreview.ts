@@ -1,15 +1,6 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useMemo } from 'react'
 import { invoke, isTauri as checkIsTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-
-// Check if running in Tauri (Tauri 2 API: requires isTauri() from @tauri-apps/api/core,
-// since window.__TAURI__ is not injected by default — only when
-// app.withGlobalTauri is true in tauri.conf.json)
-const isTauriRuntime = checkIsTauri()
-
-// Check if running in Electron
-const isElectron = !isTauriRuntime && window.electronAPI !== undefined
-
 /**
  * Hook for communicating with Electron/Tauri to open/manage
  * a preview window of YouTube live chat with CSS injection.
@@ -19,9 +10,21 @@ const isElectron = !isTauriRuntime && window.electronAPI !== undefined
  * Provides `isElectron`, `isTauri` flags and preview control methods.
  */
 export function useElectronPreview() {
-  // Capture electronApi in a ref to keep a stable reference (avoids
-  // re-running effects/callbacks when the parent re-renders).
+  // Detect Tauri runtime INSIDE the hook (lazy), not at module load.
+  // Tauri 2's init script sets `window.isTauri = true` via Object.defineProperty
+  // before the page's own scripts run, but Vite module evaluation can happen
+  // before the init script is applied in some webview timing scenarios.
+  // Evaluating on first render guarantees the property is set.
+  const isTauriRuntime = useMemo(() => checkIsTauri(), [])
+
+  // Capture electronApi in a ref to keep a stable reference
   const electronApiRef = useRef<ElectronAPI | undefined>(window.electronAPI)
+
+  // Derive isElectron after we know the Tauri state
+  const isElectron = useMemo(
+    () => !isTauriRuntime && window.electronAPI !== undefined,
+    [isTauriRuntime]
+  )
 
   // Subscribe to preview-closed events
   useEffect(() => {
@@ -45,23 +48,29 @@ export function useElectronPreview() {
         unlisten?.()
       }
     }
-  }, [])
+  }, [isElectron, isTauriRuntime])
 
-  const openPreview = useCallback(async (videoId: string, css: string) => {
-    if (isElectron && electronApiRef.current) {
-      electronApiRef.current.openChatPreview(videoId, css)
-    } else if (isTauriRuntime) {
-      await invoke('open_preview_window', { videoId, css })
-    }
-  }, [])
+  const openPreview = useCallback(
+    async (videoId: string, css: string) => {
+      if (isElectron && electronApiRef.current) {
+        electronApiRef.current.openChatPreview(videoId, css)
+      } else if (isTauriRuntime) {
+        await invoke('open_preview_window', { videoId, css })
+      }
+    },
+    [isElectron, isTauriRuntime]
+  )
 
-  const updateCSS = useCallback(async (css: string) => {
-    if (isElectron && electronApiRef.current) {
-      electronApiRef.current.updateChatCSS(css)
-    } else if (isTauriRuntime) {
-      await invoke('inject_css', { css })
-    }
-  }, [])
+  const updateCSS = useCallback(
+    async (css: string) => {
+      if (isElectron && electronApiRef.current) {
+        electronApiRef.current.updateChatCSS(css)
+      } else if (isTauriRuntime) {
+        await invoke('inject_css', { css })
+      }
+    },
+    [isElectron, isTauriRuntime]
+  )
 
   const closePreview = useCallback(() => {
     if (isElectron && electronApiRef.current) {
@@ -69,7 +78,7 @@ export function useElectronPreview() {
     } else if (isTauriRuntime) {
       invoke('close_preview_window', {})
     }
-  }, [])
+  }, [isElectron, isTauriRuntime])
 
   return {
     isElectron,
