@@ -1,9 +1,10 @@
-import { createContext, useContext, useMemo, useCallback, useState, useEffect } from 'react'
+import { createContext, useContext, useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import ChatPreview, { type Message } from '../chat/ChatPreview'
 import UrlInputBar, { type ChatMode } from '../ui/UrlInputBar'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { useElectronPreview } from '../../hooks/useElectronPreview'
 import type { YouTubeVideoInfo } from '../../utils/youtubeMetadata'
+import { trackEventAsync } from '../../utils/analytics'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -246,10 +247,19 @@ PreviewArea.Actions = function PreviewAreaActions() {
   const { fetchStatus, mode, videoId, injectedCSS } = usePreviewAreaContext()
   const { isTauri, openPreview, updateCSS, closePreview } = useElectronPreview()
   const [previewOpen, setPreviewOpen] = useState(false)
+  const previewStartRef = useRef<number | null>(null)
 
   // Listen for Electron preview window closing (by user or main process)
   useEffect(() => {
-    const handleClosed = () => setPreviewOpen(false)
+    const handleClosed = () => {
+      setPreviewOpen(false)
+      // Track preview duration
+      if (previewStartRef.current) {
+        const duration = Math.round((Date.now() - previewStartRef.current) / 1000)
+        trackEventAsync('preview_duration', { duration_seconds: duration })
+        previewStartRef.current = null
+      }
+    }
     window.addEventListener('electron-preview-closed', handleClosed)
     return () => window.removeEventListener('electron-preview-closed', handleClosed)
   }, [])
@@ -265,9 +275,20 @@ PreviewArea.Actions = function PreviewAreaActions() {
     if (previewOpen) {
       closePreview()
       setPreviewOpen(false)
+      // Track preview duration
+      if (previewStartRef.current) {
+        const duration = Math.round((Date.now() - previewStartRef.current) / 1000)
+        trackEventAsync('preview_duration', { duration_seconds: duration })
+        previewStartRef.current = null
+      }
     } else if (videoId) {
       openPreview(videoId, injectedCSS)
       setPreviewOpen(true)
+      previewStartRef.current = Date.now()
+      trackEventAsync('preview_opened', {
+        has_video_id: !!videoId,
+        video_provided: !!videoId,
+      })
     }
   }, [previewOpen, videoId, injectedCSS, openPreview, closePreview])
 

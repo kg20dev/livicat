@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useMemo, useRef, useEffect } fr
 import { useChatSettings, settingsToCSS, PRESETS } from '../../hooks/useChatSettings'
 import type { ChatSettings } from '../../types/app'
 import { loadWebFont } from '../../utils/fonts'
+import { trackEventAsync } from '../../utils/analytics'
 
 /* ─── Context ──────────────────────────────────────────────────── */
 
@@ -36,6 +37,31 @@ export default function StylingPanel({
 }: StylingPanelRootProps) {
   const { settings, updateSetting, updateSettings, savedIndicator } = useChatSettings()
 
+  // Wrapped updateSetting with analytics tracking
+  const trackedUpdateSetting = useCallback(
+    <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
+      updateSetting(key, value)
+      trackEventAsync('customization_changed', {
+        setting_type:
+          typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'toggle' : 'select',
+        setting_key: String(key),
+      })
+    },
+    [updateSetting]
+  )
+
+  // Wrapped updateSettings with analytics tracking (used for presets)
+  const trackedUpdateSettings = useCallback(
+    (partial: Partial<ChatSettings>) => {
+      updateSettings(partial)
+      trackEventAsync('preset_selected', {
+        theme: partial.theme || 'custom',
+        previous_theme: settings.theme || null,
+      })
+    },
+    [updateSettings, settings.theme]
+  )
+
   const currentCSS = useMemo(() => settingsToCSS(settings), [settings])
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -63,8 +89,8 @@ export default function StylingPanel({
 
   const contextValue: StylingPanelContext = {
     settings,
-    updateSetting,
-    updateSettings,
+    updateSetting: trackedUpdateSetting,
+    updateSettings: trackedUpdateSettings,
     currentCSS,
     savedIndicator,
   }
