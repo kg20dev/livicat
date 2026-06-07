@@ -142,16 +142,16 @@ pub fn run() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
 
+    // Note: Rust tauri-plugin-aptabase has Tokio runtime compatibility issues with Tauri v2
+    // We use @aptabase/tauri JavaScript package instead (no Rust plugin needed)
+    if !app_key.is_empty() {
+        println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
+        println!("[Livicat] Analytics enabled via @aptabase/tauri JS package");
+    }
+
     tauri::Builder::default()
-        .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .setup(move |app| {
             app.manage(preview_state);
-
-            // Note: app.track_event() requires Tokio runtime context
-            // We'll track app_launched from frontend on mount instead
-            if !app_key.is_empty() {
-                println!("[Livicat] Analytics initialized via tauri-plugin-aptabase");
-            }
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(

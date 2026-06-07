@@ -6,7 +6,6 @@
     "main"
   ],
   "permissions": [
-    "core:default",
-    "aptabase:allow-track-event"
+    "core:default"
   ]
 }

@@ -2,7 +2,12 @@ import { trackEvent as aptabaseTrackEvent } from '@aptabase/tauri'
 
 /**
  * Centralized analytics helper with consent checking and error handling
- * Uses the official Aptabase Tauri plugin for event tracking.
+ * Uses the official Aptabase JavaScript package (@aptabase/tauri).
+ * 
+ * Note: We use the JS-only approach (no Rust plugin) due to Tokio runtime
+ * compatibility issues with tauri-plugin-aptabase v1.0.0 and Tauri v2.
+ * The JS package handles all device ID, session ID, and HTTP dispatch internally.
+ * 
  * All events respect user consent and never block the UI.
  */
 
