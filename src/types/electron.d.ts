@@ -8,4 +8,5 @@ interface ElectronAPI {
 
 interface Window {
   electronAPI?: ElectronAPI
+  __TAURI__?: unknown
 }

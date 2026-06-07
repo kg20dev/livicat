@@ -1,12 +1,12 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
 // Check if running in Tauri
-const isTauri = (window as any).__TAURI__ !== undefined
+const isTauri = window.__TAURI__ !== undefined
 
 // Check if running in Electron
-const isElectron = !isTauri && (window as any).electronAPI !== undefined
+const isElectron = !isTauri && window.electronAPI !== undefined
 
 /**
  * Hook for communicating with Electron/Tauri to open/manage
@@ -17,13 +17,14 @@ const isElectron = !isTauri && (window as any).electronAPI !== undefined
  * Provides `isElectron`, `isTauri` flags and preview control methods.
  */
 export function useElectronPreview() {
-  // Electron API
-  const electronApi = (window as any).electronAPI
-  
+  // Capture electronApi in a ref to keep a stable reference (avoids
+  // re-running effects/callbacks when the parent re-renders).
+  const electronApiRef = useRef<ElectronAPI | undefined>(window.electronAPI)
+
   // Subscribe to preview-closed events
   useEffect(() => {
-    if (isElectron && electronApi) {
-      const cleanup = electronApi.onPreviewClosed(() => {
+    if (isElectron && electronApiRef.current) {
+      const cleanup = electronApiRef.current.onPreviewClosed(() => {
         window.dispatchEvent(new CustomEvent('electron-preview-closed'))
       })
       return () => {
@@ -44,8 +45,8 @@ export function useElectronPreview() {
 
   const openPreview = useCallback(
     async (videoId: string, css: string) => {
-      if (isElectron && electronApi) {
-        electronApi.openChatPreview(videoId, css)
+      if (isElectron && electronApiRef.current) {
+        electronApiRef.current.openChatPreview(videoId, css)
       } else if (isTauri) {
         await invoke('open_preview_window', { videoId, css })
       }
@@ -55,8 +56,8 @@ export function useElectronPreview() {
 
   const updateCSS = useCallback(
     async (css: string) => {
-      if (isElectron && electronApi) {
-        electronApi.updateChatCSS(css)
+      if (isElectron && electronApiRef.current) {
+        electronApiRef.current.updateChatCSS(css)
       } else if (isTauri) {
         await invoke('inject_css', { css })
       }
@@ -65,8 +66,8 @@ export function useElectronPreview() {
   )
 
   const closePreview = useCallback(() => {
-    if (isElectron && electronApi) {
-      electronApi.closeChatPreview()
+    if (isElectron && electronApiRef.current) {
+      electronApiRef.current.closeChatPreview()
     } else if (isTauri) {
       invoke('close_preview_window', {})
     }
