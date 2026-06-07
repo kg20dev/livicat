@@ -2,10 +2,9 @@
   "name": "livicat",
   "private": true,
   "version": "0.5.4",
-  "description": "YouTube Live Chat styling editor for OBS browser source overlay — CSS customization, Electron preview, and export tools.",
+  "description": "YouTube Live Chat styling editor for OBS browser source overlay — CSS customization, Tauri preview window, and export tools.",
   "author": "kg20dev <migorengx@users.noreply.github.com>",
   "type": "module",
-  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -16,12 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "electron": "electron .",
-    "electron:dev": "./scripts/dev.sh",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:prod": "npm run build && electron .",
+    "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:mac": "tauri build --target aarch64-apple-darwin"
@@ -38,9 +32,6 @@
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.5.0",
-    "concurrently": "^8.2.2",
-    "electron": "^42.3.3",
-    "electron-builder": "^24.13.3",
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
@@ -53,65 +44,7 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.8",
-    "vitest": "^4.1.8",
-    "wait-on": "^7.2.0"
-  },
-  "build": {
-    "appId": "com.livicat.app",
-    "productName": "Livicat",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "electron/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "dist",
-        "to": "dist"
-      }
-    ],
-    "icon": "electron-icons/icon.png",
-    "asar": true,
-    "compression": "maximum",
-    "electronLanguages": [
-      "en"
-    ],
-    "mac": {
-      "icon": "electron-icons/macos/icon.icns",
-      "category": "public.app-category.utilities",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
-    },
-    "win": {
-      "icon": "electron-icons/windows/icon.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "linux": {
-      "icon": "electron-icons/linux/icons/512x512.png",
-      "category": "Utility"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.0"
