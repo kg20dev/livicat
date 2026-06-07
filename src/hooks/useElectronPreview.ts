@@ -1,12 +1,14 @@
 import { useEffect, useCallback, useRef } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, isTauri as checkIsTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
-// Check if running in Tauri
-const isTauri = window.__TAURI__ !== undefined
+// Check if running in Tauri (Tauri 2 API: requires isTauri() from @tauri-apps/api/core,
+// since window.__TAURI__ is not injected by default — only when
+// app.withGlobalTauri is true in tauri.conf.json)
+const isTauriRuntime = checkIsTauri()
 
 // Check if running in Electron
-const isElectron = !isTauri && window.electronAPI !== undefined
+const isElectron = !isTauriRuntime && window.electronAPI !== undefined
 
 /**
  * Hook for communicating with Electron/Tauri to open/manage
@@ -30,7 +32,7 @@ export function useElectronPreview() {
       return () => {
         cleanup?.()
       }
-    } else if (isTauri) {
+    } else if (isTauriRuntime) {
       // Tauri event listener
       const unlistenPromise = listen('preview-closed', () => {
         window.dispatchEvent(new CustomEvent('electron-preview-closed'))
@@ -48,7 +50,7 @@ export function useElectronPreview() {
   const openPreview = useCallback(async (videoId: string, css: string) => {
     if (isElectron && electronApiRef.current) {
       electronApiRef.current.openChatPreview(videoId, css)
-    } else if (isTauri) {
+    } else if (isTauriRuntime) {
       await invoke('open_preview_window', { videoId, css })
     }
   }, [])
@@ -56,7 +58,7 @@ export function useElectronPreview() {
   const updateCSS = useCallback(async (css: string) => {
     if (isElectron && electronApiRef.current) {
       electronApiRef.current.updateChatCSS(css)
-    } else if (isTauri) {
+    } else if (isTauriRuntime) {
       await invoke('inject_css', { css })
     }
   }, [])
@@ -64,10 +66,16 @@ export function useElectronPreview() {
   const closePreview = useCallback(() => {
     if (isElectron && electronApiRef.current) {
       electronApiRef.current.closeChatPreview()
-    } else if (isTauri) {
+    } else if (isTauriRuntime) {
       invoke('close_preview_window', {})
     }
   }, [])
 
-  return { isElectron, isTauri, openPreview, updateCSS, closePreview }
+  return {
+    isElectron,
+    isTauri: isTauriRuntime,
+    openPreview,
+    updateCSS,
+    closePreview,
+  }
 }
