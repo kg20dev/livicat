@@ -75,7 +75,7 @@ jobs:
 
   rust-check:
     name: Rust Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,6 +85,20 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Install Linux system dependencies (Tauri v2 prerequisites)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
