@@ -32,13 +32,18 @@ pub fn track_event(name: String, props: Option<Value>, state: State<SharedEventQ
         return Ok(());
     }
     
+    // Determine build mode (debug vs release)
+    // In development: debug mode, in production: release mode
+    let is_debug = cfg!(debug_assertions);
+    
     let payload = serde_json::json!({
         "events": [event],
         "appVersion": env!("CARGO_PKG_VERSION"),
         "osVersion": std::env::consts::OS,
+        "buildMode": if is_debug { "debug" } else { "release" },
     });
     
-    println!("[Analytics] Sending event: {}", name);
+    println!("[Analytics] Sending event: {} (buildMode: {})", name, if is_debug { "debug" } else { "release" });
     
     match client.post(url).query(&[("key", app_key)]).json(&payload).send() {
         Ok(_) => println!("[Analytics] Event sent successfully"),
