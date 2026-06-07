@@ -1,10 +1,14 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
 import AssetsPage, { type AssetItem } from './components/layout/AssetsPage'
+import Settings from './components/layout/Settings'
+import LoadingScreen from './components/loading/LoadingScreen'
+import AnalyticsConsent from './components/analytics/AnalyticsConsent'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
@@ -141,6 +145,19 @@ export default function App() {
   const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
+  // Analytics states
+  const [showLoading, setShowLoading] = useState(true)
+  const [showConsent, setShowConsent] = useState(false)
+  const [loadingComplete, setLoadingComplete] = useState(false)
+
+  // Mark loading as complete on mount (2 second delay handled by LoadingScreen component)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoading(false)
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
   // Handle tab change + clear all state
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
@@ -196,6 +213,34 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler)
   }, [handleExportCSS])
 
+  // Analytics consent flow
+  useEffect(() => {
+    const checkConsent = async () => {
+      try {
+        const enabled = await invoke<boolean>('is_analytics_enabled')
+
+        // If consent is already set (either true or false), don't show modal
+        // Check sessionStorage to see if we've already asked in this session
+        const askedThisSession = sessionStorage.getItem('analytics_consent_asked')
+
+        if (enabled === false && !askedThisSession) {
+          // No consent yet and haven't asked this session - show modal after loading
+          const timer = setTimeout(() => {
+            setShowConsent(true)
+          }, 500) // Show 500ms after loading completes
+          return () => clearTimeout(timer)
+        }
+      } catch (error) {
+        console.error('Failed to check analytics consent:', error)
+      }
+    }
+
+    // Only check consent after loading is complete
+    if (loadingComplete) {
+      checkConsent()
+    }
+  }, [loadingComplete])
+
   // Determine mode based on active tab
   const mode: ChatMode = useMemo(() => {
     return activeTab === 'Testing Mode' ? 'testing' : 'live'
@@ -214,6 +259,26 @@ export default function App() {
 
   return (
     <div className="bg-background text-on-surface font-body-md text-body-md overflow-hidden h-screen select-none">
+      {/* Loading Screen */}
+      {showLoading && (
+        <LoadingScreen
+          onComplete={() => {
+            setLoadingComplete(true)
+          }}
+        />
+      )}
+
+      {/* Consent Modal */}
+      {showConsent && (
+        <AnalyticsConsent
+          onDecision={(allowed) => {
+            console.log('[Analytics Consent] User decision:', allowed)
+            setShowConsent(false)
+            sessionStorage.setItem('analytics_consent_asked', 'true')
+          }}
+        />
+      )}
+
       {/* Sidebar (line 137-161) */}
       <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
         <Sidebar.Header />
@@ -230,7 +295,9 @@ export default function App() {
       {/* Main Content (line 185) */}
       <main className="ml-[280px] pt-16 h-screen flex">
         <ErrorBoundary>
-          {activeNav === 'workspace' ? (
+          {activeNav === 'settings' ? (
+            <Settings />
+          ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}
               <PreviewArea
