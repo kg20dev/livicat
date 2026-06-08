@@ -4,7 +4,6 @@ import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
-import AssetsPage, { type AssetItem } from './components/layout/AssetsPage'
 import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
@@ -92,51 +91,10 @@ const DEMO_MESSAGES = [
   },
 ]
 
-const DEMO_ASSETS: AssetItem[] = [
-  {
-    id: '1',
-    name: 'Neon Purple Theme',
-    type: 'theme',
-    thumbnail: '/themes/neon-purple.png',
-    createdAt: '2 days ago',
-  },
-  {
-    id: '2',
-    name: 'Minimal Dark',
-    type: 'theme',
-    createdAt: '5 days ago',
-  },
-  {
-    id: '3',
-    name: 'Gaming Overlay Template',
-    type: 'template',
-    createdAt: '1 week ago',
-  },
-  {
-    id: '4',
-    name: 'Stream Chat Export',
-    type: 'export',
-    createdAt: '2 weeks ago',
-  },
-  {
-    id: '5',
-    name: 'Custom Frame Border',
-    type: 'frame',
-    createdAt: '3 weeks ago',
-  },
-  {
-    id: '6',
-    name: 'Retro Wave Theme',
-    type: 'theme',
-    createdAt: '1 month ago',
-  },
-]
-
 /* ─── App ────────────────────────────────────────────────────────── */
 
 export default function App() {
   const [activeNav, setActiveNav] = useState('workspace')
-  const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
   const [submittedUrl, setSubmittedUrl] = useState('')
@@ -212,11 +170,14 @@ export default function App() {
 
   // Export CSS handler
   const handleExportCSS = useCallback(() => {
-    if (!generatedCSS) return
-    const obsCSS = generateOBSCSS(generatedCSS, {
+    const css = generatedCSS || '/* No custom styles applied */'
+    const obsCSS = generateOBSCSS(css, {
       themeName: 'livicat-custom',
     })
-    downloadCSSFile(obsCSS, 'youtube-chat-custom')
+    downloadCSSFile(obsCSS, 'youtube-chat-custom').catch((err) =>
+      console.error('[App] CSS export failed:', err)
+    )
+    console.log('[App] CSS export initiated, length:', obsCSS.length)
   }, [generatedCSS])
 
   // Keyboard shortcut: Ctrl+Shift+E to export CSS
@@ -311,8 +272,8 @@ export default function App() {
         <Sidebar.ExportButton onExport={handleExportCSS} />
       </Sidebar>
 
-      {/* TopBar (line 163-183) */}
-      <TopBar searchQuery={searchQuery} onSearchChange={setSearchQuery}>
+      {/* TopBar */}
+      <TopBar>
         <TopBar.Left />
         <TopBar.Right />
       </TopBar>
@@ -562,16 +523,7 @@ export default function App() {
                 </div>
               </StylingPanel>
             </>
-          ) : (
-            <AssetsPage filter={searchQuery} onFilterChange={setSearchQuery}>
-              <AssetsPage.Header />
-              <AssetsPage.Toolbar />
-              <AssetsPage.Grid
-                assets={DEMO_ASSETS}
-                onSelectAsset={(asset) => console.log('Selected asset:', asset)}
-              />
-            </AssetsPage>
-          )}
+          ) : null}
         </ErrorBoundary>
       </main>
     </div>

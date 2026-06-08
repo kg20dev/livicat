@@ -207,6 +207,8 @@ pub fn run() {
             .level(log::LevelFilter::Debug)
             .build())
         .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .setup(move |app| {
             app.manage(preview_state);
 

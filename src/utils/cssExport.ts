@@ -5,9 +5,15 @@
  * - OBS setup instructions in a comment header
  * - The generated chat CSS
  * - CSS variables for easy customization
+ *
+ * In Tauri: uses native save dialog + file system write
+ * In browser: falls back to Blob download
  */
 
 import { trackEventAsync } from './analytics'
+import { save } from '@tauri-apps/plugin-dialog'
+import { writeTextFile } from '@tauri-apps/plugin-fs'
+import { isTauri } from '@tauri-apps/api/core'
 
 /* ─── OBS Instructions Header ───────────────────────────────────── */
 
@@ -62,38 +68,80 @@ export function generateOBSCSS(
   return header + body + '\n'
 }
 
-/* ─── Browser Download ──────────────────────────────────────────── */
+/* ─── Tauri / Browser Download ──────────────────────────────────── */
 
 /**
- * Download a CSS string as a `.css` file in the browser.
- *
- * Uses the standard Blob + object URL + anchor.click() pattern.
- * Cleans up the object URL after 1 second.
+ * Helper to safe-name a filename for export.
  */
-export function downloadCSSFile(
-  cssContent: string,
-  filename: string = 'youtube-chat-custom'
-): void {
-  const safeName = filename
+function safeFilename(name: string): string {
+  return name
     .replace(/[^a-zA-Z0-9_-]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase()
-  const fullFilename = safeName ? `${safeName}.css` : 'youtube-chat-custom.css'
+}
 
-  const blob = new Blob([cssContent], { type: 'text/css;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
+/**
+ * Download a CSS string as a `.css` file.
+ *
+ * In Tauri: opens a native save dialog and writes the file via the filesystem plugin.
+ * In browser: falls back to Blob + anchor.click().
+ */
+export async function downloadCSSFile(
+  cssContent: string,
+  filename: string = 'youtube-chat-custom'
+): Promise<void> {
+  const fullFilename = `${safeFilename(filename) || 'youtube-chat-custom'}.css`
 
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = fullFilename
-  anchor.rel = 'noopener'
-  document.body.appendChild(anchor)
-  anchor.click()
-  document.body.removeChild(anchor)
+  try {
+    if (isTauri()) {
+      // Tauri: native save dialog + file system write
+      const savePath = await save({
+        defaultPath: fullFilename,
+        filters: [{ name: 'CSS Files', extensions: ['css'] }],
+      })
 
-  // Revoke the object URL after the download has started
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+      if (!savePath) {
+        console.log('[CSS Export] User cancelled save dialog')
+        return
+      }
+
+      await writeTextFile(savePath, cssContent)
+      console.log('[CSS Export] Saved to:', savePath)
+    } else {
+      // Browser: Blob download fallback
+      const blob = new Blob([cssContent], { type: 'text/css;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = fullFilename
+      anchor.rel = 'noopener'
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      console.log('[CSS Export] Downloaded in browser:', fullFilename)
+    }
+  } catch (error) {
+    console.error('[CSS Export] Failed:', error)
+    // Fallback: try browser download as last resort
+    try {
+      const blob = new Blob([cssContent], { type: 'text/css;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = fullFilename
+      anchor.rel = 'noopener'
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (fallbackError) {
+      console.error('[CSS Export] Fallback also failed:', fallbackError)
+    }
+  }
 
   // Track analytics event
   trackEventAsync('css_exported', {

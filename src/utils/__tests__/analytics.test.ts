@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { trackEvent, trackEventAsync, isAnalyticsEnabled, setAnalyticsEnabled, getUserId } from '../analytics'
+import { trackEvent, trackEventAsync, isAnalyticsEnabled, setAnalyticsEnabled } from '../analytics'
 
 // Mock @tauri-apps/api/core
 vi.mock('@tauri-apps/api/core', () => ({
