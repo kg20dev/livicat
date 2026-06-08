@@ -72,6 +72,78 @@ The workflow triggers on:
 2. **Tag push** (manual: `git push origin v1.0.0`)
 3. **Manual dispatch** (via GitHub UI)
 
+### New Workflow Structure (v2.1)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ GitHub Actions Build Pipeline                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 📋 SETUP & VALIDATION (ubuntu-latest)                        │
+│     ✓ Checkout code                                          │
+│     ✓ Get version from package.json                           │
+│     ✓ Check if should create release                           │
+│     ✓ 🔑 VALIDATE APTABASE_APP_KEY (fails if missing)            │
+│                                                              │
+│ 🌐 BUILD FRONTEND (ubuntu-latest)                             │
+│     ✓ Checkout code                                            │
+│     ✓ Setup Node.js 20 + cache npm                             │
+│     ✓ Install dependencies (npm ci)                             │
+│     ✓ Build production bundle (npm run build) → dist/           │
+│     ✓ Upload frontend artifacts (dist/)                         │
+│                                                              │
+│ 🍎 BUILD MACOS (macos-latest)                                │
+│     ✓ needs: [setup, build-app]                               │
+│     ✓ Checkout code                                            │
+│     ✓ Download frontend artifacts (dist/) ← REUSES BUILD-APP     │
+│     ✓ Verify dist/ exists (validation step)                     │
+│     ✓ Setup Node.js 20 + Rust toolchain                       │
+│     ✓ Install dependencies                                     │
+│     ✓ cargo clean (ensure fresh artifacts)                     │
+│     ✓ Build macOS app (uses existing dist/) ← NO REBUILD        │
+│     ✓ Upload macOS artifacts (.dmg, .app)                        │
+│                                                              │
+│ 🪟 BUILD WINDOWS (windows-latest)                             │
+│     ✓ needs: [setup, build-app]                               │
+│     ✓ Checkout code                                            │
+│     ✓ Download frontend artifacts (dist/) ← REUSES BUILD-APP     │
+│     ✓ Verify dist/ exists (validation step)                     │
+│     ✓ Setup Node.js 20 + Rust toolchain                       │
+│     ✓ Cache Rust dependencies + WiX                             │
+│     ✓ Install dependencies                                     │
+│     ✓ cargo clean (ensure fresh artifacts)                     │
+│     ✓ Build Windows app (uses existing dist/) ← NO REBUILD       │
+│     ✓ Upload Windows artifacts (.exe, .msi)                      │
+│                                                              │
+│ 🚀 CREATE RELEASE (ubuntu-latest)                            │
+│     ✓ needs: [setup, build-mac, build-windows]                │
+│     ✓ Download macOS artifacts (ZIP)                           │
+│     ✓ Download Windows artifacts (ZIP)                          │
+│     ✓ Extract ZIPs to get actual binaries                        │
+│     ✓ Create GitHub Release with tag                            │
+│     ✓ Attach DMG, EXE, MSI files                               │
+│     ✓ Generate release notes                                 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+Total Time: ~7-8 minutes (parallel builds, frontend built once)
+```
+
+### Key Optimization: Build Once, Use Twice
+
+**Before (v2.0):**
+```
+build-mac:  npm ci → npm run build → npm run tauri:build (rebuilds frontend ❌)
+build-windows: npm ci → npm run build → npm run tauri build (rebuilds frontend ❌)
+```
+
+**After (v2.1):**
+```
+build-app: npm ci → npm run build (builds once) ✅
+build-mac:  downloads dist/ → cargo tauri build (uses pre-built dist/) ✅
+build-windows: downloads dist/ → cargo tauri build (uses pre-built dist/) ✅
+```
+
 ---
 
 ## Environment Variables
@@ -211,23 +283,58 @@ Artifacts are now extracted from ZIPs before attaching to release.
 
 ---
 
-## Local Development Builds
+## How Tauri Build Uses Frontend
 
-### macOS (Local)
+### Production (CI with pre-built frontend)
+
+In the CI workflow, the build process is:
+
+1. **build-app job**: 
+   - Runs `npm run build` → creates `dist/`
+   - Uploads `dist/` as "livicat-frontend" artifact
+
+2. **build-mac/build-windows jobs**:
+   - Download `livicat-frontend` artifact → extracts to `dist/`
+   - Verify `dist/` exists (validation)
+   - Run `cargo tauri build` → **uses existing `dist/`** (no rebuild)
+
+3. **Tauri configuration** (`tauri.conf.json`):
+   ```json
+   "build": {
+     "frontendDist": "../dist",
+     "beforeDevCommand": "npm run dev",
+     "beforeBuildCommand": ""  ← Empty = don't rebuild in production
+   }
+   ```
+   - `beforeDevCommand`: Starts dev server for local development with HMR
+   - `beforeBuildCommand`: Empty → Uses pre-built `dist/` for production
+
+### Local Development (manual frontend build)
+
+For local builds, you have two options:
+
+**Option 1: Build frontend separately**
 ```bash
-# Build locally (with analytics)
-APTABASE_APP_KEY=A-US-xxxxxxxxx npm run tauri:build
+# Build frontend once
+npm run build
 
-# Or use .env file
-echo "APTABASE_APP_KEY=A-US-xxxxxxxxx" > .env
+# Build Tauri app (uses existing dist/)
 npm run tauri:build
 ```
 
-### Windows (Local)
-```powershell
-# Set environment variable
-$env:APTABASE_APP_KEY="A-US-xxxxxxxxx"
-npm run tauri build
+**Option 2: Full build (rebuilds frontend)**
+```bash
+# Remove old frontend
+rm -rf dist/
+
+# Tauri will fail (no dist/), so:
+npm run build
+npm run tauri:build
+```
+
+**For development with HMR:**
+```bash
+npm run tauri:dev  # Uses beforeDevCommand (starts dev server automatically)
 ```
 
 ---
