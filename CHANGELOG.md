@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.1](https://github.com/kg20dev/livicat/compare/v0.7.0...v0.7.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* improve Windows WebView2 preview handling with debug logging and longer delay ([9f9e307](https://github.com/kg20dev/livicat/commit/9f9e3072df3f8cc354062a5175cbb5ec7ac840c6))
+* make preview commands async to fix Windows WebView2 deadlock ([fc1802f](https://github.com/kg20dev/livicat/commit/fc1802fe9b34ee5451c1ecdbec332c3f7f2a7f8c)), closes [#72](https://github.com/kg20dev/livicat/issues/72)
+* use debug formatting for window.url() Result type ([ed09d2d](https://github.com/kg20dev/livicat/commit/ed09d2d32ae86e63bbcbf7fb2e3b52bf629498dc))
+
 ## [0.7.0](https://github.com/kg20dev/livicat/compare/v0.6.1...v0.7.0) (2026-06-08)
 
 
