@@ -1,15 +1,18 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
-import AssetsPage, { type AssetItem } from './components/layout/AssetsPage'
+import Settings from './components/layout/Settings'
+import LoadingScreen from './components/loading/LoadingScreen'
+import AnalyticsConsent from './components/analytics/AnalyticsConsent'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
 import { FONT_OPTIONS } from './utils/fonts'
+import { trackEventAsync, isAnalyticsEnabled } from './utils/analytics'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -88,51 +91,10 @@ const DEMO_MESSAGES = [
   },
 ]
 
-const DEMO_ASSETS: AssetItem[] = [
-  {
-    id: '1',
-    name: 'Neon Purple Theme',
-    type: 'theme',
-    thumbnail: '/themes/neon-purple.png',
-    createdAt: '2 days ago',
-  },
-  {
-    id: '2',
-    name: 'Minimal Dark',
-    type: 'theme',
-    createdAt: '5 days ago',
-  },
-  {
-    id: '3',
-    name: 'Gaming Overlay Template',
-    type: 'template',
-    createdAt: '1 week ago',
-  },
-  {
-    id: '4',
-    name: 'Stream Chat Export',
-    type: 'export',
-    createdAt: '2 weeks ago',
-  },
-  {
-    id: '5',
-    name: 'Custom Frame Border',
-    type: 'frame',
-    createdAt: '3 weeks ago',
-  },
-  {
-    id: '6',
-    name: 'Retro Wave Theme',
-    type: 'theme',
-    createdAt: '1 month ago',
-  },
-]
-
 /* ─── App ────────────────────────────────────────────────────────── */
 
 export default function App() {
   const [activeNav, setActiveNav] = useState('workspace')
-  const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
   const [submittedUrl, setSubmittedUrl] = useState('')
@@ -140,6 +102,37 @@ export default function App() {
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle')
   const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
+
+  // Analytics states
+  const [showLoading, setShowLoading] = useState(true)
+  const [showConsent, setShowConsent] = useState(false)
+  const [loadingComplete, setLoadingComplete] = useState(false)
+  const sessionStartRef = useRef<number | null>(null)
+
+  // Mark loading as complete on mount (2 second delay handled by LoadingScreen component)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoading(false)
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Track app launch (runs once on mount)
+  useEffect(() => {
+    trackEventAsync('app_launched')
+  }, [])
+
+  // Track session duration
+  useEffect(() => {
+    sessionStartRef.current = Date.now()
+
+    return () => {
+      if (sessionStartRef.current) {
+        const duration = Math.round((Date.now() - sessionStartRef.current) / 1000)
+        trackEventAsync('session_duration', { duration_seconds: duration })
+      }
+    }
+  }, [])
 
   // Handle tab change + clear all state
   const handleTabChange = useCallback((tab: string) => {
@@ -177,11 +170,14 @@ export default function App() {
 
   // Export CSS handler
   const handleExportCSS = useCallback(() => {
-    if (!generatedCSS) return
-    const obsCSS = generateOBSCSS(generatedCSS, {
+    const css = generatedCSS || '/* No custom styles applied */'
+    const obsCSS = generateOBSCSS(css, {
       themeName: 'livicat-custom',
     })
-    downloadCSSFile(obsCSS, 'youtube-chat-custom')
+    downloadCSSFile(obsCSS, 'youtube-chat-custom').catch((err) =>
+      console.error('[App] CSS export failed:', err)
+    )
+    console.log('[App] CSS export initiated, length:', obsCSS.length)
   }, [generatedCSS])
 
   // Keyboard shortcut: Ctrl+Shift+E to export CSS
@@ -195,6 +191,45 @@ export default function App() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [handleExportCSS])
+
+  // Analytics consent flow
+  useEffect(() => {
+    console.log('[Analytics Consent] Effect triggered, loadingComplete:', loadingComplete)
+    // Only check consent after loading is complete
+    if (!loadingComplete) return
+
+    const enabled = isAnalyticsEnabled()
+
+    // If consent is already set (either true or false), don't show modal
+    // Check sessionStorage to see if we've already asked in this session
+    const askedThisSession = sessionStorage.getItem('analytics_consent_asked')
+
+    console.log('[Analytics Consent Debug]', {
+      loadingComplete,
+      enabled,
+      askedThisSession,
+      localStorageConsent: localStorage.getItem('livicat_analytics_consent'),
+      sessionStorageAsked: sessionStorage.getItem('analytics_consent_asked'),
+      willShowModal: enabled === false && !askedThisSession,
+    })
+
+    if (enabled === false && !askedThisSession) {
+      // No consent yet and haven't asked this session - show modal after loading
+      console.log('[Analytics Consent] Will show modal in 500ms')
+      const timer = setTimeout(() => {
+        console.log('[Analytics Consent] Setting showConsent=true')
+        setShowConsent(true)
+      }, 500) // Show 500ms after loading completes
+      return () => clearTimeout(timer)
+    } else {
+      console.log(
+        '[Analytics Consent] NOT showing modal - enabled:',
+        enabled,
+        'askedThisSession:',
+        askedThisSession
+      )
+    }
+  }, [loadingComplete])
 
   // Determine mode based on active tab
   const mode: ChatMode = useMemo(() => {
@@ -214,6 +249,27 @@ export default function App() {
 
   return (
     <div className="bg-background text-on-surface font-body-md text-body-md overflow-hidden h-screen select-none">
+      {/* Loading Screen */}
+      {showLoading && (
+        <LoadingScreen
+          onComplete={() => {
+            console.log('[App] LoadingScreen onComplete called')
+            setLoadingComplete(true)
+          }}
+        />
+      )}
+
+      {/* Consent Modal */}
+      {showConsent && (
+        <AnalyticsConsent
+          onDecision={(allowed) => {
+            console.log('[Analytics Consent] User decision:', allowed)
+            setShowConsent(false)
+            sessionStorage.setItem('analytics_consent_asked', 'true')
+          }}
+        />
+      )}
+
       {/* Sidebar (line 137-161) */}
       <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
         <Sidebar.Header />
@@ -221,8 +277,8 @@ export default function App() {
         <Sidebar.ExportButton onExport={handleExportCSS} />
       </Sidebar>
 
-      {/* TopBar (line 163-183) */}
-      <TopBar searchQuery={searchQuery} onSearchChange={setSearchQuery}>
+      {/* TopBar */}
+      <TopBar>
         <TopBar.Left />
         <TopBar.Right />
       </TopBar>
@@ -230,7 +286,9 @@ export default function App() {
       {/* Main Content (line 185) */}
       <main className="ml-[280px] pt-16 h-screen flex">
         <ErrorBoundary>
-          {activeNav === 'workspace' ? (
+          {activeNav === 'settings' ? (
+            <Settings />
+          ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}
               <PreviewArea
@@ -470,16 +528,7 @@ export default function App() {
                 </div>
               </StylingPanel>
             </>
-          ) : (
-            <AssetsPage filter={searchQuery} onFilterChange={setSearchQuery}>
-              <AssetsPage.Header />
-              <AssetsPage.Toolbar />
-              <AssetsPage.Grid
-                assets={DEMO_ASSETS}
-                onSelectAsset={(asset) => console.log('Selected asset:', asset)}
-              />
-            </AssetsPage>
-          )}
+          ) : null}
         </ErrorBoundary>
       </main>
     </div>

@@ -1,0 +1,75 @@
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 50%, #1e1e2e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 300ms ease-out;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.livicat-icon {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  animation: pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.3));
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.3));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 6px 30px rgba(139, 92, 246, 0.5));
+  }
+}
+
+.livicat-title {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.05em;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
