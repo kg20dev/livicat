@@ -112,6 +112,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install cargo-tauri CLI
+        run: cargo install tauri-cli --version "^2"
+
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -176,6 +179,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install cargo-tauri CLI
+        run: cargo install tauri-cli --version "^2"
+
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -208,15 +214,6 @@ jobs:
           fi
           echo "✅ Frontend artifacts found:"
           ls -lh dist/
-
-      - name: Cache WiX binaries (Windows installer tool)
-        uses: actions/cache@v4
-        with:
-          path: ~\AppData\Local\Temp\wix314-binaries
-          key: wix314-${{ runner.os }}-v1
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Clean Rust build cache (ensure fresh artifacts)
         run: cd src-tauri && cargo clean
