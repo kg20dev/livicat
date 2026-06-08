@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { setAnalyticsEnabled, trackEventAsync } from '../../utils/analytics'
 import './AnalyticsConsent.css'
 
 interface AnalyticsConsentProps {
@@ -17,11 +17,8 @@ export default function AnalyticsConsent({ onDecision }: AnalyticsConsentProps) 
   const handleAllow = async () => {
     setIsSaving(true)
     try {
-      await invoke('set_analytics_enabled', { enabled: true })
-      await invoke('track_event', {
-        name: 'analytics_consent_given',
-        props: { decision: 'allowed' },
-      })
+      setAnalyticsEnabled(true)
+      trackEventAsync('analytics_consent_given', { decision: 'allowed' })
       setIsClosing(true)
       setTimeout(() => onDecision(true), 300)
     } catch (error) {
@@ -33,7 +30,7 @@ export default function AnalyticsConsent({ onDecision }: AnalyticsConsentProps) 
   const handleDecline = async () => {
     setIsSaving(true)
     try {
-      await invoke('set_analytics_enabled', { enabled: false })
+      setAnalyticsEnabled(false)
       setIsClosing(true)
       setTimeout(() => onDecision(false), 300)
     } catch (error) {

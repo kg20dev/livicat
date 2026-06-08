@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import pkg from '../../../package.json'
 
 /* ─── Context ──────────────────────────────────────────────────── */
 
@@ -45,7 +46,7 @@ export default function Sidebar({
 
 Sidebar.Header = function SidebarHeader({
   title = 'Livicat',
-  subtitle = '0.5',
+  subtitle = `v${pkg.version}`,
 }: {
   title?: string
   subtitle?: string
@@ -75,10 +76,7 @@ function SidebarNavItems({
   activeItem: string
   onNavigate: (item: string) => void
 }) {
-  const mainItems = [
-    { id: 'workspace', label: 'Workspace', icon: 'edit_square' },
-    { id: 'assets', label: 'Assets', icon: 'folder_open' },
-  ]
+  const mainItems = [{ id: 'workspace', label: 'Workspace', icon: 'edit_square' }]
 
   const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]
 

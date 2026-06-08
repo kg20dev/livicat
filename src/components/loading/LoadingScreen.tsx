@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import './LoadingScreen.css'
 
 interface LoadingScreenProps {
@@ -12,19 +12,29 @@ interface LoadingScreenProps {
  */
 export default function LoadingScreen({ onComplete, minDuration = 2000 }: LoadingScreenProps) {
   const [isVisible, setIsVisible] = useState(true)
+  // Store onComplete in a ref so the timer effect can always call the latest version
+  // without needing it in the dependency array (which would reset the timer on every render)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
+    console.log('[LoadingScreen] Starting timer for', minDuration, 'ms')
     // Show for at least minDuration, then fade out
     const timer = setTimeout(() => {
+      console.log('[LoadingScreen] Timer done, starting fade out')
       setIsVisible(false)
       // Wait for fade transition (300ms) before calling onComplete
       setTimeout(() => {
-        onComplete()
+        console.log('[LoadingScreen] Fade complete, calling onComplete')
+        onCompleteRef.current()
       }, 300)
     }, minDuration)
 
-    return () => clearTimeout(timer)
-  }, [minDuration, onComplete])
+    return () => {
+      console.log('[LoadingScreen] Cleanup - clearing timer')
+      clearTimeout(timer)
+    }
+  }, [minDuration])
 
   return (
     <div className={`loading-screen ${isVisible ? 'visible' : 'hidden'}`}>
