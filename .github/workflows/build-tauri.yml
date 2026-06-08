@@ -127,6 +127,12 @@ jobs:
       - name: Clean Rust build cache (ensure fresh artifacts)
         run: cd src-tauri && cargo clean
 
+      - name: Cache WiX binaries (Windows installer tool)
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\Temp\wix314-binaries
+          key: wix314-${{ runner.os }}-v1
+
       - name: Build production bundle
         run: npm run build
 
