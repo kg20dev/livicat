@@ -6,34 +6,28 @@
 
 A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser source overlays.
 
-![Version](https://img.shields.io/badge/version-0.6.1-blue)
+![Release](https://img.shields.io/github/v/release/kg20dev/livicat)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
 
 ---
 
-## What's New in v0.6.1
+## Latest Release
 
-🔧 **Release Fix**
-- Fixed asset naming to match version number (DMG and EXE now named correctly)
-- macOS and Windows builds properly versioned
+🎉 **[View on GitHub Releases](https://github.com/kg20dev/livicat/releases)**
 
-🐛 **v0.6.0 Bug Fixes**
-- Fixed isTauri race condition — "Live Chat" button now appears reliably
-- Fixed YouTube "old browser" error — Chrome UA spoofing for preview window
-- Real-time CSS injection — styling changes update preview instantly
+### Recent Highlights
 
-🚀 **Tauri Migration Complete** (115 MB → 8 MB — 93% smaller)
-- Replaced Electron with [Tauri 2](https://v2.tauri.app/) (Rust backend + OS webview)
-- Native preview window with always-on-top support
-- Sub-second cold start, ~30 MB RAM idle
+🚀 **Tauri Desktop App** — 93% smaller than Electron (8 MB vs 115 MB)
+📊 **Aptabase Analytics** — Privacy-first usage tracking with user consent
+🎨 **Full CSS Customization** — 7 presets, 6 animations, 12 Google fonts
+🪟 **Cross-Platform** — macOS (Apple Silicon), Windows, and Linux builds
+⚡ **Real-Time Preview** — Native popup window with always-on-top support
+📤 **OBS-Ready Export** — Download CSS for browser source overlays
 
-🎨 **All previous features preserved**
-- 7 preset themes + full CSS customization
-- 6 message animation styles
-- Google Fonts integration (12 fonts)
-- Real-time preview + OBS-ready CSS export
-- Video metadata fetch (oEmbed API)
+### Download
+
+Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) for the latest version and platform-specific installers.
 
 ---
 
@@ -193,8 +187,8 @@ git push -u origin release/app
 ### Downloading Releases
 
 Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) to download:
-- **macOS Apple Silicon**: `Livicat_0.6.1_aarch64.dmg` (~4 MB)
-- **Windows x64**: `Livicat_0.6.1_x64-setup.exe` (~8 MB)
+- **macOS Apple Silicon**: `Livicat_<version>_aarch64.dmg` (~5 MB)
+- **Windows x64**: `Livicat_<version>_x64-setup.exe` (~3 MB) or `Livicat_<version>_x64_en-US.msi` (~4 MB)
 
 ## Building Tauri Apps
 
@@ -275,7 +269,7 @@ src-tauri/
 
 ## Features
 
-### ✅ Implemented (v0.5.4)
+### ✅ Implemented
 
 - ✅ Tauri desktop app with always-on-top popup (~8 MB binary)
 - ✅ 7 preset themes + full customization
