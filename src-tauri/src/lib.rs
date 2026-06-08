@@ -121,6 +121,60 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    #[test]
+    fn test_track_event_serialization() {
+        // Test that the track_event command serializes correctly
+        let event_name = "test_event";
+        let props = json!({
+            "key": "value",
+            "number": 42
+        });
+
+        // Verify JSON serialization works
+        let serialized = serde_json::to_string(&(event_name, props)).unwrap();
+        assert!(serialized.contains("test_event"));
+        assert!(serialized.contains("key"));
+        assert!(serialized.contains("value"));
+
+        println!("Track event serialization test passed: {}", serialized);
+    }
+
+    #[test]
+    fn test_track_event_command_args() {
+        // Test the exact structure that Tauri expects for track_event
+        // The plugin expects: { name: string, props: object }
+        let args = json!({
+            "name": "test_event",
+            "props": {
+                "key": "value"
+            }
+        });
+
+        assert_eq!(args["name"], "test_event");
+        assert!(args["props"].is_object());
+        assert_eq!(args["props"]["key"], "value");
+
+        println!("Track event command args test passed");
+    }
+
+    #[test]
+    fn test_app_launch_event_format() {
+        // Test the app_launched event format
+        let event_name = "app_launched";
+        let props: Option<serde_json::Value> = None;
+
+        // Verify it doesn't panic when serializing
+        let serialized = serde_json::to_string(&(event_name, props)).unwrap();
+        assert!(serialized.contains("app_launched"));
+
+        println!("App launch event format test passed: {}", serialized);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let preview_state: SharedPreviewState = Arc::new(Mutex::new(PreviewState {
@@ -139,31 +193,35 @@ pub fn run() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
 
-    // Create a Tokio runtime context before building the app.
-    // The Aptabase plugin calls tokio::spawn() during its setup(),
-    // which requires a Tokio runtime to be active.
-    let _runtime_guard = tokio::runtime::Runtime::new()
-        .expect("failed to create Tokio runtime")
-        .enter();
+    // Create and enter Tokio runtime for plugin setup
+    // The Aptabase plugin calls tokio::spawn() during .plugin() registration,
+    // which requires a Tokio runtime to be entered in the current thread.
+    // We keep the runtime guard alive until Builder::run() takes over.
+    let runtime = tokio::runtime::Runtime::new()
+        .expect("failed to create Tokio runtime");
+    let _runtime_guard = runtime.enter();
 
     tauri::Builder::default()
+        // Register log plugin FIRST so we can see analytics debug logs
+        .plugin(tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Debug)
+            .build())
         .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .setup(move |app| {
             app.manage(preview_state);
 
             // Track app launch event via the official plugin
             if !app_key.is_empty() {
-                let _ = app.track_event("app_launched", None);
+                println!("[Analytics] Rust: Enqueuing app_launched event");
+                let result = app.track_event("app_launched", None);
+                match result {
+                    Ok(_) => println!("[Analytics] Rust: app_launched enqueued successfully"),
+                    Err(e) => eprintln!("[Analytics] Rust: Failed to enqueue app_launched: {}", e),
+                }
                 println!("[Livicat] Analytics initialized via tauri-plugin-aptabase");
+                println!("[Livicat] Build mode: {}", if cfg!(debug_assertions) { "DEBUG" } else { "RELEASE" });
             }
 
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

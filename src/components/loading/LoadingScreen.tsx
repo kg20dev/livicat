@@ -14,17 +14,23 @@ export default function LoadingScreen({ onComplete, minDuration = 2000 }: Loadin
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
+    console.log('[LoadingScreen] Starting timer for', minDuration, 'ms')
     // Show for at least minDuration, then fade out
     const timer = setTimeout(() => {
+      console.log('[LoadingScreen] Timer done, starting fade out')
       setIsVisible(false)
       // Wait for fade transition (300ms) before calling onComplete
       setTimeout(() => {
+        console.log('[LoadingScreen] Fade complete, calling onComplete')
         onComplete()
       }, 300)
     }, minDuration)
 
-    return () => clearTimeout(timer)
-  }, [minDuration, onComplete])
+    return () => {
+      console.log('[LoadingScreen] Cleanup - clearing timer')
+      clearTimeout(timer)
+    }
+  }, [minDuration]) // Removed onComplete from deps to avoid re-running on every render
 
   return (
     <div className={`loading-screen ${isVisible ? 'visible' : 'hidden'}`}>

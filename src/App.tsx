@@ -233,6 +233,7 @@ export default function App() {
 
   // Analytics consent flow
   useEffect(() => {
+    console.log('[Analytics Consent] Effect triggered, loadingComplete:', loadingComplete)
     // Only check consent after loading is complete
     if (!loadingComplete) return
 
@@ -242,12 +243,25 @@ export default function App() {
     // Check sessionStorage to see if we've already asked in this session
     const askedThisSession = sessionStorage.getItem('analytics_consent_asked')
 
+    console.log('[Analytics Consent Debug]', {
+      loadingComplete,
+      enabled,
+      askedThisSession,
+      localStorageConsent: localStorage.getItem('livicat_analytics_consent'),
+      sessionStorageAsked: sessionStorage.getItem('analytics_consent_asked'),
+      willShowModal: enabled === false && !askedThisSession
+    })
+
     if (enabled === false && !askedThisSession) {
       // No consent yet and haven't asked this session - show modal after loading
+      console.log('[Analytics Consent] Will show modal in 500ms')
       const timer = setTimeout(() => {
+        console.log('[Analytics Consent] Setting showConsent=true')
         setShowConsent(true)
       }, 500) // Show 500ms after loading completes
       return () => clearTimeout(timer)
+    } else {
+      console.log('[Analytics Consent] NOT showing modal - enabled:', enabled, 'askedThisSession:', askedThisSession)
     }
   }, [loadingComplete])
 
@@ -273,6 +287,7 @@ export default function App() {
       {showLoading && (
         <LoadingScreen
           onComplete={() => {
+            console.log('[App] LoadingScreen onComplete called')
             setLoadingComplete(true)
           }}
         />
