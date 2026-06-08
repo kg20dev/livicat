@@ -3,14 +3,8 @@ use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
 use tauri_plugin_aptabase::EventTracker;
 
-#[cfg(target_os = "windows")]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-#[cfg(target_os = "macos")]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-#[cfg(not(any(target_os = "windows", target_os = "macos")))]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const PREVIEW_USER_AGENT: &str =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 struct PreviewState {
     window_label: Option<String>,
