@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.5](https://github.com/kg20dev/livicat/compare/v0.7.2...v0.7.5) (2026-06-08)
+
+
+### Bug Fixes
+
+* add WiX cache to prevent Windows build timeout ([c6b7e0d](https://github.com/kg20dev/livicat/commit/c6b7e0d700029d0efeeb35e24f8941cea29a5b2d))
+* disable GPU acceleration for OBS compatibility (Refs [#81](https://github.com/kg20dev/livicat/issues/81)) ([f4f8500](https://github.com/kg20dev/livicat/commit/f4f8500e09edb77ea1b82a439637d9544e9f540c))
+
+### [0.7.1](https://github.com/kg20dev/livicat/compare/v0.7.0...v0.7.1) (2026-06-08)
+
 ### [0.7.4](https://github.com/kg20dev/livicat/compare/v0.7.2...v0.7.4) (2026-06-08)
 
 
