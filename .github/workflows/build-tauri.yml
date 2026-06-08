@@ -205,6 +205,7 @@ jobs:
           path: dist
 
       - name: Verify frontend artifacts
+        shell: bash
         run: |
           echo "Verifying pre-built frontend..."
           if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
@@ -216,9 +217,11 @@ jobs:
           ls -lh dist/
 
       - name: Clean Rust build cache (ensure fresh artifacts)
+        shell: bash
         run: cd src-tauri && cargo clean
 
       - name: Build Windows app
+        shell: bash
         run: |
           echo "Building Windows app with pre-built frontend..."
           echo "Tauri will use existing dist/ directory without rebuilding"
