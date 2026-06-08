@@ -40,7 +40,7 @@ export default function LoadingScreen({ onComplete, minDuration = 2000 }: Loadin
     <div className={`loading-screen ${isVisible ? 'visible' : 'hidden'}`}>
       <div className="loading-content">
         <div className="icon-wrapper">
-          <img src="/livicat-icon.png" alt="Livicat" className="livicat-icon" />
+          <img src="./livicat-icon.png" alt="Livicat" className="livicat-icon" />
         </div>
         <h1 className="livicat-title">Livicat</h1>
       </div>
