@@ -55,7 +55,7 @@ async fn open_preview_window(
     .always_on_top(true)
     .user_agent(PREVIEW_USER_AGENT)
     .on_page_load(|window, payload| {
-        println!("[Livicat] Page loaded: {:?}, url: {}", payload, window.url());
+        println!("[Livicat] Page loaded: payload={:?}, url={:?}", payload, window.url());
     })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
