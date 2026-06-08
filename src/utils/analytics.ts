@@ -86,17 +86,18 @@ export async function trackEvent(
     }
 
     // Include user ID for cross-session tracking
-    const propsWithUser = includeUserId
-      ? { ...props, user_id: getUserId() }
-      : props
+    const propsWithUser = includeUserId ? { ...props, user_id: getUserId() } : props
 
     console.log(`[Analytics] ${timestamp} [${eventId}] SENDING: ${name}`, propsWithUser ?? '')
-    console.log(`[Analytics] ${timestamp} [${eventId}] PAYLOAD:`, JSON.stringify({ name, props: propsWithUser, timestamp }))
+    console.log(
+      `[Analytics] ${timestamp} [${eventId}] PAYLOAD:`,
+      JSON.stringify({ name, props: propsWithUser, timestamp })
+    )
 
     // Track via the official Aptabase plugin (direct Rust invoke, bypassing JS package)
     await invoke('plugin:aptabase|track_event', {
       name,
-      props: propsWithUser ?? {}
+      props: propsWithUser ?? {},
     })
 
     console.log(`[Analytics] ${timestamp} [${eventId}] SUCCESS: ${name}`)

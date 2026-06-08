@@ -210,7 +210,7 @@ export default function App() {
       askedThisSession,
       localStorageConsent: localStorage.getItem('livicat_analytics_consent'),
       sessionStorageAsked: sessionStorage.getItem('analytics_consent_asked'),
-      willShowModal: enabled === false && !askedThisSession
+      willShowModal: enabled === false && !askedThisSession,
     })
 
     if (enabled === false && !askedThisSession) {
@@ -222,7 +222,12 @@ export default function App() {
       }, 500) // Show 500ms after loading completes
       return () => clearTimeout(timer)
     } else {
-      console.log('[Analytics Consent] NOT showing modal - enabled:', enabled, 'askedThisSession:', askedThisSession)
+      console.log(
+        '[Analytics Consent] NOT showing modal - enabled:',
+        enabled,
+        'askedThisSession:',
+        askedThisSession
+      )
     }
   }, [loadingComplete])
 

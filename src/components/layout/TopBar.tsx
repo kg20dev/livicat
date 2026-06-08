@@ -10,10 +10,7 @@ interface TopBarRootProps {
   className?: string
 }
 
-export default function TopBar({
-  children,
-  className = '',
-}: TopBarRootProps) {
+export default function TopBar({ children, className = '' }: TopBarRootProps) {
   return (
     <header
       className={`h-16 fixed top-0 right-0 left-[280px] z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin ${className}`}
@@ -34,11 +31,7 @@ TopBar.Left = function TopBarLeft({ title = 'Live Chat Studio' }: { title?: stri
 }
 
 TopBar.Right = function TopBarRight({ children }: { children?: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-4">
-      {children}
-    </div>
-  )
+  return <div className="flex items-center gap-4">{children}</div>
 }
 
 export type { TopBarRootProps }

@@ -50,7 +50,10 @@ describe('analytics', () => {
       await trackEvent('test_event', { key: 'value' })
 
       expect(mockInvoke).toHaveBeenCalledTimes(1)
-      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', { name: 'test_event', props: { key: 'value', user_id: 'test-user-id-123' } })
+      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', {
+        name: 'test_event',
+        props: { key: 'value', user_id: 'test-user-id-123' },
+      })
     })
 
     it('should track with empty props when no props provided', async () => {
@@ -59,7 +62,10 @@ describe('analytics', () => {
 
       await trackEvent('test_event')
 
-      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', { name: 'test_event', props: { user_id: 'test-user-id-123' } })
+      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', {
+        name: 'test_event',
+        props: { user_id: 'test-user-id-123' },
+      })
     })
 
     it('should silently handle errors from invoke', async () => {
@@ -88,7 +94,10 @@ describe('analytics', () => {
       trackEventAsync('test_event', { key: 'value' })
 
       await new Promise((r) => setTimeout(r, 10))
-      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', { name: 'test_event', props: { key: 'value', user_id: 'test-user-id-123' } })
+      expect(mockInvoke).toHaveBeenCalledWith('plugin:aptabase|track_event', {
+        name: 'test_event',
+        props: { key: 'value', user_id: 'test-user-id-123' },
+      })
     })
   })
 
@@ -102,7 +111,9 @@ describe('analytics', () => {
         error_code: null,
       })
 
-      const callArgs = mockInvoke.mock.calls[0]?.[1] as { name: string; props: Record<string, unknown> } | undefined
+      const callArgs = mockInvoke.mock.calls[0]?.[1] as
+        | { name: string; props: Record<string, unknown> }
+        | undefined
       const props = callArgs?.props
       if (props) {
         const propsStr = JSON.stringify(props)
@@ -121,7 +132,9 @@ describe('analytics', () => {
         had_customizations: true,
       })
 
-      const callArgs = mockInvoke.mock.calls[0]?.[1] as { name: string; props: Record<string, unknown> } | undefined
+      const callArgs = mockInvoke.mock.calls[0]?.[1] as
+        | { name: string; props: Record<string, unknown> }
+        | undefined
       const props = callArgs?.props
       if (props) {
         // user_id is allowed (it's a random ID, not PII)
@@ -141,7 +154,9 @@ describe('analytics', () => {
         setting_key: 'usernameColor',
       })
 
-      const callArgs = mockInvoke.mock.calls[0]?.[1] as { name: string; props: Record<string, unknown> } | undefined
+      const callArgs = mockInvoke.mock.calls[0]?.[1] as
+        | { name: string; props: Record<string, unknown> }
+        | undefined
       const props = callArgs?.props
       if (props) {
         expect(Object.keys(props)).not.toContain('value')
