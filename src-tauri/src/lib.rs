@@ -19,15 +19,15 @@ struct PreviewState {
 type SharedPreviewState = Arc<Mutex<PreviewState>>;
 
 #[tauri::command]
-fn open_preview_window(
+async fn open_preview_window(
     video_id: String,
     css: String,
     app: AppHandle,
-    state: tauri::State<SharedPreviewState>,
+    state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
     {
         let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
-        if let Some(ref label) = state_guard.window_label {
+        if let Some(label) = state_guard.window_label.as_deref() {
             if let Some(win) = app.get_webview_window(label) {
                 let _ = win.close();
             }
@@ -54,6 +54,9 @@ fn open_preview_window(
     .min_inner_size(320.0, 480.0)
     .always_on_top(true)
     .user_agent(PREVIEW_USER_AGENT)
+    .on_page_load(|window, payload| {
+        println!("[Livicat] Page loaded: payload={:?}, url={:?}", payload, window.url());
+    })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
 
@@ -62,9 +65,20 @@ fn open_preview_window(
     let window_clone = window;
     let css_clone = css;
     std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_secs(2));
+        // WebView2 on Windows needs more time to initialize
+        #[cfg(target_os = "windows")]
+        let delay = std::time::Duration::from_secs(5);
+
+        #[cfg(not(target_os = "windows"))]
+        let delay = std::time::Duration::from_secs(2);
+
+        println!("[Livicat] Waiting {} seconds before CSS injection (platform: {})", delay.as_secs(), std::env::consts::OS);
+        std::thread::sleep(delay);
+
         if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
             eprintln!("[Livicat] CSS injection failed: {}", e);
+        } else {
+            println!("[Livicat] CSS injected successfully");
         }
     });
 
@@ -72,10 +86,10 @@ fn open_preview_window(
 }
 
 #[tauri::command]
-fn inject_css(css: String, app: AppHandle, state: tauri::State<SharedPreviewState>) -> Result<(), String> {
+async fn inject_css(css: String, app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
     let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
 
-    if let Some(ref label) = state_guard.window_label {
+    if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
             inject_css_to_window(&window, &css)?;
@@ -88,10 +102,10 @@ fn inject_css(css: String, app: AppHandle, state: tauri::State<SharedPreviewStat
 }
 
 #[tauri::command]
-fn close_preview_window(app: AppHandle, state: tauri::State<SharedPreviewState>) -> Result<(), String> {
+async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
     let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
 
-    if let Some(ref label) = state_guard.window_label {
+    if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             let _ = window.close();
         }
@@ -105,17 +119,25 @@ fn close_preview_window(app: AppHandle, state: tauri::State<SharedPreviewState>)
 }
 
 fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String> {
+    println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
+
     let script = format!(
         r#"(function() {{
             try {{
                 var existing = document.getElementById('livicat-css');
-                if (existing) existing.remove();
+                if (existing) {{
+                    console.log('[Livicat] Removing existing CSS');
+                    existing.remove();
+                }}
                 var style = document.createElement('style');
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
+                console.log('[Livicat] CSS injected successfully');
+                return true;
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
+                return false;
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?
@@ -124,8 +146,12 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
     window.eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
+    println!("[Livicat] CSS injection script executed");
     Ok(())
 }
+
+#[cfg(test)]
+mod windows_webview_tests;
 
 #[cfg(test)]
 mod tests {

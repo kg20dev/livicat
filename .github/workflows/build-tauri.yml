@@ -66,22 +66,18 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Get version from Cargo.toml
-        shell: bash
-        id: cargo-version
-        run: |
-          VERSION=$(node .github/scripts/get-cargo-version.cjs)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Cargo version: $VERSION"
-
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
-          key: ${{ steps.cargo-version.outputs.version }}
+          workspaces: src-tauri
+          cache-on-failure: true
+          cache-hit-env-var: RUST_CACHE_HIT
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Clean Rust build cache (ensure fresh artifacts)
+        run: cd src-tauri && cargo clean
 
       - name: Build production bundle
         run: npm run build
@@ -118,22 +114,18 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Get version from Cargo.toml
-        shell: bash
-        id: cargo-version
-        run: |
-          VERSION=$(node .github/scripts/get-cargo-version.cjs)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Cargo version: $VERSION"
-
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
-          key: ${{ steps.cargo-version.outputs.version }}
+          workspaces: src-tauri
+          cache-on-failure: true
+          cache-hit-env-var: RUST_CACHE_HIT
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Clean Rust build cache (ensure fresh artifacts)
+        run: cd src-tauri && cargo clean
 
       - name: Build production bundle
         run: npm run build
@@ -167,23 +159,12 @@ jobs:
         with:
           name: livicat-macos
           path: artifacts/macos
-          pattern: '*.dmg'
-          merge-multiple: true
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
           name: livicat-windows
           path: artifacts/windows
-          pattern: '*.{exe,msi}'
-          merge-multiple: true
-
-      - name: List downloaded files
-        run: |
-          echo "MacOS files:"
-          ls -la artifacts/macos/ || echo "No macOS files"
-          echo "Windows files:"
-          ls -la artifacts/windows/ || echo "No Windows files"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -191,10 +172,9 @@ jobs:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
           files: |
-            artifacts/macos/dmg/*.dmg
-            artifacts/macos/macos/*.app
-            artifacts/windows/nsis/*.exe
-            artifacts/windows/msi/*.msi
+            artifacts/macos/*.dmg
+            artifacts/windows/*.exe
+            artifacts/windows/*.msi
           draft: false
           prerelease: false
           generate_release_notes: true
