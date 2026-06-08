@@ -51,16 +51,17 @@ jobs:
       - name: Validate Aptabase Analytics Key
         run: |
           echo "Checking Aptabase configuration..."
-          if [ -z "${{ secrets.APTABASE_APP_KEY }}" ]; then
-            echo "❌ ERROR: APTABASE_APP_KEY secret not set!"
+          if [ -z "${{ vars.APTABASE_APP_KEY }}" ]; then
+            echo "❌ ERROR: APTABASE_APP_KEY environment variable not set!"
             echo "Analytics is required for production builds."
             echo ""
             echo "To fix this:"
-            echo "1. Go to: https://github.com/kg20dev/livicat/settings/secrets/actions"
-            echo "2. Click 'New repository secret'"
+            echo "1. Go to: https://github.com/kg20dev/livicat/settings/variables"
+            echo "2. Click 'New repository variable'"
             echo "3. Name: APTABASE_APP_KEY"
             echo "4. Value: Your Aptabase App Key from https://us.aptabase.com"
-            echo "5. Save and retry"
+            echo "5. Select Environment: release/** (or All)"
+            echo "6. Save and retry"
             exit 1
           fi
           echo "✅ Aptabase key is configured"
@@ -134,7 +135,7 @@ jobs:
         run: npm run tauri:build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APTABASE_APP_KEY: ${{ secrets.APTABASE_APP_KEY }}
+          APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -201,7 +202,7 @@ jobs:
         run: npm run tauri build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APTABASE_APP_KEY: ${{ secrets.APTABASE_APP_KEY }}
+          APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
