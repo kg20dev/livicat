@@ -151,6 +151,9 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
 }
 
 #[cfg(test)]
+mod windows_webview_tests;
+
+#[cfg(test)]
 mod tests {
     use serde_json::json;
 
