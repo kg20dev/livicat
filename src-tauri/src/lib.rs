@@ -19,15 +19,15 @@ struct PreviewState {
 type SharedPreviewState = Arc<Mutex<PreviewState>>;
 
 #[tauri::command]
-fn open_preview_window(
+async fn open_preview_window(
     video_id: String,
     css: String,
     app: AppHandle,
-    state: tauri::State<SharedPreviewState>,
+    state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
     {
         let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
-        if let Some(ref label) = state_guard.window_label {
+        if let Some(label) = state_guard.window_label.as_deref() {
             if let Some(win) = app.get_webview_window(label) {
                 let _ = win.close();
             }
@@ -86,10 +86,10 @@ fn open_preview_window(
 }
 
 #[tauri::command]
-fn inject_css(css: String, app: AppHandle, state: tauri::State<SharedPreviewState>) -> Result<(), String> {
+async fn inject_css(css: String, app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
     let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
 
-    if let Some(ref label) = state_guard.window_label {
+    if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
             inject_css_to_window(&window, &css)?;
@@ -102,10 +102,10 @@ fn inject_css(css: String, app: AppHandle, state: tauri::State<SharedPreviewStat
 }
 
 #[tauri::command]
-fn close_preview_window(app: AppHandle, state: tauri::State<SharedPreviewState>) -> Result<(), String> {
+async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
     let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
 
-    if let Some(ref label) = state_guard.window_label {
+    if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             let _ = window.close();
         }
