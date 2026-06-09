@@ -262,12 +262,6 @@ jobs:
           name: livicat-windows
           path: artifacts/windows
 
-      - name: Extract macOS artifacts
-        run: unzip -o artifacts/macos/livicat-macos.zip -d artifacts/macos/
-
-      - name: Extract Windows artifacts
-        run: unzip -o artifacts/windows/livicat-windows.zip -d artifacts/windows/
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
