@@ -10,18 +10,18 @@
     "beforeBuildCommand": ""
   },
   "app": {
-    "windows": [
-      {
-        "title": "Livicat",
-        "width": 1400,
-        "height": 900,
-        "minWidth": 800,
-        "minHeight": 500,
-        "resizable": true,
-        "fullscreen": false,
-        "additionalBrowserArgs": "--disable-gpu --disable-software-rasterizer"
-      }
-    ],
+      "windows": [
+        {
+          "title": "Livicat",
+          "width": 1400,
+          "height": 900,
+          "minWidth": 800,
+          "minHeight": 500,
+          "resizable": true,
+          "fullscreen": false,
+          "additionalBrowserArgs": "--disable-gpu-compositing --disable-features=msWebOOUI,msPdfOOUI"
+        }
+      ],
     "security": {
       "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.youtube.com https://i.ytimg.com"
     }
