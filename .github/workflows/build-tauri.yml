@@ -262,6 +262,14 @@ jobs:
           name: livicat-windows
           path: artifacts/windows
 
+      - name: Debug artifact structure
+        run: |
+          echo "macOS artifacts:"
+          find artifacts/macos -type f
+          echo ""
+          echo "Windows artifacts:"
+          find artifacts/windows -type f
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
