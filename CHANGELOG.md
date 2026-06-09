@@ -1,6 +1,13 @@
-# Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+### [0.7.2](https://github.com/kg20dev/livicat/compare/v0.7.3...v0.7.2) (2026-06-09)
+
+
+### Bug Fixes
+
+* sync workflow fixes from release/app to main (Refs [#81](https://github.com/kg20dev/livicat/issues/81)) ([abf949d](https://github.com/kg20dev/livicat/commit/abf949dbfed1b4b76e20ed8819080d9a315cc270))
+* use --disable-gpu-compositing for Windows OBS compatibility (Refs [#84](https://github.com/kg20dev/livicat/issues/84)) ([#85](https://github.com/kg20dev/livicat/issues/85)) ([f0e3b95](https://github.com/kg20dev/livicat/commit/f0e3b95d5e2d56eda531ce8f5849d1e2e96f670a))
+
+### [0.7.1](https://github.com/kg20dev/livicat/compare/v0.7.3...v0.7.1) (2026-06-08)
 
 ### [0.7.5](https://github.com/kg20dev/livicat/compare/v0.7.2...v0.7.5) (2026-06-08)
 
