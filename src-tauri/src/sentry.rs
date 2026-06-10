@@ -121,25 +121,35 @@ pub fn send_test_scenario() {
 /// - SENTRY_ENVIRONMENT: Environment name (development/production)
 /// - SENTRY_RELEASE: Release version (auto-synced with Cargo.toml)
 pub fn init_sentry() -> sentry::ClientInitGuard {
-    let dsn = env::var("SENTRY_DSN").unwrap_or_else(|_| {
-        println!("[Livicat] SENTRY_DSN not set, error reporting disabled");
-        String::new()
+    // Try compile-time env first (embedded in binary during CI/production builds),
+    // then fall back to runtime env (for local development with .env file)
+    let dsn = option_env!("SENTRY_DSN").map(|s| s.to_string()).unwrap_or_else(|| {
+        env::var("SENTRY_DSN").unwrap_or_else(|_| {
+            println!("[Livicat] SENTRY_DSN not set, error reporting disabled");
+            String::new()
+        })
     });
 
     if dsn.is_empty() {
         return sentry::init(());
     }
 
-    let environment = env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| {
-        if cfg!(debug_assertions) {
-            "development".to_string()
-        } else {
-            "production".to_string()
-        }
+    // Compile-time env with runtime fallback for environment override
+    let environment = option_env!("SENTRY_ENVIRONMENT").map(|s| s.to_string()).unwrap_or_else(|| {
+        env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| {
+            if cfg!(debug_assertions) {
+                "development".to_string()
+            } else {
+                "production".to_string()
+            }
+        })
     });
 
-    let release = env::var("SENTRY_RELEASE").unwrap_or_else(|_| {
-        format!("livicat@{}", env!("CARGO_PKG_VERSION"))
+    // Release uses compile-time CARGO_PKG_VERSION as base, with optional override
+    let release = option_env!("SENTRY_RELEASE").map(|s| s.to_string()).unwrap_or_else(|| {
+        env::var("SENTRY_RELEASE").unwrap_or_else(|_| {
+            format!("livicat@{}", env!("CARGO_PKG_VERSION"))
+        })
     });
 
     println!(
