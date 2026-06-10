@@ -116,6 +116,9 @@ jobs:
 
       - name: Check Rust code (src-tauri)
         run: cd src-tauri && cargo check
+        env:
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: development
         continue-on-error: false
 
   build:

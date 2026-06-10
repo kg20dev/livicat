@@ -3,6 +3,9 @@ use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
 use tauri_plugin_aptabase::EventTracker;
 
+mod sentry;
+use ::sentry::Level as SentryLevel;
+
 #[cfg(target_os = "windows")]
 const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -38,6 +41,9 @@ async fn open_preview_window(
     let chat_url = format!("https://www.youtube.com/live_chat?is_popout=1&v={}", video_id);
 
     println!("[Livicat Tauri] Opening preview for video: {}", video_id);
+
+    // Add breadcrumb for tracking
+    sentry::add_breadcrumb("preview", &format!("Opening preview window (video ID: {})", video_id), SentryLevel::Info);
 
     {
         let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
@@ -76,9 +82,17 @@ async fn open_preview_window(
         std::thread::sleep(delay);
 
         if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
+            // Capture error to Sentry
             eprintln!("[Livicat] CSS injection failed: {}", e);
+            sentry::capture_error(&e);
+            
+            // Add breadcrumb for CSS injection failure
+            sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
         } else {
             println!("[Livicat] CSS injected successfully");
+            
+            // Add breadcrumb for successful CSS injection
+            sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
         }
     });
 
@@ -89,13 +103,17 @@ async fn open_preview_window(
 async fn inject_css(css: String, app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
     let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
 
-    if let Some(label) = state_guard.window_label.as_deref() {
-        if let Some(window) = app.get_webview_window(label) {
-            println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
-            inject_css_to_window(&window, &css)?;
-            return Ok(());
+        if let Some(label) = state_guard.window_label.as_deref() {
+            if let Some(window) = app.get_webview_window(label) {
+                println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
+                
+                // Add breadcrumb for CSS injection
+                sentry::add_breadcrumb("css_injection", "Re-injecting CSS to existing preview window", SentryLevel::Info);
+                
+                inject_css_to_window(&window, &css)?;
+                return Ok(());
+            }
         }
-    }
 
     println!("[Livicat Tauri] No preview window to inject CSS into");
     Ok(())
@@ -107,6 +125,9 @@ async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPrev
 
     if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
+            // Add breadcrumb for window close
+            sentry::add_breadcrumb("preview", "Closing preview window", SentryLevel::Info);
+            
             let _ = window.close();
         }
         state_guard.window_label = None;
@@ -225,6 +246,10 @@ pub fn run() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
 
+    // Initialize Sentry for error reporting
+    let _sentry_client = sentry::init_sentry();
+    println!("[Livicat] Sentry error reporting initialized");
+
     // Create and enter Tokio runtime for plugin setup
     // The Aptabase plugin calls tokio::spawn() during .plugin() registration,
     // which requires a Tokio runtime to be entered in the current thread.
@@ -243,6 +268,18 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .setup(move |app| {
             app.manage(preview_state);
+
+            // Set up panic hook to capture Rust panics to Sentry
+            std::panic::set_hook(Box::new(|panic_info| {
+                let panic_message = panic_info.to_string();
+                eprintln!("[Livicat] Panic captured: {}", panic_message);
+                
+                // Send to Sentry
+            sentry::capture_message(&panic_message, SentryLevel::Error);
+            
+            // Add breadcrumb for panic context
+            sentry::add_breadcrumb("panic", &panic_message, SentryLevel::Fatal);
+            }));
 
             // Track app launch event via the official plugin
             if !app_key.is_empty() {
