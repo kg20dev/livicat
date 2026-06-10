@@ -2,6 +2,7 @@ use sentry::types::Dsn;
 use std::env;
 use std::str::FromStr;
 use ::sentry::Level as SentryLevel;
+use log::info;
 
 /// Add breadcrumb for tracking user actions
 pub fn add_breadcrumb(category: &str, message: &str, level: SentryLevel) {
@@ -21,6 +22,96 @@ pub fn capture_error(err: &str) {
 /// Capture message as warning
 pub fn capture_message(message: &str, level: SentryLevel) {
     sentry::capture_message(message, level);
+}
+
+/// Send test log to Sentry
+pub fn send_test_log() {
+    info!("Sentry integration test - log capture working");
+    info!("Test event sent from Livicat app");
+}
+
+/// Trigger intentional panic for testing (use carefully!)
+#[allow(dead_code)]
+pub fn trigger_test_panic() {
+    panic!("Sentry test panic - this is intentional for testing error reporting");
+}
+
+/// Send fake crash event to Sentry without actually panicking
+pub fn send_fake_crash_event() {
+    // This simulates a crash without actually crashing the app
+    capture_error("Fake crash event - application crash simulation");
+    
+    // Add crash context
+    add_breadcrumb("crash", "Simulated application crash for testing", SentryLevel::Fatal);
+    
+    // Add crash metadata
+    sentry::configure_scope(|scope| {
+        scope.set_extra("fake_crash", "true".into());
+        scope.set_extra("crash_type", "test_simulation".into());
+        scope.set_extra("test_purpose", "Verifying Sentry crash reporting".into());
+    });
+    
+    println!("🧪 Fake crash event sent to Sentry - check dashboard for crash event");
+}
+
+/// Send fake error with stack trace simulation
+pub fn send_fake_error_with_stacktrace() {
+    // Simulate an error with context
+    let error_message = "Simulated error in preview window creation";
+    
+    // Add breadcrumbs leading to the error
+    add_breadcrumb("ui_action", "User clicked 'Open Preview'", SentryLevel::Info);
+    add_breadcrumb("preview", "Attempting to create preview window", SentryLevel::Info);
+    add_breadcrumb("error", "Preview window creation failed", SentryLevel::Error);
+    
+    // Capture the error with context
+    capture_error(&error_message);
+    
+    // Add additional context
+    sentry::configure_scope(|scope| {
+        scope.set_extra("error_context", "Preview window creation simulation".into());
+        scope.set_extra("ui_component", "PreviewWindow".into());
+        scope.set_extra("test_purpose", "Stack trace simulation".into());
+    });
+    
+    println!("🧪 Fake error with breadcrumbs sent to Sentry");
+}
+
+/// Send multiple test events to simulate real usage
+pub fn send_test_scenario() {
+    println!("🧪 Sending test scenario to Sentry...");
+    println!("======================================");
+    
+    // Scenario 1: User opens preview window
+    add_breadcrumb("user_action", "User opened YouTube live chat", SentryLevel::Info);
+    add_breadcrumb("feature", "Preview functionality", SentryLevel::Info);
+    println!("✅ Step 1: User action breadcrumb");
+    
+    // Scenario 2: CSS injection works
+    add_breadcrumb("css_injection", "CSS injected successfully", SentryLevel::Info);
+    println!("✅ Step 2: CSS injection breadcrumb");
+    
+    // Scenario 3: Something goes wrong
+    capture_error("Simulated YouTube API timeout");
+    add_breadcrumb("api_error", "YouTube API request timed out", SentryLevel::Error);
+    println!("✅ Step 3: API error captured");
+    
+    // Scenario 4: User tries again
+    add_breadcrumb("user_action", "User retries operation", SentryLevel::Info);
+    capture_error("Simulated CSS parsing error");
+    println!("✅ Step 4: Retry error captured");
+    
+    // Scenario 5: App crash simulation
+    send_fake_crash_event();
+    println!("✅ Step 5: Crash simulation sent");
+    
+    println!("");
+    println!("🎯 Check Sentry dashboard for complete user journey with:");
+    println!("   • User action breadcrumbs");
+    println!("   • Feature usage breadcrumbs");
+    println!("   • Multiple error events");
+    println!("   • Crash simulation");
+    println!("   • Complete user flow context");
 }
 
 /// Initialize Sentry for error reporting
@@ -56,16 +147,23 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
         environment, release
     );
 
+    println!("[Livicat] Initializing Sentry with DSN: {}...", &dsn[..dsn.len().min(20)]);
+    
     let client = sentry::init((
         Dsn::from_str(&dsn).expect("Invalid Sentry DSN format"),
         sentry::ClientOptions {
             release: Some(release.into()),
             environment: Some(environment.into()),
-            traces_sample_rate: 0.1, // 10% sampling for performance monitoring
+            traces_sample_rate: 1.0, // 100% sampling for testing to ensure events are sent
             attach_stacktrace: true,
+            send_default_pii: false, // Don't send PII for privacy
+            debug: true, // Enable debug mode to see what Sentry is doing
             ..Default::default()
         },
     ));
+
+    println!("[Livicat] Sentry client created, is enabled: {}", client.is_enabled());
+    println!("[Livicat] Sentry debug mode enabled - check console for detailed logs");
 
     // Configure global scope with app context
     sentry::configure_scope(|scope| {

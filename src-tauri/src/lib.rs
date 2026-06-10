@@ -139,6 +139,33 @@ async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPrev
     Ok(())
 }
 
+#[tauri::command]
+async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
+    match crash_type.as_str() {
+        "panic" => {
+            println!("[Livicat] Triggering test panic for Sentry verification");
+            sentry::trigger_test_panic();
+            Ok(())
+        }
+        "fake_crash" => {
+            println!("[Livicat] Sending fake crash event to Sentry");
+            sentry::send_fake_crash_event();
+            Ok(())
+        }
+        "fake_error" => {
+            println!("[Livicat] Sending fake error with stack trace");
+            sentry::send_fake_error_with_stacktrace();
+            Ok(())
+        }
+        "scenario" => {
+            println!("[Livicat] Sending complete test scenario");
+            sentry::send_test_scenario();
+            Ok(())
+        }
+        _ => Err(format!("Unknown crash type: {}. Use: panic, fake_crash, fake_error, scenario", crash_type)),
+    }
+}
+
 fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
 
@@ -228,6 +255,10 @@ mod tests {
     }
 }
 
+mod sentry_integration_test;
+
+mod sentry_live_test;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let preview_state: SharedPreviewState = Arc::new(Mutex::new(PreviewState {
@@ -237,6 +268,10 @@ pub fn run() {
     // Load .env file if present (for local development)
     dotenvy::dotenv().ok();
 
+    // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
+    let sentry_guard = sentry::init_sentry();
+    println!("[Livicat] Sentry error reporting initialized");
+
     let app_key = std::env::var("APTABASE_APP_KEY").unwrap_or_else(|_| {
         println!("[Livicat] APTABASE_APP_KEY not set, analytics disabled");
         "".to_string()
@@ -245,10 +280,6 @@ pub fn run() {
     if !app_key.is_empty() {
         println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
     }
-
-    // Initialize Sentry for error reporting
-    let _sentry_client = sentry::init_sentry();
-    println!("[Livicat] Sentry error reporting initialized");
 
     // Create and enter Tokio runtime for plugin setup
     // The Aptabase plugin calls tokio::spawn() during .plugin() registration,
@@ -268,6 +299,9 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .setup(move |app| {
             app.manage(preview_state);
+
+            // Send test log to verify Sentry logs feature is working
+            sentry::send_test_log();
 
             // Set up panic hook to capture Rust panics to Sentry
             std::panic::set_hook(Box::new(|panic_info| {
@@ -299,7 +333,11 @@ pub fn run() {
             open_preview_window,
             inject_css,
             close_preview_window,
+            trigger_crash_test,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    // Keep Sentry guard alive until app closes
+    drop(sentry_guard);
 }
