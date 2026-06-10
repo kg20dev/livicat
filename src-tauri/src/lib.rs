@@ -58,7 +58,8 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    .always_on_top(true)
+    // always_on_top disabled on Windows — known to cause WebView2 crashes with YouTube chat
+    .always_on_top(cfg!(not(target_os = "windows")))
     .user_agent(PREVIEW_USER_AGENT)
     .on_page_load(|window, payload| {
         let url = window.url().ok();
@@ -80,23 +81,38 @@ async fn open_preview_window(
     let window_clone = window;
     let css_clone = css;
     std::thread::spawn(move || {
-        // Wait for webview to initialize and page to start loading
-        #[cfg(target_os = "windows")]
-        let delay = std::time::Duration::from_millis(800);
+        // Wrap in catch_unwind to isolate any Rust panics from crashing the process
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            // Wait for webview to initialize and page to start loading
+            #[cfg(target_os = "windows")]
+            let delay = std::time::Duration::from_millis(800);
 
-        #[cfg(not(target_os = "windows"))]
-        let delay = std::time::Duration::from_millis(500);
+            #[cfg(not(target_os = "windows"))]
+            let delay = std::time::Duration::from_millis(500);
 
-        println!("[Livicat] Waiting {}ms before CSS injection (platform: {})", delay.as_millis(), std::env::consts::OS);
-        std::thread::sleep(delay);
+            println!("[Livicat] Waiting {}ms before CSS injection (platform: {})", delay.as_millis(), std::env::consts::OS);
+            std::thread::sleep(delay);
 
-        if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
-            eprintln!("[Livicat] CSS injection failed: {}", e);
-            sentry::capture_error(&e);
-            sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
-        } else {
-            println!("[Livicat] CSS injected successfully");
-            sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
+            if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
+                eprintln!("[Livicat] CSS injection failed: {}", e);
+                sentry::capture_error(&e);
+                sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
+            } else {
+                println!("[Livicat] CSS injected successfully");
+                sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
+            }
+        }));
+
+        if let Err(panic_err) = result {
+            let msg = if let Some(s) = panic_err.downcast_ref::<&str>() {
+                s.to_string()
+            } else if let Some(s) = panic_err.downcast_ref::<String>() {
+                s.clone()
+            } else {
+                "Unknown panic in CSS injection thread".to_string()
+            };
+            eprintln!("[Livicat] CSS injection thread panicked: {}", msg);
+            sentry::capture_error(&format!("CSS injection thread panicked: {}", msg));
         }
     });
 
@@ -307,16 +323,16 @@ pub fn run() {
             // Send test log to verify Sentry logs feature is working
             sentry::send_test_log();
 
-            // Set up panic hook to capture Rust panics to Sentry
-            std::panic::set_hook(Box::new(|panic_info| {
+            // Register a Sentry-compatible panic hook
+            // We preserve any existing hook (Sentry's own) and add ours on top
+            let previous_hook = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |panic_info| {
+                // Call the previous hook first (Sentry's panic handler)
+                previous_hook(panic_info);
+
+                // Also log to stderr for local debugging
                 let panic_message = panic_info.to_string();
                 eprintln!("[Livicat] Panic captured: {}", panic_message);
-                
-                // Send to Sentry
-            sentry::capture_message(&panic_message, SentryLevel::Error);
-            
-            // Add breadcrumb for panic context
-            sentry::add_breadcrumb("panic", &panic_message, SentryLevel::Fatal);
             }));
 
             // Track app launch event via the official plugin
