@@ -151,6 +151,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
           SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -230,6 +231,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
           SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
