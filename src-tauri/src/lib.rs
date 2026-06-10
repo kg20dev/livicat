@@ -7,7 +7,7 @@ mod sentry;
 use ::sentry::Level as SentryLevel;
 
 #[cfg(target_os = "windows")]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 #[cfg(target_os = "macos")]
 const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -79,7 +79,6 @@ async fn open_preview_window(
 
     let window_clone = window;
     let css_clone = css;
-    let video_id_clone = video_id;
     std::thread::spawn(move || {
         // Wait for webview to initialize and page to start loading
         #[cfg(target_os = "windows")]
@@ -91,26 +90,13 @@ async fn open_preview_window(
         println!("[Livicat] Waiting {}ms before CSS injection (platform: {})", delay.as_millis(), std::env::consts::OS);
         std::thread::sleep(delay);
 
-        // Check if window is still visible before injection (prevents crashes on closed windows)
-        match window_clone.is_visible() {
-            Ok(true) => {
-                if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
-                    eprintln!("[Livicat] CSS injection failed: {}", e);
-                    sentry::capture_error(&e);
-                    sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
-                } else {
-                    println!("[Livicat] CSS injected successfully");
-                    sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
-                }
-            }
-            Ok(false) => {
-                println!("[Livicat] Preview window closed before CSS injection could complete");
-                sentry::add_breadcrumb("preview", &format!("Preview window closed early (video: {})", video_id_clone), SentryLevel::Warning);
-            }
-            Err(e) => {
-                eprintln!("[Livicat] Failed to check preview window visibility: {}", e);
-                sentry::capture_error(&format!("Preview window state check failed: {}", e));
-            }
+        if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
+            eprintln!("[Livicat] CSS injection failed: {}", e);
+            sentry::capture_error(&e);
+            sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
+        } else {
+            println!("[Livicat] CSS injected successfully");
+            sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
         }
     });
 
