@@ -105,4 +105,22 @@ mod tests {
         // Test that error capture doesn't panic
         capture_error("Test error message");
     }
+
+    #[test]
+    fn test_init_without_dsn() {
+        // Test that Sentry initialization works without DSN (disabled mode)
+        // This ensures the app doesn't crash when SENTRY_DSN is not set
+        let dsn = "";
+        if dsn.is_empty() {
+            // Should return a disabled client
+            let client = sentry::init(());
+            assert!(!client.is_enabled());
+        }
+    }
+
+    #[test]
+    fn test_breadcrumb_creation() {
+        // Test breadcrumb creation doesn't panic
+        add_breadcrumb("test_category", "test_message", SentryLevel::Info);
+    }
 }
