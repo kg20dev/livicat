@@ -61,12 +61,6 @@
 2. Run the installer
 3. Open Livicat from your Start menu
 
-### **🐧 Linux**
-
-1. Download the latest `.deb` or `.AppImage` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
-2. Install the package or run the AppImage
-3. Open Livicat from your applications menu
-
 **💡 Tip:** Livicat is only ~8MB — it downloads in seconds!
 
 ---

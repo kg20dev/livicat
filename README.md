@@ -80,7 +80,6 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
-- **Linux:** AppImage
 
 ---
 
@@ -97,10 +96,6 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 **Windows:**
 - Download `.exe` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
 - Run installer and open from Start menu
-
-**Linux:**
-- Download `.AppImage` or `.deb` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
-- Make executable and run
 
 ### Step 2: Open Livicat
 
@@ -184,7 +179,6 @@ npm run tauri:build
 # Binaries output to:
 # - macOS: src-tauri/target/release/bundle/dmg/
 # - Windows: src-tauri/target/release/bundle/msi/
-# - Linux: src-tauri/target/release/bundle/deb/ or AppImage
 ```
 
 ### Project Structure
@@ -215,7 +209,7 @@ livicat/
 - **Size:** ~10MB (Tauri) vs ~115MB (Electron) — 91% smaller
 - **Tests:** 182+ tests (frontend + Rust)
 - **Languages:** TypeScript, Rust, React
-- **Platforms:** macOS, Windows, Linux
+- **Platforms:** macOS, Windows
 - **License:** MIT
 
 ---
