@@ -314,7 +314,7 @@ export default function App() {
               {/* Styling Panel */}
               <StylingPanel onCSSChange={setGeneratedCSS}>
                 <StylingPanel.Header />
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
                   {/* Hero Section: Quick Presets */}
                   <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets">
                     <StylingPanel.PresetSelector />
@@ -338,7 +338,7 @@ export default function App() {
                   </StylingPanel.Section>
 
                   {/* Section: Header */}
-                  <StylingPanel.Section icon="header" title="Header">
+                  <StylingPanel.Section icon="title" title="Header">
                     <div className="space-y-2">
                       <StylingPanel.Toggle settingKey="showHeader" label="Show Header" />
                     </div>
@@ -496,7 +496,7 @@ export default function App() {
                   </StylingPanel.Section>
 
                   {/* Section: Scrollbar */}
-                  <StylingPanel.Section icon="scroll" title="Scrollbar">
+                  <StylingPanel.Section icon="swipe_vertical" title="Scrollbar">
                     <div className="space-y-2">
                       <StylingPanel.Slider
                         settingKey="scrollbarWidth"

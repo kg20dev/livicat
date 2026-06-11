@@ -35,23 +35,26 @@ mod sentry_live_tests {
         println!("✅ Error captured");
 
         // Test 3: Capture a message
-        sentry::capture_message("Live test message - should appear in Sentry", SentryLevel::Warning);
+        sentry::capture_message(
+            "Live test message - should appear in Sentry",
+            SentryLevel::Warning,
+        );
         println!("✅ Message captured");
 
         // Test 4: Send fake crash event
         sentry::send_fake_crash_event();
         println!("✅ Fake crash event sent");
-        
+
         // Test 5: Send fake error with breadcrumbs
         sentry::send_fake_error_with_stacktrace();
         println!("✅ Fake error with stack trace sent");
-        
+
         // Test 6: Send complete test scenario
         sentry::send_test_scenario();
         println!("✅ Complete test scenario sent");
         {
-            use log::{info, error, warn};
-            
+            use log::{error, info, warn};
+
             info!("Live test log from Livicat - INFO level");
             warn!("Live test log from Livicat - WARN level");
             error!("Live test log from Livicat - ERROR level");

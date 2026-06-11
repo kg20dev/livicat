@@ -138,8 +138,8 @@ StylingPanel.Section = function StylingPanelSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="px-5 py-4 border-b border-outline-variant/40 last:border-b-0">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="bg-surface-container-low rounded-xl px-4 py-4 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
         <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
       </div>
@@ -355,7 +355,7 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
     { value: 'default', label: 'None', icon: 'block' },
     { value: 'blink', label: 'Blink', icon: 'visibility' },
     { value: 'glowing', label: 'Glowing', icon: 'auto_awesome' },
-    { value: 'fade', label: 'Fade', icon: 'fade_on_image' },
+    { value: 'fade', label: 'Fade', icon: 'opacity' },
     { value: 'slide', label: 'Slide', icon: 'arrow_right_alt' },
     { value: 'bounce', label: 'Bounce', icon: 'restart_alt' },
   ]
@@ -462,7 +462,7 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
   )
 }
 
-/* Hero Section - special treatment for Quick Presets */
+/* Hero Section - subtle primary tint for Quick Presets */
 StylingPanel.HeroSection = function StylingPanelHeroSection({
   icon,
   title,
@@ -473,8 +473,8 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="px-5 py-4 border-b border-outline-variant/40">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="bg-primary/[0.04] rounded-xl px-4 py-4 mb-3 border border-primary/10">
+      <div className="flex items-center gap-2 mb-4">
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
         <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
       </div>
