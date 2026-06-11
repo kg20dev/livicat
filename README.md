@@ -282,15 +282,6 @@ src-tauri/
 - ✅ Keyboard shortcut (`Ctrl+Shift+E` to export)
 - ✅ Cross-platform support (macOS, Windows)
 
-### 🚧 Planned
-
-- [ ] Custom theme import/export
-- [ ] Dark/light mode toggle
-- [ ] More animation styles
-- [ ] Chat replay support for VODs
-- [ ] Universal macOS binary (Intel + Apple Silicon)
-- [ ] Windows release builds
-
 ---
 
 ## Troubleshooting
