@@ -12,6 +12,10 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ![macOS](https://img.shields.io/badge/macOS-supported-brightgreen?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
+<p align="center">
+  <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
+</p>
+
 ---
 
 ## 📚 Choose Your Documentation
