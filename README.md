@@ -314,6 +314,9 @@ Livicat is made better by the streamers, developers, and testers who use it, rep
 <a href="https://github.com/migorengx">
   <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 4px;" title="migorengx — Creator & Maintainer">
 </a>
+<a href="https://github.com/sutoberiii">
+  <img src="https://github.com/sutoberiii.png" width="60" height="60" alt="sutoberiii" style="border-radius: 50%; margin: 4px;" title="sutoberiii — Collaborator">
+</a>
 
 ---
 
