@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import pkg from '../../../package.json'
+import { TauriService } from '../../services'
 
 /* ─── Context ──────────────────────────────────────────────────── */
 
@@ -56,12 +57,9 @@ Sidebar.Header = function SidebarHeader({
   const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
 
   useEffect(() => {
-    import('@tauri-apps/api/core')
-      .then(({ invoke }) => invoke<string>('get_app_version'))
-      .then((v) => setRuntimeVersion(v))
-      .catch(() => {
-        // Tauri not available — keep null fallback
-      })
+    TauriService.getAppVersion().then((v) => {
+      if (v) setRuntimeVersion(v)
+    })
   }, [])
 
   const subtitle = subtitleProp ?? `v${runtimeVersion ?? pkg.version}`
