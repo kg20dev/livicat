@@ -330,7 +330,11 @@ pub fn run() {
         .setup(move |app| {
             app.manage(preview_state);
 
-            // Send test log to verify Sentry logs feature is working
+            // Move Sentry guard into Tauri state so it persists even on crash
+            // This ensures Sentry flushes events even if the app crashes hard
+            app.manage(sentry_guard);
+
+            // Send test log to verify Sentry is working
             sentry::send_test_log();
 
             // Register a Sentry-compatible panic hook
@@ -376,6 +380,5 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    // Keep Sentry guard alive until app closes
-    drop(sentry_guard);
+    // Sentry guard is now managed by Tauri state - lives until app teardown
 }

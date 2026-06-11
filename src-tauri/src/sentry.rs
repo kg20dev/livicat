@@ -1,8 +1,9 @@
 use ::sentry::Level as SentryLevel;
-use log::info;
+use sentry::integrations::panic::PanicIntegration;
 use sentry::types::Dsn;
 use std::env;
 use std::str::FromStr;
+use std::sync::Arc;
 
 /// Add breadcrumb for tracking user actions
 pub fn add_breadcrumb(category: &str, message: &str, level: SentryLevel) {
@@ -26,8 +27,8 @@ pub fn capture_message(message: &str, level: SentryLevel) {
 
 /// Send test log to Sentry
 pub fn send_test_log() {
-    info!("Sentry integration test - log capture working");
-    info!("Test event sent from Livicat app");
+    capture_message("Sentry integration test - app started", SentryLevel::Info);
+    capture_message("Test event sent from Livicat app", SentryLevel::Info);
 }
 
 /// Trigger intentional panic for testing (use carefully!)
@@ -204,6 +205,9 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
             attach_stacktrace: true,
             send_default_pii: false, // Don't send PII for privacy
             debug: true,             // Enable debug mode to see what Sentry is doing
+            integrations: vec![
+                Arc::new(PanicIntegration::default()), // ← captures panics
+            ],
             ..Default::default()
         },
     ));
