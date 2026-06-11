@@ -73,51 +73,34 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    // always_on_top disabled on Windows — known to cause WebView2 crashes with YouTube chat
-    .always_on_top(cfg!(not(target_os = "windows")))
+    .always_on_top(true)
     .user_agent(PREVIEW_USER_AGENT)
     .additional_browser_args("--disable-gpu")
-    .on_page_load(move |window, payload| {
-        let url = window.url().ok();
-        println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
-
-        // Report navigation failures to Sentry
-        if payload.event() == tauri::webview::PageLoadEvent::Finished {
-            if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
-                if url_str.contains("error") || url_str.contains("blank") {
-                    sentry::capture_error(&format!(
-                        "Preview page load resulted in error page: {}",
-                        url_str
-                    ));
-                }
-            }
-
-            // Inject CSS when page finishes loading
-            // Runs on Tauri's event loop thread — avoids raw thread spawn crash on Windows
-            if let Err(e) = inject_css_to_window(&window, &css) {
-                eprintln!("[Livicat] CSS injection via page load failed: {}", e);
-                sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
-                sentry::add_breadcrumb(
-                    "css_injection",
-                    &format!("CSS injection via page load failed: {}", e),
-                    SentryLevel::Error,
-                );
-            } else {
-                println!("[Livicat] CSS injected on page load");
-                sentry::add_breadcrumb(
-                    "css_injection",
-                    &format!("CSS injected on page load ({} bytes)", css.len()),
-                    SentryLevel::Info,
-                );
-            }
-        }
-    })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
 
     window
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
+
+    // Test hypothesis: Does CSS injection delay + --disable-gpu flag work?
+    // YouTube chat with --disable-gpu (software rendering) may need more time to initialize
+    let window_clone = window.clone();
+    let css_clone = css;
+    std::thread::spawn(move || {
+        let delay = std::time::Duration::from_secs(5);
+
+        println!(
+            "[Livicat] Test: Waiting {}s before CSS injection with --disable-gpu flag",
+            delay.as_secs()
+        );
+        std::thread::sleep(delay);
+
+        match inject_css_to_window(&window_clone, &css_clone) {
+            Ok(_) => println!("[Livicat] Test: CSS injected successfully with --disable-gpu + 5s delay"),
+            Err(e) => eprintln!("[Livicat] Test: CSS injection failed with --disable-gpu + 5s delay: {}", e),
+        }
+    });
 
     Ok(())
 }
