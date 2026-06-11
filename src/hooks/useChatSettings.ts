@@ -245,7 +245,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       fontFamily: settings.fontFamily || undefined,
     },
     container: {
-      background: settings.messageBackgroundColor || undefined,
+      background: settings.backgroundColor || undefined,
       borderRadius: settings.messageBorderRadius ? `${settings.messageBorderRadius}px` : undefined,
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
     },
