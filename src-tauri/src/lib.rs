@@ -82,6 +82,28 @@ async fn open_preview_window(
         let flags = "";
         flags
     })
+    .on_page_load(move |window, payload| {
+        let url = window.url().ok();
+        println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
+
+        // Report navigation failures to Sentry
+        if payload.event() == tauri::webview::PageLoadEvent::Finished {
+            if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
+                if url_str.contains("error") || url_str.contains("blank") {
+                    eprintln!("[Livicat] Preview navigated to error page: {}", url_str);
+                    sentry::capture_error(&format!(
+                        "Preview navigated to error page (WebView2 crash): {}",
+                        url_str
+                    ));
+                    sentry::add_breadcrumb(
+                        "webview_error",
+                        &format!("Preview error page: {}", url_str),
+                        SentryLevel::Error,
+                    );
+                }
+            }
+        }
+    })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
 
