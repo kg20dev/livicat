@@ -134,6 +134,12 @@ async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPrev
 }
 
 #[tauri::command]
+fn get_app_version() -> String {
+    // Read version from Cargo.toml at compile time — always matches the binary
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
 async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
     match crash_type.as_str() {
         "panic" => {
@@ -327,6 +333,7 @@ pub fn run() {
             open_preview_window,
             inject_css,
             close_preview_window,
+            get_app_version,
             trigger_crash_test,
         ])
         .run(tauri::generate_context!())
