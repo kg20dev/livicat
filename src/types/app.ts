@@ -63,6 +63,9 @@ export interface ChatSettings {
   scrollButtonBorderRadius: number
   scrollButtonOpacity: number
 
+  /* Window */
+  transparentBackground: boolean
+
   /* Other */
   messageSpacing: MessageSpacing
   theme: Theme

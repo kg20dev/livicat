@@ -192,6 +192,19 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler)
   }, [handleExportCSS])
 
+  // Apply transparent background setting on mount — toggled in Settings page
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('livicat_chat_settings')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        document.body.classList.toggle('window-transparent', !!parsed.transparentBackground)
+      }
+    } catch {
+      // localStorage unavailable or corrupted
+    }
+  }, [])
+
   // Analytics consent flow
   useEffect(() => {
     console.log('[Analytics Consent] Effect triggered, loadingComplete:', loadingComplete)

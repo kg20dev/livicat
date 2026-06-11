@@ -19,6 +19,7 @@
         "minHeight": 500,
         "resizable": true,
         "fullscreen": false,
+        "transparent": true,
         "additionalBrowserArgs": "--disable-gpu-compositing --disable-features=msWebOOUI,msPdfOOUI"
       }
     ],

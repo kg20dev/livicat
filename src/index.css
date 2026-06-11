@@ -286,3 +286,26 @@ yt-live-chat-author-chip {
   flex-direction: column;
   gap: 4px;
 }
+
+/* ─── Transparent window mode ──────────────────────────────────────── */
+/* When .window-transparent is on <body>, the app background is see-through.
+   Sidebar and TopBar get more translucent so desktop content shows through. */
+body.window-transparent {
+  background: transparent !important;
+}
+
+body.window-transparent .glass-panel {
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(30px);
+}
+
+body.window-transparent aside,
+body.window-transparent [class*="bg-surface-container-low"] {
+  background: rgba(28, 27, 27, 0.7) !important;
+  backdrop-filter: blur(40px);
+}
+
+/* Root app container — no solid background in transparent mode */
+body.window-transparent > div:first-child {
+  background: transparent !important;
+}

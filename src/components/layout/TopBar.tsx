@@ -13,6 +13,7 @@ interface TopBarRootProps {
 export default function TopBar({ children, className = '' }: TopBarRootProps) {
   return (
     <header
+      data-tauri-drag-region
       className={`h-16 fixed top-0 right-0 left-[280px] z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin ${className}`}
     >
       {children}
