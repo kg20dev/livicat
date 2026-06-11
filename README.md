@@ -10,6 +10,10 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
 
+<p align="center">
+  <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
+</p>
+
 ---
 
 ## Latest Release
@@ -21,7 +25,7 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 🚀 **Tauri Desktop App** — 93% smaller than Electron (8 MB vs 115 MB)
 📊 **Aptabase Analytics** — Privacy-first usage tracking with user consent
 🎨 **Full CSS Customization** — 7 presets, 6 animations, 12 Google fonts
-🪟 **Cross-Platform** — macOS (Apple Silicon), Windows, and Linux builds
+🪟 **Cross-Platform** — macOS (Apple Silicon) and Windows builds
 ⚡ **Real-Time Preview** — Native popup window with always-on-top support
 📤 **OBS-Ready Export** — Download CSS for browser source overlays
 
@@ -206,7 +210,7 @@ Builds appear in `src-tauri/target/<arch>/release/bundle/`.
 
 ### Adding More Platforms
 
-To build for additional platforms (e.g., x86_64 macOS, Windows, Linux):
+To build for additional platforms (e.g., x86_64 macOS, Windows):
 
 ```bash
 # Add target
@@ -262,7 +266,7 @@ src-tauri/
 - **Tauri IPC**: Frontend calls `invoke('open_preview_window', { videoId, css })` → Rust creates webview window → CSS injected via `window.eval()` creating `<style id="livicat-css">`
 - **oEmbed API**: Fetches video metadata without API key (public endpoint)
 - **Vite + React**: Frontend built with Vite, React 18, TypeScript, TailwindCSS
-- **Tauri 2**: Rust backend uses OS webview (WKWebView on macOS, WebView2 on Windows, WebKitGTK on Linux) — much smaller than Electron's bundled Chromium
+- **Tauri 2**: Rust backend uses OS webview (WKWebView on macOS, WebView2 on Windows) — no bundled Chromium, much smaller than Electron
 - **No YouTube Data API**: Uses native YouTube live chat in iframe, not custom message polling
 
 ---
@@ -280,16 +284,7 @@ src-tauri/
 - ✅ Video metadata fetch (oEmbed API)
 - ✅ Settings persistence (localStorage)
 - ✅ Keyboard shortcut (`Ctrl+Shift+E` to export)
-- ✅ Cross-platform support (macOS, Windows, Linux via Tauri)
-
-### 🚧 Planned
-
-- [ ] Custom theme import/export
-- [ ] Dark/light mode toggle
-- [ ] More animation styles
-- [ ] Chat replay support for VODs
-- [ ] Universal macOS binary (Intel + Apple Silicon)
-- [ ] Windows + Linux release builds
+- ✅ Cross-platform support (macOS, Windows)
 
 ---
 
