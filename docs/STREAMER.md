@@ -304,7 +304,7 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 Check [existing discussions](https://github.com/kg20dev/livicat/discussions) or start a new one.
 
 ### **📖 Developer Docs**
-See [README_DEVELOPER.md](README_DEVELOPER.md) for technical details.
+See [docs/README_DEVELOPER.md](docs/README_DEVELOPER.md) for technical details.
 
 ---
 
@@ -332,4 +332,4 @@ Livicat is made better by streamers like you who use it, report bugs, and sugges
 
 **Made with ❤️ for streamers** | [kg20dev](https://github.com/kg20dev)
 
-**[⬆ Back to main README](README.md)**
+**[⬆ Back to main README](../README.md)**

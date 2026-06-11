@@ -17,7 +17,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ## 📚 Choose Your Documentation
 
 ### 🎯 For Streamers & OBS Users
-**[→ STREAMER.md](STREAMER.md)** - Complete guide from installation to OBS setup
+**[→ docs/STREAMER.md](docs/STREAMER.md)** - Complete guide from installation to OBS setup
 
 **Includes:**
 - Step-by-step installation
@@ -30,7 +30,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ---
 
 ### 🛠️ For Developers & Contributors
-**[→ README_DEVELOPER.md](README_DEVELOPER.md)** - Technical documentation
+**[→ docs/README_DEVELOPER.md](docs/README_DEVELOPER.md)** - Technical documentation
 
 **Includes:**
 - Architecture overview

@@ -831,7 +831,7 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential \
 
 ### **Documentation**
 
-- [STREAMER.md](STREAMER.md) — End-user guide
+- [docs/STREAMER.md](docs/STREAMER.md) — End-user guide
 - [BUILD.md](BUILD.md) — Build instructions
 - [TESTING.md](TESTING.md) — Testing guide
 - [RELEASE.md](RELEASE.md) — Release workflow
@@ -936,4 +936,4 @@ Styled YouTube Chat
 
 **Made with ❤️ for developers** | [kg20dev](https://github.com/kg20dev)
 
-**[⬆ Back to main README](README.md)**
+**[⬆ Back to main README](../README.md)**
