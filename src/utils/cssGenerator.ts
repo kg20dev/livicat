@@ -242,7 +242,7 @@ function buildMessageRules(settings: MessageSettings): string {
   if (settings.borderRadius) rules.push(`  border-radius: var(--chat-msg-radius) !important;`)
   if (settings.padding) rules.push(`  padding: var(--chat-msg-padding) !important;`)
   if (settings.margin) rules.push(`  margin: var(--chat-msg-margin) !important;`)
-  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity) !important;`)
+  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity);`)
 
   if (rules.length === 0) return ''
 

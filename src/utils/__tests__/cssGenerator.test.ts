@@ -76,7 +76,7 @@ describe('generateChatCSS', () => {
         message: { opacity: 0.9 },
       })
       expect(css).toContain('--chat-msg-opacity: 0.9')
-      expect(css).toContain('opacity: var(--chat-msg-opacity) !important')
+      expect(css).toContain('opacity: var(--chat-msg-opacity)')
     })
 
     it('generates font-family when provided', () => {
