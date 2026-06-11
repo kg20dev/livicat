@@ -324,7 +324,10 @@ export default function App() {
                   <StylingPanel.Section icon="layers" title="Generic">
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-3">
-                        <StylingPanel.ColorField settingKey="backgroundColor" label="Background" />
+                        <StylingPanel.ColorField
+                          settingKey="backgroundColor"
+                          label="Page Background"
+                        />
                         <StylingPanel.ColorField settingKey="accentColor" label="Accent" />
                       </div>
                       <StylingPanel.Slider
