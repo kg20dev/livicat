@@ -77,7 +77,9 @@ export const TauriService = {
   },
 
   /** Trigger a crash test (for Sentry verification) */
-  async triggerCrashTest(crashType: 'panic' | 'fake_crash' | 'fake_error' | 'scenario'): Promise<boolean> {
+  async triggerCrashTest(
+    crashType: 'panic' | 'fake_crash' | 'fake_error' | 'scenario'
+  ): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {
