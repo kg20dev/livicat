@@ -111,6 +111,12 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
+    // Inject Sentry into preview webview to capture JavaScript errors
+    if let Err(e) = inject_sentry_to_window(&window) {
+        eprintln!("[Livicat] Sentry injection failed: {}", e);
+        sentry::capture_error(&format!("Sentry injection failed: {}", e));
+    }
+
     // Inject CSS immediately after window show
     // OBS-compatible GPU rendering (--use-angle=d3d11) should handle this smoothly
     if let Err(e) = inject_css_to_window(&window, &css) {
@@ -244,6 +250,60 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
     println!("[Livicat] CSS injection script executed");
+    Ok(())
+}
+
+fn inject_sentry_to_window(window: &WebviewWindow) -> Result<(), String> {
+    println!("[Livicat] Injecting Sentry into preview webview");
+
+    // Inject Sentry browser SDK to capture JavaScript errors in preview webview
+    let script = r#"(function() {
+        try {
+            // Check if Sentry is already loaded
+            if (window.Sentry) {
+                console.log('[Livicat] Sentry already loaded in preview webview');
+                return;
+            }
+
+            // Load Sentry from CDN
+            var script = document.createElement('script');
+            script.src = 'https://browser.sentry-cdn.com/8.29.0/bundle.min.js';
+            script.crossOrigin = 'anonymous';
+            script.onload = function() {
+                console.log('[Livicat] Sentry SDK loaded, initializing...');
+                
+                // Initialize Sentry
+                Sentry.init({
+                    dsn: 'https://a152e9a3e9de46c5b099336088514b7d@o4504026331295744.ingest.us.sentry.io/4507986409615360',
+                    environment: 'production',
+                    release: 'livicat@0.7.7',
+                    integrations: [new Sentry.BrowserTracing()],
+                    tracesSampleRate: 1.0,
+                    beforeSend: function(event, hint) {
+                        console.log('[Livicat] Sending event to Sentry:', event);
+                        return event;
+                    }
+                });
+
+                console.log('[Livicat] Sentry initialized in preview webview');
+                
+                // Capture initial message
+                Sentry.captureMessage('Preview webview initialized', 'info');
+            };
+            script.onerror = function() {
+                console.error('[Livicat] Failed to load Sentry SDK');
+            };
+            document.head.appendChild(script);
+        } catch(e) {
+            console.error('[Livicat] Sentry injection error:', e);
+        }
+    })();"#;
+
+    window
+        .eval(script)
+        .map_err(|e| format!("Failed to inject Sentry: {}", e))?;
+
+    println!("[Livicat] Sentry injection script executed");
     Ok(())
 }
 
