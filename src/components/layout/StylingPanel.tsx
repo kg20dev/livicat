@@ -111,11 +111,11 @@ export default function StylingPanel({
 StylingPanel.Header = function StylingPanelHeader({ title = 'Styling Panel' }: { title?: string }) {
   const { savedIndicator } = useStylingPanelContext()
   return (
-    <div className="p-gutter border-b border-outline-variant flex items-center justify-between bg-surface-container-low/50 backdrop-blur-sm">
+    <div className="p-gutter border-b border-outline-variant flex items-center justify-between">
       <h2 className="font-title-lg text-title-lg text-on-surface font-semibold">{title}</h2>
       <div className="flex items-center gap-2">
         {savedIndicator && (
-          <span className="text-label-md text-primary animate-pulse font-medium flex items-center gap-1">
+          <span className="text-label-md text-primary font-medium flex items-center gap-1">
             <span className="material-symbols-outlined text-[16px]">check_circle</span>
             Saved
           </span>
@@ -138,20 +138,15 @@ StylingPanel.Section = function StylingPanelSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="relative">
-      {/* Section header - minimal */}
-      <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
-          {icon}
-        </span>
-        <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
+    <div className="px-4 py-5 border-b border-outline-variant/30 last:border-b-0">
+      {/* Section header */}
+      <div className="flex items-center gap-2.5 mb-4">
+        <span className="material-symbols-outlined text-primary text-[22px]">{icon}</span>
+        <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
       </div>
 
       {/* Section content */}
-      <div className="px-1 py-2 space-y-2">{children}</div>
-
-      {/* Section separator */}
-      <div className="border-t border-outline-variant/40 my-4" />
+      <div className="space-y-4">{children}</div>
     </div>
   )
 }
@@ -165,9 +160,7 @@ StylingPanel.Field = function StylingPanelField({
 }) {
   return (
     <label className="block cursor-pointer">
-      <span className="text-label-md text-on-surface-variant mb-1.5 block font-medium">
-        {label}
-      </span>
+      <span className="text-label-md text-on-surface-variant mb-2 block font-medium">{label}</span>
       {children}
     </label>
   )
@@ -219,30 +212,28 @@ StylingPanel.Slider = function StylingPanelSlider({
   return (
     <div>
       <div className="flex justify-between mb-2 items-center">
-        <span className="text-label-md text-on-surface-variant font-medium">{label}</span>
-        <span className="text-label-md font-bold text-primary text-sm bg-primary/10 px-2 py-0.5 rounded">
+        <span className="text-label-md text-on-surface font-medium">{label}</span>
+        <span className="text-label-sm font-medium text-on-surface-variant tabular-nums">
           {value}
           {unit}
         </span>
       </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) =>
-            updateSetting(settingKey, Number(e.target.value) as ChatSettings[typeof settingKey])
-          }
-          className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer slider-thumb"
-          style={{
-            background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${
-              ((value - min) / (max - min)) * 100
-            }%, var(--color-surface-container-highest) ${((value - min) / (max - min)) * 100}%, var(--color-surface-container-highest) 100%)`,
-          }}
-        />
-      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) =>
+          updateSetting(settingKey, Number(e.target.value) as ChatSettings[typeof settingKey])
+        }
+        className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer slider-thumb"
+        style={{
+          background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${
+            ((value - min) / (max - min)) * 100
+          }%, var(--color-surface-container-highest) ${((value - min) / (max - min)) * 100}%, var(--color-surface-container-highest) 100%)`,
+        }}
+      />
     </div>
   )
 }
@@ -258,20 +249,16 @@ StylingPanel.Toggle = function StylingPanelToggle({
   const value = settings[settingKey] as boolean
 
   return (
-    <div className="flex justify-between items-center group">
-      <span className="text-label-md text-on-surface-variant font-medium group-hover:text-on-surface transition-colors">
-        {label}
-      </span>
+    <div className="flex justify-between items-center">
+      <span className="text-label-md text-on-surface font-medium">{label}</span>
       <button
         onClick={() => updateSetting(settingKey, !value as ChatSettings[typeof settingKey])}
-        className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-200 ease-out ${
-          value
-            ? 'bg-primary shadow-lg shadow-primary/30'
-            : 'bg-surface-container-highest hover:bg-outline'
+        className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-200 ${
+          value ? 'bg-primary' : 'bg-surface-container-highest hover:bg-outline'
         }`}
       >
         <div
-          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ease-out shadow-sm ${
+          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 shadow-sm ${
             value ? 'right-1' : 'left-1'
           }`}
         />
@@ -291,11 +278,11 @@ StylingPanel.ColorField = function StylingPanelColorField({
   const value = settings[settingKey] as string
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-label-md text-on-surface-variant font-medium">{label}</span>
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-label-md text-on-surface font-medium">{label}</span>
         <div
-          className="w-4 h-4 rounded border border-outline-variant shadow-sm"
+          className="w-4 h-4 rounded border border-outline-variant"
           style={{ backgroundColor: value }}
         />
       </div>
@@ -347,7 +334,7 @@ StylingPanel.Select = function StylingPanelSelect({
         onChange={(e) =>
           updateSetting(settingKey, e.target.value as ChatSettings[typeof settingKey])
         }
-        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer relative"
+        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23cdc3d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
@@ -392,7 +379,7 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
             }
             className={`p-2.5 rounded-lg border transition-all duration-200 text-left ${
               value === option.value
-                ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
+                ? 'border-primary bg-primary/10'
                 : 'border-outline-variant bg-surface-container-lowest hover:border-primary/30 hover:bg-surface-container-low'
             }`}
           >
@@ -402,12 +389,7 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
               </span>
               <span className="text-label-sm font-medium text-on-surface">{option.label}</span>
             </div>
-            {value === option.value && (
-              <div className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px] text-primary">check</span>
-                <span className="text-label-sm text-on-surface-variant/70">Active</span>
-              </div>
-            )}
+            {value === option.value && <span className="text-label-sm text-primary">Active</span>}
           </button>
         ))}
       </div>
@@ -467,7 +449,11 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-[16px] text-primary">
+              <span
+                className={`material-symbols-outlined text-[16px] ${
+                  isActive ? 'text-primary' : 'text-on-surface-variant'
+                }`}
+              >
                 auto_awesome
               </span>
               <span className="text-label-sm font-medium text-on-surface">{preset.label}</span>
@@ -493,20 +479,15 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="relative mb-4">
-      {/* Hero header - minimal */}
-      <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
-          {icon}
-        </span>
-        <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
+    <div className="px-4 pt-5 pb-3 border-b border-outline-variant/30">
+      {/* Hero header */}
+      <div className="flex items-center gap-2.5 mb-4">
+        <span className="material-symbols-outlined text-primary text-[22px]">{icon}</span>
+        <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
       </div>
 
       {/* Hero content */}
-      <div className="px-1 py-2">{children}</div>
-
-      {/* Section separator */}
-      <div className="border-t border-outline-variant/40 my-4" />
+      <div>{children}</div>
     </div>
   )
 }
