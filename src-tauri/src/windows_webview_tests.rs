@@ -33,7 +33,10 @@ mod windows_webview_tests {
 
         // If you see this test failing or being removed, it means someone
         // changed these commands back to sync, which will break Windows!
-        assert!(true, "Preview window commands must remain async for Windows WebView2 compatibility");
+        assert!(
+            true,
+            "Preview window commands must remain async for Windows WebView2 compatibility"
+        );
     }
 
     /// Test state handling doesn't deadlock when locked.
@@ -42,9 +45,8 @@ mod windows_webview_tests {
     /// don't cause issues when called from async contexts.
     #[test]
     fn test_preview_state_lock_operations() {
-        let preview_state: Arc<Mutex<PreviewState>> = Arc::new(Mutex::new(PreviewState {
-            window_label: None,
-        }));
+        let preview_state: Arc<Mutex<PreviewState>> =
+            Arc::new(Mutex::new(PreviewState { window_label: None }));
 
         // Test lock operations don't deadlock
         {

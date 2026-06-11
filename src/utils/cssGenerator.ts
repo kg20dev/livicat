@@ -242,7 +242,7 @@ function buildMessageRules(settings: MessageSettings): string {
   if (settings.borderRadius) rules.push(`  border-radius: var(--chat-msg-radius) !important;`)
   if (settings.padding) rules.push(`  padding: var(--chat-msg-padding) !important;`)
   if (settings.margin) rules.push(`  margin: var(--chat-msg-margin) !important;`)
-  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity) !important;`)
+  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity);`)
 
   if (rules.length === 0) return ''
 
@@ -450,7 +450,7 @@ function buildAnimationRules(settings: AnimationSettings): string {
       rules.push(`  transition: box-shadow ${duration} ease-out !important;`)
     }
     if (settings.style === 'fade' || settings.style === 'slide') {
-      rules.push(`  transform: translateZ(0) !important;`) // Enable hardware acceleration
+      rules.push(`  transform: translateZ(0);`) // Enable hardware acceleration (no !important — animation keyframes must override transform)
     }
 
     parts.push(`yt-live-chat-text-message-renderer {\n${rules.join('\n')}\n}`)

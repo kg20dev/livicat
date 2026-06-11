@@ -1,6 +1,6 @@
-use tauri::{Manager, AppHandle};
-use tauri::{WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use std::sync::{Arc, Mutex};
+use tauri::{AppHandle, Manager};
+use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_aptabase::EventTracker;
 
 mod sentry;
@@ -29,7 +29,9 @@ async fn open_preview_window(
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
     {
-        let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+        let state_guard = state
+            .lock()
+            .map_err(|e| format!("State lock error: {}", e))?;
         if let Some(label) = state_guard.window_label.as_deref() {
             if let Some(win) = app.get_webview_window(label) {
                 let _ = win.close();
@@ -38,22 +40,35 @@ async fn open_preview_window(
     }
 
     let window_label = format!("preview-{}", video_id);
-    let chat_url = format!("https://www.youtube.com/live_chat?is_popout=1&v={}", video_id);
+    let chat_url = format!(
+        "https://www.youtube.com/live_chat?is_popout=1&v={}",
+        video_id
+    );
 
     println!("[Livicat Tauri] Opening preview for video: {}", video_id);
 
     // Add breadcrumb for tracking
-    sentry::add_breadcrumb("preview", &format!("Opening preview window (video ID: {})", video_id), SentryLevel::Info);
+    sentry::add_breadcrumb(
+        "preview",
+        &format!("Opening preview window (video ID: {})", video_id),
+        SentryLevel::Info,
+    );
 
     {
-        let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+        let mut state_guard = state
+            .lock()
+            .map_err(|e| format!("State lock error: {}", e))?;
         state_guard.window_label = Some(window_label.clone());
     }
 
     let window = WebviewWindowBuilder::new(
         &app,
         &window_label,
-        WebviewUrl::External(chat_url.parse().map_err(|e| format!("Invalid URL: {}", e))?),
+        WebviewUrl::External(
+            chat_url
+                .parse()
+                .map_err(|e| format!("Invalid URL: {}", e))?,
+        ),
     )
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
@@ -69,7 +84,10 @@ async fn open_preview_window(
         if payload.event() == tauri::webview::PageLoadEvent::Finished {
             if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
                 if url_str.contains("error") || url_str.contains("blank") {
-                    sentry::capture_error(&format!("Preview page load resulted in error page: {}", url_str));
+                    sentry::capture_error(&format!(
+                        "Preview page load resulted in error page: {}",
+                        url_str
+                    ));
                 }
             }
 
@@ -78,50 +96,75 @@ async fn open_preview_window(
             if let Err(e) = inject_css_to_window(&window, &css) {
                 eprintln!("[Livicat] CSS injection via page load failed: {}", e);
                 sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
-                sentry::add_breadcrumb("css_injection", &format!("CSS injection via page load failed: {}", e), SentryLevel::Error);
+                sentry::add_breadcrumb(
+                    "css_injection",
+                    &format!("CSS injection via page load failed: {}", e),
+                    SentryLevel::Error,
+                );
             } else {
                 println!("[Livicat] CSS injected on page load");
-                sentry::add_breadcrumb("css_injection", &format!("CSS injected on page load ({} bytes)", css.len()), SentryLevel::Info);
+                sentry::add_breadcrumb(
+                    "css_injection",
+                    &format!("CSS injected on page load ({} bytes)", css.len()),
+                    SentryLevel::Info,
+                );
             }
         }
     })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
 
-    window.show().map_err(|e| format!("Failed to show window: {}", e))?;
+    window
+        .show()
+        .map_err(|e| format!("Failed to show window: {}", e))?;
 
     Ok(())
 }
 
 #[tauri::command]
-async fn inject_css(css: String, app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
-    let state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+async fn inject_css(
+    css: String,
+    app: AppHandle,
+    state: tauri::State<'_, SharedPreviewState>,
+) -> Result<(), String> {
+    let state_guard = state
+        .lock()
+        .map_err(|e| format!("State lock error: {}", e))?;
 
-        if let Some(label) = state_guard.window_label.as_deref() {
-            if let Some(window) = app.get_webview_window(label) {
-                println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
-                
-                // Add breadcrumb for CSS injection
-                sentry::add_breadcrumb("css_injection", "Re-injecting CSS to existing preview window", SentryLevel::Info);
-                
-                inject_css_to_window(&window, &css)?;
-                return Ok(());
-            }
+    if let Some(label) = state_guard.window_label.as_deref() {
+        if let Some(window) = app.get_webview_window(label) {
+            println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
+
+            // Add breadcrumb for CSS injection
+            sentry::add_breadcrumb(
+                "css_injection",
+                "Re-injecting CSS to existing preview window",
+                SentryLevel::Info,
+            );
+
+            inject_css_to_window(&window, &css)?;
+            return Ok(());
         }
+    }
 
     println!("[Livicat Tauri] No preview window to inject CSS into");
     Ok(())
 }
 
 #[tauri::command]
-async fn close_preview_window(app: AppHandle, state: tauri::State<'_, SharedPreviewState>) -> Result<(), String> {
-    let mut state_guard = state.lock().map_err(|e| format!("State lock error: {}", e))?;
+async fn close_preview_window(
+    app: AppHandle,
+    state: tauri::State<'_, SharedPreviewState>,
+) -> Result<(), String> {
+    let mut state_guard = state
+        .lock()
+        .map_err(|e| format!("State lock error: {}", e))?;
 
     if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             // Add breadcrumb for window close
             sentry::add_breadcrumb("preview", "Closing preview window", SentryLevel::Info);
-            
+
             let _ = window.close();
         }
         state_guard.window_label = None;
@@ -162,7 +205,10 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
             sentry::send_test_scenario();
             Ok(())
         }
-        _ => Err(format!("Unknown crash type: {}. Use: panic, fake_crash, fake_error, scenario", crash_type)),
+        _ => Err(format!(
+            "Unknown crash type: {}. Use: panic, fake_crash, fake_error, scenario",
+            crash_type
+        )),
     }
 }
 
@@ -191,7 +237,8 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?
     );
 
-    window.eval(&script)
+    window
+        .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
     println!("[Livicat] CSS injection script executed");
@@ -261,9 +308,8 @@ mod sentry_live_test;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let preview_state: SharedPreviewState = Arc::new(Mutex::new(PreviewState {
-        window_label: None,
-    }));
+    let preview_state: SharedPreviewState =
+        Arc::new(Mutex::new(PreviewState { window_label: None }));
 
     // Load .env file if present (for local development)
     dotenvy::dotenv().ok();
@@ -278,22 +324,26 @@ pub fn run() {
     });
 
     if !app_key.is_empty() {
-        println!("[Livicat] Aptabase App Key loaded: {}...", &app_key[..app_key.len().min(10)]);
+        println!(
+            "[Livicat] Aptabase App Key loaded: {}...",
+            &app_key[..app_key.len().min(10)]
+        );
     }
 
     // Create and enter Tokio runtime for plugin setup
     // The Aptabase plugin calls tokio::spawn() during .plugin() registration,
     // which requires a Tokio runtime to be entered in the current thread.
     // We keep the runtime guard alive until Builder::run() takes over.
-    let runtime = tokio::runtime::Runtime::new()
-        .expect("failed to create Tokio runtime");
+    let runtime = tokio::runtime::Runtime::new().expect("failed to create Tokio runtime");
     let _runtime_guard = runtime.enter();
 
     tauri::Builder::default()
         // Register log plugin FIRST so we can see analytics debug logs
-        .plugin(tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Debug)
-            .build())
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .level(log::LevelFilter::Debug)
+                .build(),
+        )
         .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -324,7 +374,14 @@ pub fn run() {
                     Err(e) => eprintln!("[Analytics] Rust: Failed to enqueue app_launched: {}", e),
                 }
                 println!("[Livicat] Analytics initialized via tauri-plugin-aptabase");
-                println!("[Livicat] Build mode: {}", if cfg!(debug_assertions) { "DEBUG" } else { "RELEASE" });
+                println!(
+                    "[Livicat] Build mode: {}",
+                    if cfg!(debug_assertions) {
+                        "DEBUG"
+                    } else {
+                        "RELEASE"
+                    }
+                );
             }
 
             Ok(())

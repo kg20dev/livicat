@@ -14,7 +14,10 @@ mod sentry_integration_tests {
             return;
         }
 
-        println!("Testing Sentry integration with DSN: {}...", &dsn[..dsn.len().min(20)]);
+        println!(
+            "Testing Sentry integration with DSN: {}...",
+            &dsn[..dsn.len().min(20)]
+        );
 
         // Test breadcrumb creation
         sentry::add_breadcrumb("test", "Integration test breadcrumb", SentryLevel::Info);
@@ -25,7 +28,10 @@ mod sentry_integration_tests {
         println!("✅ Error captured successfully");
 
         // Test message capture
-        sentry::capture_message("Test integration message - this is intentional", SentryLevel::Warning);
+        sentry::capture_message(
+            "Test integration message - this is intentional",
+            SentryLevel::Warning,
+        );
         println!("✅ Message captured successfully");
 
         // Test log capture
