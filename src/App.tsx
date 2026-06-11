@@ -193,7 +193,9 @@ export default function App() {
   }, [handleExportCSS])
 
   // Apply transparent background setting on mount — toggled in Settings page
-  useEffect(() => {
+  // Sync transparent background from localStorage to body class.
+  // Re-reads whenever StylingPanel dispatches a change event.
+  const syncTransparentBg = useCallback(() => {
     try {
       const stored = localStorage.getItem('livicat_chat_settings')
       if (stored) {
@@ -204,6 +206,12 @@ export default function App() {
       // localStorage unavailable or corrupted
     }
   }, [])
+
+  useEffect(() => {
+    syncTransparentBg()
+    window.addEventListener('livicat:setting-changed', syncTransparentBg)
+    return () => window.removeEventListener('livicat:setting-changed', syncTransparentBg)
+  }, [syncTransparentBg])
 
   // Analytics consent flow
   useEffect(() => {
@@ -332,6 +340,18 @@ export default function App() {
                   <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets">
                     <StylingPanel.PresetSelector />
                   </StylingPanel.HeroSection>
+
+                  {/* Section: Window */}
+                  <StylingPanel.Section icon="blur_on" title="Window">
+                    <div className="space-y-2">
+                      <StylingPanel.ToggleField
+                        settingKey="transparentBackground"
+                        label="Transparent Background"
+                        description="Make window see-through for OBS overlays. Drag the top bar to move."
+                        dispatchEventOnChange={true}
+                      />
+                    </div>
+                  </StylingPanel.Section>
 
                   {/* Section: Generic */}
                   <StylingPanel.Section icon="layers" title="Generic">

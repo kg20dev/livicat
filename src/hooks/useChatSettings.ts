@@ -57,7 +57,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   scrollButtonOpacity: 90,
 
   /* Window */
-  transparentBackground: false,
+  transparentBackground: true,
 
   /* Other */
   messageSpacing: 'normal',

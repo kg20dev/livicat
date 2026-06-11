@@ -2,69 +2,28 @@ import { useState, useEffect } from 'react'
 import { isAnalyticsEnabled, setAnalyticsEnabled, trackEventAsync } from '../../utils/analytics'
 import './Settings.css'
 
-const STORAGE_KEY = 'livicat_chat_settings'
-
 /**
- * Read transparentBackground from ChatSettings in localStorage.
- */
-function readTransparentBg(): boolean {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      return !!parsed.transparentBackground
-    }
-  } catch {
-    // ignore
-  }
-  return false
-}
-
-/**
- * Persist transparentBackground to ChatSettings in localStorage and
- * toggle the CSS class on <body>.
- */
-function writeTransparentBg(enabled: boolean): void {
-  document.body.classList.toggle('window-transparent', enabled)
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    const settings = stored ? JSON.parse(stored) : {}
-    settings.transparentBackground = enabled
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-  } catch {
-    // storage unavailable
-  }
-}
-
-/**
- * Settings panel with analytics and window toggles.
+ * Settings panel with analytics toggle
  */
 export default function Settings() {
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
-  const [transparentBg, setTransparentBg] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load current settings from localStorage
+    // Load current analytics consent status from localStorage
     setAnalyticsEnabledState(isAnalyticsEnabled())
-    setTransparentBg(readTransparentBg())
     setIsLoading(false)
   }, [])
 
-  const handleAnalyticsToggle = () => {
+  const handleToggle = () => {
     const newValue = !analyticsEnabled
     setAnalyticsEnabledState(newValue)
     setAnalyticsEnabled(newValue)
 
+    // Track the toggle event
     if (newValue) {
       trackEventAsync('analytics_enabled_in_settings')
     }
-  }
-
-  const handleTransparentToggle = () => {
-    const newValue = !transparentBg
-    setTransparentBg(newValue)
-    writeTransparentBg(newValue)
   }
 
   return (
@@ -74,51 +33,6 @@ export default function Settings() {
       </div>
 
       <div className="settings-content">
-        {/* ── Window Section ────────────────────────────────────────────── */}
-        <div className="settings-section">
-          <div className="settings-section-header">
-            <div className="settings-section-icon">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
-                <circle cx="6" cy="8" r="1" fill="currentColor" />
-                <circle cx="9" cy="8" r="1" fill="currentColor" />
-                <circle cx="12" cy="8" r="1" fill="currentColor" />
-              </svg>
-            </div>
-            <h3 className="settings-section-title">Window</h3>
-          </div>
-
-          <div className="settings-item">
-            <div className="settings-item-content">
-              <div className="settings-item-header">
-                <label htmlFor="transparent-toggle" className="settings-item-label">
-                  Transparent Background
-                </label>
-                <div className={`toggle-switch ${transparentBg ? 'active' : ''}`}>
-                  <input
-                    id="transparent-toggle"
-                    type="checkbox"
-                    checked={transparentBg}
-                    onChange={handleTransparentToggle}
-                  />
-                  <span className="toggle-slider"></span>
-                </div>
-              </div>
-              <p className="settings-item-description">
-                Make the window background transparent for OBS overlays.
-                Drag the top bar to move the window.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Privacy & Analytics ────────────────────────────────────────── */}
         <div className="settings-section">
           <div className="settings-section-header">
             <div className="settings-section-icon">
@@ -159,7 +73,7 @@ export default function Settings() {
                     id="analytics-toggle"
                     type="checkbox"
                     checked={analyticsEnabled}
-                    onChange={handleAnalyticsToggle}
+                    onChange={handleToggle}
                     disabled={isLoading}
                   />
                   <span className="toggle-slider"></span>
@@ -180,7 +94,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* ── About ──────────────────────────────────────────────────────── */}
         <div className="settings-section">
           <div className="settings-section-header">
             <div className="settings-section-icon">
