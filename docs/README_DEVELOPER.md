@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="livicat-icon.png" alt="Livicat Icon" width="128" height="128">
+  <img src="../livicat-icon.png" alt="Livicat Icon" width="128" height="128">
 </p>
 
 # 🛠️ Livicat — Developer Guide
