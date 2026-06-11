@@ -77,7 +77,7 @@ async fn open_preview_window(
     .user_agent(PREVIEW_USER_AGENT)
     .additional_browser_args({
         #[cfg(target_os = "windows")]
-        let flags = "--use-angle=d3d11 --disable-gpu-vsync";
+        let flags = "--disable-gpu";
         #[cfg(not(target_os = "windows"))]
         let flags = "";
         flags
