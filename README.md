@@ -305,6 +305,18 @@ src-tauri/
 
 ---
 
+## Thanks to the Community
+
+Livicat is made better by the streamers, developers, and testers who use it, report bugs, suggest features, and contribute code. Thank you! 🙌
+
+### Project Members
+
+<a href="https://github.com/migorengx">
+  <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 4px;" title="migorengx — Creator & Maintainer">
+</a>
+
+---
+
 ## License
 
 [MIT](LICENSE)
