@@ -266,6 +266,53 @@ StylingPanel.Toggle = function StylingPanelToggle({
   )
 }
 
+StylingPanel.ToggleField = function StylingPanelToggleField({
+  settingKey,
+  label,
+  description,
+  dispatchEventOnChange = false,
+}: {
+  settingKey: keyof ChatSettings
+  label: string
+  description?: string
+  dispatchEventOnChange?: boolean
+}) {
+  const { settings, updateSetting } = useStylingPanelContext()
+  const value = settings[settingKey] as boolean
+
+  const handleToggle = () => {
+    const newValue = !value as ChatSettings[typeof settingKey]
+    updateSetting(settingKey, newValue)
+    
+    if (dispatchEventOnChange) {
+      window.dispatchEvent(new CustomEvent('livicat:setting-changed'))
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-label-md text-on-surface font-medium">{label}</span>
+        <button
+          onClick={handleToggle}
+          className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-150 ${
+            value ? 'bg-primary' : 'bg-surface-container-highest'
+          }`}
+        >
+          <div
+            className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-150 ${
+              value ? 'translate-x-5' : 'translate-x-0.5'
+            }`}
+          />
+        </button>
+      </div>
+      {description && (
+        <p className="text-label-sm text-on-surface-variant/70 leading-snug">{description}</p>
+      )}
+    </div>
+  )
+}
+
 StylingPanel.ColorField = function StylingPanelColorField({
   settingKey,
   label,
