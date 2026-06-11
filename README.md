@@ -88,32 +88,125 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 **2 Minutes to Custom Chat in OBS:**
 
-1. **Download** Livicat for your platform
-2. **Open** the app and customize your chat appearance
-3. **Choose your OBS method:**
-   - **Quick:** Click "Live Chat" → OBS Window Capture
-   - **Manual:** Click "Export CSS" → OBS Browser Source
+### Step 1: Download & Install
 
-**[→ Full Setup Guide](STREAMER.md#quick-start)**
+**macOS (Apple Silicon):**
+- Download `.dmg` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
+- Open and drag Livicat to Applications
+
+**Windows:**
+- Download `.exe` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
+- Run installer and open from Start menu
+
+**Linux:**
+- Download `.AppImage` or `.deb` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
+- Make executable and run
+
+### Step 2: Open Livicat
+
+Launch the app from your Applications folder or Start menu.
+
+### Step 3: Customize Your Chat
+
+1. **Enter stream URL** - Paste your YouTube stream URL
+2. **Pick a preset** - Choose a theme (Stream, Neon, Minimal, etc.)
+3. **Adjust colors** - Customize background, username, message colors
+4. **Choose fonts** - Pick from 12 Google Fonts
+5. **Add animations** - Make new messages glow, slide, or bounce
+6. **Toggle elements** - Show/hide avatars, timestamps, badges
+
+### Step 4: Add to OBS
+
+**Method 1: Live Preview (Easiest - Window Capture)**
+1. Click **"Live Chat"** button
+2. Popup opens with your custom chat + always-on-top
+3. In OBS: Add **Window Capture** → Select "Livicat — Live Chat Preview"
+4. Size and position as needed
+
+**Method 2: CSS Export (Browser Source)**
+1. Click **"Export CSS"** (or `Ctrl+Shift+E`)
+2. CSS file downloads
+3. In OBS: Add **Browser Source**
+4. URL: `https://www.youtube.com/live_chat?v=YOUR_VIDEO_ID`
+5. Paste downloaded CSS into **"Custom CSS"** field
+
+**[→ Full Setup Guide with Screenshots](docs/STREAMER.md)**
 
 ---
 
 ## 🛠️ Quick Start (Developers)
 
+### Prerequisites
+
+- **Node.js** 18+ and npm
+- **Rust toolchain** (stable) - install via [rustup](https://rustup.rs/)
+- **Platform deps** - see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
+
+### Installation
+
 ```bash
-# Clone and install
+# Clone the repository
 git clone https://github.com/kg20dev/livicat.git
 cd livicat
+
+# Install dependencies
 npm install
 
-# Run dev server
+# Install Rust toolchain (if not already installed)
+rustup default stable
+```
+
+### Development
+
+```bash
+# Run Vite dev server (web mode only)
+npm run dev
+
+# Run Tauri desktop app (dev mode with hot-reload)
 npm run tauri:dev
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
 
 # Run tests
 npm test
 ```
 
-**[→ Full Developer Guide](README_DEVELOPER.md)**
+### Building
+
+```bash
+# Build for production
+npm run tauri:build
+
+# Binaries output to:
+# - macOS: src-tauri/target/release/bundle/dmg/
+# - Windows: src-tauri/target/release/bundle/msi/
+# - Linux: src-tauri/target/release/bundle/deb/ or AppImage
+```
+
+### Project Structure
+
+```
+livicat/
+├── src/                    # React frontend (Vite + TypeScript + TailwindCSS)
+│   ├── components/        # React components
+│   ├── hooks/             # Custom React hooks
+│   ├── types/             # TypeScript types
+│   └── utils/             # Utility functions
+├── src-tauri/             # Rust backend (Tauri 2)
+│   ├── src/               # Rust source code
+│   ├── Cargo.toml          # Rust dependencies
+│   └── tauri.conf.json    # Tauri configuration
+├── docs/                  # Documentation
+│   ├── STREAMER.md        # Streamer guide
+│   └── README_DEVELOPER.md # Developer guide
+└── README.md              # This file
+```
+
+**[→ Full Developer Guide](docs/README_DEVELOPER.md)**
 
 ---
 
