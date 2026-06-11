@@ -97,7 +97,9 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
 
+
 **Thank you to:**
+
 - All streamers and developers who use Livicat
 - Contributors who report bugs and suggest features
 - Community members who test and provide feedback
