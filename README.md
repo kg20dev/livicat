@@ -2,9 +2,9 @@
   <img src="livicat-icon.png" alt="Livicat Icon" width="128" height="128">
 </p>
 
-# Livicat — YouTube Live Chat Styling Editor
+# Livicat — YouTube Live Chat Styling Editor for OBS
 
-A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser source overlays.
+A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ![Release](https://img.shields.io/github/v/release/kg20dev/livicat)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -12,11 +12,49 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 ![macOS](https://img.shields.io/badge/macOS-supported-brightgreen?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
-<p align="center">
-  <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
-</p>
+---
 
-### Demo Videos
+## 📚 Choose Your Documentation
+
+### 🎯 For Streamers & OBS Users
+**[→ STREAMER.md](STREAMER.md)** - Complete guide from installation to OBS setup
+
+**Includes:**
+- Step-by-step installation
+- Quick start guide (5 minutes)
+- Two OBS setup methods
+- Customization options
+- Troubleshooting
+- Video tutorials
+
+---
+
+### 🛠️ For Developers & Contributors
+**[→ README_DEVELOPER.md](README_DEVELOPER.md)** - Technical documentation
+
+**Includes:**
+- Architecture overview
+- Development setup
+- API reference
+- Testing guide
+- Build & release process
+- Contributing guidelines
+
+---
+
+## ✨ Key Features
+
+- 🎨 **7 Preset Themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
+- ✨ **6 Message Animations** — Blink, Glowing, Fade, Slide, Bounce, Default
+- 🪟 **Two OBS Methods** — CSS Export (Browser Source) or Live Preview (Window Capture)
+- ⚡ **Real-Time Preview** — Native popup window with always-on-top support
+- 📊 **Privacy-First Analytics** — Aptabase with user consent
+- 🔒 **Error Reporting** — Sentry for crash tracking
+- 🚀 **Lightweight** — 8MB Tauri app (vs 115MB Electron)
+
+---
+
+## 🎥 Demo Videos
 
 **Fast Live Chat Styling:**
 
@@ -32,252 +70,72 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 
 ---
 
-## Latest Release
+## 📥 Quick Download
 
-🎉 **[View on GitHub Releases](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release](https://github.com/kg20dev/livicat/releases)**
 
-### Recent Highlights
-
-- 🚀 **Tauri Desktop App** — 93% smaller than Electron (8 MB vs 115 MB)
-- 📊 **Aptabase Analytics** — Privacy-first usage tracking with user consent
-- 🎨 **Full CSS Customization** — 7 presets, 6 animations, 12 Google fonts
-- 🪟 **Cross-Platform** — macOS (Apple Silicon) and Windows builds
-- ⚡ **Real-Time Preview** — Native popup window with always-on-top support
-- 📤 **OBS-Ready Export** — Download CSS for browser source overlays
-
-### Download
-
-Visit [GitHub Releases](https://github.com/kg20dev/livicat/releases) for the latest version and platform-specific installers.
+- **macOS (Apple Silicon):** `.dmg` installer
+- **Windows:** `.exe` installer
+- **Linux:** AppImage
 
 ---
 
-## What It Does
+## 🚀 Quick Start (Streamers)
 
-Livicat is a **CSS styling tool** for YouTube Live Chat. It lets you:
+**2 Minutes to Custom Chat in OBS:**
 
-- 🎨 **Customize chat appearance** — Colors, fonts, spacing, opacity, animations
-- 🖥️ **Preview in real-time** — Tauri popup with always-on-top window
-- 📤 **Export CSS for OBS** — Download ready-to-use CSS for browser source
-- ✨ **Add message animations** — 6 styles (blink, glowing, fade, slide, bounce, default)
-- 🎯 **Choose from presets** — 7 themes (Default, Minimal, Compact, Large, Stream, Neon, Light, Retro)
+1. **Download** Livicat for your platform
+2. **Open** the app and customize your chat appearance
+3. **Choose your OBS method:**
+   - **Quick:** Click "Live Chat" → OBS Window Capture
+   - **Manual:** Click "Export CSS" → OBS Browser Source
+
+**[→ Full Setup Guide](STREAMER.md#quick-start)**
 
 ---
 
-## Quick Start
-
-### Prerequisites
-
-- **Node.js** 18+ and npm
-- **Rust toolchain** (stable) — install via [rustup](https://rustup.rs/) (required for Tauri)
-- **Platform deps** — see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
-
-### Option 1: Download Pre-built Apps
-
-**macOS (Apple Silicon):**
-- Download the latest `.dmg` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
-- Open and drag Livicat to Applications
-
-### Option 2: Build from Source
+## 🛠️ Quick Start (Developers)
 
 ```bash
-# Clone the repo
+# Clone and install
 git clone https://github.com/kg20dev/livicat.git
 cd livicat
-
-# Install dependencies
 npm install
 
-# Start Vite dev server only (web mode, no native window)
-npm run dev
-
-# Or run Tauri desktop app (dev mode with hot-reload)
+# Run dev server
 npm run tauri:dev
 
-# Build for production
-npm run tauri:build
+# Run tests
+npm test
 ```
 
----
-
-## How to Use Livicat with OBS
-
-Livicat offers **two methods** to display your customized chat in OBS:
-
-### Method 1: Manual CSS Export (Browser Source)
-
-**Best for:** Testing, web-based workflows, non-Tauri usage
-
-**Steps:**
-1. Open Livicat and customize your chat appearance
-2. Click **"Export CSS"** in sidebar (or press `Ctrl+Shift+E`)
-3. CSS file downloads automatically
-
-**In OBS:**
-- Add **Browser Source**
-- URL: `https://www.youtube.com/live_chat?v=VIDEO_ID`
-- Paste downloaded CSS into **"Custom CSS"** field
-- Set dimensions (recommend: 400×600)
-
-**Pros:** Works in web mode, no Tauri needed
-**Cons:** Manual setup, can't use always-on-top window
+**[→ Full Developer Guide](README_DEVELOPER.md)**
 
 ---
 
-### Method 2: Live Chat Preview (Window Capture) ⭐
+## 🏆 Project Stats
 
-**Best for:** Streamers, always-on-top overlay, easier OBS setup
-
-**Steps:**
-1. Run Tauri desktop app: `npm run tauri:dev` (or use pre-built app)
-2. Customize your chat appearance in Livicat editor
-3. Enter YouTube video URL and click **"Fetch"**
-4. Click **"Live Chat"** button → popup opens with your CSS injected
-5. Popup stays **always-on-top** for easy OBS capture
-
-**In OBS:**
-- Add **Window Capture** source
-- Select **"Livicat — Live Chat Preview"** window
-- Size and position as needed
-
-**Pros:** One-click setup, always-on-top, easier workflow
-**Cons:** Requires Tauri desktop app
+- **Size:** ~10MB (Tauri) vs ~115MB (Electron) — 91% smaller
+- **Tests:** 182+ tests (frontend + Rust)
+- **Languages:** TypeScript, Rust, React
+- **Platforms:** macOS, Windows, Linux
+- **License:** MIT
 
 ---
 
-### Comparison
+## 🤝 Contributing
 
-| Feature | Method 1 (CSS Export) | Method 2 (Live Preview) |
-|---------|----------------------|------------------------|
-| **OBS Source Type** | Browser Source | Window Capture |
-| **Setup Complexity** | Medium (manual CSS) | Easy (one click) |
-| **Always-on-Top** | ❌ No | ✅ Yes |
-| **Requirements** | Web browser only | Tauri desktop app |
-| **CSS Updates** | Manual re-export | Instant (automatic) |
-| **Best For** | Testing, web users | Streamers, production |
+We welcome contributions! Please read our contributing guidelines:
 
----
+- [🐛 Report a Bug](https://github.com/kg20dev/livicat/issues/new?template=bug_report.yml)
+- [✨ Feature Request](https://github.com/kg20dev/livicat/issues/new)
+- [📖 Browse Issues](https://github.com/kg20dev/livicat/issues)
 
-## Usage
-
-### 1. Customize Appearance
-
-Use the **Styling Panel** (right sidebar) to adjust:
-
-| Setting | Options |
-|---------|---------|
-| Preset Themes | Default, Minimal, Compact, Large, Stream, Neon, Light, Retro |
-| Message Animation | Default, Blink, Glowing, Fade, Slide, Bounce |
-| Animation Speed | None, Slow, Normal |
-| Colors | Background, username, message, accent, scrollbar |
-| Typography | 12 Google Fonts, sizes 12-24px |
-| Spacing | Compact, Normal, Comfortable |
-| Opacity | Message and container opacity 0-100% |
-| Toggles | Avatars, timestamps, header, scroll button |
-
-All settings auto-save to your browser.
-
-### 2. Preview Your Chat
-
-**Testing Mode** (no URL needed):
-- See demo messages with your custom CSS
-- Perfect for quick styling iterations
-
-**Live/Past Video Mode**:
-- Paste any YouTube URL
-- App fetches video title, author, thumbnail
-- Preview with demo messages + your CSS
-
-**Tauri Popup**:
-- Opens YouTube's actual live chat in a popup
-- Your CSS is injected automatically
-- Always-on-top for OBS window capture
-
-### 3. Use with OBS
-
-**Choose your method:**
-- **Method 1:** Export CSS → OBS Browser Source (manual)
-- **Method 2:** Live Chat Preview → OBS Window Capture (automatic)
-
-See [**How to Use Livicat with OBS**](#how-to-use-livicat-with-obs) above for detailed steps.
+**[→ Developer Documentation](README_DEVELOPER.md#contributing)**
 
 ---
 
-## Development
-
-```bash
-npm run dev            # Vite dev server (http://localhost:3000)
-npm run tauri:dev      # Tauri desktop app (dev mode with hot-reload)
-npm run tauri:build    # Build production Tauri app
-npm test               # Run 157+ tests
-npm run type-check     # TypeScript check
-npm run lint           # ESLint
-npm run format         # Prettier
-```
-
-## Release
-
-See [RELEASE.md](RELEASE.md) for build, release workflow, and platform downloads.
-
-## Project Structure
-
-```
-livicat/
-├── src/                    # React frontend (Vite + TypeScript + TailwindCSS)
-└── src-tauri/              # Rust backend (Tauri 2, IPC commands, app config)
-```
-
-## How It Works
-
-- **Frontend**: React app generates CSS from user settings, sends it via Tauri IPC to the Rust backend
-- **Backend**: Rust creates an OS-native webview window (WKWebView on Mac, WebView2 on Windows) loading YouTube live chat, injects the CSS
-- **No YouTube API key needed**: Uses YouTube's public oEmbed for metadata and native `youtube.com/live_chat` iframe for chat
-
----
-
-## Features
-
-### ✅ Implemented
-
-- ✅ Tauri desktop app with always-on-top popup (~8 MB binary)
-- ✅ 7 preset themes + full customization
-- ✅ 6 message animation styles
-- ✅ CSS export for OBS browser source
-- ✅ Google Fonts integration (12 fonts)
-- ✅ Real-time preview (demo + native popup)
-- ✅ Video metadata fetch (oEmbed API)
-- ✅ Settings persistence (localStorage)
-- ✅ Keyboard shortcut (`Ctrl+Shift+E` to export)
-- ✅ Cross-platform support (macOS, Windows)
-
----
-
-## Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| **Tauri build fails** | Ensure Rust toolchain is installed: `rustup default stable` |
-| **Popup missing** | Check Tauri runtime is active (look for "Live Chat" button in app) |
-| **CSS not applying in OBS** | Clear OBS browser cache, refresh source |
-| **Export not working** | Check browser downloads, ensure popups allowed |
-| **Video not found** | Verify YouTube URL is public and not deleted |
-
----
-
-## Contributing
-
-Found a bug or have a feature idea? We'd love to hear from you.
-
-- **🐛 Report a Bug** — [Open a bug report](https://github.com/kg20dev/livicat/issues/new?template=bug_report.yml) with your OS, app version, and steps to reproduce
-- **✨ Feature Request** — [Open an issue](https://github.com/kg20dev/livicat/issues/new) and describe what you'd like to see
-- **📖 Browse Issues** — Check [existing issues](https://github.com/kg20dev/livicat/issues) before posting
-
----
-
-## Thanks to the Community
-
-Livicat is made better by the streamers, developers, and testers who use it, report bugs, suggest features, and contribute code. Thank you! 🙌
-
-### Project Members
+## 👥 Team
 
 <a href="https://github.com/migorengx">
   <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 4px;" title="migorengx — Creator & Maintainer">
@@ -291,7 +149,7 @@ Livicat is made better by the streamers, developers, and testers who use it, rep
 
 ---
 
-## License
+## 📄 License
 
 [MIT](LICENSE)
 
