@@ -16,6 +16,14 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
   <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
 </p>
 
+### Demo Videos
+
+**Fast Live Chat Styling:**
+[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white)](https://youtu.be/8rsJAPWoyW4)
+
+**OBS Integration Tutorial:**
+[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white)](https://youtu.be/pmZq-mYhObc)
+
 ---
 
 ## Latest Release
