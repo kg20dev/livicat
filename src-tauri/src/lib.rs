@@ -76,6 +76,7 @@ async fn open_preview_window(
     // always_on_top disabled on Windows — known to cause WebView2 crashes with YouTube chat
     .always_on_top(cfg!(not(target_os = "windows")))
     .user_agent(PREVIEW_USER_AGENT)
+    .additional_browser_args("--disable-gpu-compositing --disable-accelerated-2d-canvas --disable-gpu")
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
         println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
