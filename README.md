@@ -22,12 +22,12 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 
 ### Recent Highlights
 
-🚀 **Tauri Desktop App** — 93% smaller than Electron (8 MB vs 115 MB)
-📊 **Aptabase Analytics** — Privacy-first usage tracking with user consent
-🎨 **Full CSS Customization** — 7 presets, 6 animations, 12 Google fonts
-🪟 **Cross-Platform** — macOS (Apple Silicon) and Windows builds
-⚡ **Real-Time Preview** — Native popup window with always-on-top support
-📤 **OBS-Ready Export** — Download CSS for browser source overlays
+- 🚀 **Tauri Desktop App** — 93% smaller than Electron (8 MB vs 115 MB)
+- 📊 **Aptabase Analytics** — Privacy-first usage tracking with user consent
+- 🎨 **Full CSS Customization** — 7 presets, 6 animations, 12 Google fonts
+- 🪟 **Cross-Platform** — macOS (Apple Silicon) and Windows builds
+- ⚡ **Real-Time Preview** — Native popup window with always-on-top support
+- 📤 **OBS-Ready Export** — Download CSS for browser source overlays
 
 ### Download
 
