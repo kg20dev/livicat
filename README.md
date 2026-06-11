@@ -171,47 +171,16 @@ See [RELEASE.md](RELEASE.md) for build, release workflow, and platform downloads
 ## Project Structure
 
 ```
-src/
-├── components/
-│   ├── chat/               # Chat preview components (ChatDisplay, ChatMessage)
-│   ├── layout/             # Sidebar, styling panel, preview area (StylingPanel, PreviewArea)
-│   └── ui/                 # Reusable UI components (Button, Input, Select)
-├── hooks/
-│   ├── useChatSettings.ts  # Settings persistence + CSS generation
-│   └── useElectronPreview.ts # Runtime-agnostic preview window hook (Tauri primary)
-├── services/
-│   └── youtubeMetadata.ts  # Video metadata (oEmbed API)
-├── utils/
-│   ├── cssGenerator.ts     # Converts settings to CSS
-│   ├── cssExport.ts        # OBS export utilities
-│   ├── fonts.ts            # Google Fonts integration
-│   ├── youtubePolling.ts   # Chat message polling
-│   └── debounce.ts         # Utility function
-└── types/
-    ├── app.ts              # TypeScript type definitions
-    └── electron.d.ts       # Window API declarations (Electron legacy + Tauri)
-
-src-tauri/
-├── src/
-│   ├── main.rs             # Tauri app entry
-│   └── lib.rs              # IPC commands (open_preview_window, inject_css, close_preview_window)
-├── icons/                  # App icons (auto-generated from source PNG)
-├── capabilities/
-│   └── default.json        # Tauri permissions
-├── Cargo.toml              # Rust dependencies
-└── tauri.conf.json         # Tauri config (window, bundle, security)
+livicat/
+├── src/                    # React frontend (Vite + TypeScript + TailwindCSS)
+└── src-tauri/              # Rust backend (Tauri 2, IPC commands, app config)
 ```
 
----
+## How It Works
 
-## How It Works (Technical)
-
-- **CSS Generation**: Your settings → CSS variables → YouTube chat selectors (via `cssGenerator.ts`)
-- **Tauri IPC**: Frontend calls `invoke('open_preview_window', { videoId, css })` → Rust creates webview window → CSS injected via `window.eval()` creating `<style id="livicat-css">`
-- **oEmbed API**: Fetches video metadata without API key (public endpoint)
-- **Vite + React**: Frontend built with Vite, React 18, TypeScript, TailwindCSS
-- **Tauri 2**: Rust backend uses OS webview (WKWebView on macOS, WebView2 on Windows) — no bundled Chromium, much smaller than Electron
-- **No YouTube Data API**: Uses native YouTube live chat in iframe, not custom message polling
+- **Frontend**: React app generates CSS from user settings, sends it via Tauri IPC to the Rust backend
+- **Backend**: Rust creates an OS-native webview window (WKWebView on Mac, WebView2 on Windows) loading YouTube live chat, injects the CSS
+- **No YouTube API key needed**: Uses YouTube's public oEmbed for metadata and native `youtube.com/live_chat` iframe for chat
 
 ---
 
