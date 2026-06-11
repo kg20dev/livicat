@@ -27,8 +27,7 @@ pub fn capture_message(message: &str, level: SentryLevel) {
 
 /// Send test log to Sentry
 pub fn send_test_log() {
-    capture_message("Sentry integration test - app started", SentryLevel::Info);
-    capture_message("Test event sent from Livicat app", SentryLevel::Info);
+    capture_message("Sentry initialized", SentryLevel::Info);
 }
 
 /// Trigger intentional panic for testing (use carefully!)
