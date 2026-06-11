@@ -213,6 +213,16 @@ livicat/
 
 ---
 
+## Contributing
+
+Found a bug or have a feature idea? We'd love to hear from you.
+
+- **🐛 Report a Bug** — [Open a bug report](https://github.com/kg20dev/livicat/issues/new?template=bug_report.yml) with your OS, app version, and steps to reproduce
+- **✨ Feature Request** — [Open an issue](https://github.com/kg20dev/livicat/issues/new) and describe what you'd like to see
+- **📖 Browse Issues** — Check [existing issues](https://github.com/kg20dev/livicat/issues) before posting
+
+---
+
 ## Thanks to the Community
 
 Livicat is made better by the streamers, developers, and testers who use it, report bugs, suggest features, and contribute code. Thank you! 🙌
