@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import pkg from '../../../package.json'
 
 /* ─── Context ──────────────────────────────────────────────────── */
@@ -46,11 +46,25 @@ export default function Sidebar({
 
 Sidebar.Header = function SidebarHeader({
   title = 'Livicat',
-  subtitle = `v${pkg.version}`,
+  subtitle: subtitleProp,
 }: {
   title?: string
   subtitle?: string
 }) {
+  // Read version from Rust binary at runtime (more reliable than build-time import)
+  // Falls back to pkg.version when Tauri is not available (web dev mode)
+  const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke<string>('get_app_version'))
+      .then((v) => setRuntimeVersion(v))
+      .catch(() => {
+        // Tauri not available — keep null fallback
+      })
+  }, [])
+
+  const subtitle = subtitleProp ?? `v${runtimeVersion ?? pkg.version}`
   return (
     <div className="px-gutter mb-8">
       <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
