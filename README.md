@@ -42,9 +42,17 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 🎥 Demo Videos
 
-**Fast Live Chat Styling:** [Watch](https://youtu.be/8rsJAPWoyW4)
+**Fast Live Chat Styling:**
 
-**OBS Integration:** [Watch](https://youtu.be/pmZq-mYhObc)
+<a href="https://www.youtube.com/watch?v=8rsJAPWoyW4" target="_blank">
+  <img src="https://img.youtube.com/vi/8rsJAPWoyW4/maxresdefault.jpg" alt="Fast Live Chat Styling" width="480" style="border-radius: 8px;">
+</a>
+
+**OBS Integration Tutorial:**
+
+<a href="https://www.youtube.com/watch?v=pmZq-mYhObc" target="_blank">
+  <img src="https://img.youtube.com/vi/pmZq-mYhObc/maxresdefault.jpg" alt="OBS Integration Tutorial" width="480" style="border-radius: 8px;">
+</a>
 
 ---
 
