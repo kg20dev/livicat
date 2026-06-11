@@ -75,13 +75,6 @@ async fn open_preview_window(
     .min_inner_size(320.0, 480.0)
     .always_on_top(true)
     .user_agent(PREVIEW_USER_AGENT)
-    .additional_browser_args({
-        #[cfg(target_os = "windows")]
-        let flags = "--disable-gpu --in-process-gpu";
-        #[cfg(not(target_os = "windows"))]
-        let flags = "";
-        flags
-    })
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
         println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
@@ -375,6 +368,16 @@ pub fn run() {
 
     // Load .env file if present (for local development)
     dotenvy::dotenv().ok();
+
+    // Set WebView2 environment variables for OBS capture (Windows only)
+    #[cfg(target_os = "windows")]
+    {
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--disable-gpu",
+        );
+        println!("[Livicat] Set WebView2 environment variable: --disable-gpu (for OBS capture)");
+    }
 
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
     let sentry_guard = sentry::init_sentry();
