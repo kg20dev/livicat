@@ -89,19 +89,15 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 <p align="center">
   <a href="https://github.com/migorengx" title="migorengx — Creator & Maintainer">
-    <img src="https://github.com/migorengx.png" width="80" height="80" alt="migorengx" style="border-radius: 50%; margin: 8px; border: 2px solid #E91E63; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
   </a>
   <a href="https://github.com/sutoberiii" title="sutoberiii — Collaborator">
-    <img src="https://github.com/sutoberiii.png" width="80" height="80" alt="sutoberiii" style="border-radius: 50%; margin: 8px; border: 2px solid #00BCD4; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <img src="https://github.com/sutoberiii.png" width="60" height="60" alt="sutoberiii" style="border-radius: 50%; margin: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
   </a>
   <a href="https://github.com/Necromanchi" title="Necromanchi — Collaborator">
-    <img src="https://github.com/Necromanchi.png" width="80" height="80" alt="Necromanchi" style="border-radius: 50%; margin: 8px; border: 2px solid #4CAF50; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <img src="https://github.com/Necromanchi.png" width="60" height="60" alt="Necromanchi" style="border-radius: 50%; margin: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
   </a>
 </p>
-
-**migorengx** — Creator & Maintainer  
-**sutoberiii** — Collaborator  
-**Necromanchi** — Collaborator
 
 **Thank you to:**
 - All streamers and developers who use Livicat
