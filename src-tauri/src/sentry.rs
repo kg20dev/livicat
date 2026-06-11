@@ -201,7 +201,6 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
             release: Some(release.into()),
             environment: Some(environment.into()),
             traces_sample_rate: 1.0, // 100% sampling for testing to ensure events are sent
-            attach_stacktrace: true,
             send_default_pii: false, // Don't send PII for privacy
             debug: true,             // Enable debug mode to see what Sentry is doing
             integrations: vec![
