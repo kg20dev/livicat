@@ -85,15 +85,23 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 👥 Team
 
+**Thanks to our contributors who make Livicat better!**
+
 <a href="https://github.com/migorengx">
-  <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 4px;">
+  <img src="https://github.com/migorengx.png" width="60" height="60" alt="migorengx" style="border-radius: 50%; margin: 4px;" title="migorengx — Creator & Maintainer">
 </a>
 <a href="https://github.com/sutoberiii">
-  <img src="https://github.com/sutoberiii.png" width="60" height="60" alt="sutoberiii" style="border-radius: 50%; margin: 4px;">
+  <img src="https://github.com/sutoberiii.png" width="60" height="60" alt="sutoberiii" style="border-radius: 50%; margin: 4px;" title="sutoberiii — Collaborator">
 </a>
 <a href="https://github.com/Necromanchi">
-  <img src="https://github.com/Necromanchi.png" width="60" height="60" alt="Necromanchi" style="border-radius: 50%; margin: 4px;">
+  <img src="https://github.com/Necromanchi.png" width="60" height="60" alt="Necromanchi" style="border-radius: 50%; margin: 4px;" title="Necromanchi — Collaborator">
 </a>
+
+**Thank you to:**
+- All streamers and developers who use Livicat
+- Contributors who report bugs and suggest features
+- Community members who test and provide feedback
+- Everyone who helps improve Livicat! 🙌
 
 ---
 
