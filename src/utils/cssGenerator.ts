@@ -450,7 +450,7 @@ function buildAnimationRules(settings: AnimationSettings): string {
       rules.push(`  transition: box-shadow ${duration} ease-out !important;`)
     }
     if (settings.style === 'fade' || settings.style === 'slide') {
-      rules.push(`  transform: translateZ(0) !important;`) // Enable hardware acceleration
+      rules.push(`  transform: translateZ(0);`) // Enable hardware acceleration (no !important — animation keyframes must override transform)
     }
 
     parts.push(`yt-live-chat-text-message-renderer {\n${rules.join('\n')}\n}`)
