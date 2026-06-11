@@ -99,22 +99,61 @@ npm run tauri:build
 
 ---
 
-## How It Works
+## How to Use Livicat with OBS
 
-### Web Mode (`npm run dev`)
+Livicat offers **two methods** to display your customized chat in OBS:
 
-1. Open `http://localhost:3000`
-2. **Testing Mode**: Preview your custom CSS with demo chat messages
-3. **Live/Past Video**: Paste a YouTube URL to see video info and preview
-4. **Export CSS**: Click "Export CSS" to download OBS-ready stylesheet
+### Method 1: Manual CSS Export (Browser Source)
 
-### Tauri Desktop Mode (`npm run tauri:dev`)
+**Best for:** Testing, web-based workflows, non-Tauri usage
 
-1. The Livicat editor window opens
-2. Enter a YouTube video URL and click "Fetch"
-3. Click **"Live Chat"** to open a popup window with YouTube's live chat + your CSS injected
-4. The popup stays **always-on-top** for OBS convenience
-5. Use OBS **Window Capture** to capture the popup
+**Steps:**
+1. Open Livicat and customize your chat appearance
+2. Click **"Export CSS"** in sidebar (or press `Ctrl+Shift+E`)
+3. CSS file downloads automatically
+
+**In OBS:**
+- Add **Browser Source**
+- URL: `https://www.youtube.com/live_chat?v=VIDEO_ID`
+- Paste downloaded CSS into **"Custom CSS"** field
+- Set dimensions (recommend: 400×600)
+
+**Pros:** Works in web mode, no Tauri needed
+**Cons:** Manual setup, can't use always-on-top window
+
+---
+
+### Method 2: Live Chat Preview (Window Capture) ⭐
+
+**Best for:** Streamers, always-on-top overlay, easier OBS setup
+
+**Steps:**
+1. Run Tauri desktop app: `npm run tauri:dev` (or use pre-built app)
+2. Customize your chat appearance in Livicat editor
+3. Enter YouTube video URL and click **"Fetch"**
+4. Click **"Live Chat"** button → popup opens with your CSS injected
+5. Popup stays **always-on-top** for easy OBS capture
+
+**In OBS:**
+- Add **Window Capture** source
+- Select **"Livicat — Live Chat Preview"** window
+- Size and position as needed
+
+**Pros:** One-click setup, always-on-top, easier workflow
+**Cons:** Requires Tauri desktop app
+
+---
+
+### Comparison
+
+| Feature | Method 1 (CSS Export) | Method 2 (Live Preview) |
+|---------|----------------------|------------------------|
+| **OBS Source Type** | Browser Source | Window Capture |
+| **Setup Complexity** | Medium (manual CSS) | Easy (one click) |
+| **Always-on-Top** | ❌ No | ✅ Yes |
+| **Requirements** | Web browser only | Tauri desktop app |
+| **CSS Updates** | Manual re-export | Instant (automatic) |
+| **Best For** | Testing, web users | Streamers, production |
 
 ---
 
@@ -153,16 +192,13 @@ All settings auto-save to your browser.
 - Your CSS is injected automatically
 - Always-on-top for OBS window capture
 
-### 3. Export for OBS
+### 3. Use with OBS
 
-1. Customize your chat appearance
-2. Click **"Export CSS"** in sidebar (or press `Ctrl+Shift+E`)
-3. CSS file downloads automatically
+**Choose your method:**
+- **Method 1:** Export CSS → OBS Browser Source (manual)
+- **Method 2:** Live Chat Preview → OBS Window Capture (automatic)
 
-**In OBS:**
-- Add **Browser Source** → URL: `https://www.youtube.com/live_chat?v=VIDEO_ID`
-- Paste downloaded CSS into **"Custom CSS"** field
-- Set dimensions (recommend: 400×600)
+See [**How to Use Livicat with OBS**](#how-to-use-livicat-with-obs) above for detailed steps.
 
 ---
 
