@@ -9,6 +9,8 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 ![Release](https://img.shields.io/github/v/release/kg20dev/livicat)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
+![macOS](https://img.shields.io/badge/macOS-supported-brightgreen?logo=apple&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
 <p align="center">
   <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
