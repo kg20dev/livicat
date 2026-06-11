@@ -61,9 +61,10 @@ async fn open_preview_window(
     // always_on_top disabled on Windows — known to cause WebView2 crashes with YouTube chat
     .always_on_top(cfg!(not(target_os = "windows")))
     .user_agent(PREVIEW_USER_AGENT)
-    .on_page_load(|window, payload| {
+    .on_page_load(move |window, payload| {
         let url = window.url().ok();
         println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
+
         // Report navigation failures to Sentry
         if payload.event() == tauri::webview::PageLoadEvent::Finished {
             if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
@@ -71,50 +72,23 @@ async fn open_preview_window(
                     sentry::capture_error(&format!("Preview page load resulted in error page: {}", url_str));
                 }
             }
+
+            // Inject CSS when page finishes loading
+            // Runs on Tauri's event loop thread — avoids raw thread spawn crash on Windows
+            if let Err(e) = inject_css_to_window(&window, &css) {
+                eprintln!("[Livicat] CSS injection via page load failed: {}", e);
+                sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
+                sentry::add_breadcrumb("css_injection", &format!("CSS injection via page load failed: {}", e), SentryLevel::Error);
+            } else {
+                println!("[Livicat] CSS injected on page load");
+                sentry::add_breadcrumb("css_injection", &format!("CSS injected on page load ({} bytes)", css.len()), SentryLevel::Info);
+            }
         }
     })
     .build()
     .map_err(|e| format!("Failed to create window: {}", e))?;
 
     window.show().map_err(|e| format!("Failed to show window: {}", e))?;
-
-    let window_clone = window;
-    let css_clone = css;
-    std::thread::spawn(move || {
-        // Wrap in catch_unwind to isolate any Rust panics from crashing the process
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            // Wait for webview to initialize and page to start loading
-            #[cfg(target_os = "windows")]
-            let delay = std::time::Duration::from_millis(800);
-
-            #[cfg(not(target_os = "windows"))]
-            let delay = std::time::Duration::from_millis(500);
-
-            println!("[Livicat] Waiting {}ms before CSS injection (platform: {})", delay.as_millis(), std::env::consts::OS);
-            std::thread::sleep(delay);
-
-            if let Err(e) = inject_css_to_window(&window_clone, &css_clone) {
-                eprintln!("[Livicat] CSS injection failed: {}", e);
-                sentry::capture_error(&e);
-                sentry::add_breadcrumb("css_injection", &format!("CSS injection failed: {}", e), SentryLevel::Error);
-            } else {
-                println!("[Livicat] CSS injected successfully");
-                sentry::add_breadcrumb("css_injection", &format!("CSS injected successfully ({} bytes)", css_clone.len()), SentryLevel::Info);
-            }
-        }));
-
-        if let Err(panic_err) = result {
-            let msg = if let Some(s) = panic_err.downcast_ref::<&str>() {
-                s.to_string()
-            } else if let Some(s) = panic_err.downcast_ref::<String>() {
-                s.clone()
-            } else {
-                "Unknown panic in CSS injection thread".to_string()
-            };
-            eprintln!("[Livicat] CSS injection thread panicked: {}", msg);
-            sentry::capture_error(&format!("CSS injection thread panicked: {}", msg));
-        }
-    });
 
     Ok(())
 }
