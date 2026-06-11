@@ -77,7 +77,7 @@ async fn open_preview_window(
     .user_agent(PREVIEW_USER_AGENT)
     .additional_browser_args({
         #[cfg(target_os = "windows")]
-        let flags = "--disable-gpu";
+        let flags = "--disable-gpu --in-process-gpu";
         #[cfg(not(target_os = "windows"))]
         let flags = "";
         flags

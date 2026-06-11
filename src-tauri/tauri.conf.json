@@ -19,7 +19,7 @@
         "minHeight": 500,
         "resizable": true,
         "fullscreen": false,
-        "additionalBrowserArgs": "--disable-gpu"
+        "additionalBrowserArgs": "--disable-gpu --in-process-gpu"
       }
     ],
     "security": {
