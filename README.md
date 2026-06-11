@@ -19,10 +19,16 @@ A desktop Tauri app for customizing YouTube Live Chat appearance for OBS browser
 ### Demo Videos
 
 **Fast Live Chat Styling:**
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white)](https://youtu.be/8rsJAPWoyW4)
+
+<a href="https://www.youtube.com/watch?v=8rsJAPWoyW4" target="_blank">
+  <img src="https://img.youtube.com/vi/8rsJAPWoyW4/0.jpg" alt="Fast Live Chat Styling" width="480" style="border-radius: 8px;">
+</a>
 
 **OBS Integration Tutorial:**
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white)](https://youtu.be/pmZq-mYhObc)
+
+<a href="https://www.youtube.com/watch?v=pmZq-mYhObc" target="_blank">
+  <img src="https://img.youtube.com/vi/pmZq-mYhObc/0.jpg" alt="OBS Integration Tutorial" width="480" style="border-radius: 8px;">
+</a>
 
 ---
 
