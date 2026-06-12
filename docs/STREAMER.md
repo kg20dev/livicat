@@ -317,11 +317,6 @@ See [docs/README_DEVELOPER.md](docs/README_DEVELOPER.md) for technical details.
 
 Livicat is made better by streamers like you who use it, report bugs, and suggest features. Thank you for helping us improve! 🙌
 
-**Featured Contributors:**
-- [@migorengx](https://github.com/migorengx) — Creator & Maintainer
-- [@sutoberiii](https://github.com/sutoberiii) — Collaborator
-- [@Necromanchi](https://github.com/Necromanchi) — Collaborator
-
 ---
 
 **Made with ❤️ for streamers** | [kg20dev](https://github.com/kg20dev)
