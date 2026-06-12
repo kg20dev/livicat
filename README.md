@@ -102,6 +102,15 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <img src="https://github.com/sutoberiii.png" width="72" height="72" alt="sutoberiii" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
 <a href="https://github.com/Necromanchi" title="Necromanchi — Collaborator">
+  <img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+</a>
+<a href="https://github.com/yurisien" title="yurisien — Collaborator">
+  <img src="https://github.com/yurisien.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+</a>
+<a href="https://github.com/sutoberiii" title="sutoberiii — Collaborator">
+  <img src="https://github.com/sutoberiii.png" width="72" height="72" alt="sutoberiii" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+</a>
+<a href="https://github.com/Necromanchi" title="Necromanchi — Collaborator">
   <img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
 
