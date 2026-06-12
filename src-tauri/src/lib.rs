@@ -146,7 +146,7 @@ async fn open_preview_window(
             loop {
                 std::thread::sleep(std::time::Duration::from_millis(500));
                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
-                let _ = window_clone.eval("void(document.body.offsetHeight)");
+                let _ = window_clone.eval("window.dispatchEvent(new Event('resize'))");
             }
         });
     }
