@@ -392,9 +392,9 @@ pub fn run() {
     {
         std::env::set_var(
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
-            "--disable-gpu",
+            "--use-angle=d3d11",
         );
-        println!("[Livicat] Set WebView2 environment variable: --disable-gpu (for OBS capture)");
+        println!("[Livicat] Set WebView2 environment variable: --use-angle=d3d11 (for OBS capture)");
     }
 
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
