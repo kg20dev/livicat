@@ -137,6 +137,20 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
+    // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
+    // Without this, OBS Window Capture can't see the window (Display Capture works fine)
+    #[cfg(target_os = "windows")]
+    {
+        let window_clone = window.clone();
+        std::thread::spawn(move || {
+            loop {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
+                let _ = window_clone.eval("void(document.body.offsetHeight)");
+            }
+        });
+    }
+
     Ok(())
 }
 
