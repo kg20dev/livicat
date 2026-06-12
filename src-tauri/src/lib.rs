@@ -79,19 +79,51 @@ async fn open_preview_window(
         let url = window.url().ok();
         println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
 
-        // Report navigation failures to Sentry
-        if payload.event() == tauri::webview::PageLoadEvent::Finished {
-            if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
-                if url_str.contains("error") || url_str.contains("blank") {
-                    eprintln!("[Livicat] Preview navigated to error page: {}", url_str);
-                    sentry::capture_error(&format!(
-                        "Preview navigated to error page (WebView2 crash): {}",
-                        url_str
-                    ));
+        match payload.event() {
+            tauri::webview::PageLoadEvent::Started => {
+                // Inject Sentry before page scripts run, so it can catch
+                // any JS errors during initial page load.
+                if let Err(e) = inject_sentry_to_window(&window) {
+                    eprintln!("[Livicat] Sentry injection failed: {}", e);
+                }
+            }
+            tauri::webview::PageLoadEvent::Finished => {
+                // Report navigation failures to Sentry
+                if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
+                    if url_str.contains("error") || url_str.contains("blank") {
+                        eprintln!("[Livicat] Preview navigated to error page: {}", url_str);
+                        sentry::capture_error(&format!(
+                            "Preview navigated to error page (WebView2 crash): {}",
+                            url_str
+                        ));
+                        sentry::add_breadcrumb(
+                            "webview_error",
+                            &format!("Preview error page: {}", url_str),
+                            SentryLevel::Error,
+                        );
+                        return;
+                    }
+                }
+
+                // Inject CSS after the page finishes loading.
+                // On Windows (WebView2), eval() before NavigationCompleted
+                // fires into an uninitialized JS context, causing crashes.
+                // On macOS (WKWebView) it's more forgiving but still unsafe.
+                // Waiting for Finished guarantees the JS environment is ready.
+                if let Err(e) = inject_css_to_window(&window, &css) {
+                    eprintln!("[Livicat] CSS injection via page load failed: {}", e);
+                    sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
                     sentry::add_breadcrumb(
-                        "webview_error",
-                        &format!("Preview error page: {}", url_str),
+                        "css_injection",
+                        &format!("CSS injection via page load failed: {}", e),
                         SentryLevel::Error,
+                    );
+                } else {
+                    println!("[Livicat] CSS injected on page load");
+                    sentry::add_breadcrumb(
+                        "css_injection",
+                        &format!("CSS injected on page load ({} bytes)", css.len()),
+                        SentryLevel::Info,
                     );
                 }
             }
@@ -103,21 +135,6 @@ async fn open_preview_window(
     window
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
-
-    // Inject Sentry into preview webview to capture JavaScript errors
-    if let Err(e) = inject_sentry_to_window(&window) {
-        eprintln!("[Livicat] Sentry injection failed: {}", e);
-        sentry::capture_error(&format!("Sentry injection failed: {}", e));
-    }
-
-    // Inject CSS immediately after window show
-    // OBS-compatible GPU rendering (--use-angle=d3d11) should handle this smoothly
-    if let Err(e) = inject_css_to_window(&window, &css) {
-        eprintln!("[Livicat] CSS injection failed: {}", e);
-        sentry::capture_error(&format!("CSS injection failed: {}", e));
-    } else {
-        println!("[Livicat] CSS injected successfully (OBS-compatible mode)");
-    }
 
     Ok(())
 }
