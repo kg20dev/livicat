@@ -7,6 +7,11 @@
  * CSS variable naming convention: --chat-*
  */
 
+/* ─── Layout Types ────────────────────────────────────────────── */
+
+export type NameMessageLayout = 'left-right' | 'top-bottom'
+export type BackgroundStyle = 'full-block' | 'inline-text'
+
 /* ─── Interfaces ───────────────────────────────────────────────── */
 
 export interface ContainerSettings {
@@ -89,6 +94,11 @@ export interface AnimationSettings {
   speed?: 'none' | 'slow' | 'normal'
 }
 
+export interface LayoutSettings {
+  nameMessageLayout?: NameMessageLayout
+  backgroundStyle?: BackgroundStyle
+}
+
 export interface ChatCSSSettings {
   fontUrl?: string
   container?: ContainerSettings
@@ -104,6 +114,7 @@ export interface ChatCSSSettings {
   scrollbar?: ScrollbarSettings
   general?: GeneralSettings
   animation?: AnimationSettings
+  layout?: LayoutSettings
 }
 
 /* ─── CSS Variable Helpers ─────────────────────────────────────── */
@@ -459,6 +470,94 @@ function buildAnimationRules(settings: AnimationSettings): string {
   return parts.join('\n\n')
 }
 
+function buildLayoutRules(settings: LayoutSettings): string {
+  const parts: string[] = []
+
+  /*
+   * Name & Message Layout ──────────────────────────────────
+   * Controls whether author name and message appear side-by-side
+   * (left-right, YouTube default) or stacked (top-bottom).
+   *
+   * Left-right: uses flexbox on the parent renderer so all children
+   * (avatar, #content, #before-content-buttons, #menu) are flex items
+   * and flow inline in natural DOM order — no display:contents or
+   * CSS order needed.
+   *
+   * Top-bottom: message is block-level with margin-top so it always
+   * stacks below the name line, regardless of inline-text background.
+   */
+  if (settings.nameMessageLayout === 'left-right') {
+    parts.push(`yt-live-chat-text-message-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  column-gap: 4px !important;
+  direction: ltr !important;
+}
+/* Keep #content as a normal flex item — its children flow inline naturally */
+#author-photo {
+  flex-shrink: 0 !important;
+}`)
+  } else if (settings.nameMessageLayout === 'top-bottom') {
+    // Message always stacks below name in top-bottom mode
+    // author-chip only becomes inline when combined with inline-text (see below)
+    parts.push(`#message {
+  display: block !important;
+  margin-top: 6px !important;
+}`)
+  }
+
+  /*
+   * Background Card Area ────────────────────────────────────
+   * Controls whether the message background fills the entire
+   * block (full-block, current default) or only wraps the text
+   * content (inline-text).
+   */
+  if (settings.backgroundStyle === 'inline-text') {
+    let inlineTextCSS = `yt-live-chat-text-message-renderer {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+#author-name {
+  display: inline-block !important;
+  background: var(--chat-msg-bg) !important;
+  border-radius: var(--chat-msg-radius) !important;
+  padding: 2px 6px !important;
+}
+#message {
+  background: var(--chat-msg-bg) !important;
+  border-radius: var(--chat-msg-radius) !important;
+  padding: 2px 6px !important;
+}`
+
+    // When combined with top-bottom, make author-chip inline-flex so
+    // #before-content-buttons sits next to the name on the same line.
+    // Both use inline-flex + align-items:center + vertical-align:middle
+    // so the badge and name are perfectly centered horizontally.
+    if (settings.nameMessageLayout === 'top-bottom') {
+      inlineTextCSS =
+        `yt-live-chat-author-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+#before-content-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+` + inlineTextCSS
+    }
+
+    parts.push(inlineTextCSS)
+  }
+
+  return parts.join('\n\n')
+}
+
 /* ─── Main Generator ───────────────────────────────────────────── */
 
 /**
@@ -544,6 +643,11 @@ export function generateChatCSS(settings: ChatCSSSettings): string {
 
   if (settings.animation) {
     const rules = buildAnimationRules(settings.animation)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.layout) {
+    const rules = buildLayoutRules(settings.layout)
     if (rules) parts.push(rules)
   }
 
