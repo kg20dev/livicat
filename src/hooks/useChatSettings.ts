@@ -56,6 +56,10 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   scrollButtonBorderRadius: 20,
   scrollButtonOpacity: 90,
 
+  /* Layout */
+  nameMessageLayout: 'left-right',
+  backgroundStyle: 'full-block',
+
   /* Other */
   messageSpacing: 'normal',
   theme: 'dark',
@@ -304,6 +308,10 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
     animation: {
       style: settings.newMessageAnimation || undefined,
       speed: settings.animationSpeed || undefined,
+    },
+    layout: {
+      nameMessageLayout: settings.nameMessageLayout || undefined,
+      backgroundStyle: settings.backgroundStyle || undefined,
     },
   }
 }

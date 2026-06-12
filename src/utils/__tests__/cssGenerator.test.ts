@@ -376,4 +376,106 @@ describe('generateChatCSS', () => {
       expect(css).toContain('transition: box-shadow 0.8s ease-out')
     })
   })
+
+  describe('layout settings', () => {
+    describe('nameMessageLayout', () => {
+      it('generates left-right name layout rules with flexbox', () => {
+        const css = generateChatCSS({
+          layout: { nameMessageLayout: 'left-right' },
+        })
+        // Simple flexbox on renderer — #content stays as a normal flex item,
+        // its children (timestamp, name, message) flow inline naturally
+        expect(css).toContain('display: flex')
+        expect(css).toContain('flex-direction: row')
+        expect(css).toContain('flex-wrap: wrap')
+        expect(css).toContain('column-gap: 4px')
+        expect(css).toContain('direction: ltr')
+        // No display:contents or order — those caused reversed layout
+        expect(css).not.toContain('display: contents')
+        expect(css).not.toContain('order:')
+        expect(css).not.toContain('width: 100%')
+      })
+
+      it('generates top-bottom name layout rules stacking name above message', () => {
+        const css = generateChatCSS({
+          layout: { nameMessageLayout: 'top-bottom' },
+        })
+        // Message is block-level to stack below name
+        expect(css).toContain('#message')
+        expect(css).toContain('display: block !important')
+        expect(css).toContain('margin-top: 6px')
+        // Author-chip is NOT changed in top-bottom alone —
+        // it only becomes inline when combined with inline-text background
+        expect(css).not.toContain('yt-live-chat-author-chip')
+        expect(css).not.toContain('display: inline')
+        // No flex/contents/order — those are only for left-right mode
+        expect(css).not.toContain('display: flex')
+        expect(css).not.toContain('display: contents')
+        expect(css).not.toMatch(/^\s+order:/m)
+      })
+    })
+
+    describe('backgroundStyle', () => {
+      it('generates inline-text background rules', () => {
+        const css = generateChatCSS({
+          layout: { backgroundStyle: 'inline-text' },
+        })
+        expect(css).toContain('background: transparent !important')
+        expect(css).toContain('yt-live-chat-text-message-renderer')
+        expect(css).toContain('#author-name')
+        expect(css).toContain('display: inline-block')
+        expect(css).toContain('padding: 2px 6px')
+      })
+
+      it('does not generate background rules for full-block (default)', () => {
+        const css = generateChatCSS({
+          layout: { backgroundStyle: 'full-block' },
+        })
+        expect(css).toBe('')
+      })
+    })
+
+    describe('combined', () => {
+      it('handles left-right + inline-text together', () => {
+        const css = generateChatCSS({
+          layout: {
+            nameMessageLayout: 'left-right',
+            backgroundStyle: 'inline-text',
+          },
+        })
+        expect(css).toContain('display: flex')
+        expect(css).toContain('background: transparent')
+        expect(css).toContain('padding: 2px 6px')
+        // No display:contents or CSS order property (simpler approach)
+        expect(css).not.toContain('display: contents')
+        expect(css).not.toMatch(/^\s+order:/m)
+      })
+
+      it('handles top-bottom + inline-text together', () => {
+        const css = generateChatCSS({
+          layout: {
+            nameMessageLayout: 'top-bottom',
+            backgroundStyle: 'inline-text',
+          },
+        })
+        // Combined: author-chip becomes inline-flex so #before-content-buttons
+        // can sit next to the name, both centered vertically
+        expect(css).toContain('yt-live-chat-author-chip')
+        expect(css).toContain('display: inline-flex')
+        expect(css).toContain('align-items: center')
+        expect(css).toContain('#before-content-buttons')
+        expect(css).toContain('display: inline-flex')
+        // Message block below from top-bottom
+        expect(css).toContain('#message')
+        expect(css).toContain('display: block !important')
+        expect(css).toContain('margin-top: 6px')
+        // Inline-text background
+        expect(css).toContain('background: transparent')
+        expect(css).toContain('padding: 2px 6px')
+        // No flex/contents (not needed for top-bottom)
+        expect(css).not.toContain('display: flex')
+        expect(css).not.toContain('display: contents')
+      })
+    })
+  })
 })

@@ -9,6 +9,11 @@ export type MessageSpacing = 'compact' | 'normal' | 'comfortable'
 export type AnimationSpeed = 'none' | 'slow' | 'normal'
 export type AnimationStyle = 'default' | 'blink' | 'glowing' | 'fade' | 'slide' | 'bounce'
 
+/* ─── Layout Options ──────────────────────────────────────────── */
+
+export type NameMessageLayout = 'left-right' | 'top-bottom'
+export type BackgroundStyle = 'full-block' | 'inline-text'
+
 /* ─── Chat Settings ─────────────────────────────────────────────── */
 
 /**
@@ -62,6 +67,10 @@ export interface ChatSettings {
   scrollButtonColor: string
   scrollButtonBorderRadius: number
   scrollButtonOpacity: number
+
+  /* Layout */
+  nameMessageLayout: NameMessageLayout
+  backgroundStyle: BackgroundStyle
 
   /* Other */
   messageSpacing: MessageSpacing

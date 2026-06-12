@@ -441,6 +441,18 @@ export default function App() {
                     </div>
                   </StylingPanel.Section>
 
+                  {/* Section: Message Layout */}
+                  <StylingPanel.Section icon="space_dashboard" title="Message Layout">
+                    <div className="space-y-4">
+                      <StylingPanel.Field label="Name & Message">
+                        <StylingPanel.NameMessageLayout />
+                      </StylingPanel.Field>
+                      <StylingPanel.Field label="Background Card Area">
+                        <StylingPanel.BackgroundStyle />
+                      </StylingPanel.Field>
+                    </div>
+                  </StylingPanel.Section>
+
                   {/* Section: Avatar */}
                   <StylingPanel.Section icon="face" title="Avatar">
                     <div className="space-y-2">

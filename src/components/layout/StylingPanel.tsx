@@ -483,4 +483,266 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
   )
 }
 
+/* ─── Layout Controls ─────────────────────────────────────────── */
+
+StylingPanel.NameMessageLayout = function StylingPanelNameMessageLayout() {
+  const { settings, updateSetting } = useStylingPanelContext()
+  const value = settings.nameMessageLayout as string
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => updateSetting('nameMessageLayout', 'left-right')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'left-right'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="19"
+              rx="3.5"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="4"
+              width="7"
+              height="12"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="13"
+              y="4"
+              width="15"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="13"
+              y="11"
+              width="10"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Left → Right</span>
+        </div>
+      </button>
+      <button
+        onClick={() => updateSetting('nameMessageLayout', 'top-bottom')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'top-bottom'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="19"
+              rx="3.5"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="4"
+              width="7"
+              height="12"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="13"
+              y="3"
+              width="15"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="13"
+              y="11"
+              width="12"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Top → Bottom</span>
+        </div>
+      </button>
+    </div>
+  )
+}
+
+StylingPanel.BackgroundStyle = function StylingPanelBackgroundStyle() {
+  const { settings, updateSetting } = useStylingPanelContext()
+  const value = settings.backgroundStyle as string
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => updateSetting('backgroundStyle', 'full-block')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'full-block'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="currentColor"
+              className="text-primary/[0.15]"
+            />
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="12"
+              y="5"
+              width="16"
+              height="3"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="12"
+              y="11"
+              width="10"
+              height="3"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+            <rect
+              x="4"
+              y="5"
+              width="6"
+              height="9"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Full Block</span>
+        </div>
+      </button>
+      <button
+        onClick={() => updateSetting('backgroundStyle', 'inline-text')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'inline-text'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="15"
+              y="4"
+              width="13"
+              height="5"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/[0.15]"
+            />
+            <rect
+              x="15"
+              y="4"
+              width="13"
+              height="5"
+              rx="1.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="17"
+              y="6"
+              width="9"
+              height="2"
+              rx="0.7"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="14"
+              y="12"
+              width="10"
+              height="4"
+              rx="1.5"
+              fill="currentColor"
+              className="text-on-surface-variant/[0.15]"
+            />
+            <rect
+              x="14"
+              y="12"
+              width="10"
+              height="4"
+              rx="1.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="5"
+              width="6"
+              height="9"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Inline Text</span>
+        </div>
+      </button>
+    </div>
+  )
+}
+
 export type { StylingPanelRootProps }
