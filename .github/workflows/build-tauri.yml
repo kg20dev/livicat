@@ -117,7 +117,7 @@ jobs:
       - name: Install cargo-tauri CLI
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
-        run: cargo install tauri-cli --version "2.10" --locked
+        run: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -189,7 +189,7 @@ jobs:
       - name: Install cargo-tauri CLI
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
-        run: cargo install tauri-cli --version "2.10" --locked
+        run: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
