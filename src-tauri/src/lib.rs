@@ -406,9 +406,9 @@ pub fn run() {
     {
         std::env::set_var(
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
-            "--disable-gpu --disable-software-rasterizer --in-process-gpu --disable-gpu-vsync --disable-frame-rate-limit",
+            "--disable-gpu-vsync --disable-frame-rate-limit --disable-features=CalculateNativeWinOcclusion"
         );
-        println!("[Livicat] Set WebView2 environment variable: --disable-gpu --disable-software-rasterizer --in-process-gpu --disable-gpu-vsync --disable-frame-rate-limit (for OBS capture)");
+        println!("[Livicat] Set WebView2 environment variable: --disable-gpu-vsync --disable-frame-rate-limit --disable-features=CalculateNativeWinOcclusion (for OBS capture)");
     }
 
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
