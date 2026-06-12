@@ -120,7 +120,7 @@ jobs:
         # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 10
+          timeout_minutes: 30
           max_attempts: 3
           retry_on: error
           command: cargo install tauri-cli --version "^2.10" --locked
@@ -198,7 +198,7 @@ jobs:
         # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 10
+          timeout_minutes: 30
           max_attempts: 3
           retry_on: error
           command: cargo install tauri-cli --version "^2.10" --locked
