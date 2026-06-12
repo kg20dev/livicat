@@ -137,19 +137,25 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
-    // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
-    // Without this, OBS Window Capture can't see the window (Display Capture works fine)
-    #[cfg(target_os = "windows")]
-    {
-        let window_clone = window.clone();
-        std::thread::spawn(move || {
-            loop {
-                std::thread::sleep(std::time::Duration::from_millis(500));
-                // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
-                let _ = window_clone.eval("window.dispatchEvent(new Event('resize'))");
-            }
-        });
-    }
+//     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
+//     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
+//     #[cfg(target_os = "windows")]
+//     {
+//         let window_clone = window.clone();
+//         std::thread::spawn(move || {
+//             loop {
+//                 std::thread::sleep(std::time::Duration::from_millis(500));
+//                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
+//                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
+//                     Ok(_) => {}
+//                     Err(e) => {
+//                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
+//                         break;
+//                     }
+//                 }
+//             }
+//         });
+//     }
 
     Ok(())
 }
@@ -406,9 +412,9 @@ pub fn run() {
     {
         std::env::set_var(
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
-            "--in-process-gpu --use-angle=d3d11 --disable-software-rasterizer"
+            "--enable-gpu"
         );
-        println!("[Livicat] Set WebView2 environment variable: --in-process-gpu --use-angle=d3d11 --disable-software-rasterizer (for YouTube chat + OBS capture)");
+        println!("[Livicat] Set WebView2 environment variable: --enable-gpu (for YouTube chat + OBS capture)");
     }
 
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
