@@ -824,6 +824,8 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential \
 - In OBS Window Capture properties, set **Capture Method** to **"Windows 10 (1903 and up)"** — not "Automatic" (required for WebView2 windows)
 - If still frozen, try re-adding the Window Capture source
 
+  <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
+
 **Preview window crashes (Windows):**
 - Disable always-on-top (known WebView2 issue)
 - Update WebView2 Runtime

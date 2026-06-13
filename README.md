@@ -73,6 +73,8 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 > **⚠️ Windows + OBS Live Preview (Window Capture):**  
 > In OBS, open the Window Capture source properties and set **Capture Method** to **"Windows 10 (1903 and up)"** — do not leave it on "Automatic". The preview window won't update without this setting.
+>
+> <img src="docs/yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
 ---
 

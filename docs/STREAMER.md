@@ -147,6 +147,8 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 
 > **⚠️ Windows Users — Critical OBS Setting:**  
 > In the Window Capture properties, set **Capture Method** to **"Windows 10 (1903 and up)"** — do NOT leave it on "Automatic". This is required for WebView2-based windows (like Livicat's preview) to capture reliably on Windows.
+>
+> <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
 **✅ Pros:** One-click setup, always-on-top, easier workflow
 **❌ Cons:** Requires Livicat desktop app
