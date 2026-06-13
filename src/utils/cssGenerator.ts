@@ -276,7 +276,10 @@ function buildMessageTextRules(settings: MessageTextSettings): string {
   const rules: string[] = []
 
   if (settings.color) rules.push(`  color: var(--chat-message-color) !important;`)
-  if (settings.fontSize) rules.push(`  font-size: var(--chat-message-font-size) !important;`)
+  if (settings.fontSize) {
+    rules.push(`  font-size: var(--chat-message-font-size) !important;`)
+    rules.push(`  line-height: 1.5 !important;`)
+  }
 
   if (rules.length === 0) return ''
 
