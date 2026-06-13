@@ -296,7 +296,7 @@ describe('generateChatCSS', () => {
       })
       expect(css).toContain('@keyframes livicat-blink')
       expect(css).toContain('yt-live-chat-text-message-renderer')
-      expect(css).toContain('animation: livicat-blink 0.8s ease-out')
+      expect(css).toContain('animation: livicat-blink 0.8s ease-in-out')
     })
 
     it('generates glowing animation keyframes and rules', () => {
@@ -305,7 +305,7 @@ describe('generateChatCSS', () => {
       })
       expect(css).toContain('@keyframes livicat-glowing')
       expect(css).toContain('yt-live-chat-text-message-renderer')
-      expect(css).toContain('animation: livicat-glowing 0.8s ease-out')
+      expect(css).toContain('animation: livicat-glowing 0.8s ease-in-out')
     })
 
     it('generates fade animation keyframes and rules', () => {
@@ -314,7 +314,7 @@ describe('generateChatCSS', () => {
       })
       expect(css).toContain('@keyframes livicat-fade')
       expect(css).toContain('yt-live-chat-text-message-renderer')
-      expect(css).toContain('animation: livicat-fade 0.8s ease-out')
+      expect(css).toContain('animation: livicat-fade 0.8s ease-in-out')
     })
 
     it('generates slide animation keyframes and rules', () => {
@@ -323,7 +323,7 @@ describe('generateChatCSS', () => {
       })
       expect(css).toContain('@keyframes livicat-slide')
       expect(css).toContain('yt-live-chat-text-message-renderer')
-      expect(css).toContain('animation: livicat-slide 0.8s ease-out')
+      expect(css).toContain('animation: livicat-slide 0.8s ease-in-out')
     })
 
     it('generates bounce animation keyframes and rules', () => {
@@ -332,19 +332,19 @@ describe('generateChatCSS', () => {
       })
       expect(css).toContain('@keyframes livicat-bounce')
       expect(css).toContain('yt-live-chat-text-message-renderer')
-      expect(css).toContain('animation: livicat-bounce 0.8s ease-out')
+      expect(css).toContain('animation: livicat-bounce 0.8s ease-in-out')
     })
 
     it('respects animation speed setting', () => {
       const slowCss = generateChatCSS({
         animation: { style: 'blink', speed: 'slow' },
       })
-      expect(slowCss).toContain('animation: livicat-blink 1.5s ease-out')
+      expect(slowCss).toContain('animation: livicat-blink 1.5s ease-in-out')
 
       const noneCss = generateChatCSS({
         animation: { style: 'blink', speed: 'none' },
       })
-      expect(noneCss).toContain('animation: livicat-blink 0s ease-out')
+      expect(noneCss).toContain('animation: livicat-blink 0s ease-in-out')
     })
 
     it('does not generate animation for default style', () => {
@@ -373,7 +373,7 @@ describe('generateChatCSS', () => {
       const css = generateChatCSS({
         animation: { style: 'glowing', speed: 'normal' },
       })
-      expect(css).toContain('transition: box-shadow 0.8s ease-out')
+      expect(css).toContain('transition: filter 0.8s ease-in-out')
     })
   })
 
