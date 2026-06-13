@@ -316,7 +316,7 @@ export default function App() {
                 <StylingPanel.Header />
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
                   {/* Hero Section: Quick Presets */}
-                  <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets">
+                  <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets" collapsible defaultOpen={true}>
                     <StylingPanel.PresetSelector />
                   </StylingPanel.HeroSection>
 
@@ -423,6 +423,18 @@ export default function App() {
                           max={100}
                         />
                       </div>
+                      <StylingPanel.Slider
+                        settingKey="messageMarginBottom"
+                        label="Bottom Margin"
+                        min={0}
+                        max={40}
+                      />
+                      <StylingPanel.Slider
+                        settingKey="messageInnerPadding"
+                        label="Inner Padding"
+                        min={0}
+                        max={20}
+                      />
                       <div className="grid grid-cols-2 gap-3">
                         <StylingPanel.Toggle settingKey="showAvatars" label="Avatars" />
                         <StylingPanel.Toggle settingKey="showTimestamps" label="Timestamps" />
@@ -461,6 +473,12 @@ export default function App() {
                         label="Avatar Size"
                         min={16}
                         max={64}
+                      />
+                      <StylingPanel.Slider
+                        settingKey="avatarMarginTop"
+                        label="Top Margin"
+                        min={0}
+                        max={40}
                       />
                     </div>
                   </StylingPanel.Section>
