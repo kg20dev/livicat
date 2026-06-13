@@ -55,6 +55,12 @@
 3. Drag Livicat to your Applications folder
 4. Open Launchpad and click Livicat
 
+> **⚠️ macOS Gatekeeper:** If you see "Livicat is damaged and can't be opened" or the app won't launch, run this in Terminal to bypass Gatekeeper:
+> ```bash
+> sudo xattr -rd com.apple.quarantine /Applications/Livicat.app
+> ```
+> This removes the quarantine flag from the downloaded app. You only need to do this once after installation.
+
 ### **🪟 Windows**
 
 1. Download the latest `.exe` or `.msi` from [GitHub Releases](https://github.com/kg20dev/livicat/releases)
