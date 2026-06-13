@@ -20,9 +20,19 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install cargo-tauri CLI
-        run: cargo install tauri-cli --version "^2"
+        # Pin to 2.10 with --locked to avoid conflicting trait impl between
+        # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
+        # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: error
+          command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2

@@ -73,42 +73,60 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    // always_on_top disabled on Windows — known to cause WebView2 crashes with YouTube chat
+    // always_on_top disabled on Windows — known WebView2 crashes with YouTube chat + OBS capture
     .always_on_top(cfg!(not(target_os = "windows")))
     .user_agent(PREVIEW_USER_AGENT)
-    .additional_browser_args("--disable-gpu")
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
         println!("[Livicat] Page load event: {:?}, url={:?}", payload, url);
 
-        // Report navigation failures to Sentry
-        if payload.event() == tauri::webview::PageLoadEvent::Finished {
-            if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
-                if url_str.contains("error") || url_str.contains("blank") {
-                    sentry::capture_error(&format!(
-                        "Preview page load resulted in error page: {}",
-                        url_str
-                    ));
+        match payload.event() {
+            tauri::webview::PageLoadEvent::Started => {
+                // Inject Sentry before page scripts run, so it can catch
+                // any JS errors during initial page load.
+                if let Err(e) = inject_sentry_to_window(&window) {
+                    eprintln!("[Livicat] Sentry injection failed: {}", e);
                 }
             }
+            tauri::webview::PageLoadEvent::Finished => {
+                // Report navigation failures to Sentry
+                if let Some(url_str) = url.as_ref().map(|u| u.to_string()) {
+                    if url_str.contains("error") || url_str.contains("blank") {
+                        eprintln!("[Livicat] Preview navigated to error page: {}", url_str);
+                        sentry::capture_error(&format!(
+                            "Preview navigated to error page (WebView2 crash): {}",
+                            url_str
+                        ));
+                        sentry::add_breadcrumb(
+                            "webview_error",
+                            &format!("Preview error page: {}", url_str),
+                            SentryLevel::Error,
+                        );
+                        return;
+                    }
+                }
 
-            // Inject CSS when page finishes loading
-            // Runs on Tauri's event loop thread — avoids raw thread spawn crash on Windows
-            if let Err(e) = inject_css_to_window(&window, &css) {
-                eprintln!("[Livicat] CSS injection via page load failed: {}", e);
-                sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
-                sentry::add_breadcrumb(
-                    "css_injection",
-                    &format!("CSS injection via page load failed: {}", e),
-                    SentryLevel::Error,
-                );
-            } else {
-                println!("[Livicat] CSS injected on page load");
-                sentry::add_breadcrumb(
-                    "css_injection",
-                    &format!("CSS injected on page load ({} bytes)", css.len()),
-                    SentryLevel::Info,
-                );
+                // Inject CSS after the page finishes loading.
+                // On Windows (WebView2), eval() before NavigationCompleted
+                // fires into an uninitialized JS context, causing crashes.
+                // On macOS (WKWebView) it's more forgiving but still unsafe.
+                // Waiting for Finished guarantees the JS environment is ready.
+                if let Err(e) = inject_css_to_window(&window, &css) {
+                    eprintln!("[Livicat] CSS injection via page load failed: {}", e);
+                    sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
+                    sentry::add_breadcrumb(
+                        "css_injection",
+                        &format!("CSS injection via page load failed: {}", e),
+                        SentryLevel::Error,
+                    );
+                } else {
+                    println!("[Livicat] CSS injected on page load");
+                    sentry::add_breadcrumb(
+                        "css_injection",
+                        &format!("CSS injected on page load ({} bytes)", css.len()),
+                        SentryLevel::Info,
+                    );
+                }
             }
         }
     })
@@ -118,6 +136,26 @@ async fn open_preview_window(
     window
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
+
+//     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
+//     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
+//     #[cfg(target_os = "windows")]
+//     {
+//         let window_clone = window.clone();
+//         std::thread::spawn(move || {
+//             loop {
+//                 std::thread::sleep(std::time::Duration::from_millis(500));
+//                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
+//                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
+//                     Ok(_) => {}
+//                     Err(e) => {
+//                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
+//                         break;
+//                     }
+//                 }
+//             }
+//         });
+//     }
 
     Ok(())
 }
@@ -246,6 +284,60 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
     Ok(())
 }
 
+fn inject_sentry_to_window(window: &WebviewWindow) -> Result<(), String> {
+    println!("[Livicat] Injecting Sentry into preview webview");
+
+    // Inject Sentry browser SDK to capture JavaScript errors in preview webview
+    let script = r#"(function() {
+        try {
+            // Check if Sentry is already loaded
+            if (window.Sentry) {
+                console.log('[Livicat] Sentry already loaded in preview webview');
+                return;
+            }
+
+            // Load Sentry from CDN
+            var script = document.createElement('script');
+            script.src = 'https://browser.sentry-cdn.com/8.29.0/bundle.min.js';
+            script.crossOrigin = 'anonymous';
+            script.onload = function() {
+                console.log('[Livicat] Sentry SDK loaded, initializing...');
+                
+                // Initialize Sentry
+                Sentry.init({
+                    dsn: 'https://a152e9a3e9de46c5b099336088514b7d@o4504026331295744.ingest.us.sentry.io/4507986409615360',
+                    environment: 'production',
+                    release: 'livicat@0.7.7',
+                    integrations: [new Sentry.BrowserTracing()],
+                    tracesSampleRate: 1.0,
+                    beforeSend: function(event, hint) {
+                        console.log('[Livicat] Sending event to Sentry:', event);
+                        return event;
+                    }
+                });
+
+                console.log('[Livicat] Sentry initialized in preview webview');
+                
+                // Capture initial message
+                Sentry.captureMessage('Preview webview initialized', 'info');
+            };
+            script.onerror = function() {
+                console.error('[Livicat] Failed to load Sentry SDK');
+            };
+            document.head.appendChild(script);
+        } catch(e) {
+            console.error('[Livicat] Sentry injection error:', e);
+        }
+    })();"#;
+
+    window
+        .eval(script)
+        .map_err(|e| format!("Failed to inject Sentry: {}", e))?;
+
+    println!("[Livicat] Sentry injection script executed");
+    Ok(())
+}
+
 #[cfg(test)]
 mod windows_webview_tests;
 
@@ -315,6 +407,50 @@ pub fn run() {
     // Load .env file if present (for local development)
     dotenvy::dotenv().ok();
 
+    // WebView2 browser flags for Windows OBS Window Capture compatibility
+    //
+    // Flags:
+    //   --disable-gpu
+    //     Disables GPU hardware acceleration. Forces software rendering path
+    //     that OBS Window Capture can reliably hook into via BitBlt/DWM.
+    //
+    //   --disable-software-rasterizer
+    //     Prevents fallback to SwiftShader software rasterizer, ensuring
+    //     OBS capture can access the composited output.
+    //
+    //   --in-process-gpu
+    //     Runs GPU rendering in the browser process rather than a separate
+    //     GPU process. Avoids cross-process capture issues with OBS.
+    //
+    //   --disable-frame-rate-limit
+    //     Removes Chromium's frame rate cap so rendering stays responsive
+    //     even when the window is not in focus.
+    //
+    //   --disable-backgrounding-occluded-windows
+    //     Prevents WebView2 from throttling rendering when the window is
+    //     partly or fully occluded (covered by other windows). OBS Window
+    //     Capture reads the window's pixels even when it's behind other windows.
+    //
+    //   --disable-background-timer-throttling
+    //     Prevents Chromium from throttling JS timers in background tabs.
+    //     Without this, chat updates may stall when the window is occluded.
+    //
+    // OBS Capture Method: Must be set to "Windows 10 (1903 and up)" not
+    // "Automatic" for WebView2 windows to capture reliably.
+    #[cfg(target_os = "windows")]
+    {
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--disable-gpu \
+             --disable-software-rasterizer \
+             --in-process-gpu \
+             --disable-frame-rate-limit \
+             --disable-backgrounding-occluded-windows \
+             --disable-background-timer-throttling"
+        );
+        println!("[Livicat] Set WebView2 browser flags: --disable-gpu --disable-software-rasterizer --in-process-gpu --disable-frame-rate-limit --disable-backgrounding-occluded-windows --disable-background-timer-throttling");
+    }
+
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
     let sentry_guard = sentry::init_sentry();
     println!("[Livicat] Sentry error reporting initialized");
@@ -351,7 +487,11 @@ pub fn run() {
         .setup(move |app| {
             app.manage(preview_state);
 
-            // Send test log to verify Sentry logs feature is working
+            // Move Sentry guard into Tauri state so it persists even on crash
+            // This ensures Sentry flushes events even if the app crashes hard
+            app.manage(sentry_guard);
+
+            // Send test log to verify Sentry is working
             sentry::send_test_log();
 
             // Register a Sentry-compatible panic hook
@@ -397,6 +537,5 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    // Keep Sentry guard alive until app closes
-    drop(sentry_guard);
+    // Sentry guard is now managed by Tauri state - lives until app teardown
 }
