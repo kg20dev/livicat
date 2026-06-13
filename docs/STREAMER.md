@@ -145,6 +145,9 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 8. Click **OK**
 9. Resize and position the chat overlay on your stream
 
+> **⚠️ Windows Users — Critical OBS Setting:**  
+> In the Window Capture properties, set **Capture Method** to **"Windows 10 (1903 and up)"** — do NOT leave it on "Automatic". This is required for WebView2-based windows (like Livicat's preview) to capture reliably on Windows.
+
 **✅ Pros:** One-click setup, always-on-top, easier workflow
 **❌ Cons:** Requires Livicat desktop app
 

@@ -407,14 +407,48 @@ pub fn run() {
     // Load .env file if present (for local development)
     dotenvy::dotenv().ok();
 
-    // Set WebView2 environment variables for OBS capture (Windows only)
+    // WebView2 browser flags for Windows OBS Window Capture compatibility
+    //
+    // Flags:
+    //   --disable-gpu
+    //     Disables GPU hardware acceleration. Forces software rendering path
+    //     that OBS Window Capture can reliably hook into via BitBlt/DWM.
+    //
+    //   --disable-software-rasterizer
+    //     Prevents fallback to SwiftShader software rasterizer, ensuring
+    //     OBS capture can access the composited output.
+    //
+    //   --in-process-gpu
+    //     Runs GPU rendering in the browser process rather than a separate
+    //     GPU process. Avoids cross-process capture issues with OBS.
+    //
+    //   --disable-frame-rate-limit
+    //     Removes Chromium's frame rate cap so rendering stays responsive
+    //     even when the window is not in focus.
+    //
+    //   --disable-backgrounding-occluded-windows
+    //     Prevents WebView2 from throttling rendering when the window is
+    //     partly or fully occluded (covered by other windows). OBS Window
+    //     Capture reads the window's pixels even when it's behind other windows.
+    //
+    //   --disable-background-timer-throttling
+    //     Prevents Chromium from throttling JS timers in background tabs.
+    //     Without this, chat updates may stall when the window is occluded.
+    //
+    // OBS Capture Method: Must be set to "Windows 10 (1903 and up)" not
+    // "Automatic" for WebView2 windows to capture reliably.
     #[cfg(target_os = "windows")]
     {
         std::env::set_var(
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
-            "--enable-gpu"
+            "--disable-gpu \
+             --disable-software-rasterizer \
+             --in-process-gpu \
+             --disable-frame-rate-limit \
+             --disable-backgrounding-occluded-windows \
+             --disable-background-timer-throttling"
         );
-        println!("[Livicat] Set WebView2 environment variable: --enable-gpu (for YouTube chat + OBS capture)");
+        println!("[Livicat] Set WebView2 browser flags: --disable-gpu --disable-software-rasterizer --in-process-gpu --disable-frame-rate-limit --disable-backgrounding-occluded-windows --disable-background-timer-throttling");
     }
 
     // Initialize Sentry for error reporting - keep guard alive to ensure events are sent
