@@ -152,7 +152,10 @@ StylingPanel.Section = function StylingPanelSection({
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
         <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
         {collapsible && (
-          <span className="material-symbols-outlined text-on-surface-variant text-[18px] transition-transform duration-200" style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+          <span
+            className="material-symbols-outlined text-on-surface-variant text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
             expand_more
           </span>
         )}
@@ -501,7 +504,10 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
         <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
         {collapsible && (
-          <span className="material-symbols-outlined text-primary text-[18px] transition-transform duration-200" style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+          <span
+            className="material-symbols-outlined text-primary text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
             expand_more
           </span>
         )}

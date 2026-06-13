@@ -316,7 +316,12 @@ export default function App() {
                 <StylingPanel.Header />
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
                   {/* Hero Section: Quick Presets */}
-                  <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets" collapsible defaultOpen={true}>
+                  <StylingPanel.HeroSection
+                    icon="auto_awesome"
+                    title="Quick Presets"
+                    collapsible
+                    defaultOpen={true}
+                  >
                     <StylingPanel.PresetSelector />
                   </StylingPanel.HeroSection>
 
