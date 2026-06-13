@@ -63,6 +63,11 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
 
+> **⚠️ macOS Gatekeeper:** If the app shows "damaged and can't be opened," run this in Terminal:
+> ```bash
+> sudo xattr -rd com.apple.quarantine /Applications/Livicat.app
+> ```
+
 ---
 
 ## 🚀 Quick Start
