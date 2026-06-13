@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Livicat",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "identifier": "com.livicat.app",
   "build": {
     "frontendDist": "../dist",
@@ -18,8 +18,7 @@
         "minWidth": 800,
         "minHeight": 500,
         "resizable": true,
-        "fullscreen": false,
-        "additionalBrowserArgs": "--disable-gpu-compositing --disable-features=msWebOOUI,msPdfOOUI"
+        "fullscreen": false
       }
     ],
     "security": {
@@ -35,6 +34,10 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "-"
+    }
   }
 }

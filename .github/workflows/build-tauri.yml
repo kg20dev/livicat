@@ -111,9 +111,19 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install cargo-tauri CLI
-        run: cargo install tauri-cli --version "^2"
+        # Pin to 2.10 with --locked to avoid conflicting trait impl between
+        # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
+        # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: error
+          command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -150,6 +160,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
+
+      - name: Ad-hoc sign and prepare macOS bundle
+        run: |
+          DMG_DIR="src-tauri/target/release/bundle/dmg"
+          APP_PATH="$DMG_DIR/Livicat.app"
+
+          # Ad-hoc sign the .app bundle (in case Tauri's built-in signing didn't apply)
+          if [ -d "$APP_PATH" ]; then
+            echo "Ad-hoc signing .app bundle..."
+            codesign --force --deep --sign - "$APP_PATH"
+            codesign --verify --deep --strict "$APP_PATH" && echo "✅ Signature verified"
+          else
+            echo "⚠️ .app not found at $APP_PATH, trying alternative paths..."
+            find src-tauri/target/release/bundle -name "*.app" -type d -exec codesign --force --deep --sign - {} \;
+          fi
+
+          # Strip quarantine flag from .dmg so it doesn't carry the attribute into the download
+          for dmg in "$DMG_DIR"/*.dmg; do
+            if [ -f "$dmg" ]; then
+              xattr -rd com.apple.quarantine "$dmg" 2>/dev/null || true
+              echo "✅ Quarantine stripped from $(basename "$dmg")"
+            fi
+          done
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -177,9 +212,19 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install cargo-tauri CLI
-        run: cargo install tauri-cli --version "^2"
+        # Pin to 2.10 with --locked to avoid conflicting trait impl between
+        # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
+        # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: error
+          command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -228,6 +273,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4

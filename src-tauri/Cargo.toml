@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.7.6"
+version = "0.7.7"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -28,3 +28,9 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 dotenvy = "0.15"
+sentry = "0.48"
+sentry-rust-minidump = "0.7"
+sentry-log = "0.48"
+# Pin time to <0.3.48 to avoid conflicting trait impl with tauri-utils 2.9.2
+# time 0.3.48 added From<HourBase> that conflicts with blanket impls in tauri-utils
+time = ">=0.3.37, <0.3.48"

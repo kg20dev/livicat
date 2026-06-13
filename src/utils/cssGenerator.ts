@@ -7,6 +7,11 @@
  * CSS variable naming convention: --chat-*
  */
 
+/* ─── Layout Types ────────────────────────────────────────────── */
+
+export type NameMessageLayout = 'left-right' | 'top-bottom'
+export type BackgroundStyle = 'full-block' | 'inline-text'
+
 /* ─── Interfaces ───────────────────────────────────────────────── */
 
 export interface ContainerSettings {
@@ -25,6 +30,7 @@ export interface MessageSettings {
   borderRadius?: string
   padding?: string
   margin?: string
+  marginBottom?: string
   opacity?: number
 }
 
@@ -37,6 +43,7 @@ export interface UsernameSettings {
 export interface MessageTextSettings {
   color?: string
   fontSize?: string
+  padding?: string
 }
 
 export interface AvatarSettings {
@@ -44,6 +51,7 @@ export interface AvatarSettings {
   height?: string
   borderRadius?: string
   display?: string
+  marginTop?: string
 }
 
 export interface TimestampSettings {
@@ -89,6 +97,11 @@ export interface AnimationSettings {
   speed?: 'none' | 'slow' | 'normal'
 }
 
+export interface LayoutSettings {
+  nameMessageLayout?: NameMessageLayout
+  backgroundStyle?: BackgroundStyle
+}
+
 export interface ChatCSSSettings {
   fontUrl?: string
   container?: ContainerSettings
@@ -104,6 +117,7 @@ export interface ChatCSSSettings {
   scrollbar?: ScrollbarSettings
   general?: GeneralSettings
   animation?: AnimationSettings
+  layout?: LayoutSettings
 }
 
 /* ─── CSS Variable Helpers ─────────────────────────────────────── */
@@ -242,7 +256,8 @@ function buildMessageRules(settings: MessageSettings): string {
   if (settings.borderRadius) rules.push(`  border-radius: var(--chat-msg-radius) !important;`)
   if (settings.padding) rules.push(`  padding: var(--chat-msg-padding) !important;`)
   if (settings.margin) rules.push(`  margin: var(--chat-msg-margin) !important;`)
-  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity) !important;`)
+  if (settings.marginBottom) rules.push(`  margin-bottom: ${settings.marginBottom} !important;`)
+  if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity);`)
 
   if (rules.length === 0) return ''
 
@@ -261,20 +276,42 @@ function buildUsernameRules(settings: UsernameSettings): string {
   return `#author-name {\n${rules.join('\n')}\n}\n`
 }
 
-function buildMessageTextRules(settings: MessageTextSettings): string {
-  const rules: string[] = []
+/**
+ * Split into two rule blocks so the padding/display part can be emitted
+ * after layout rules. This ensures Inner Padding's `padding` wins over
+ * `inline-text` background which uses `padding: 2px 6px` on the same
+ * selector (layout rules are added later in the stylesheet).
+ */
+type SplitTextRules = { base: string; padding: string }
+function buildMessageTextRules(settings: MessageTextSettings): SplitTextRules {
+  const baseRules: string[] = []
+  const paddingRules: string[] = []
 
-  if (settings.color) rules.push(`  color: var(--chat-message-color) !important;`)
-  if (settings.fontSize) rules.push(`  font-size: var(--chat-message-font-size) !important;`)
+  if (settings.color) baseRules.push(`  color: var(--chat-message-color) !important;`)
+  if (settings.fontSize) {
+    baseRules.push(`  font-size: var(--chat-message-font-size) !important;`)
+    baseRules.push(`  line-height: 1.5 !important;`)
+  }
+  if (settings.padding) {
+    // display: inline-block goes in base (before layout) so layout's
+    // display: block (top-bottom) can override it if needed
+    baseRules.push(`  display: inline-block !important;`)
+    // padding goes in its own block emitted after layout so it wins
+    // over inline-text background's padding: 2px 6px
+    paddingRules.push(`  padding: ${settings.padding} !important;`)
+  }
 
-  if (rules.length === 0) return ''
+  const selector = `#message-container > #message`
+  const base = baseRules.length > 0 ? `${selector} {\n${baseRules.join('\n')}\n}\n` : ''
+  const padding = paddingRules.length > 0 ? `${selector} {\n${paddingRules.join('\n')}\n}\n` : ''
 
-  return `#message {\n${rules.join('\n')}\n}\n`
+  return { base, padding }
 }
 
 function buildAvatarRules(settings: AvatarSettings): string {
   const rules: string[] = []
 
+  if (settings.marginTop) rules.push(`  margin-top: ${settings.marginTop} !important;`)
   if (settings.width) rules.push(`  width: var(--chat-avatar-width) !important;`)
   if (settings.height) rules.push(`  height: var(--chat-avatar-height) !important;`)
   if (settings.borderRadius) rules.push(`  border-radius: var(--chat-avatar-radius) !important;`)
@@ -388,13 +425,19 @@ function buildAnimationRules(settings: AnimationSettings): string {
 }`,
     glowing: `@keyframes livicat-glowing {
   0% { 
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0));
+  }
+  25% { 
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.12));
   }
   50% { 
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25));
+  }
+  75% { 
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.12));
   }
   100% { 
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0));
   }
 }`,
     fade: `@keyframes livicat-fade {
@@ -443,17 +486,108 @@ function buildAnimationRules(settings: AnimationSettings): string {
     const rules: string[] = []
 
     // Base animation properties
-    rules.push(`  animation: ${animationName} ${duration} ease-out !important;`)
+    rules.push(`  animation: ${animationName} ${duration} ease-in-out !important;`)
 
     // Style-specific additions
     if (settings.style === 'glowing') {
-      rules.push(`  transition: box-shadow ${duration} ease-out !important;`)
+      rules.push(`  transition: filter ${duration} ease-in-out !important;`)
     }
     if (settings.style === 'fade' || settings.style === 'slide') {
-      rules.push(`  transform: translateZ(0) !important;`) // Enable hardware acceleration
+      rules.push(`  transform: translateZ(0);`) // Enable hardware acceleration (no !important — animation keyframes must override transform)
     }
 
+    // Use filter: drop-shadow on the renderer so the glow traces the actual
+    // rendered content (alpha channel) — pill shapes in inline-text mode,
+    // full block in full-block mode. Avoids rectangular box-shadow artifacts.
     parts.push(`yt-live-chat-text-message-renderer {\n${rules.join('\n')}\n}`)
+  }
+
+  return parts.join('\n\n')
+}
+
+function buildLayoutRules(settings: LayoutSettings): string {
+  const parts: string[] = []
+
+  /*
+   * Name & Message Layout ──────────────────────────────────
+   * Controls whether author name and message appear side-by-side
+   * (left-right, YouTube default) or stacked (top-bottom).
+   *
+   * Left-right: uses flexbox on the parent renderer so all children
+   * (avatar, #content, #before-content-buttons, #menu) are flex items
+   * and flow inline in natural DOM order — no display:contents or
+   * CSS order needed.
+   *
+   * Top-bottom: message is block-level with margin-top so it always
+   * stacks below the name line, regardless of inline-text background.
+   */
+  if (settings.nameMessageLayout === 'left-right') {
+    parts.push(`yt-live-chat-text-message-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  column-gap: 4px !important;
+  direction: ltr !important;
+}
+/* Keep #content as a normal flex item — its children flow inline naturally */
+#author-photo {
+  flex-shrink: 0 !important;
+}`)
+  } else if (settings.nameMessageLayout === 'top-bottom') {
+    // Message always stacks below name in top-bottom mode
+    // author-chip only becomes inline when combined with inline-text (see below)
+    parts.push(`#message-container > #message {
+  display: block !important;
+  margin-top: 6px !important;
+}`)
+  }
+
+  /*
+   * Background Card Area ────────────────────────────────────
+   * Controls whether the message background fills the entire
+   * block (full-block, current default) or only wraps the text
+   * content (inline-text).
+   */
+  if (settings.backgroundStyle === 'inline-text') {
+    let inlineTextCSS = `yt-live-chat-text-message-renderer {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+#author-name {
+  display: inline-block !important;
+  background: var(--chat-msg-bg) !important;
+  border-radius: var(--chat-msg-radius) !important;
+  padding: 2px 6px !important;
+}
+#message-container > #message {
+  background: var(--chat-msg-bg) !important;
+  border-radius: var(--chat-msg-radius) !important;
+  padding: 2px 6px !important;
+}`
+
+    // When combined with top-bottom, make author-chip inline-flex so
+    // #before-content-buttons sits next to the name on the same line.
+    // Both use inline-flex + align-items:center + vertical-align:middle
+    // so the badge and name are perfectly centered horizontally.
+    if (settings.nameMessageLayout === 'top-bottom') {
+      inlineTextCSS =
+        `yt-live-chat-author-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+#before-content-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+` + inlineTextCSS
+    }
+
+    parts.push(inlineTextCSS)
   }
 
   return parts.join('\n\n')
@@ -469,7 +603,7 @@ function buildAnimationRules(settings: AnimationSettings): string {
  * - YouTube chat container rules (#contents, #chat)
  * - Message rules (yt-live-chat-text-message-renderer)
  * - Username rules (#author-name)
- * - Message text rules (#message)
+ * - Message text rules (#message-container > #message)
  * - Avatar rules (#author-photo img)
  * - Timestamp rules (.timestamp, #timestamp)
  * - Scrollbar rules (#chat::-webkit-scrollbar-*)
@@ -502,9 +636,11 @@ export function generateChatCSS(settings: ChatCSSSettings): string {
     if (rules) parts.push(rules)
   }
 
+  let messagePaddingCSS = ''
   if (settings.messageText) {
-    const rules = buildMessageTextRules(settings.messageText)
-    if (rules) parts.push(rules)
+    const { base, padding } = buildMessageTextRules(settings.messageText)
+    if (base) parts.push(base)
+    messagePaddingCSS = padding
   }
 
   if (settings.avatar) {
@@ -546,6 +682,15 @@ export function generateChatCSS(settings: ChatCSSSettings): string {
     const rules = buildAnimationRules(settings.animation)
     if (rules) parts.push(rules)
   }
+
+  if (settings.layout) {
+    const rules = buildLayoutRules(settings.layout)
+    if (rules) parts.push(rules)
+  }
+
+  // Inner Padding must come last so it wins over layout rules
+  // (inline-text background sets padding: 2px 6px on the same selector)
+  if (messagePaddingCSS) parts.push(messagePaddingCSS)
 
   return parts.join('\n')
 }

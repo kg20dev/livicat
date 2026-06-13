@@ -20,7 +20,10 @@ interface ChatMessageProps {
  *     yt-live-chat-author-chip        (style-scope yt-live-chat-text-message-renderer)
  *       span#author-name              (style-scope yt-live-chat-author-chip)
  *       span#chat-badges              (style-scope yt-live-chat-author-chip)
- *     span#message                    (style-scope yt-live-chat-text-message-renderer)
+ *     div#before-content-buttons      (style-scope yt-live-chat-text-message-renderer)
+ *     span#message-container          (style-scope yt-live-chat-text-message-renderer)
+ *       span#message                  (style-scope yt-live-chat-text-message-renderer)
+ *     span#hover-message              (...)
  *   div#menu                          (style-scope yt-live-chat-text-message-renderer)
  *   div#inline-action-button-container (...)
  * ```
@@ -90,16 +93,23 @@ export default function ChatMessage({
         })
       ),
 
-      /* Message text */
+      /* Message text (wrapped in #message-container to match real YouTube DOM) */
       createElement(
         'span',
         {
-          id: 'message',
-          dir: 'auto',
+          id: 'message-container',
           className: 'style-scope yt-live-chat-text-message-renderer',
-          key: 'message',
+          key: 'msg-container',
         },
-        message
+        createElement(
+          'span',
+          {
+            id: 'message',
+            dir: 'auto',
+            className: 'style-scope yt-live-chat-text-message-renderer',
+          },
+          message
+        )
       )
     )
   )
