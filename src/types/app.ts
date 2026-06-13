@@ -50,8 +50,11 @@ export interface ChatSettings {
 
   /* Spacing */
   messagePadding: number
+  messageInnerPadding: number
   messageBorderRadius: number
   avatarSize: number
+  avatarMarginTop: number
+  messageMarginBottom: number
 
   /* Effects */
   messageOpacity: number

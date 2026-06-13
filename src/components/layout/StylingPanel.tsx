@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, useRef, useEffect } from 'react'
+import { createContext, useContext, useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import { useChatSettings, settingsToCSS, PRESETS } from '../../hooks/useChatSettings'
 import type { ChatSettings } from '../../types/app'
 import { loadWebFont } from '../../utils/fonts'
@@ -132,18 +132,35 @@ StylingPanel.Section = function StylingPanelSection({
   icon,
   title,
   children,
+  collapsible = false,
+  defaultOpen = true,
 }: {
   icon: string
   title: string
   children: React.ReactNode
+  collapsible?: boolean
+  defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
     <div className="bg-surface-container-low rounded-xl px-4 py-4 mb-3">
-      <div className="flex items-center gap-2 mb-4">
+      <div
+        className={`flex items-center gap-2 ${collapsible ? 'cursor-pointer select-none' : ''} ${open ? 'mb-4' : ''}`}
+        onClick={() => collapsible && setOpen((v) => !v)}
+      >
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
-        <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
+        <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
+        {collapsible && (
+          <span
+            className="material-symbols-outlined text-on-surface-variant text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
+            expand_more
+          </span>
+        )}
       </div>
-      <div className="space-y-3">{children}</div>
+      {open && <div className="space-y-3">{children}</div>}
     </div>
   )
 }
@@ -435,7 +452,7 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
         return (
           <button
             key={preset.name}
-            onClick={() => updateSettings(preset.settings)}
+            onClick={() => updateSettings({ ...preset.settings, messageInnerPadding: 0 })}
             className={`text-left p-2.5 rounded-md border transition-colors duration-150 ${
               isActive
                 ? 'border-primary bg-primary/8'
@@ -467,18 +484,35 @@ StylingPanel.HeroSection = function StylingPanelHeroSection({
   icon,
   title,
   children,
+  collapsible = false,
+  defaultOpen = true,
 }: {
   icon: string
   title: string
   children: React.ReactNode
+  collapsible?: boolean
+  defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
     <div className="bg-primary/[0.04] rounded-xl px-4 py-4 mb-3 border border-primary/10">
-      <div className="flex items-center gap-2 mb-4">
+      <div
+        className={`flex items-center gap-2 ${collapsible ? 'cursor-pointer select-none' : ''} ${open ? 'mb-4' : ''}`}
+        onClick={() => collapsible && setOpen((v) => !v)}
+      >
         <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
-        <h3 className="text-label-md font-semibold text-on-surface">{title}</h3>
+        <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
+        {collapsible && (
+          <span
+            className="material-symbols-outlined text-primary text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
+            expand_more
+          </span>
+        )}
       </div>
-      <div>{children}</div>
+      {open && <div>{children}</div>}
     </div>
   )
 }

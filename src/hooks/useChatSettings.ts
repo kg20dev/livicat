@@ -38,8 +38,11 @@ export const DEFAULT_SETTINGS: ChatSettings = {
 
   /* Spacing */
   messagePadding: 8,
+  messageInnerPadding: 0,
   messageBorderRadius: 6,
   avatarSize: 24,
+  avatarMarginTop: 0,
+  messageMarginBottom: 0,
 
   /* Effects */
   messageOpacity: 100,
@@ -105,6 +108,7 @@ export const PRESETS: Preset[] = [
       messagePadding: 6,
       avatarSize: 20,
       messageSpacing: 'compact',
+      messageMarginBottom: 2,
       scrollButtonBackground: '#2a2a2a',
       scrollButtonBorderRadius: 4,
     },
@@ -120,7 +124,9 @@ export const PRESETS: Preset[] = [
       timestampFontSize: 14,
       messagePadding: 12,
       avatarSize: 32,
+      avatarMarginTop: 6,
       messageSpacing: 'comfortable',
+      messageMarginBottom: 12,
       animationSpeed: 'slow',
       scrollButtonBackground: '#444444',
       scrollButtonBorderRadius: 24,
@@ -137,6 +143,7 @@ export const PRESETS: Preset[] = [
       containerOpacity: 80,
       messageOpacity: 90,
       messageFontSize: 16,
+      messageMarginBottom: 4,
       showGlow: true,
       scrollButtonBackground: 'rgba(0, 0, 0, 0.5)',
       scrollButtonColor: '#ffffff',
@@ -155,8 +162,10 @@ export const PRESETS: Preset[] = [
       timestampColor: '#666666',
       accentColor: '#ff00ff',
       messageBorderRadius: 12,
+      avatarMarginTop: 4,
       showGlow: true,
       messageOpacity: 95,
+      messageMarginBottom: 8,
       scrollbarColor: '#ff00ff',
       scrollButtonBackground: '#ff00ff',
       scrollButtonColor: '#000000',
@@ -262,6 +271,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
       opacity: settings.messageOpacity ? settings.messageOpacity / 100 : undefined,
       margin: spacingMap[settings.messageSpacing] || undefined,
+      marginBottom: settings.messageMarginBottom ? `${settings.messageMarginBottom}px` : undefined,
     },
     username: {
       color: settings.usernameColor || undefined,
@@ -271,12 +281,14 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
     messageText: {
       color: settings.messageColor || undefined,
       fontSize: settings.messageFontSize ? `${settings.messageFontSize}px` : undefined,
+      padding: settings.messageInnerPadding ? `${settings.messageInnerPadding}px` : undefined,
     },
     avatar: {
       width: settings.avatarSize ? `${settings.avatarSize}px` : undefined,
       height: settings.avatarSize ? `${settings.avatarSize}px` : undefined,
       borderRadius: settings.avatarSize ? '50%' : undefined,
       display: settings.showAvatars ? undefined : 'none',
+      marginTop: settings.avatarMarginTop ? `${settings.avatarMarginTop}px` : undefined,
     },
     timestamp: {
       color: settings.timestampColor || undefined,
@@ -362,7 +374,7 @@ export function useChatSettings() {
     const preset = PRESETS.find((p) => p.name === presetName)
     if (preset) {
       setSettings((prev) => {
-        const newSettings = { ...prev, ...preset.settings }
+        const newSettings = { ...prev, ...preset.settings, messageInnerPadding: 0 }
         saveSettings(newSettings)
         return newSettings
       })

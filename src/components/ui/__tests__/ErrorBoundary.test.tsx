@@ -19,8 +19,6 @@ describe('ErrorBoundary', () => {
   })
 
   it('catches errors and shows default fallback with retry button', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
     render(
       <ErrorBoundary>
         <BuggyComponent shouldThrow={true} />
@@ -30,13 +28,9 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Something went wrong')).toBeDefined()
     expect(screen.getByText('Test error')).toBeDefined()
     expect(screen.getByRole('button', { name: /try again/i })).toBeDefined()
-
-    spy.mockRestore()
   })
 
   it('shows custom fallback when provided', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
     render(
       <ErrorBoundary fallback={<div>Custom error UI</div>}>
         <BuggyComponent shouldThrow={true} />
@@ -44,12 +38,9 @@ describe('ErrorBoundary', () => {
     )
 
     expect(screen.getByText('Custom error UI')).toBeDefined()
-
-    spy.mockRestore()
   })
 
   it('calls onError when catching an error', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const onError = vi.fn()
 
     render(
@@ -59,7 +50,5 @@ describe('ErrorBoundary', () => {
     )
 
     expect(onError).toHaveBeenCalledTimes(1)
-
-    spy.mockRestore()
   })
 })
