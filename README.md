@@ -71,6 +71,9 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 **Developers:** `git clone && npm install` → [docs/README_DEVELOPER.md](docs/README_DEVELOPER.md)
 
+> **⚠️ Windows + OBS Live Preview (Window Capture):**  
+> In OBS, open the Window Capture source properties and set **Capture Method** to **"Windows 10 (1903 and up)"** — do not leave it on "Automatic". The preview window won't update without this setting.
+
 ---
 
 ## 📊 Stats
