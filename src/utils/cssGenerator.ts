@@ -102,6 +102,23 @@ export interface LayoutSettings {
   backgroundStyle?: BackgroundStyle
 }
 
+export interface RoleColorSet {
+  background?: string
+  textColor?: string
+  usernameColor?: string
+}
+
+export interface RoleColors {
+  owner?: RoleColorSet
+  moderator?: RoleColorSet
+  member?: RoleColorSet
+}
+
+export interface BubbleTailSettings {
+  offset?: number
+  color?: string
+}
+
 export interface ChatCSSSettings {
   fontUrl?: string
   container?: ContainerSettings
@@ -118,6 +135,8 @@ export interface ChatCSSSettings {
   general?: GeneralSettings
   animation?: AnimationSettings
   layout?: LayoutSettings
+  roleColors?: RoleColors
+  bubbleTail?: BubbleTailSettings
 }
 
 /* ─── CSS Variable Helpers ─────────────────────────────────────── */
@@ -223,6 +242,43 @@ function buildCSSVariables(settings: ChatCSSSettings): string {
   }
   if (settings.scrollbar?.thumbBorderRadius) {
     vars.push(`  --chat-scrollbar-thumb-radius: ${settings.scrollbar.thumbBorderRadius};`)
+  }
+
+  if (settings.roleColors?.owner?.background) {
+    vars.push(`  --chat-owner-bg: ${settings.roleColors.owner.background};`)
+  }
+  if (settings.roleColors?.owner?.textColor) {
+    vars.push(`  --chat-owner-text: ${settings.roleColors.owner.textColor};`)
+  }
+  if (settings.roleColors?.owner?.usernameColor) {
+    vars.push(`  --chat-owner-username: ${settings.roleColors.owner.usernameColor};`)
+  }
+
+  if (settings.roleColors?.moderator?.background) {
+    vars.push(`  --chat-mod-bg: ${settings.roleColors.moderator.background};`)
+  }
+  if (settings.roleColors?.moderator?.textColor) {
+    vars.push(`  --chat-mod-text: ${settings.roleColors.moderator.textColor};`)
+  }
+  if (settings.roleColors?.moderator?.usernameColor) {
+    vars.push(`  --chat-mod-username: ${settings.roleColors.moderator.usernameColor};`)
+  }
+
+  if (settings.roleColors?.member?.background) {
+    vars.push(`  --chat-member-bg: ${settings.roleColors.member.background};`)
+  }
+  if (settings.roleColors?.member?.textColor) {
+    vars.push(`  --chat-member-text: ${settings.roleColors.member.textColor};`)
+  }
+  if (settings.roleColors?.member?.usernameColor) {
+    vars.push(`  --chat-member-username: ${settings.roleColors.member.usernameColor};`)
+  }
+
+  if (settings.bubbleTail?.offset !== undefined) {
+    vars.push(`  --chat-bubble-tail-offset: ${settings.bubbleTail.offset}px;`)
+  }
+  if (settings.bubbleTail?.color) {
+    vars.push(`  --chat-bubble-tail-color: ${settings.bubbleTail.color};`)
   }
 
   if (vars.length === 1) return '' // only the comment, no vars
