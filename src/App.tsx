@@ -4,6 +4,7 @@ import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
+import WorkspaceX from './components/layout/WorkspaceX'
 import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
@@ -288,6 +289,8 @@ export default function App() {
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />
+          ) : activeNav === 'workspace-x' ? (
+            <WorkspaceX />
           ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}
