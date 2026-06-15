@@ -183,7 +183,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
 .livicat-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 56px 8px 8px;
   scrollbar-width: thin;
   scrollbar-color: ${settings.scrollbarColor} transparent;
 }
