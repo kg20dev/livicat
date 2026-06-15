@@ -441,6 +441,24 @@ StylingPanel.NumberField = function StylingPanelNumberField({
 StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
   const { settings, updateSettings } = useStylingPanelContext()
 
+  // WorkspaceX-specific IM settings that should never be affected by presets
+  const IM_SETTINGS_TO_PRESERVE = [
+    'bubbleBorderWidth',
+    'bubbleTailOffset',
+    'bubbleMaxWidth',
+    'bubblePadding',
+    'chromaKey',
+    'ownerBg',
+    'ownerText',
+    'ownerUsername',
+    'modBg',
+    'modText',
+    'modUsername',
+    'memberBg',
+    'memberText',
+    'memberUsername',
+  ] as const
+
   return (
     <div className="grid grid-cols-2 gap-2">
       {PRESETS.map((preset) => {
@@ -452,7 +470,14 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
         return (
           <button
             key={preset.name}
-            onClick={() => updateSettings({ ...preset.settings, messageInnerPadding: 0 })}
+            onClick={() => {
+              // Preserve IM-specific settings when applying presets
+              const preservedSettings = IM_SETTINGS_TO_PRESERVE.reduce(
+                (acc, key) => ({ ...acc, [key]: settings[key as keyof ChatSettings] }),
+                {}
+              )
+              updateSettings({ ...preset.settings, ...preservedSettings, messageInnerPadding: 0 })
+            }}
             className={`text-left p-2.5 rounded-md border transition-colors duration-150 ${
               isActive
                 ? 'border-primary bg-primary/8'

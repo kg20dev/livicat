@@ -290,7 +290,7 @@ export default function App() {
           {activeNav === 'settings' ? (
             <Settings />
           ) : activeNav === 'workspace-x' ? (
-            <WorkspaceX />
+            <WorkspaceX key="workspace-x" />
           ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}

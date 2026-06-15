@@ -90,6 +90,16 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   memberUsername: '#ce93d8',
 }
 
+/* ─── Reset to Factory Defaults ──────────────────────────────────── */
+
+export function clearStoredSettings(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Storage unavailable
+  }
+}
+
 /* ─── Presets ───────────────────────────────────────────────────── */
 
 export const PRESETS: Preset[] = [
@@ -469,5 +479,6 @@ export function useChatSettings() {
     importSettings,
     savedIndicator,
     presets: PRESETS,
+    clearSettings: clearStoredSettings,
   }
 }

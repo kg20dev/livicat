@@ -51,7 +51,10 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
   const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring
 
   // ── Animation Keyframes ─────────────────────────────────
-  // Renderer pop-in — the whole message group slides and bounces in
+  // Renderer pop-in — the whole message group slides and bounces in.
+  // The renderer handles the overall container entrance (scale + translate + fade).
+  // Child elements (chip, avatar, bubble) animate their own transforms independently
+  // so there's no compounding with the renderer's transform.
   parts.push(`@keyframes livicat-message-pop-in {
   0% {
     opacity: 0;
@@ -66,6 +69,21 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}`)
+
+  // Message bubble pop-in — subtle scale-up with the same spring easing
+  parts.push(`@keyframes livicat-bubble-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }`)
 
@@ -181,14 +199,15 @@ yt-live-chat-author-chip * {
   padding: 0 !important;
 }`)
 
-  // Name chip — rotated badge overlapping the message bubble, with own entrance animation
+  // Name chip — rotated badge overlapping the message bubble, with own entrance animation.
+  // Targeting #author-name directly for both visual styling AND animation.
+  // This matches the original cssGenerator.ts approach and works with YouTube's actual DOM.
   const chipAnimCSS =
     animSpeed === 'none'
       ? ''
       : `  animation: livicat-chip-tilt-in ${chipDuration} ${chipEasing} backwards !important;
   animation-delay: ${chipDelay} !important;`
-  parts.push(`yt-live-chat-text-message-renderer #author-name-chip,
-yt-live-chat-text-message-renderer #author-name {
+  parts.push(`yt-live-chat-text-message-renderer #author-name {
   position: relative !important;
   z-index: 2 !important;
   display: inline-block !important;
@@ -206,7 +225,11 @@ yt-live-chat-text-message-renderer #author-name {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 ${chipAnimCSS}}`)
 
-  // Message bubble — inline-block with border, tail-ready positioning
+  // Message bubble — inline-block with border, tail-ready positioning, own pop-in
+  const bubbleAnimCSS =
+    animSpeed === 'none'
+      ? ''
+      : `  animation: livicat-bubble-pop-in ${animDuration} ${animEasing} both !important;`
   parts.push(`yt-live-chat-text-message-renderer #message {
   display: inline-block !important;
   background: ${bubbleBg} !important;
@@ -219,7 +242,7 @@ ${chipAnimCSS}}`)
   position: relative !important;
   overflow: visible !important;
   max-width: 100% !important;
-}`)
+${bubbleAnimCSS}}`)
 
   // Bubble tail — rotated square ::before pseudo-element
   parts.push(`yt-live-chat-text-message-renderer #message::before {
@@ -331,13 +354,13 @@ function buildIMRoleColorRules(settings: ChatCSSSettings): string {
       parts.push(`${selector} #message::before {\n${tailRules.join('\n')}\n}`)
     }
 
-    // #author-name color + background
+    // #author-name background + text color + weight override
     const nameRules: string[] = []
+    if (rc.background) nameRules.push(`  background: var(${role.bgVar}) !important;`)
     if (rc.usernameColor) {
       nameRules.push(`  color: var(${role.usernameVar}) !important;`)
       nameRules.push(`  font-weight: ${role.weight} !important;`)
     }
-    if (rc.background) nameRules.push(`  background: var(${role.bgVar}) !important;`)
     if (nameRules.length > 0) {
       parts.push(`${selector} #author-name {\n${nameRules.join('\n')}\n}`)
     }

@@ -8,7 +8,11 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import type { Message } from '../chat/ChatPreview'
-import { useChatSettings, settingsToCSSSettings } from '../../hooks/useChatSettings'
+import {
+  useChatSettings,
+  settingsToCSSSettings,
+  clearStoredSettings,
+} from '../../hooks/useChatSettings'
 import { generateChatCSSX } from '../../utils/cssGenerator-x'
 import { useElectronPreview } from '../../hooks/useElectronPreview'
 import { trackEventAsync } from '../../utils/analytics'
@@ -342,7 +346,11 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   const chipAnimation =
     settings.animationSpeed === 'none'
       ? 'none'
-      : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
+      : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards`
+  const bubbleAnimation =
+    settings.animationSpeed === 'none'
+      ? 'none'
+      : `livicat-bubble-pop-in ${animDuration} ${animEasing} both`
 
   const imCSS = `
 @keyframes livicat-message-pop-in {
@@ -369,6 +377,20 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   }
   70% {
     transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes livicat-bubble-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.03);
   }
   100% {
     opacity: 1;
@@ -468,6 +490,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   line-height: 1.4;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+  animation: ${bubbleAnimation};
 }
 .livicat-bubble::before {
   content: "";
@@ -763,6 +786,7 @@ export default function WorkspaceX() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [previewOpen, setPreviewOpen] = useState(false)
   const previewStartRef = useRef<number | null>(null)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // Auto-load web font
   useEffect(() => {
@@ -888,627 +912,691 @@ export default function WorkspaceX() {
 
   const s = settings // shorthand
 
+  const handleReset = useCallback(() => {
+    clearStoredSettings()
+    setShowResetConfirm(false)
+    window.location.reload()
+  }, [])
+
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      {/* ─── Left Panel: Customizer ─────────────────────────── */}
-      <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-outline-variant/50 flex items-center gap-3">
-          <div>
-            <h2 className="text-title-lg font-bold text-on-surface">Style Panel</h2>
-            <p className="text-label-md text-on-surface-variant">Style Customizer</p>
+    <>
+      <div className="flex h-full w-full overflow-hidden">
+        {/* ─── Left Panel: Customizer ─────────────────────────── */}
+        <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-outline-variant/50 flex items-center gap-3">
+            <div>
+              <h2 className="text-title-lg font-bold text-on-surface">Style Panel</h2>
+              <p className="text-label-md text-on-surface-variant">Style Customizer</p>
+            </div>
           </div>
-        </div>
 
-        {/* Scrollable sections */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-          {/* ── Text Message ──────────────────────────────── */}
-          <CollapsibleSection icon="chat_bubble" title="Text Message">
-            {/* Background */}
-            <div>
-              <SubHeading label="Background" />
-              <ColorRow
-                label="Default Bubble Background"
-                value={s.messageBackgroundColor}
-                onChange={(v) => update('messageBackgroundColor', v)}
-              />
-            </div>
-
-            {/* Author Name */}
-            <div>
-              <SubHeading label="Author Name" />
-              <ColorRow
-                label="Default Username Color"
-                value={s.usernameColor}
-                onChange={(v) => update('usernameColor', v)}
-              />
-              <div className="mt-2">
-                <ToggleRow
-                  label="Bold"
-                  value={s.usernameFontWeight === '700'}
-                  onChange={(v) => update('usernameFontWeight', v ? '700' : '400')}
+          {/* Scrollable sections */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
+            {/* ── Text Message ──────────────────────────────── */}
+            <CollapsibleSection icon="chat_bubble" title="Text Message">
+              {/* Background */}
+              <div>
+                <SubHeading label="Background" />
+                <ColorRow
+                  label="Default Bubble Background"
+                  value={s.messageBackgroundColor}
+                  onChange={(v) => update('messageBackgroundColor', v)}
                 />
               </div>
-            </div>
 
-            {/* Content */}
-            <div>
-              <SubHeading label="Content" />
-              <ColorRow
-                label="Default Text Color"
-                value={s.messageColor}
-                onChange={(v) => update('messageColor', v)}
-              />
-            </div>
+              {/* Author Name */}
+              <div>
+                <SubHeading label="Author Name" />
+                <ColorRow
+                  label="Default Username Color"
+                  value={s.usernameColor}
+                  onChange={(v) => update('usernameColor', v)}
+                />
+                <div className="mt-2">
+                  <ToggleRow
+                    label="Bold"
+                    value={s.usernameFontWeight === '700'}
+                    onChange={(v) => update('usernameFontWeight', v ? '700' : '400')}
+                  />
+                </div>
+              </div>
 
-            {/* Typography */}
-            <div>
-              <SubHeading label="Typography" />
-              <SliderRow
-                label="Username Size"
-                value={s.usernameFontSize}
-                min={10}
-                max={40}
-                unit="px"
-                onChange={(v) => update('usernameFontSize', v)}
-              />
-              <div className="mt-3">
+              {/* Content */}
+              <div>
+                <SubHeading label="Content" />
+                <ColorRow
+                  label="Default Text Color"
+                  value={s.messageColor}
+                  onChange={(v) => update('messageColor', v)}
+                />
+              </div>
+
+              {/* Typography */}
+              <div>
+                <SubHeading label="Typography" />
                 <SliderRow
-                  label="Content Font Size"
-                  value={s.messageFontSize}
+                  label="Username Size"
+                  value={s.usernameFontSize}
                   min={10}
-                  max={48}
+                  max={40}
                   unit="px"
-                  onChange={(v) => update('messageFontSize', v)}
+                  onChange={(v) => update('usernameFontSize', v)}
                 />
+                <div className="mt-3">
+                  <SliderRow
+                    label="Content Font Size"
+                    value={s.messageFontSize}
+                    min={10}
+                    max={48}
+                    unit="px"
+                    onChange={(v) => update('messageFontSize', v)}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Bubble */}
-            <div>
-              <SubHeading label="Bubble" />
-              <ColorRow
-                label="Border Color"
-                value={s.scrollbarColor}
-                onChange={(v) => update('scrollbarColor', v)}
-              />
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <SliderRow
-                  label="Border Width"
-                  value={s.bubbleBorderWidth}
-                  min={0}
-                  max={10}
-                  unit="px"
-                  onChange={(v) => update('bubbleBorderWidth', v)}
+              {/* Bubble */}
+              <div>
+                <SubHeading label="Bubble" />
+                <ColorRow
+                  label="Border Color"
+                  value={s.scrollbarColor}
+                  onChange={(v) => update('scrollbarColor', v)}
                 />
-                <SliderRow
-                  label="Corner Radius"
-                  value={s.messageBorderRadius}
-                  min={0}
-                  max={30}
-                  unit="px"
-                  onChange={(v) => update('messageBorderRadius', v)}
-                />
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <SliderRow
+                    label="Border Width"
+                    value={s.bubbleBorderWidth}
+                    min={0}
+                    max={10}
+                    unit="px"
+                    onChange={(v) => update('bubbleBorderWidth', v)}
+                  />
+                  <SliderRow
+                    label="Corner Radius"
+                    value={s.messageBorderRadius}
+                    min={0}
+                    max={30}
+                    unit="px"
+                    onChange={(v) => update('messageBorderRadius', v)}
+                  />
+                </div>
+                <div className="mt-3">
+                  <SliderRow
+                    label="Padding"
+                    value={s.bubblePadding}
+                    min={4}
+                    max={30}
+                    unit="px"
+                    onChange={(v) => update('bubblePadding', v)}
+                  />
+                </div>
+                <div className="mt-3">
+                  <SliderRow
+                    label="Tail Offset"
+                    value={s.bubbleTailOffset}
+                    min={-20}
+                    max={10}
+                    unit="px"
+                    onChange={(v) => update('bubbleTailOffset', v)}
+                  />
+                </div>
+                <div className="mt-3">
+                  <SliderRow
+                    label="Max Width"
+                    value={s.bubbleMaxWidth}
+                    min={200}
+                    max={800}
+                    unit="px"
+                    onChange={(v) => update('bubbleMaxWidth', v)}
+                  />
+                </div>
               </div>
-              <div className="mt-3">
-                <SliderRow
-                  label="Padding"
-                  value={s.bubblePadding}
-                  min={4}
-                  max={30}
-                  unit="px"
-                  onChange={(v) => update('bubblePadding', v)}
-                />
-              </div>
-              <div className="mt-3">
-                <SliderRow
-                  label="Tail Offset"
-                  value={s.bubbleTailOffset}
-                  min={-20}
-                  max={10}
-                  unit="px"
-                  onChange={(v) => update('bubbleTailOffset', v)}
-                />
-              </div>
-              <div className="mt-3">
-                <SliderRow
-                  label="Max Width"
-                  value={s.bubbleMaxWidth}
-                  min={200}
-                  max={800}
-                  unit="px"
-                  onChange={(v) => update('bubbleMaxWidth', v)}
-                />
-              </div>
-            </div>
-          </CollapsibleSection>
+            </CollapsibleSection>
 
-          {/* ── Role Colors ────────────────────────────────── */}
-          <CollapsibleSection icon="palette" title="Role Colors" defaultOpen={false}>
-            <div>
-              <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                Owner
-              </div>
-              <ColorRow
-                label="Bubble Background"
-                value={s.ownerBg}
-                onChange={(v) => update('ownerBg', v)}
-              />
-              <div className="mt-2">
+            {/* ── Role Colors ────────────────────────────────── */}
+            <CollapsibleSection icon="palette" title="Role Colors" defaultOpen={false}>
+              <div>
+                <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                  Owner
+                </div>
                 <ColorRow
-                  label="Text Color"
-                  value={s.ownerText}
-                  onChange={(v) => update('ownerText', v)}
+                  label="Bubble Background"
+                  value={s.ownerBg}
+                  onChange={(v) => update('ownerBg', v)}
                 />
+                <div className="mt-2">
+                  <ColorRow
+                    label="Text Color"
+                    value={s.ownerText}
+                    onChange={(v) => update('ownerText', v)}
+                  />
+                </div>
+                <div className="mt-2">
+                  <ColorRow
+                    label="Username Color"
+                    value={s.ownerUsername}
+                    onChange={(v) => update('ownerUsername', v)}
+                  />
+                </div>
               </div>
-              <div className="mt-2">
+              <div className="border-t border-outline-variant/20 pt-4 mt-4">
+                <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  Moderator
+                </div>
                 <ColorRow
-                  label="Username Color"
-                  value={s.ownerUsername}
-                  onChange={(v) => update('ownerUsername', v)}
+                  label="Bubble Background"
+                  value={s.modBg}
+                  onChange={(v) => update('modBg', v)}
                 />
+                <div className="mt-2">
+                  <ColorRow
+                    label="Text Color"
+                    value={s.modText}
+                    onChange={(v) => update('modText', v)}
+                  />
+                </div>
+                <div className="mt-2">
+                  <ColorRow
+                    label="Username Color"
+                    value={s.modUsername}
+                    onChange={(v) => update('modUsername', v)}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="border-t border-outline-variant/20 pt-4 mt-4">
-              <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                Moderator
-              </div>
-              <ColorRow
-                label="Bubble Background"
-                value={s.modBg}
-                onChange={(v) => update('modBg', v)}
-              />
-              <div className="mt-2">
+              <div className="border-t border-outline-variant/20 pt-4 mt-4">
+                <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-400" />
+                  Member
+                </div>
                 <ColorRow
-                  label="Text Color"
-                  value={s.modText}
-                  onChange={(v) => update('modText', v)}
+                  label="Bubble Background"
+                  value={s.memberBg}
+                  onChange={(v) => update('memberBg', v)}
                 />
+                <div className="mt-2">
+                  <ColorRow
+                    label="Text Color"
+                    value={s.memberText}
+                    onChange={(v) => update('memberText', v)}
+                  />
+                </div>
+                <div className="mt-2">
+                  <ColorRow
+                    label="Username Color"
+                    value={s.memberUsername}
+                    onChange={(v) => update('memberUsername', v)}
+                  />
+                </div>
               </div>
-              <div className="mt-2">
-                <ColorRow
-                  label="Username Color"
-                  value={s.modUsername}
-                  onChange={(v) => update('modUsername', v)}
-                />
-              </div>
-            </div>
-            <div className="border-t border-outline-variant/20 pt-4 mt-4">
-              <div className="text-[13px] font-semibold text-on-surface mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-400" />
-                Member
-              </div>
-              <ColorRow
-                label="Bubble Background"
-                value={s.memberBg}
-                onChange={(v) => update('memberBg', v)}
-              />
-              <div className="mt-2">
-                <ColorRow
-                  label="Text Color"
-                  value={s.memberText}
-                  onChange={(v) => update('memberText', v)}
-                />
-              </div>
-              <div className="mt-2">
-                <ColorRow
-                  label="Username Color"
-                  value={s.memberUsername}
-                  onChange={(v) => update('memberUsername', v)}
-                />
-              </div>
-            </div>
-          </CollapsibleSection>
+            </CollapsibleSection>
 
-          {/* ── Common Settings ────────────────────────────── */}
-          <CollapsibleSection icon="tune" title="Common Settings" defaultOpen={false}>
-            <SliderRow
-              label="Container Opacity"
-              value={s.containerOpacity}
-              min={0}
-              max={100}
-              unit="%"
-              onChange={(v) => update('containerOpacity', v)}
-            />
-            <SliderRow
-              label="Message Opacity"
-              value={s.messageOpacity}
-              min={0}
-              max={100}
-              unit="%"
-              onChange={(v) => update('messageOpacity', v)}
-            />
-            <SelectRow
-              label="Message Spacing"
-              value={s.messageSpacing}
-              options={[
-                { value: 'compact', label: 'Compact' },
-                { value: 'normal', label: 'Normal' },
-                { value: 'comfortable', label: 'Comfortable' },
-              ]}
-              onChange={(v) => update('messageSpacing', v as ChatSettings['messageSpacing'])}
-            />
-            <SelectRow
-              label="Font Family"
-              value={s.fontFamily}
-              options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
-              onChange={(v) => update('fontFamily', v)}
-            />
-            <div className="grid grid-cols-2 gap-3">
+            {/* ── Common Settings ────────────────────────────── */}
+            <CollapsibleSection icon="tune" title="Common Settings" defaultOpen={false}>
               <SliderRow
-                label="Max Messages"
-                value={s.maxMessages}
-                min={10}
-                max={500}
-                onChange={(v) => update('maxMessages', v)}
+                label="Container Opacity"
+                value={s.containerOpacity}
+                min={0}
+                max={100}
+                unit="%"
+                onChange={(v) => update('containerOpacity', v)}
               />
-              <ToggleRow
-                label="Auto Scroll"
-                value={s.autoScroll}
-                onChange={(v) => update('autoScroll', v)}
+              <SliderRow
+                label="Message Opacity"
+                value={s.messageOpacity}
+                min={0}
+                max={100}
+                unit="%"
+                onChange={(v) => update('messageOpacity', v)}
               />
-            </div>
-            <SelectRow
-              label="Animation Speed"
-              value={s.animationSpeed}
-              options={[
-                { value: 'none', label: 'None' },
-                { value: 'slow', label: 'Slow' },
-                { value: 'normal', label: 'Normal' },
-              ]}
-              onChange={(v) => update('animationSpeed', v as ChatSettings['animationSpeed'])}
-            />
-          </CollapsibleSection>
-
-          {/* ── Avatar ──────────────────────────────────────── */}
-          <CollapsibleSection icon="face" title="Avatar" defaultOpen={false}>
-            <SliderRow
-              label="Size"
-              value={s.avatarSize}
-              min={16}
-              max={80}
-              unit="px"
-              onChange={(v) => update('avatarSize', v)}
-            />
-            <SliderRow
-              label="Vertical Offset"
-              value={s.avatarMarginTop}
-              min={0}
-              max={60}
-              unit="px"
-              onChange={(v) => update('avatarMarginTop', v)}
-            />
-          </CollapsibleSection>
-
-          {/* ── Message Visibility ─────────────────────────── */}
-          <CollapsibleSection icon="visibility" title="Message Visibility" defaultOpen={false}>
-            <ToggleRow label="Text Messages" value={true} onChange={() => {}} />
-            <ToggleRow
-              label="Super Chat / Paid"
-              value={s.showEngagementMessages}
-              onChange={(v) => update('showEngagementMessages', v)}
-            />
-            <ToggleRow
-              label="Membership Messages"
-              value={s.showChatDisclaimer}
-              onChange={(v) => update('showChatDisclaimer', v)}
-            />
-            <div className="border-t border-outline-variant/20 pt-3 mt-3">
-              <ToggleRow
-                label="Show Avatars"
-                value={s.showAvatars}
-                onChange={(v) => update('showAvatars', v)}
+              <SelectRow
+                label="Message Spacing"
+                value={s.messageSpacing}
+                options={[
+                  { value: 'compact', label: 'Compact' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'comfortable', label: 'Comfortable' },
+                ]}
+                onChange={(v) => update('messageSpacing', v as ChatSettings['messageSpacing'])}
               />
-              <div className="mt-2">
+              <SelectRow
+                label="Font Family"
+                value={s.fontFamily}
+                options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
+                onChange={(v) => update('fontFamily', v)}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <SliderRow
+                  label="Max Messages"
+                  value={s.maxMessages}
+                  min={10}
+                  max={500}
+                  onChange={(v) => update('maxMessages', v)}
+                />
                 <ToggleRow
-                  label="Show Timestamps"
-                  value={s.showTimestamps}
-                  onChange={(v) => update('showTimestamps', v)}
+                  label="Auto Scroll"
+                  value={s.autoScroll}
+                  onChange={(v) => update('autoScroll', v)}
                 />
               </div>
-              <div className="mt-2">
+              <SelectRow
+                label="Animation Speed"
+                value={s.animationSpeed}
+                options={[
+                  { value: 'none', label: 'None' },
+                  { value: 'slow', label: 'Slow' },
+                  { value: 'normal', label: 'Normal' },
+                ]}
+                onChange={(v) => update('animationSpeed', v as ChatSettings['animationSpeed'])}
+              />
+            </CollapsibleSection>
+
+            {/* ── Avatar ──────────────────────────────────────── */}
+            <CollapsibleSection icon="face" title="Avatar" defaultOpen={false}>
+              <SliderRow
+                label="Size"
+                value={s.avatarSize}
+                min={16}
+                max={80}
+                unit="px"
+                onChange={(v) => update('avatarSize', v)}
+              />
+              <SliderRow
+                label="Vertical Offset"
+                value={s.avatarMarginTop}
+                min={0}
+                max={60}
+                unit="px"
+                onChange={(v) => update('avatarMarginTop', v)}
+              />
+            </CollapsibleSection>
+
+            {/* ── Message Visibility ─────────────────────────── */}
+            <CollapsibleSection icon="visibility" title="Message Visibility" defaultOpen={false}>
+              <ToggleRow label="Text Messages" value={true} onChange={() => {}} />
+              <ToggleRow
+                label="Super Chat / Paid"
+                value={s.showEngagementMessages}
+                onChange={(v) => update('showEngagementMessages', v)}
+              />
+              <ToggleRow
+                label="Membership Messages"
+                value={s.showChatDisclaimer}
+                onChange={(v) => update('showChatDisclaimer', v)}
+              />
+              <div className="border-t border-outline-variant/20 pt-3 mt-3">
                 <ToggleRow
-                  label="Show Header"
-                  value={s.showHeader}
-                  onChange={(v) => update('showHeader', v)}
+                  label="Show Avatars"
+                  value={s.showAvatars}
+                  onChange={(v) => update('showAvatars', v)}
                 />
+                <div className="mt-2">
+                  <ToggleRow
+                    label="Show Timestamps"
+                    value={s.showTimestamps}
+                    onChange={(v) => update('showTimestamps', v)}
+                  />
+                </div>
+                <div className="mt-2">
+                  <ToggleRow
+                    label="Show Header"
+                    value={s.showHeader}
+                    onChange={(v) => update('showHeader', v)}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* ── Danger Zone ─────────────────────────────────── */}
+            <CollapsibleSection icon="warning" title="Danger Zone" defaultOpen={false}>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-surface-container border border-red-500/20">
+                  <span className="material-symbols-outlined text-[18px] text-error shrink-0 mt-0.5">
+                    delete_forever
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-label-sm font-medium text-on-surface">Reset All Settings</p>
+                    <p className="text-[11px] text-on-surface-variant mt-1 leading-relaxed">
+                      This will clear all your saved settings and reset to defaults. This action
+                      cannot be undone.
+                    </p>
+                    <button
+                      onClick={() => setShowResetConfirm(true)}
+                      className="mt-2 px-3 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 transition-colors text-label-sm font-medium flex items-center gap-1.5 border border-error/20"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">delete</span>
+                      Reset All Settings
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CollapsibleSection>
+          </div>
+        </aside>
+
+        {/* ─── Right Panel: Preview ──────────────────────────── */}
+        <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0">
+          {/* Preview Toolbar */}
+          <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between">
+            {/* Left: Mode toggle */}
+            <div className="flex items-center gap-3">
+              <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
+                <button
+                  onClick={() => setPreviewMode('live')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
+                    previewMode === 'live'
+                      ? 'bg-primary text-on-primary shadow-sm'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">play_arrow</span>
+                  Live
+                </button>
+                <button
+                  onClick={() => setPreviewMode('gallery')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
+                    previewMode === 'gallery'
+                      ? 'bg-primary text-on-primary shadow-sm'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">grid_view</span>
+                  Gallery
+                </button>
+              </div>
+
+              {/* Chroma Key Toggle */}
+              <button
+                onClick={() => update('chromaKey', !s.chromaKey)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
+                  s.chromaKey
+                    ? 'bg-green-600/20 text-green-400 border border-green-600/30'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                }`}
+                title={
+                  s.chromaKey
+                    ? 'Chroma Key ON — OBS-ready green background'
+                    : 'Toggle Chroma Key for OBS'
+                }
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${s.chromaKey ? 'bg-green-400 animate-pulse' : 'bg-outline-variant'}`}
+                />
+                <span className="material-symbols-outlined text-[13px]">grid_on</span>
+                Chroma Key
+              </button>
+
+              {/* Mode indicator */}
+              {previewMode === 'live' && (
+                <span className="flex items-center gap-1.5 text-label-sm text-green-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  {paused ? 'Paused' : `${displayIndex}/${LIVE_MESSAGES.length}`}
+                </span>
+              )}
+              {previewMode === 'gallery' && (
+                <span className="text-label-sm text-on-surface-variant">
+                  {GALLERY_MESSAGES.length} states
+                </span>
+              )}
+            </div>
+
+            {/* Right: Controls */}
+            <div className="flex items-center gap-2">
+              {/* YouTube URL Input (only in Live mode) */}
+              {previewMode === 'live' && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    placeholder="YouTube URL or ID..."
+                    className={`w-48 bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
+                      urlError ? 'border-red-500/50' : 'border-outline-variant'
+                    }`}
+                  />
+                  <button
+                    onClick={handleYoutubePreview}
+                    disabled={!videoId}
+                    className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
+                      videoId
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
+                    }`}
+                    title={previewOpen ? 'Close Preview' : 'Open YouTube Preview'}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.5.5c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.5 9.5.5 9.5.5s7.6 0 9.5-.5c1-.3 1.7-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6.4 3.5-6.4 3.5z" />
+                    </svg>
+                    {previewOpen && (
+                      <span className="material-symbols-outlined text-[12px]">close</span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Playback Controls (only in Live mode) */}
+              {previewMode === 'live' && (
+                <>
+                  <div className="w-px h-4 bg-outline-variant/30" />
+                  <button
+                    onClick={() => {
+                      setDisplayIndex(0)
+                      setPaused(false)
+                    }}
+                    className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                    title="Restart"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                  </button>
+                  <button
+                    onClick={() => setPaused((v) => !v)}
+                    className={`p-1.5 rounded-md transition-colors ${
+                      paused
+                        ? 'text-primary bg-primary/10'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                    title={paused ? 'Resume' : 'Pause'}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {paused ? 'play_arrow' : 'pause'}
+                    </span>
+                  </button>
+                </>
+              )}
+
+              <div className="w-px h-4 bg-outline-variant/30" />
+              <button
+                onClick={() => setShowSettings((v) => !v)}
+                className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                title="Settings"
+              >
+                <span className="material-symbols-outlined text-[16px]">settings</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Settings panel (overlay) */}
+          {showSettings && (
+            <div className="absolute top-16 right-6 z-20 bg-surface-container border border-outline-variant rounded-xl p-4 shadow-2xl w-72">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-label-md font-semibold text-on-surface">Preview Settings</h3>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-on-surface-variant hover:text-on-surface"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+
+              {/* Message Speed */}
+              <div className="mb-4">
+                <label className="text-label-sm text-on-surface-variant block mb-1">
+                  {previewMode === 'live' ? 'Message Speed' : 'Switch to Live to adjust speed'}
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={400}
+                    max={3000}
+                    step={100}
+                    value={messageSpeed}
+                    onChange={(e) => setMessageSpeed(Number(e.target.value))}
+                    className={`flex-1 h-1 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary ${previewMode === 'gallery' ? 'opacity-40 pointer-events-none' : ''}`}
+                  />
+                  <span className="text-label-sm text-on-surface font-mono tabular-nums w-12 text-right">
+                    {(messageSpeed / 1000).toFixed(1)}s
+                  </span>
+                </div>
+              </div>
+
+              {/* Preview Size */}
+              <div>
+                <label className="text-label-sm text-on-surface-variant block mb-1">
+                  Preview Size
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <div className="flex-1">
+                    <span className="text-[10px] text-on-surface-variant block">Width</span>
+                    <input
+                      type="number"
+                      value={previewWidth}
+                      min={200}
+                      max={1200}
+                      step={10}
+                      onChange={(e) => setPreviewWidth(Number(e.target.value))}
+                      className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-1 px-2 text-label-sm text-on-surface outline-none tabular-nums"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-[10px] text-on-surface-variant block">Height</span>
+                    <input
+                      type="number"
+                      value={previewHeight}
+                      min={200}
+                      max={1200}
+                      step={10}
+                      onChange={(e) => setPreviewHeight(Number(e.target.value))}
+                      className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-1 px-2 text-label-sm text-on-surface outline-none tabular-nums"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  {SIZE_PRESETS.map((p) => (
+                    <button
+                      key={p.label}
+                      onClick={() => {
+                        setPreviewWidth(p.w)
+                        setPreviewHeight(p.h)
+                      }}
+                      className={`flex-1 py-1 rounded-md text-label-sm font-medium transition-colors ${
+                        previewWidth === p.w && previewHeight === p.h
+                          ? 'bg-primary text-on-primary'
+                          : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </CollapsibleSection>
-        </div>
-      </aside>
+          )}
 
-      {/* ─── Right Panel: Preview ──────────────────────────── */}
-      <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0">
-        {/* Preview Toolbar */}
-        <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between">
-          {/* Left: Mode toggle */}
-          <div className="flex items-center gap-3">
-            <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
-              <button
-                onClick={() => setPreviewMode('live')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
-                  previewMode === 'live'
-                    ? 'bg-primary text-on-primary shadow-sm'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[14px]">play_arrow</span>
-                Live
-              </button>
-              <button
-                onClick={() => setPreviewMode('gallery')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
-                  previewMode === 'gallery'
-                    ? 'bg-primary text-on-primary shadow-sm'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[14px]">grid_view</span>
-                Gallery
-              </button>
-            </div>
-
-            {/* Chroma Key Toggle */}
-            <button
-              onClick={() => update('chromaKey', !s.chromaKey)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
-                s.chromaKey
-                  ? 'bg-green-600/20 text-green-400 border border-green-600/30'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-              }`}
-              title={
-                s.chromaKey
-                  ? 'Chroma Key ON — OBS-ready green background'
-                  : 'Toggle Chroma Key for OBS'
-              }
+          {/* ─── Preview Content ────────────────────────────── */}
+          <div
+            className="flex-1 transition-all duration-200"
+            style={{ maxHeight: 'calc(100vh - 180px)' }}
+          >
+            <div
+              className="w-full h-full flex items-center justify-center p-6 pt-16"
+              style={{ maxHeight: '100%' }}
             >
-              <span
-                className={`w-2 h-2 rounded-full ${s.chromaKey ? 'bg-green-400 animate-pulse' : 'bg-outline-variant'}`}
-              />
-              <span className="material-symbols-outlined text-[13px]">grid_on</span>
-              Chroma Key
-            </button>
+              {previewMode === 'live' && displayIndex === 0 && !paused ? (
+                /* Empty state while waiting for first message */
+                <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8 mt-16">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                  <p className="text-body-md text-on-surface-variant text-center">
+                    Waiting for chat...
+                  </p>
+                  <p className="text-label-sm text-on-surface-variant/60 text-center mt-2">
+                    Messages will appear in ~{(messageSpeed / 1000).toFixed(1)}s
+                  </p>
+                </div>
+              ) : (
+                /* IM-style chat list (gallery or live) - full width, centered content */
+                <div
+                  className="rounded-xl shadow-2xl overflow-hidden"
+                  style={{
+                    width: '100%',
+                    height: `${previewHeight}px`,
+                    maxWidth: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: effectiveBg,
+                  }}
+                >
+                  <ImChatList
+                    messages={previewMode === 'gallery' ? GALLERY_MESSAGES : visibleMessages}
+                    settings={settings}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
-            {/* Mode indicator */}
-            {previewMode === 'live' && (
+          {/* Mode hint at bottom */}
+          <div className="absolute bottom-6 left-6 right-6 z-10 flex items-center justify-between">
+            <button className="flex items-center gap-1.5 text-label-sm text-on-surface-variant hover:text-on-surface transition-colors">
+              <span className="material-symbols-outlined text-[14px]">info</span>
+              How to Use
+            </button>
+            {previewMode === 'live' && displayIndex > 0 && (
+              <span className="text-label-sm text-on-surface-variant/60">
+                {displayIndex < LIVE_MESSAGES.length ? 'Streaming...' : '🔁 Looping'}
+              </span>
+            )}
+            {previewOpen && (
               <span className="flex items-center gap-1.5 text-label-sm text-green-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                {paused ? 'Paused' : `${displayIndex}/${LIVE_MESSAGES.length}`}
-              </span>
-            )}
-            {previewMode === 'gallery' && (
-              <span className="text-label-sm text-on-surface-variant">
-                {GALLERY_MESSAGES.length} states
+                Preview Window Open
               </span>
             )}
           </div>
+        </section>
+      </div>
 
-          {/* Right: Controls */}
-          <div className="flex items-center gap-2">
-            {/* YouTube URL Input (only in Live mode) */}
-            {previewMode === 'live' && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={youtubeUrl}
-                  onChange={(e) => setYoutubeUrl(e.target.value)}
-                  placeholder="YouTube URL or ID..."
-                  className={`w-48 bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
-                    urlError ? 'border-red-500/50' : 'border-outline-variant'
-                  }`}
-                />
-                <button
-                  onClick={handleYoutubePreview}
-                  disabled={!videoId}
-                  className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
-                    videoId
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
-                  }`}
-                  title={previewOpen ? 'Close Preview' : 'Open YouTube Preview'}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.5.5c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.5 9.5.5 9.5.5s7.6 0 9.5-.5c1-.3 1.7-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6.4 3.5-6.4 3.5z" />
-                  </svg>
-                  {previewOpen && (
-                    <span className="material-symbols-outlined text-[12px]">close</span>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* Playback Controls (only in Live mode) */}
-            {previewMode === 'live' && (
-              <>
-                <div className="w-px h-4 bg-outline-variant/30" />
-                <button
-                  onClick={() => {
-                    setDisplayIndex(0)
-                    setPaused(false)
-                  }}
-                  className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                  title="Restart"
-                >
-                  <span className="material-symbols-outlined text-[16px]">refresh</span>
-                </button>
-                <button
-                  onClick={() => setPaused((v) => !v)}
-                  className={`p-1.5 rounded-md transition-colors ${
-                    paused
-                      ? 'text-primary bg-primary/10'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-                  }`}
-                  title={paused ? 'Resume' : 'Pause'}
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {paused ? 'play_arrow' : 'pause'}
-                  </span>
-                </button>
-              </>
-            )}
-
-            <div className="w-px h-4 bg-outline-variant/30" />
-            <button
-              onClick={() => setShowSettings((v) => !v)}
-              className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-              title="Settings"
-            >
-              <span className="material-symbols-outlined text-[16px]">settings</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Settings panel (overlay) */}
-        {showSettings && (
-          <div className="absolute top-16 right-6 z-20 bg-surface-container border border-outline-variant rounded-xl p-4 shadow-2xl w-72">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-label-md font-semibold text-on-surface">Preview Settings</h3>
+      {/* ── Reset Confirmation Modal ─────────────────────────── */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-surface-container border border-outline-variant rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-symbols-outlined text-[24px] text-error">warning</span>
+              <h3 className="text-title-md font-bold text-on-surface">Reset All Settings?</h3>
+            </div>
+            <p className="text-body-sm text-on-surface-variant mb-6 leading-relaxed">
+              This will clear all your saved settings and reset to defaults. This action cannot be
+              undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
               <button
-                onClick={() => setShowSettings(false)}
-                className="text-on-surface-variant hover:text-on-surface"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors text-label-sm font-medium"
               >
-                <span className="material-symbols-outlined text-[16px]">close</span>
+                Cancel
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-error/90 transition-colors font-medium flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[18px]">delete_forever</span>
+                Reset
               </button>
             </div>
-
-            {/* Message Speed */}
-            <div className="mb-4">
-              <label className="text-label-sm text-on-surface-variant block mb-1">
-                {previewMode === 'live' ? 'Message Speed' : 'Switch to Live to adjust speed'}
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={400}
-                  max={3000}
-                  step={100}
-                  value={messageSpeed}
-                  onChange={(e) => setMessageSpeed(Number(e.target.value))}
-                  className={`flex-1 h-1 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary ${previewMode === 'gallery' ? 'opacity-40 pointer-events-none' : ''}`}
-                />
-                <span className="text-label-sm text-on-surface font-mono tabular-nums w-12 text-right">
-                  {(messageSpeed / 1000).toFixed(1)}s
-                </span>
-              </div>
-            </div>
-
-            {/* Preview Size */}
-            <div>
-              <label className="text-label-sm text-on-surface-variant block mb-1">
-                Preview Size
-              </label>
-              <div className="flex gap-2 mb-2">
-                <div className="flex-1">
-                  <span className="text-[10px] text-on-surface-variant block">Width</span>
-                  <input
-                    type="number"
-                    value={previewWidth}
-                    min={200}
-                    max={1200}
-                    step={10}
-                    onChange={(e) => setPreviewWidth(Number(e.target.value))}
-                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-1 px-2 text-label-sm text-on-surface outline-none tabular-nums"
-                  />
-                </div>
-                <div className="flex-1">
-                  <span className="text-[10px] text-on-surface-variant block">Height</span>
-                  <input
-                    type="number"
-                    value={previewHeight}
-                    min={200}
-                    max={1200}
-                    step={10}
-                    onChange={(e) => setPreviewHeight(Number(e.target.value))}
-                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-1 px-2 text-label-sm text-on-surface outline-none tabular-nums"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-1.5">
-                {SIZE_PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => {
-                      setPreviewWidth(p.w)
-                      setPreviewHeight(p.h)
-                    }}
-                    className={`flex-1 py-1 rounded-md text-label-sm font-medium transition-colors ${
-                      previewWidth === p.w && previewHeight === p.h
-                        ? 'bg-primary text-on-primary'
-                        : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ─── Preview Content ────────────────────────────── */}
-        <div
-          className="flex-1 transition-all duration-200"
-          style={{ maxHeight: 'calc(100vh - 180px)' }}
-        >
-          <div
-            className="w-full h-full flex items-center justify-center p-6 pt-16"
-            style={{ maxHeight: '100%' }}
-          >
-            {previewMode === 'live' && displayIndex === 0 && !paused ? (
-              /* Empty state while waiting for first message */
-              <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8 mt-16">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-body-md text-on-surface-variant text-center">
-                  Waiting for chat...
-                </p>
-                <p className="text-label-sm text-on-surface-variant/60 text-center mt-2">
-                  Messages will appear in ~{(messageSpeed / 1000).toFixed(1)}s
-                </p>
-              </div>
-            ) : (
-              /* IM-style chat list (gallery or live) - full width, centered content */
-              <div
-                className="rounded-xl shadow-2xl overflow-hidden"
-                style={{
-                  width: '100%',
-                  height: `${previewHeight}px`,
-                  maxWidth: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: effectiveBg,
-                }}
-              >
-                <ImChatList
-                  messages={previewMode === 'gallery' ? GALLERY_MESSAGES : visibleMessages}
-                  settings={settings}
-                />
-              </div>
-            )}
           </div>
         </div>
-
-        {/* Mode hint at bottom */}
-        <div className="absolute bottom-6 left-6 right-6 z-10 flex items-center justify-between">
-          <button className="flex items-center gap-1.5 text-label-sm text-on-surface-variant hover:text-on-surface transition-colors">
-            <span className="material-symbols-outlined text-[14px]">info</span>
-            How to Use
-          </button>
-          {previewMode === 'live' && displayIndex > 0 && (
-            <span className="text-label-sm text-on-surface-variant/60">
-              {displayIndex < LIVE_MESSAGES.length ? 'Streaming...' : '🔁 Looping'}
-            </span>
-          )}
-          {previewOpen && (
-            <span className="flex items-center gap-1.5 text-label-sm text-green-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Preview Window Open
-            </span>
-          )}
-        </div>
-      </section>
-    </div>
+      )}
+    </>
   )
 }
