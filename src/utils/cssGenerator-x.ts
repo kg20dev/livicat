@@ -16,10 +16,7 @@
  *   └── #before-content-buttons → display: none
  */
 
-import type {
-  ChatCSSSettings,
-  RoleColors,
-} from './cssGenerator'
+import type { ChatCSSSettings, RoleColors } from './cssGenerator'
 import {
   buildCSSVariables,
   buildContainerRules,
@@ -110,9 +107,10 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
 }`)
 
   // ── Renderer — flex row, transparent, with IM animation
-  const animCSS = animSpeed === 'none'
-    ? ''
-    : `  animation: livicat-message-pop-in ${animDuration} ${animEasing} both !important;`
+  const animCSS =
+    animSpeed === 'none'
+      ? ''
+      : `  animation: livicat-message-pop-in ${animDuration} ${animEasing} both !important;`
   parts.push(`yt-live-chat-text-message-renderer {
   display: flex !important;
   flex-direction: row !important;
@@ -126,9 +124,10 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
 ${animCSS}}`)
 
   // ── Avatar wrapper — fixed size, circular, with configurable vertical offset
-  const avatarAnimCSS = animSpeed === 'none'
-    ? ''
-    : `  animation: livicat-avatar-scale ${avatarDuration} ease-out both !important;`
+  const avatarAnimCSS =
+    animSpeed === 'none'
+      ? ''
+      : `  animation: livicat-avatar-scale ${avatarDuration} ease-out both !important;`
   parts.push(`yt-live-chat-text-message-renderer #author-photo {
   flex-shrink: 0 !important;
   width: ${avatarSize} !important;
@@ -183,9 +182,10 @@ yt-live-chat-author-chip * {
 }`)
 
   // Name chip — rotated badge overlapping the message bubble, with own entrance animation
-  const chipAnimCSS = animSpeed === 'none'
-    ? ''
-    : `  animation: livicat-chip-tilt-in ${chipDuration} ${chipEasing} backwards !important;
+  const chipAnimCSS =
+    animSpeed === 'none'
+      ? ''
+      : `  animation: livicat-chip-tilt-in ${chipDuration} ${chipEasing} backwards !important;
   animation-delay: ${chipDelay} !important;`
   parts.push(`yt-live-chat-text-message-renderer #author-name-chip,
 yt-live-chat-text-message-renderer #author-name {
@@ -280,9 +280,27 @@ function buildIMRoleColorRules(settings: ChatCSSSettings): string {
   }
 
   const roles: RoleInfo[] = [
-    { type: 'owner', bgVar: '--chat-owner-bg', textVar: '--chat-owner-text', usernameVar: '--chat-owner-username', weight: '700' },
-    { type: 'moderator', bgVar: '--chat-mod-bg', textVar: '--chat-mod-text', usernameVar: '--chat-mod-username', weight: '700' },
-    { type: 'member', bgVar: '--chat-member-bg', textVar: '--chat-member-text', usernameVar: '--chat-member-username', weight: '600' },
+    {
+      type: 'owner',
+      bgVar: '--chat-owner-bg',
+      textVar: '--chat-owner-text',
+      usernameVar: '--chat-owner-username',
+      weight: '700',
+    },
+    {
+      type: 'moderator',
+      bgVar: '--chat-mod-bg',
+      textVar: '--chat-mod-text',
+      usernameVar: '--chat-mod-username',
+      weight: '700',
+    },
+    {
+      type: 'member',
+      bgVar: '--chat-member-bg',
+      textVar: '--chat-member-text',
+      usernameVar: '--chat-member-username',
+      weight: '600',
+    },
   ]
 
   for (const role of roles) {

@@ -22,40 +22,232 @@ import { validateYouTubeUrl } from '../../utils/youtubeValidation'
    ══════════════════════════════════════════════════════════════════ */
 
 const LIVE_MESSAGES: Message[] = [
-  { id: 'l1', username: 'NeonNights', message: 'Hey everyone! 🎉', avatarSeed: 58, timestamp: '10:23 AM' },
-  { id: 'l2', username: 'StreamKing', message: 'Love the stream! 🔥', avatarSeed: 70, timestamp: '10:23 AM' },
-  { id: 'l3', username: 'GamerPro_99', message: 'How do I save this theme?', avatarSeed: 5, timestamp: '10:24 AM' },
-  { id: 'l4', username: 'PixelPanda', message: 'Can we get more animations?', avatarSeed: 33, timestamp: '10:24 AM' },
-  { id: 'l5', username: 'VibeCheck', message: 'This editor is a lifesaver!', avatarSeed: 26, timestamp: '10:25 AM' },
-  { id: 'l6', username: 'ChatMaster', message: 'Check out my new stream setup!', avatarSeed: 42, timestamp: '10:25 AM' },
-  { id: 'l7', username: 'LiveWire', message: 'First time watching, hi! 👋', avatarSeed: 15, timestamp: '10:26 AM' },
-  { id: 'l8', username: 'NeonNights', message: 'Loving the typography options.', avatarSeed: 58, timestamp: '10:26 AM' },
-  { id: 'l9', username: 'ShadowFox', message: 'That play was insane! 😱', avatarSeed: 89, timestamp: '10:27 AM' },
-  { id: 'l10', username: 'CyberBeam', message: 'What song is this? 🎵', avatarSeed: 44, timestamp: '10:27 AM' },
-  { id: 'l11', username: 'VelvetVoice', message: 'Can someone explain the rules?', avatarSeed: 12, timestamp: '10:28 AM' },
-  { id: 'l12', username: 'StreamKing', message: 'Hype! Hype! Hype! 🔥🔥🔥', avatarSeed: 70, timestamp: '10:28 AM' },
-  { id: 'l13', username: 'GamerPro_99', message: 'GG everyone!', avatarSeed: 5, timestamp: '10:29 AM' },
-  { id: 'l14', username: 'PixelPanda', message: 'New subscriber here! 🎊', avatarSeed: 33, timestamp: '10:29 AM' },
-  { id: 'l15', username: 'VibeCheck', message: 'This is so relaxing to watch', avatarSeed: 26, timestamp: '10:30 AM' },
-  { id: 'l16', username: 'ShadowFox', message: 'The quality is amazing', avatarSeed: 89, timestamp: '10:30 AM' },
-  { id: 'l17', username: 'ChatMaster', message: 'How long have you been streaming?', avatarSeed: 42, timestamp: '10:31 AM' },
-  { id: 'l18', username: 'VelvetVoice', message: 'Keep it up, you\'re doing great!', avatarSeed: 12, timestamp: '10:31 AM' },
-  { id: 'l19', username: 'LiveWire', message: 'LMAO 😂😂😂', avatarSeed: 15, timestamp: '10:32 AM' },
-  { id: 'l20', username: 'CyberBeam', message: 'What\'s your rank?', avatarSeed: 44, timestamp: '10:32 AM' },
-  { id: 'l21', username: 'NeonNights', message: 'Do you stream every day?', avatarSeed: 58, timestamp: '10:33 AM' },
-  { id: 'l22', username: 'StreamKing', message: 'Just raided! 🔴', avatarSeed: 70, timestamp: '10:33 AM' },
-  { id: 'l23', username: 'GamerPro_99', message: 'The chat is moving so fast 🏃', avatarSeed: 5, timestamp: '10:34 AM' },
-  { id: 'l24', username: 'PixelPanda', message: 'Hello from Canada! 🍁', avatarSeed: 33, timestamp: '10:34 AM' },
-  { id: 'l25', username: 'VibeCheck', message: 'Late but here! 🙌', avatarSeed: 26, timestamp: '10:35 AM' },
+  {
+    id: 'l1',
+    username: 'NeonNights',
+    message: 'Hey everyone! 🎉',
+    avatarSeed: 58,
+    timestamp: '10:23 AM',
+  },
+  {
+    id: 'l2',
+    username: 'StreamKing',
+    message: 'Love the stream! 🔥',
+    avatarSeed: 70,
+    timestamp: '10:23 AM',
+  },
+  {
+    id: 'l3',
+    username: 'GamerPro_99',
+    message: 'How do I save this theme?',
+    avatarSeed: 5,
+    timestamp: '10:24 AM',
+  },
+  {
+    id: 'l4',
+    username: 'PixelPanda',
+    message: 'Can we get more animations?',
+    avatarSeed: 33,
+    timestamp: '10:24 AM',
+  },
+  {
+    id: 'l5',
+    username: 'VibeCheck',
+    message: 'This editor is a lifesaver!',
+    avatarSeed: 26,
+    timestamp: '10:25 AM',
+  },
+  {
+    id: 'l6',
+    username: 'ChatMaster',
+    message: 'Check out my new stream setup!',
+    avatarSeed: 42,
+    timestamp: '10:25 AM',
+  },
+  {
+    id: 'l7',
+    username: 'LiveWire',
+    message: 'First time watching, hi! 👋',
+    avatarSeed: 15,
+    timestamp: '10:26 AM',
+  },
+  {
+    id: 'l8',
+    username: 'NeonNights',
+    message: 'Loving the typography options.',
+    avatarSeed: 58,
+    timestamp: '10:26 AM',
+  },
+  {
+    id: 'l9',
+    username: 'ShadowFox',
+    message: 'That play was insane! 😱',
+    avatarSeed: 89,
+    timestamp: '10:27 AM',
+  },
+  {
+    id: 'l10',
+    username: 'CyberBeam',
+    message: 'What song is this? 🎵',
+    avatarSeed: 44,
+    timestamp: '10:27 AM',
+  },
+  {
+    id: 'l11',
+    username: 'VelvetVoice',
+    message: 'Can someone explain the rules?',
+    avatarSeed: 12,
+    timestamp: '10:28 AM',
+  },
+  {
+    id: 'l12',
+    username: 'StreamKing',
+    message: 'Hype! Hype! Hype! 🔥🔥🔥',
+    avatarSeed: 70,
+    timestamp: '10:28 AM',
+  },
+  {
+    id: 'l13',
+    username: 'GamerPro_99',
+    message: 'GG everyone!',
+    avatarSeed: 5,
+    timestamp: '10:29 AM',
+  },
+  {
+    id: 'l14',
+    username: 'PixelPanda',
+    message: 'New subscriber here! 🎊',
+    avatarSeed: 33,
+    timestamp: '10:29 AM',
+  },
+  {
+    id: 'l15',
+    username: 'VibeCheck',
+    message: 'This is so relaxing to watch',
+    avatarSeed: 26,
+    timestamp: '10:30 AM',
+  },
+  {
+    id: 'l16',
+    username: 'ShadowFox',
+    message: 'The quality is amazing',
+    avatarSeed: 89,
+    timestamp: '10:30 AM',
+  },
+  {
+    id: 'l17',
+    username: 'ChatMaster',
+    message: 'How long have you been streaming?',
+    avatarSeed: 42,
+    timestamp: '10:31 AM',
+  },
+  {
+    id: 'l18',
+    username: 'VelvetVoice',
+    message: "Keep it up, you're doing great!",
+    avatarSeed: 12,
+    timestamp: '10:31 AM',
+  },
+  {
+    id: 'l19',
+    username: 'LiveWire',
+    message: 'LMAO 😂😂😂',
+    avatarSeed: 15,
+    timestamp: '10:32 AM',
+  },
+  {
+    id: 'l20',
+    username: 'CyberBeam',
+    message: "What's your rank?",
+    avatarSeed: 44,
+    timestamp: '10:32 AM',
+  },
+  {
+    id: 'l21',
+    username: 'NeonNights',
+    message: 'Do you stream every day?',
+    avatarSeed: 58,
+    timestamp: '10:33 AM',
+  },
+  {
+    id: 'l22',
+    username: 'StreamKing',
+    message: 'Just raided! 🔴',
+    avatarSeed: 70,
+    timestamp: '10:33 AM',
+  },
+  {
+    id: 'l23',
+    username: 'GamerPro_99',
+    message: 'The chat is moving so fast 🏃',
+    avatarSeed: 5,
+    timestamp: '10:34 AM',
+  },
+  {
+    id: 'l24',
+    username: 'PixelPanda',
+    message: 'Hello from Canada! 🍁',
+    avatarSeed: 33,
+    timestamp: '10:34 AM',
+  },
+  {
+    id: 'l25',
+    username: 'VibeCheck',
+    message: 'Late but here! 🙌',
+    avatarSeed: 26,
+    timestamp: '10:35 AM',
+  },
 ]
 
 const GALLERY_MESSAGES: Message[] = [
-  { id: 'g1', username: 'StreamKing', message: 'Regular chat message with default styling', avatarSeed: 70, timestamp: '10:25 AM', role: 'default' },
-  { id: 'g2', username: 'NeonNights', message: 'Owner message with special role colors 🛡️', avatarSeed: 58, timestamp: '10:26 AM', role: 'owner' },
-  { id: 'g3', username: 'ChatMaster', message: 'Moderator message with moderation styling 🔧', avatarSeed: 42, timestamp: '10:27 AM', role: 'moderator' },
-  { id: 'g4', username: 'PixelPanda', message: 'Member message with membership badge ⭐', avatarSeed: 33, timestamp: '10:28 AM', role: 'member' },
-  { id: 'g5', username: 'VelvetVoice', message: '🌟 Super Chat • $10.00 — This is a highlighted paid message with super chat styling', avatarSeed: 12, timestamp: '10:29 AM', role: 'super-chat' },
-  { id: 'g6', username: 'LiveWire', message: 'Welcome to the membership! Member since June 2026', avatarSeed: 15, timestamp: '10:30 AM', role: 'member-ship' },
+  {
+    id: 'g1',
+    username: 'StreamKing',
+    message: 'Regular chat message with default styling',
+    avatarSeed: 70,
+    timestamp: '10:25 AM',
+    role: 'default',
+  },
+  {
+    id: 'g2',
+    username: 'NeonNights',
+    message: 'Owner message with special role colors 🛡️',
+    avatarSeed: 58,
+    timestamp: '10:26 AM',
+    role: 'owner',
+  },
+  {
+    id: 'g3',
+    username: 'ChatMaster',
+    message: 'Moderator message with moderation styling 🔧',
+    avatarSeed: 42,
+    timestamp: '10:27 AM',
+    role: 'moderator',
+  },
+  {
+    id: 'g4',
+    username: 'PixelPanda',
+    message: 'Member message with membership badge ⭐',
+    avatarSeed: 33,
+    timestamp: '10:28 AM',
+    role: 'member',
+  },
+  {
+    id: 'g5',
+    username: 'VelvetVoice',
+    message: '🌟 Super Chat • $10.00 — This is a highlighted paid message with super chat styling',
+    avatarSeed: 12,
+    timestamp: '10:29 AM',
+    role: 'super-chat',
+  },
+  {
+    id: 'g6',
+    username: 'LiveWire',
+    message: 'Welcome to the membership! Member since June 2026',
+    avatarSeed: 15,
+    timestamp: '10:30 AM',
+    role: 'member-ship',
+  },
 ]
 
 /* ══════════════════════════════════════════════════════════════════
@@ -72,7 +264,12 @@ function getRoleColors(
     case 'moderator':
       return { bg: s.modBg, text: s.modText, username: s.modUsername, border: s.modText }
     case 'member':
-      return { bg: s.memberBg, text: s.memberText, username: s.memberUsername, border: s.memberText }
+      return {
+        bg: s.memberBg,
+        text: s.memberText,
+        username: s.memberUsername,
+        border: s.memberText,
+      }
     default:
       return {
         bg: s.messageBackgroundColor,
@@ -119,17 +316,33 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   const avatarSize = settings.showAvatars ? settings.avatarSize : 0
   const gap = 0
   const bubbleWidth = settings.bubbleMaxWidth
-  const gridCols = avatarSize > 0 ? `${avatarSize}px minmax(0, ${bubbleWidth}px)` : `0px minmax(0, ${bubbleWidth}px)`
+  const gridCols =
+    avatarSize > 0
+      ? `${avatarSize}px minmax(0, ${bubbleWidth}px)`
+      : `0px minmax(0, ${bubbleWidth}px)`
   const gridAreas = avatarSize > 0 ? '"avatar name" "avatar bubble"' : '"name" "bubble"'
-  const marginBottom = settings.messageSpacing === 'compact' ? 4 : settings.messageSpacing === 'comfortable' ? 16 : 10
+  const marginBottom =
+    settings.messageSpacing === 'compact' ? 4 : settings.messageSpacing === 'comfortable' ? 16 : 10
   const totalWidth = avatarSize + gap + bubbleWidth
 
   // Animation settings
-  const animDuration = settings.animationSpeed === 'slow' ? '0.6s' : settings.animationSpeed === 'normal' ? '0.4s' : '0s'
+  const animDuration =
+    settings.animationSpeed === 'slow'
+      ? '0.6s'
+      : settings.animationSpeed === 'normal'
+        ? '0.4s'
+        : '0s'
   const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring
-  const messageAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-message-pop-in ${animDuration} ${animEasing} both`
-  const avatarAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-avatar-scale 0.3s ease-out both`
-  const chipAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
+  const messageAnimation =
+    settings.animationSpeed === 'none'
+      ? 'none'
+      : `livicat-message-pop-in ${animDuration} ${animEasing} both`
+  const avatarAnimation =
+    settings.animationSpeed === 'none' ? 'none' : `livicat-avatar-scale 0.3s ease-out both`
+  const chipAnimation =
+    settings.animationSpeed === 'none'
+      ? 'none'
+      : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
 
   const imCSS = `
 @keyframes livicat-message-pop-in {
@@ -382,7 +595,15 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 
 /* ─── Inline Color Row ────────────────────────────────────────── */
 
-function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function ColorRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-[12px] text-on-surface font-medium">{label}</span>
@@ -424,7 +645,9 @@ function SliderRow({
             onChange={(e) => onChange(Number(e.target.value))}
             className="w-10 text-[12px] font-semibold text-on-surface bg-transparent border-none outline-none text-right tabular-nums"
           />
-          {unit && <span className="text-[10px] font-medium text-on-surface-variant/60">{unit}</span>}
+          {unit && (
+            <span className="text-[10px] font-medium text-on-surface-variant/60">{unit}</span>
+          )}
         </div>
       </div>
       <input
@@ -447,7 +670,15 @@ function SliderRow({
 
 /* ─── Toggle Switch ───────────────────────────────────────────── */
 
-function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: boolean
+  onChange: (v: boolean) => void
+}) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-[12px] text-on-surface font-medium">{label}</span>
@@ -647,7 +878,8 @@ export default function WorkspaceX() {
     <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
       updateSetting(key, value)
       trackEventAsync('customization_changed', {
-        setting_type: typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'toggle' : 'select',
+        setting_type:
+          typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'toggle' : 'select',
         setting_key: String(key),
       })
     },
@@ -675,49 +907,118 @@ export default function WorkspaceX() {
             {/* Background */}
             <div>
               <SubHeading label="Background" />
-              <ColorRow label="Default Bubble Background" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
+              <ColorRow
+                label="Default Bubble Background"
+                value={s.messageBackgroundColor}
+                onChange={(v) => update('messageBackgroundColor', v)}
+              />
             </div>
 
             {/* Author Name */}
             <div>
               <SubHeading label="Author Name" />
-              <ColorRow label="Default Username Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
+              <ColorRow
+                label="Default Username Color"
+                value={s.usernameColor}
+                onChange={(v) => update('usernameColor', v)}
+              />
               <div className="mt-2">
-                <ToggleRow label="Bold" value={s.usernameFontWeight === '700'} onChange={(v) => update('usernameFontWeight', v ? '700' : '400')} />
+                <ToggleRow
+                  label="Bold"
+                  value={s.usernameFontWeight === '700'}
+                  onChange={(v) => update('usernameFontWeight', v ? '700' : '400')}
+                />
               </div>
             </div>
 
             {/* Content */}
             <div>
               <SubHeading label="Content" />
-              <ColorRow label="Default Text Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
+              <ColorRow
+                label="Default Text Color"
+                value={s.messageColor}
+                onChange={(v) => update('messageColor', v)}
+              />
             </div>
 
             {/* Typography */}
             <div>
               <SubHeading label="Typography" />
-              <SliderRow label="Username Size" value={s.usernameFontSize} min={10} max={40} unit="px" onChange={(v) => update('usernameFontSize', v)} />
+              <SliderRow
+                label="Username Size"
+                value={s.usernameFontSize}
+                min={10}
+                max={40}
+                unit="px"
+                onChange={(v) => update('usernameFontSize', v)}
+              />
               <div className="mt-3">
-                <SliderRow label="Content Font Size" value={s.messageFontSize} min={10} max={48} unit="px" onChange={(v) => update('messageFontSize', v)} />
+                <SliderRow
+                  label="Content Font Size"
+                  value={s.messageFontSize}
+                  min={10}
+                  max={48}
+                  unit="px"
+                  onChange={(v) => update('messageFontSize', v)}
+                />
               </div>
             </div>
 
             {/* Bubble */}
             <div>
               <SubHeading label="Bubble" />
-              <ColorRow label="Border Color" value={s.scrollbarColor} onChange={(v) => update('scrollbarColor', v)} />
+              <ColorRow
+                label="Border Color"
+                value={s.scrollbarColor}
+                onChange={(v) => update('scrollbarColor', v)}
+              />
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <SliderRow label="Border Width" value={s.bubbleBorderWidth} min={0} max={10} unit="px" onChange={(v) => update('bubbleBorderWidth', v)} />
-                <SliderRow label="Corner Radius" value={s.messageBorderRadius} min={0} max={30} unit="px" onChange={(v) => update('messageBorderRadius', v)} />
+                <SliderRow
+                  label="Border Width"
+                  value={s.bubbleBorderWidth}
+                  min={0}
+                  max={10}
+                  unit="px"
+                  onChange={(v) => update('bubbleBorderWidth', v)}
+                />
+                <SliderRow
+                  label="Corner Radius"
+                  value={s.messageBorderRadius}
+                  min={0}
+                  max={30}
+                  unit="px"
+                  onChange={(v) => update('messageBorderRadius', v)}
+                />
               </div>
               <div className="mt-3">
-                <SliderRow label="Padding" value={s.bubblePadding} min={4} max={30} unit="px" onChange={(v) => update('bubblePadding', v)} />
+                <SliderRow
+                  label="Padding"
+                  value={s.bubblePadding}
+                  min={4}
+                  max={30}
+                  unit="px"
+                  onChange={(v) => update('bubblePadding', v)}
+                />
               </div>
               <div className="mt-3">
-                <SliderRow label="Tail Offset" value={s.bubbleTailOffset} min={-20} max={10} unit="px" onChange={(v) => update('bubbleTailOffset', v)} />
+                <SliderRow
+                  label="Tail Offset"
+                  value={s.bubbleTailOffset}
+                  min={-20}
+                  max={10}
+                  unit="px"
+                  onChange={(v) => update('bubbleTailOffset', v)}
+                />
               </div>
               <div className="mt-3">
-                <SliderRow label="Max Width" value={s.bubbleMaxWidth} min={200} max={800} unit="px" onChange={(v) => update('bubbleMaxWidth', v)} />
+                <SliderRow
+                  label="Max Width"
+                  value={s.bubbleMaxWidth}
+                  min={200}
+                  max={800}
+                  unit="px"
+                  onChange={(v) => update('bubbleMaxWidth', v)}
+                />
               </div>
             </div>
           </CollapsibleSection>
@@ -729,12 +1030,24 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-yellow-400" />
                 Owner
               </div>
-              <ColorRow label="Bubble Background" value={s.ownerBg} onChange={(v) => update('ownerBg', v)} />
+              <ColorRow
+                label="Bubble Background"
+                value={s.ownerBg}
+                onChange={(v) => update('ownerBg', v)}
+              />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.ownerText} onChange={(v) => update('ownerText', v)} />
+                <ColorRow
+                  label="Text Color"
+                  value={s.ownerText}
+                  onChange={(v) => update('ownerText', v)}
+                />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.ownerUsername} onChange={(v) => update('ownerUsername', v)} />
+                <ColorRow
+                  label="Username Color"
+                  value={s.ownerUsername}
+                  onChange={(v) => update('ownerUsername', v)}
+                />
               </div>
             </div>
             <div className="border-t border-outline-variant/20 pt-4 mt-4">
@@ -742,12 +1055,24 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-blue-400" />
                 Moderator
               </div>
-              <ColorRow label="Bubble Background" value={s.modBg} onChange={(v) => update('modBg', v)} />
+              <ColorRow
+                label="Bubble Background"
+                value={s.modBg}
+                onChange={(v) => update('modBg', v)}
+              />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.modText} onChange={(v) => update('modText', v)} />
+                <ColorRow
+                  label="Text Color"
+                  value={s.modText}
+                  onChange={(v) => update('modText', v)}
+                />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.modUsername} onChange={(v) => update('modUsername', v)} />
+                <ColorRow
+                  label="Username Color"
+                  value={s.modUsername}
+                  onChange={(v) => update('modUsername', v)}
+                />
               </div>
             </div>
             <div className="border-t border-outline-variant/20 pt-4 mt-4">
@@ -755,20 +1080,46 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-green-400" />
                 Member
               </div>
-              <ColorRow label="Bubble Background" value={s.memberBg} onChange={(v) => update('memberBg', v)} />
+              <ColorRow
+                label="Bubble Background"
+                value={s.memberBg}
+                onChange={(v) => update('memberBg', v)}
+              />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.memberText} onChange={(v) => update('memberText', v)} />
+                <ColorRow
+                  label="Text Color"
+                  value={s.memberText}
+                  onChange={(v) => update('memberText', v)}
+                />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.memberUsername} onChange={(v) => update('memberUsername', v)} />
+                <ColorRow
+                  label="Username Color"
+                  value={s.memberUsername}
+                  onChange={(v) => update('memberUsername', v)}
+                />
               </div>
             </div>
           </CollapsibleSection>
 
           {/* ── Common Settings ────────────────────────────── */}
           <CollapsibleSection icon="tune" title="Common Settings" defaultOpen={false}>
-            <SliderRow label="Container Opacity" value={s.containerOpacity} min={0} max={100} unit="%" onChange={(v) => update('containerOpacity', v)} />
-            <SliderRow label="Message Opacity" value={s.messageOpacity} min={0} max={100} unit="%" onChange={(v) => update('messageOpacity', v)} />
+            <SliderRow
+              label="Container Opacity"
+              value={s.containerOpacity}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(v) => update('containerOpacity', v)}
+            />
+            <SliderRow
+              label="Message Opacity"
+              value={s.messageOpacity}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(v) => update('messageOpacity', v)}
+            />
             <SelectRow
               label="Message Spacing"
               value={s.messageSpacing}
@@ -779,10 +1130,25 @@ export default function WorkspaceX() {
               ]}
               onChange={(v) => update('messageSpacing', v as ChatSettings['messageSpacing'])}
             />
-            <SelectRow label="Font Family" value={s.fontFamily} options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))} onChange={(v) => update('fontFamily', v)} />
+            <SelectRow
+              label="Font Family"
+              value={s.fontFamily}
+              options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
+              onChange={(v) => update('fontFamily', v)}
+            />
             <div className="grid grid-cols-2 gap-3">
-              <SliderRow label="Max Messages" value={s.maxMessages} min={10} max={500} onChange={(v) => update('maxMessages', v)} />
-              <ToggleRow label="Auto Scroll" value={s.autoScroll} onChange={(v) => update('autoScroll', v)} />
+              <SliderRow
+                label="Max Messages"
+                value={s.maxMessages}
+                min={10}
+                max={500}
+                onChange={(v) => update('maxMessages', v)}
+              />
+              <ToggleRow
+                label="Auto Scroll"
+                value={s.autoScroll}
+                onChange={(v) => update('autoScroll', v)}
+              />
             </div>
             <SelectRow
               label="Animation Speed"
@@ -798,22 +1164,56 @@ export default function WorkspaceX() {
 
           {/* ── Avatar ──────────────────────────────────────── */}
           <CollapsibleSection icon="face" title="Avatar" defaultOpen={false}>
-            <SliderRow label="Size" value={s.avatarSize} min={16} max={80} unit="px" onChange={(v) => update('avatarSize', v)} />
-            <SliderRow label="Vertical Offset" value={s.avatarMarginTop} min={0} max={60} unit="px" onChange={(v) => update('avatarMarginTop', v)} />
+            <SliderRow
+              label="Size"
+              value={s.avatarSize}
+              min={16}
+              max={80}
+              unit="px"
+              onChange={(v) => update('avatarSize', v)}
+            />
+            <SliderRow
+              label="Vertical Offset"
+              value={s.avatarMarginTop}
+              min={0}
+              max={60}
+              unit="px"
+              onChange={(v) => update('avatarMarginTop', v)}
+            />
           </CollapsibleSection>
 
           {/* ── Message Visibility ─────────────────────────── */}
           <CollapsibleSection icon="visibility" title="Message Visibility" defaultOpen={false}>
             <ToggleRow label="Text Messages" value={true} onChange={() => {}} />
-            <ToggleRow label="Super Chat / Paid" value={s.showEngagementMessages} onChange={(v) => update('showEngagementMessages', v)} />
-            <ToggleRow label="Membership Messages" value={s.showChatDisclaimer} onChange={(v) => update('showChatDisclaimer', v)} />
+            <ToggleRow
+              label="Super Chat / Paid"
+              value={s.showEngagementMessages}
+              onChange={(v) => update('showEngagementMessages', v)}
+            />
+            <ToggleRow
+              label="Membership Messages"
+              value={s.showChatDisclaimer}
+              onChange={(v) => update('showChatDisclaimer', v)}
+            />
             <div className="border-t border-outline-variant/20 pt-3 mt-3">
-              <ToggleRow label="Show Avatars" value={s.showAvatars} onChange={(v) => update('showAvatars', v)} />
+              <ToggleRow
+                label="Show Avatars"
+                value={s.showAvatars}
+                onChange={(v) => update('showAvatars', v)}
+              />
               <div className="mt-2">
-                <ToggleRow label="Show Timestamps" value={s.showTimestamps} onChange={(v) => update('showTimestamps', v)} />
+                <ToggleRow
+                  label="Show Timestamps"
+                  value={s.showTimestamps}
+                  onChange={(v) => update('showTimestamps', v)}
+                />
               </div>
               <div className="mt-2">
-                <ToggleRow label="Show Header" value={s.showHeader} onChange={(v) => update('showHeader', v)} />
+                <ToggleRow
+                  label="Show Header"
+                  value={s.showHeader}
+                  onChange={(v) => update('showHeader', v)}
+                />
               </div>
             </div>
           </CollapsibleSection>
@@ -859,9 +1259,15 @@ export default function WorkspaceX() {
                   ? 'bg-green-600/20 text-green-400 border border-green-600/30'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
               }`}
-              title={s.chromaKey ? 'Chroma Key ON — OBS-ready green background' : 'Toggle Chroma Key for OBS'}
+              title={
+                s.chromaKey
+                  ? 'Chroma Key ON — OBS-ready green background'
+                  : 'Toggle Chroma Key for OBS'
+              }
             >
-              <span className={`w-2 h-2 rounded-full ${s.chromaKey ? 'bg-green-400 animate-pulse' : 'bg-outline-variant'}`} />
+              <span
+                className={`w-2 h-2 rounded-full ${s.chromaKey ? 'bg-green-400 animate-pulse' : 'bg-outline-variant'}`}
+              />
               <span className="material-symbols-outlined text-[13px]">grid_on</span>
               Chroma Key
             </button>
@@ -919,7 +1325,10 @@ export default function WorkspaceX() {
               <>
                 <div className="w-px h-4 bg-outline-variant/30" />
                 <button
-                  onClick={() => { setDisplayIndex(0); setPaused(false) }}
+                  onClick={() => {
+                    setDisplayIndex(0)
+                    setPaused(false)
+                  }}
                   className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
                   title="Restart"
                 >
@@ -928,11 +1337,15 @@ export default function WorkspaceX() {
                 <button
                   onClick={() => setPaused((v) => !v)}
                   className={`p-1.5 rounded-md transition-colors ${
-                    paused ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    paused
+                      ? 'text-primary bg-primary/10'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
                   }`}
                   title={paused ? 'Resume' : 'Pause'}
                 >
-                  <span className="material-symbols-outlined text-[16px]">{paused ? 'play_arrow' : 'pause'}</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    {paused ? 'play_arrow' : 'pause'}
+                  </span>
                 </button>
               </>
             )}
@@ -953,7 +1366,10 @@ export default function WorkspaceX() {
           <div className="absolute top-16 right-6 z-20 bg-surface-container border border-outline-variant rounded-xl p-4 shadow-2xl w-72">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-label-md font-semibold text-on-surface">Preview Settings</h3>
-              <button onClick={() => setShowSettings(false)} className="text-on-surface-variant hover:text-on-surface">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
                 <span className="material-symbols-outlined text-[16px]">close</span>
               </button>
             </div>
@@ -981,7 +1397,9 @@ export default function WorkspaceX() {
 
             {/* Preview Size */}
             <div>
-              <label className="text-label-sm text-on-surface-variant block mb-1">Preview Size</label>
+              <label className="text-label-sm text-on-surface-variant block mb-1">
+                Preview Size
+              </label>
               <div className="flex gap-2 mb-2">
                 <div className="flex-1">
                   <span className="text-[10px] text-on-surface-variant block">Width</span>
@@ -1012,7 +1430,10 @@ export default function WorkspaceX() {
                 {SIZE_PRESETS.map((p) => (
                   <button
                     key={p.label}
-                    onClick={() => { setPreviewWidth(p.w); setPreviewHeight(p.h) }}
+                    onClick={() => {
+                      setPreviewWidth(p.w)
+                      setPreviewHeight(p.h)
+                    }}
                     className={`flex-1 py-1 rounded-md text-label-sm font-medium transition-colors ${
                       previewWidth === p.w && previewHeight === p.h
                         ? 'bg-primary text-on-primary'
@@ -1060,7 +1481,10 @@ export default function WorkspaceX() {
                   background: effectiveBg,
                 }}
               >
-                <ImChatList messages={previewMode === 'gallery' ? GALLERY_MESSAGES : visibleMessages} settings={settings} />
+                <ImChatList
+                  messages={previewMode === 'gallery' ? GALLERY_MESSAGES : visibleMessages}
+                  settings={settings}
+                />
               </div>
             )}
           </div>

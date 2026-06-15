@@ -212,7 +212,11 @@ export default function ChatMessage({
   rootChildren.push(
     createElement(
       'div',
-      { id: 'content', key: 'content', className: 'style-scope yt-live-chat-text-message-renderer' },
+      {
+        id: 'content',
+        key: 'content',
+        className: 'style-scope yt-live-chat-text-message-renderer',
+      },
       ...contentChildren
     )
   )
