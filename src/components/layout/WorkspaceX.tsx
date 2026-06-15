@@ -183,7 +183,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
 .livicat-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 56px 8px 8px;
+  padding: 8px;
   scrollbar-width: thin;
   scrollbar-color: ${settings.scrollbarColor} transparent;
 }
@@ -1033,7 +1033,7 @@ export default function WorkspaceX() {
           style={{ maxHeight: 'calc(100vh - 180px)' }}
         >
           <div
-            className="w-full h-full flex items-center justify-center p-6"
+            className="w-full h-full flex items-center justify-center p-6 pt-16"
             style={{ maxHeight: '100%' }}
           >
             {previewMode === 'live' && displayIndex === 0 && !paused ? (
