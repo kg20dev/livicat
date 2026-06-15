@@ -68,6 +68,26 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   theme: 'dark',
   animationSpeed: 'normal',
   newMessageAnimation: 'default',
+
+  /* Chroma key */
+  chromaKey: false,
+
+  /* IM-style bubble settings */
+  bubbleBorderWidth: 2,
+  bubbleTailOffset: -10,
+  bubbleMaxWidth: 400,
+  bubblePadding: 12,
+
+  /* IM-style role colors */
+  ownerBg: '#2a1e00',
+  ownerText: '#ffd700',
+  ownerUsername: '#ffd700',
+  modBg: '#0d2b1e',
+  modText: '#66bb6a',
+  modUsername: '#66bb6a',
+  memberBg: '#1a0d2b',
+  memberText: '#ce93d8',
+  memberUsername: '#ce93d8',
 }
 
 /* ─── Presets ───────────────────────────────────────────────────── */
@@ -324,6 +344,27 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
     layout: {
       nameMessageLayout: settings.nameMessageLayout || undefined,
       backgroundStyle: settings.backgroundStyle || undefined,
+    },
+    roleColors: {
+      owner: {
+        background: settings.ownerBg || undefined,
+        textColor: settings.ownerText || undefined,
+        usernameColor: settings.ownerUsername || undefined,
+      },
+      moderator: {
+        background: settings.modBg || undefined,
+        textColor: settings.modText || undefined,
+        usernameColor: settings.modUsername || undefined,
+      },
+      member: {
+        background: settings.memberBg || undefined,
+        textColor: settings.memberText || undefined,
+        usernameColor: settings.memberUsername || undefined,
+      },
+    },
+    bubbleTail: {
+      offset: settings.bubbleTailOffset ?? undefined,
+      borderWidth: settings.bubbleBorderWidth ?? undefined,
     },
   }
 }
