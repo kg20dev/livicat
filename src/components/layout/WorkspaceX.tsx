@@ -1,5 +1,5 @@
 /**
- * Workspace X — A page inspired by doodlekuma's IM Style customizer.
+ * Workspace X — A page inspired by doodlekuma's Style Panel.
  *
  * Preview modes:
  *   Live    → Real-time message streaming (variable timing, loops)
@@ -90,25 +90,25 @@ function ImBubble({ message, settings }: { message: Message; settings: ChatSetti
 
   return (
     <div
-      className="im-message"
+      className="livicat-message"
       style={
         {
-          '--im-bg': rc.bg,
-          '--im-text': rc.text,
-          '--im-username': rc.username,
-          '--im-border': rc.border,
-          '--im-username-bg': settings.messageBackgroundColor,
+          '--livicat-bg': rc.bg,
+          '--livicat-text': rc.text,
+          '--livicat-username': rc.username,
+          '--livicat-border': rc.border,
+          '--livicat-username-bg': settings.messageBackgroundColor,
         } as React.CSSProperties
       }
     >
       {settings.showAvatars && (
-        <div className="im-avatar">
-          <img src={avatarUrl} alt="" className="im-avatar-img" />
+        <div className="livicat-avatar">
+          <img src={avatarUrl} alt="" className="livicat-avatar-img" />
         </div>
       )}
-      <div className="im-name">{message.username}</div>
-      <div className="im-bubble">
-        <div className="im-bubble-text">{message.message}</div>
+      <div className="livicat-name">{message.username}</div>
+      <div className="livicat-bubble">
+        <div className="livicat-bubble-text">{message.message}</div>
       </div>
     </div>
   )
@@ -127,12 +127,12 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   // Animation settings
   const animDuration = settings.animationSpeed === 'slow' ? '0.6s' : settings.animationSpeed === 'normal' ? '0.4s' : '0s'
   const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring (matching doodlekuma)
-  const messageAnimation = settings.animationSpeed === 'none' ? 'none' : `im-message-pop-in ${animDuration} ${animEasing} both`
-  const avatarAnimation = settings.animationSpeed === 'none' ? 'none' : `im-avatar-scale 0.3s ease-out both`
-  const chipAnimation = settings.animationSpeed === 'none' ? 'none' : `im-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
+  const messageAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-message-pop-in ${animDuration} ${animEasing} both`
+  const avatarAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-avatar-scale 0.3s ease-out both`
+  const chipAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
 
   const imCSS = `
-@keyframes im-message-pop-in {
+@keyframes livicat-message-pop-in {
   0% {
     opacity: 0;
     transform: scale(0.3) translateY(20px);
@@ -149,7 +149,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   }
 }
 
-@keyframes im-avatar-scale {
+@keyframes livicat-avatar-scale {
   0% {
     opacity: 0;
     transform: scale(0);
@@ -163,7 +163,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   }
 }
 
-@keyframes im-chip-tilt-in {
+@keyframes livicat-chip-tilt-in {
   0% {
     opacity: 0;
     transform: rotate(10deg) translate(-20px, 0) scale(0.7);
@@ -180,14 +180,14 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   }
 }
 
-.im-chat-messages {
+.livicat-chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 8px;
   scrollbar-width: thin;
   scrollbar-color: ${settings.scrollbarColor} transparent;
 }
-.im-message {
+.livicat-message {
   display: grid;
   grid-template-columns: ${gridCols};
   grid-template-areas: ${gridAreas};
@@ -201,7 +201,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   animation: ${messageAnimation};
   transform-origin: left center;
 }
-.im-avatar {
+.livicat-avatar {
   grid-area: avatar;
   width: ${avatarSize}px;
   height: ${avatarSize}px;
@@ -210,13 +210,13 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   margin-top: ${settings.avatarMarginTop}px;
   animation: ${avatarAnimation};
 }
-.im-avatar-img {
+.livicat-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-.im-name {
+.livicat-name {
   grid-area: name;
   position: relative;
   z-index: 2;
@@ -225,8 +225,8 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   max-width: 100%;
   padding: 2px 10px;
   border-radius: 12px;
-  background: var(--im-username-bg, ${settings.messageBackgroundColor});
-  color: var(--im-username);
+  background: var(--livicat-username-bg, ${settings.messageBackgroundColor});
+  color: var(--livicat-username);
   font-size: ${settings.usernameFontSize}px;
   font-weight: ${settings.usernameFontWeight};
   font-family: inherit;
@@ -237,7 +237,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   animation-delay: 50ms;
   animation-fill-mode: backwards;
 }
-.im-bubble {
+.livicat-bubble {
   grid-area: bubble;
   position: relative;
   z-index: 1;
@@ -245,10 +245,10 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   width: fit-content;
   max-width: 100%;
   padding: ${settings.bubblePadding}px;
-  border: ${settings.bubbleBorderWidth}px solid var(--im-border);
+  border: ${settings.bubbleBorderWidth}px solid var(--livicat-border);
   border-radius: ${settings.messageBorderRadius}px;
-  background: var(--im-bg);
-  color: var(--im-text);
+  background: var(--livicat-bg);
+  color: var(--livicat-text);
   font-size: ${settings.messageFontSize}px;
   font-family: inherit;
   font-weight: normal;
@@ -256,24 +256,24 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.im-bubble::before {
+.livicat-bubble::before {
   content: "";
   position: absolute;
   left: ${settings.bubbleTailOffset}px;
   top: 14px;
   width: 12px;
   height: 12px;
-  border-left: ${settings.bubbleBorderWidth}px solid var(--im-border);
-  border-bottom: ${settings.bubbleBorderWidth}px solid var(--im-border);
+  border-left: ${settings.bubbleBorderWidth}px solid var(--livicat-border);
+  border-bottom: ${settings.bubbleBorderWidth}px solid var(--livicat-border);
   border-radius: 3px 0 3px 3px;
-  background: var(--im-bg);
+  background: var(--livicat-bg);
   transform: rotate(45deg);
   z-index: 1;
 }
 `
 
   return (
-    <div className="im-chat-messages" style={{ fontFamily: settings.fontFamily }}>
+    <div className="livicat-chat-messages" style={{ fontFamily: settings.fontFamily }}>
       <style>{imCSS}</style>
       {messages.map((msg) => (
         <ImBubble key={msg.id} message={msg} settings={settings} />
@@ -663,7 +663,7 @@ export default function WorkspaceX() {
         {/* Header */}
         <div className="px-5 py-4 border-b border-outline-variant/50 flex items-center gap-3">
           <div>
-            <h2 className="text-title-lg font-bold text-on-surface">IM Style</h2>
+            <h2 className="text-title-lg font-bold text-on-surface">Style Panel</h2>
             <p className="text-label-md text-on-surface-variant">Style Customizer</p>
           </div>
         </div>

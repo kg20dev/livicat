@@ -55,7 +55,7 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
 
   // ── Animation Keyframes ─────────────────────────────────
   // Renderer pop-in — the whole message group slides and bounces in
-  parts.push(`@keyframes im-message-pop-in {
+  parts.push(`@keyframes livicat-message-pop-in {
   0% {
     opacity: 0;
     transform: scale(0.3) translateY(20px);
@@ -76,7 +76,7 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
   const chipEasing = 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' // overshoot back then forward
   const chipDuration = animSpeed === 'slow' ? '0.5s' : animSpeed === 'none' ? '0s' : '0.35s'
   const chipDelay = animSpeed === 'none' ? '0s' : '0.05s'
-  parts.push(`@keyframes im-chip-tilt-in {
+  parts.push(`@keyframes livicat-chip-tilt-in {
   0% {
     opacity: 0;
     transform: rotate(10deg) translate(-20px, 0) scale(0.7);
@@ -95,7 +95,7 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
 
   // Avatar scale-in — pops in from zero
   const avatarDuration = animSpeed === 'slow' ? '0.45s' : animSpeed === 'none' ? '0s' : '0.3s'
-  parts.push(`@keyframes im-avatar-scale {
+  parts.push(`@keyframes livicat-avatar-scale {
   0% {
     opacity: 0;
     transform: scale(0);
@@ -112,7 +112,7 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
   // ── Renderer — flex row, transparent, with IM animation
   const animCSS = animSpeed === 'none'
     ? ''
-    : `  animation: im-message-pop-in ${animDuration} ${animEasing} both !important;`
+    : `  animation: livicat-message-pop-in ${animDuration} ${animEasing} both !important;`
   parts.push(`yt-live-chat-text-message-renderer {
   display: flex !important;
   flex-direction: row !important;
@@ -128,7 +128,7 @@ ${animCSS}}`)
   // ── Avatar wrapper — fixed size, circular, with configurable vertical offset
   const avatarAnimCSS = animSpeed === 'none'
     ? ''
-    : `  animation: im-avatar-scale ${avatarDuration} ease-out both !important;`
+    : `  animation: livicat-avatar-scale ${avatarDuration} ease-out both !important;`
   parts.push(`yt-live-chat-text-message-renderer #author-photo {
   flex-shrink: 0 !important;
   width: ${avatarSize} !important;
@@ -185,7 +185,7 @@ yt-live-chat-author-chip * {
   // Name chip — rotated badge overlapping the message bubble, with own entrance animation
   const chipAnimCSS = animSpeed === 'none'
     ? ''
-    : `  animation: im-chip-tilt-in ${chipDuration} ${chipEasing} backwards !important;
+    : `  animation: livicat-chip-tilt-in ${chipDuration} ${chipEasing} backwards !important;
   animation-delay: ${chipDelay} !important;`
   parts.push(`yt-live-chat-text-message-renderer #author-name-chip,
 yt-live-chat-text-message-renderer #author-name {
