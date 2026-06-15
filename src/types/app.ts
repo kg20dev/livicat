@@ -80,6 +80,26 @@ export interface ChatSettings {
   theme: Theme
   animationSpeed: AnimationSpeed
   newMessageAnimation: AnimationStyle
+
+  /* IM-style bubble settings */
+  bubbleBorderWidth: number
+  bubbleTailOffset: number
+  bubbleMaxWidth: number
+  bubblePadding: number
+
+  /* Chroma key mode — forces background to #00b140 for OBS */
+  chromaKey: boolean
+
+  /* IM-style role colors */
+  ownerBg: string
+  ownerText: string
+  ownerUsername: string
+  modBg: string
+  modText: string
+  modUsername: string
+  memberBg: string
+  memberText: string
+  memberUsername: string
 }
 
 /* ─── Preset ────────────────────────────────────────────────────── */

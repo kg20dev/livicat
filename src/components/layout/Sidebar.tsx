@@ -88,7 +88,10 @@ function SidebarNavItems({
   activeItem: string
   onNavigate: (item: string) => void
 }) {
-  const mainItems = [{ id: 'workspace', label: 'Workspace', icon: 'edit_square' }]
+  const mainItems = [
+    { id: 'workspace', label: 'Workspace', icon: 'edit_square' },
+    { id: 'workspace-x', label: 'Workspace X', icon: 'magic_button' },
+  ]
 
   const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]
 

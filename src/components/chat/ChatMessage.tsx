@@ -5,6 +5,7 @@ interface ChatMessageProps {
   message: string
   avatarSeed: string | number
   timestamp?: string
+  role?: 'owner' | 'moderator' | 'member' | 'member-ship' | 'super-chat' | 'default'
 }
 
 /**
@@ -37,16 +38,165 @@ export default function ChatMessage({
   message,
   avatarSeed,
   timestamp,
+  role = 'default',
 }: ChatMessageProps) {
-  return createElement(
-    'yt-live-chat-text-message-renderer',
-    { className: 'style-scope yt-live-chat-item-list-renderer' },
+  // ── Author chip children ──
+  const authorChildren: React.ReactNode[] = [
+    createElement(
+      'span',
+      {
+        id: 'author-name',
+        dir: 'auto',
+        key: 'name',
+        className: 'style-scope yt-live-chat-author-chip',
+      },
+      username
+    ),
+  ]
 
-    /* ── Avatar: yt-img-shadow#author-photo > img#img ── */
+  // Role badge in author chip
+  if (role === 'owner') {
+    authorChildren.push(
+      createElement(
+        'span',
+        {
+          id: 'chat-badges',
+          key: 'badge',
+          className: 'style-scope yt-live-chat-author-chip owner-badge',
+        },
+        '🛡️'
+      )
+    )
+  } else if (role === 'moderator') {
+    authorChildren.push(
+      createElement(
+        'span',
+        {
+          id: 'chat-badges',
+          key: 'badge',
+          className: 'style-scope yt-live-chat-author-chip mod-badge',
+        },
+        '🔧'
+      )
+    )
+  } else if (role === 'member') {
+    authorChildren.push(
+      createElement(
+        'span',
+        {
+          id: 'chat-badges',
+          key: 'badge',
+          className: 'style-scope yt-live-chat-author-chip member-badge',
+        },
+        '⭐'
+      )
+    )
+  } else if (role === 'member-ship') {
+    authorChildren.push(
+      createElement(
+        'span',
+        {
+          id: 'chat-badges',
+          key: 'badge',
+          className: 'style-scope yt-live-chat-author-chip membership-badge',
+        },
+        '🌟'
+      )
+    )
+  } else {
+    authorChildren.push(
+      createElement('span', {
+        id: 'chat-badges',
+        key: 'badge',
+        className: 'style-scope yt-live-chat-author-chip',
+      })
+    )
+  }
+
+  // ── #content children ──
+  const contentChildren: React.ReactNode[] = []
+
+  if (role === 'member-ship') {
+    contentChildren.push(
+      createElement(
+        'div',
+        {
+          id: 'membership-banner',
+          key: 'membership',
+          className: 'style-scope yt-live-chat-text-message-renderer',
+        },
+        '🎉 New member! Welcome to the channel!'
+      )
+    )
+  }
+
+  // Timestamp
+  if (timestamp) {
+    contentChildren.push(
+      createElement(
+        'span',
+        {
+          id: 'timestamp',
+          className: 'timestamp style-scope yt-live-chat-text-message-renderer',
+          key: 'timestamp',
+        },
+        timestamp
+      )
+    )
+  }
+
+  // Author chip
+  contentChildren.push(
+    createElement(
+      'yt-live-chat-author-chip',
+      { className: 'style-scope yt-live-chat-text-message-renderer', key: 'chip' },
+      ...authorChildren
+    )
+  )
+
+  // Message text
+  contentChildren.push(
+    createElement(
+      'span',
+      {
+        id: 'message-container',
+        className: 'style-scope yt-live-chat-text-message-renderer',
+        key: 'msg-container',
+      },
+      createElement(
+        'span',
+        {
+          id: 'message',
+          dir: 'auto',
+          className: 'style-scope yt-live-chat-text-message-renderer',
+        },
+        message
+      )
+    )
+  )
+
+  // ── Root renderer children ──
+  const rootChildren: React.ReactNode[] = []
+
+  // Super Chat color bar
+  if (role === 'super-chat') {
+    rootChildren.push(
+      createElement('div', {
+        id: 'sc-bar',
+        key: 'sc-bar',
+        className: 'style-scope yt-live-chat-text-message-renderer',
+        style: { height: '4px', width: '100%', background: 'var(--chat-accent, #ff69b4)' },
+      })
+    )
+  }
+
+  // Avatar
+  rootChildren.push(
     createElement(
       'yt-img-shadow',
       {
         id: 'author-photo',
+        key: 'photo',
         className: 'no-transition style-scope yt-live-chat-text-message-renderer',
       },
       createElement('img', {
@@ -55,62 +205,28 @@ export default function ChatMessage({
         alt: username,
         className: 'style-scope yt-img-shadow',
       })
-    ),
+    )
+  )
 
-    /* ── #content wrapper (timestamp, author chip, message) ── */
+  // #content
+  rootChildren.push(
     createElement(
       'div',
-      { id: 'content', className: 'style-scope yt-live-chat-text-message-renderer' },
-
-      /* Timestamp (optional) */
-      timestamp &&
-        createElement(
-          'span',
-          {
-            id: 'timestamp',
-            className: 'timestamp style-scope yt-live-chat-text-message-renderer',
-            key: 'timestamp',
-          },
-          timestamp
-        ),
-
-      /* Author chip: yt-live-chat-author-chip > #author-name + #chat-badges */
-      createElement(
-        'yt-live-chat-author-chip',
-        { className: 'style-scope yt-live-chat-text-message-renderer', key: 'chip' },
-        createElement(
-          'span',
-          {
-            id: 'author-name',
-            dir: 'auto',
-            className: 'style-scope yt-live-chat-author-chip',
-          },
-          username
-        ),
-        createElement('span', {
-          id: 'chat-badges',
-          className: 'style-scope yt-live-chat-author-chip',
-        })
-      ),
-
-      /* Message text (wrapped in #message-container to match real YouTube DOM) */
-      createElement(
-        'span',
-        {
-          id: 'message-container',
-          className: 'style-scope yt-live-chat-text-message-renderer',
-          key: 'msg-container',
-        },
-        createElement(
-          'span',
-          {
-            id: 'message',
-            dir: 'auto',
-            className: 'style-scope yt-live-chat-text-message-renderer',
-          },
-          message
-        )
-      )
+      {
+        id: 'content',
+        key: 'content',
+        className: 'style-scope yt-live-chat-text-message-renderer',
+      },
+      ...contentChildren
     )
+  )
+
+  return createElement(
+    'yt-live-chat-text-message-renderer',
+    {
+      className: 'style-scope yt-live-chat-item-list-renderer',
+      'data-role': role,
+    },
+    ...rootChildren
   )
 }
