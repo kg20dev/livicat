@@ -51,7 +51,7 @@ function buildIMLayoutRules(settings: ChatCSSSettings): string {
   // Determine animation speed
   const animSpeed = settings.animation?.speed ?? 'normal'
   const animDuration = animSpeed === 'slow' ? '0.6s' : animSpeed === 'none' ? '0s' : '0.4s'
-  const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring (matching doodlekuma)
+  const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring
 
   // ── Animation Keyframes ─────────────────────────────────
   // Renderer pop-in — the whole message group slides and bounces in

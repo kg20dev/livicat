@@ -1,5 +1,5 @@
 /**
- * Workspace X — A page inspired by doodlekuma's Style Panel.
+ * Workspace X — A Style Panel for live chat customization.
  *
  * Preview modes:
  *   Live    → Real-time message streaming (variable timing, loops)
@@ -126,7 +126,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
 
   // Animation settings
   const animDuration = settings.animationSpeed === 'slow' ? '0.6s' : settings.animationSpeed === 'normal' ? '0.4s' : '0s'
-  const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring (matching doodlekuma)
+  const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring
   const messageAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-message-pop-in ${animDuration} ${animEasing} both`
   const avatarAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-avatar-scale 0.3s ease-out both`
   const chipAnimation = settings.animationSpeed === 'none' ? 'none' : `livicat-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
@@ -341,7 +341,7 @@ function SubHeading({ label }: { label: string }) {
   )
 }
 
-/* ─── Color Picker (inline, like doodlekuma) ──────────────────── */
+/* ─── Color Picker (inline) ──────────────────────────── */
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const hex = value.replace('#', '')
