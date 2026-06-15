@@ -1038,7 +1038,7 @@ export default function WorkspaceX() {
           >
             {previewMode === 'live' && displayIndex === 0 && !paused ? (
               /* Empty state while waiting for first message */
-              <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8">
+              <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8 mt-16">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
                 <p className="text-body-md text-on-surface-variant text-center">
                   Waiting for chat...
