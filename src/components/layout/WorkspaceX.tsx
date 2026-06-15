@@ -7,14 +7,15 @@
  */
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import ChatPreview from '../chat/ChatPreview'
 import type { Message } from '../chat/ChatPreview'
-import { useChatSettings, settingsToCSS } from '../../hooks/useChatSettings'
-import { generateOBSCSS, downloadCSSFile } from '../../utils/cssExport'
+import { useChatSettings, settingsToCSSSettings } from '../../hooks/useChatSettings'
+import { generateChatCSSX } from '../../utils/cssGenerator-x'
+import { useElectronPreview } from '../../hooks/useElectronPreview'
 import { trackEventAsync } from '../../utils/analytics'
 import { loadWebFont } from '../../utils/fonts'
 import { FONT_OPTIONS } from '../../utils/fonts'
 import type { ChatSettings } from '../../types/app'
+import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 
 /* ══════════════════════════════════════════════════════════════════
    ║  Demo Data                                                      ║
@@ -57,75 +58,229 @@ const GALLERY_MESSAGES: Message[] = [
   { id: 'g6', username: 'LiveWire', message: 'Welcome to the membership! Member since June 2026', avatarSeed: 15, timestamp: '10:30 AM', role: 'member-ship' },
 ]
 
-/**
- * Role-based CSS injected in Gallery mode so each data-role gets distinct
- * visual treatment. This gives users a preview of how role-specific
- * styling could look in their exported CSS.
- */
-const ROLE_STYLES_CSS = `
-/* ── Owner role ── */
-yt-live-chat-text-message-renderer[data-role="owner"] {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 200, 0, 0.06)) !important;
-  border-left: 3px solid #ffd700 !important;
-}
-yt-live-chat-text-message-renderer[data-role="owner"] #author-name {
-  color: #ffd700 !important;
-  font-weight: 700 !important;
+/* ══════════════════════════════════════════════════════════════════
+   ║  IM-Style Chat Bubble Components                                 ║
+   ══════════════════════════════════════════════════════════════════ */
+
+function getRoleColors(
+  role: Message['role'] | undefined,
+  s: ChatSettings
+): { bg: string; text: string; username: string; border: string } {
+  switch (role) {
+    case 'owner':
+      return { bg: s.ownerBg, text: s.ownerText, username: s.ownerUsername, border: s.ownerText }
+    case 'moderator':
+      return { bg: s.modBg, text: s.modText, username: s.modUsername, border: s.modText }
+    case 'member':
+      return { bg: s.memberBg, text: s.memberText, username: s.memberUsername, border: s.memberText }
+    default:
+      return {
+        bg: s.messageBackgroundColor,
+        text: s.messageColor,
+        username: s.usernameColor,
+        border: s.scrollbarColor,
+      }
+  }
 }
 
-/* ── Moderator role ── */
-yt-live-chat-text-message-renderer[data-role="moderator"] {
-  background: linear-gradient(135deg, rgba(66, 133, 244, 0.10), rgba(66, 133, 244, 0.04)) !important;
-  border-left: 3px solid #4285f4 !important;
-}
-yt-live-chat-text-message-renderer[data-role="moderator"] #author-name {
-  color: #4285f4 !important;
-  font-weight: 700 !important;
+/** Single IM-style chat bubble with avatar, name chip, and tail */
+function ImBubble({ message, settings }: { message: Message; settings: ChatSettings }) {
+  const rc = getRoleColors(message.role, settings)
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.avatarSeed}`
+
+  return (
+    <div
+      className="im-message"
+      style={
+        {
+          '--im-bg': rc.bg,
+          '--im-text': rc.text,
+          '--im-username': rc.username,
+          '--im-border': rc.border,
+          '--im-username-bg': settings.messageBackgroundColor,
+        } as React.CSSProperties
+      }
+    >
+      {settings.showAvatars && (
+        <div className="im-avatar">
+          <img src={avatarUrl} alt="" className="im-avatar-img" />
+        </div>
+      )}
+      <div className="im-name">{message.username}</div>
+      <div className="im-bubble">
+        <div className="im-bubble-text">{message.message}</div>
+      </div>
+    </div>
+  )
 }
 
-/* ── Member role ── */
-yt-live-chat-text-message-renderer[data-role="member"] {
-  background: linear-gradient(135deg, rgba(52, 168, 83, 0.10), rgba(52, 168, 83, 0.04)) !important;
-  border-left: 3px solid #34a853 !important;
-}
-yt-live-chat-text-message-renderer[data-role="member"] #author-name {
-  color: #34a853 !important;
-  font-weight: 600 !important;
+/** Scrollable list of IM-style chat bubbles */
+function ImChatList({ messages, settings }: { messages: Message[]; settings: ChatSettings }) {
+  const avatarSize = settings.showAvatars ? settings.avatarSize : 0
+  const gap = 0
+  const bubbleWidth = settings.bubbleMaxWidth
+  const gridCols = avatarSize > 0 ? `${avatarSize}px minmax(0, ${bubbleWidth}px)` : `0px minmax(0, ${bubbleWidth}px)`
+  const gridAreas = avatarSize > 0 ? '"avatar name" "avatar bubble"' : '"name" "bubble"'
+  const marginBottom = settings.messageSpacing === 'compact' ? 4 : settings.messageSpacing === 'comfortable' ? 16 : 10
+  const totalWidth = avatarSize + gap + bubbleWidth
+
+  // Animation settings
+  const animDuration = settings.animationSpeed === 'slow' ? '0.6s' : settings.animationSpeed === 'normal' ? '0.4s' : '0s'
+  const animEasing = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' // gentle spring (matching doodlekuma)
+  const messageAnimation = settings.animationSpeed === 'none' ? 'none' : `im-message-pop-in ${animDuration} ${animEasing} both`
+  const avatarAnimation = settings.animationSpeed === 'none' ? 'none' : `im-avatar-scale 0.3s ease-out both`
+  const chipAnimation = settings.animationSpeed === 'none' ? 'none' : `im-chip-tilt-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) both`
+
+  const imCSS = `
+@keyframes im-message-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  50% {
+    transform: scale(1.05) translateY(-5px);
+  }
+  70% {
+    transform: scale(0.95) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* ── Super Chat ── */
-yt-live-chat-text-message-renderer[data-role="super-chat"] {
-  background: linear-gradient(135deg, rgba(255, 105, 180, 0.15), rgba(255, 105, 180, 0.06)) !important;
-  border: 2px solid rgba(255, 105, 180, 0.4) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 0 20px rgba(255, 105, 180, 0.15) !important;
-}
-yt-live-chat-text-message-renderer[data-role="super-chat"] #sc-bar {
-  display: block !important;
-  flex: 0 0 auto !important;
-}
-yt-live-chat-text-message-renderer[data-role="super-chat"] #author-name {
-  color: #ff69b4 !important;
-  font-weight: 700 !important;
+@keyframes im-avatar-scale {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-/* ── Membership ── */
-yt-live-chat-text-message-renderer[data-role="member-ship"] {
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.10), rgba(147, 51, 234, 0.04)) !important;
-  border-left: 3px solid #9333ea !important;
+@keyframes im-chip-tilt-in {
+  0% {
+    opacity: 0;
+    transform: rotate(10deg) translate(-20px, 0) scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-8deg) translate(5px, 8px) scale(1.1);
+  }
+  80% {
+    transform: rotate(-2deg) translate(0, 5px) scale(0.98);
+  }
+  100% {
+    transform: rotate(-4deg) translate(2px, 6px) scale(1);
+  }
 }
-yt-live-chat-text-message-renderer[data-role="member-ship"] #membership-banner {
-  display: block !important;
-  font-size: 13px !important;
-  padding: 4px 0 !important;
-  color: #9333ea !important;
-  font-weight: 600 !important;
+
+.im-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: ${settings.scrollbarColor} transparent;
 }
-yt-live-chat-text-message-renderer[data-role="member-ship"] #author-name {
-  color: #9333ea !important;
-  font-weight: 700 !important;
+.im-message {
+  display: grid;
+  grid-template-columns: ${gridCols};
+  grid-template-areas: ${gridAreas};
+  column-gap: 8px;
+  row-gap: 0;
+  align-items: start;
+  width: fit-content;
+  max-width: min(100%, ${totalWidth}px);
+  margin-bottom: ${marginBottom}px;
+  opacity: ${settings.messageOpacity / 100};
+  animation: ${messageAnimation};
+  transform-origin: left center;
+}
+.im-avatar {
+  grid-area: avatar;
+  width: ${avatarSize}px;
+  height: ${avatarSize}px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-top: ${settings.avatarMarginTop}px;
+  animation: ${avatarAnimation};
+}
+.im-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.im-name {
+  grid-area: name;
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: var(--im-username-bg, ${settings.messageBackgroundColor});
+  color: var(--im-username);
+  font-size: ${settings.usernameFontSize}px;
+  font-weight: ${settings.usernameFontWeight};
+  font-family: inherit;
+  line-height: 1.3;
+  transform: rotate(-4deg) translate(2px, 6px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  animation: ${chipAnimation};
+  animation-delay: 50ms;
+  animation-fill-mode: backwards;
+}
+.im-bubble {
+  grid-area: bubble;
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: ${settings.bubblePadding}px;
+  border: ${settings.bubbleBorderWidth}px solid var(--im-border);
+  border-radius: ${settings.messageBorderRadius}px;
+  background: var(--im-bg);
+  color: var(--im-text);
+  font-size: ${settings.messageFontSize}px;
+  font-family: inherit;
+  font-weight: normal;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.im-bubble::before {
+  content: "";
+  position: absolute;
+  left: ${settings.bubbleTailOffset}px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-left: ${settings.bubbleBorderWidth}px solid var(--im-border);
+  border-bottom: ${settings.bubbleBorderWidth}px solid var(--im-border);
+  border-radius: 3px 0 3px 3px;
+  background: var(--im-bg);
+  transform: rotate(45deg);
+  z-index: 1;
 }
 `
+
+  return (
+    <div className="im-chat-messages" style={{ fontFamily: settings.fontFamily }}>
+      <style>{imCSS}</style>
+      {messages.map((msg) => (
+        <ImBubble key={msg.id} message={msg} settings={settings} />
+      ))}
+    </div>
+  )
+}
 
 /* ══════════════════════════════════════════════════════════════════
    ║  Collapsible Section                                             ║
@@ -363,18 +518,20 @@ const SIZE_PRESETS = [
    ══════════════════════════════════════════════════════════════════ */
 
 export default function WorkspaceX() {
-  const { settings, updateSetting, savedIndicator } = useChatSettings()
-  const [previewWidth, setPreviewWidth] = useState(500)
-  const [previewHeight, setPreviewHeight] = useState(700)
+  const { settings, updateSetting } = useChatSettings()
+  const effectiveBg = settings.chromaKey ? '#00b140' : settings.backgroundColor
+  const { openPreview, updateCSS, closePreview } = useElectronPreview()
+  const [previewWidth, setPreviewWidth] = useState(600)
+  const [previewHeight, setPreviewHeight] = useState(800)
   const [messageSpeed, setMessageSpeed] = useState(1200)
   const [previewMode, setPreviewMode] = useState<'live' | 'gallery'>('live')
   const [paused, setPaused] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [displayIndex, setDisplayIndex] = useState(0)
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Generate CSS from settings
-  const currentCSS = useMemo(() => settingsToCSS(settings), [settings])
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const previewStartRef = useRef<number | null>(null)
 
   // Auto-load web font
   useEffect(() => {
@@ -415,35 +572,74 @@ export default function WorkspaceX() {
     }
   }, [previewMode])
 
+  // Listen for preview window closing
+  useEffect(() => {
+    const handleClosed = () => {
+      setPreviewOpen(false)
+      if (previewStartRef.current) {
+        const duration = Math.round((Date.now() - previewStartRef.current) / 1000)
+        trackEventAsync('preview_duration', { duration_seconds: duration })
+        previewStartRef.current = null
+      }
+    }
+    window.addEventListener('electron-preview-closed', handleClosed)
+    return () => window.removeEventListener('electron-preview-closed', handleClosed)
+  }, [])
+
+  // Build CSS settings — patch background when chroma key is active
+  const xCSSSettings = useMemo(() => {
+    const base = settingsToCSSSettings(settings)
+    if (settings.chromaKey) {
+      return {
+        ...base,
+        container: { ...base.container, background: '#00b140' },
+        general: { ...base.general, backgroundColor: '#00b140' },
+      }
+    }
+    return base
+  }, [settings])
+
+  // Auto-sync CSS to preview window — use IM-style CSS generator
+  useEffect(() => {
+    if (!previewOpen) return
+    const timer = setTimeout(() => {
+      const css = generateChatCSSX(xCSSSettings)
+      updateCSS(css)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [previewOpen, xCSSSettings, updateCSS])
+
   const visibleMessages = useMemo(() => {
     if (previewMode === 'gallery') return GALLERY_MESSAGES
     return LIVE_MESSAGES.slice(0, displayIndex)
   }, [previewMode, displayIndex])
 
-  // Combined CSS: generated + role styles for gallery
-  const previewCSS = useMemo(() => {
-    if (previewMode === 'gallery') {
-      return currentCSS + '\n' + ROLE_STYLES_CSS
-    }
-    return currentCSS
-  }, [currentCSS, previewMode])
+  // Validate YouTube URL
+  const validation = useMemo(() => validateYouTubeUrl(youtubeUrl), [youtubeUrl])
+  const urlError = validation.isValid || !youtubeUrl ? null : (validation.errorMessage ?? null)
+  const videoId = validation.isValid ? validation.videoId : null
 
-  // Export handler
-  const handleExportCSS = useCallback(() => {
-    const css = currentCSS || '/* No custom styles applied */'
-    const obsCSS = generateOBSCSS(css, {
-      themeName: 'livicat-workspace-x',
-    })
-    downloadCSSFile(obsCSS, 'youtube-chat-workspace-x')
-      .then(() => {
-        trackEventAsync('css_exported', {
-          format: 'css',
-          method: 'download',
-          had_customizations: css.length > 0,
-        })
+  // Open YouTube preview window
+  const handleYoutubePreview = useCallback(() => {
+    if (previewOpen) {
+      closePreview()
+      setPreviewOpen(false)
+      if (previewStartRef.current) {
+        const duration = Math.round((Date.now() - previewStartRef.current) / 1000)
+        trackEventAsync('preview_duration', { duration_seconds: duration })
+        previewStartRef.current = null
+      }
+    } else if (videoId) {
+      const css = generateChatCSSX(xCSSSettings)
+      openPreview(videoId, css)
+      setPreviewOpen(true)
+      previewStartRef.current = Date.now()
+      trackEventAsync('preview_opened', {
+        has_video_id: !!videoId,
+        video_provided: !!videoId,
       })
-      .catch((err) => console.error('[WorkspaceX] CSS export failed:', err))
-  }, [currentCSS])
+    }
+  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings])
 
   /* ─── setting helper wrappers ─────────────────────────────────── */
 
@@ -461,7 +657,7 @@ export default function WorkspaceX() {
   const s = settings // shorthand
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full overflow-hidden">
       {/* ─── Left Panel: Customizer ─────────────────────────── */}
       <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
         {/* Header */}
@@ -475,20 +671,17 @@ export default function WorkspaceX() {
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
           {/* ── Text Message ──────────────────────────────── */}
-          <CollapsibleSection icon="message_square" title="Text Message">
+          <CollapsibleSection icon="chat_bubble" title="Text Message">
             {/* Background */}
             <div>
               <SubHeading label="Background" />
-              <ColorRow label="Background Color" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
+              <ColorRow label="Default Bubble Background" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
             </div>
 
             {/* Author Name */}
             <div>
               <SubHeading label="Author Name" />
-              <ColorRow label="Background" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
-              <div className="mt-2">
-                <ColorRow label="Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
-              </div>
+              <ColorRow label="Default Username Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
               <div className="mt-2">
                 <ToggleRow label="Bold" value={s.usernameFontWeight === '700'} onChange={(v) => update('usernameFontWeight', v ? '700' : '400')} />
               </div>
@@ -497,24 +690,34 @@ export default function WorkspaceX() {
             {/* Content */}
             <div>
               <SubHeading label="Content" />
-              <ColorRow label="Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
+              <ColorRow label="Default Text Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
             </div>
 
             {/* Typography */}
             <div>
               <SubHeading label="Typography" />
-              <SliderRow label="Name Size" value={s.usernameFontSize} min={10} max={40} unit="px" onChange={(v) => update('usernameFontSize', v)} />
+              <SliderRow label="Username Size" value={s.usernameFontSize} min={10} max={40} unit="px" onChange={(v) => update('usernameFontSize', v)} />
               <div className="mt-3">
                 <SliderRow label="Content Font Size" value={s.messageFontSize} min={10} max={48} unit="px" onChange={(v) => update('messageFontSize', v)} />
               </div>
             </div>
 
-            {/* Border */}
+            {/* Bubble */}
             <div>
-              <SubHeading label="Border" />
+              <SubHeading label="Bubble" />
               <ColorRow label="Border Color" value={s.scrollbarColor} onChange={(v) => update('scrollbarColor', v)} />
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <SliderRow label="Border Width" value={s.bubbleBorderWidth} min={0} max={10} unit="px" onChange={(v) => update('bubbleBorderWidth', v)} />
+                <SliderRow label="Corner Radius" value={s.messageBorderRadius} min={0} max={30} unit="px" onChange={(v) => update('messageBorderRadius', v)} />
+              </div>
               <div className="mt-3">
-                <SliderRow label="Border Width" value={s.messageBorderRadius} min={0} max={20} unit="px" onChange={(v) => update('messageBorderRadius', v)} />
+                <SliderRow label="Padding" value={s.bubblePadding} min={4} max={30} unit="px" onChange={(v) => update('bubblePadding', v)} />
+              </div>
+              <div className="mt-3">
+                <SliderRow label="Tail Offset" value={s.bubbleTailOffset} min={-20} max={10} unit="px" onChange={(v) => update('bubbleTailOffset', v)} />
+              </div>
+              <div className="mt-3">
+                <SliderRow label="Max Width" value={s.bubbleMaxWidth} min={200} max={800} unit="px" onChange={(v) => update('bubbleMaxWidth', v)} />
               </div>
             </div>
           </CollapsibleSection>
@@ -526,12 +729,12 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-yellow-400" />
                 Owner
               </div>
-              <ColorRow label="Background" value={s.accentColor} onChange={(v) => update('accentColor', v)} />
+              <ColorRow label="Bubble Background" value={s.ownerBg} onChange={(v) => update('ownerBg', v)} />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
+                <ColorRow label="Text Color" value={s.ownerText} onChange={(v) => update('ownerText', v)} />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
+                <ColorRow label="Username Color" value={s.ownerUsername} onChange={(v) => update('ownerUsername', v)} />
               </div>
             </div>
             <div className="border-t border-outline-variant/20 pt-4 mt-4">
@@ -539,12 +742,12 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-blue-400" />
                 Moderator
               </div>
-              <ColorRow label="Background" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
+              <ColorRow label="Bubble Background" value={s.modBg} onChange={(v) => update('modBg', v)} />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
+                <ColorRow label="Text Color" value={s.modText} onChange={(v) => update('modText', v)} />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
+                <ColorRow label="Username Color" value={s.modUsername} onChange={(v) => update('modUsername', v)} />
               </div>
             </div>
             <div className="border-t border-outline-variant/20 pt-4 mt-4">
@@ -552,12 +755,12 @@ export default function WorkspaceX() {
                 <span className="w-2 h-2 rounded-full bg-green-400" />
                 Member
               </div>
-              <ColorRow label="Background" value={s.messageBackgroundColor} onChange={(v) => update('messageBackgroundColor', v)} />
+              <ColorRow label="Bubble Background" value={s.memberBg} onChange={(v) => update('memberBg', v)} />
               <div className="mt-2">
-                <ColorRow label="Text Color" value={s.messageColor} onChange={(v) => update('messageColor', v)} />
+                <ColorRow label="Text Color" value={s.memberText} onChange={(v) => update('memberText', v)} />
               </div>
               <div className="mt-2">
-                <ColorRow label="Username Color" value={s.usernameColor} onChange={(v) => update('usernameColor', v)} />
+                <ColorRow label="Username Color" value={s.memberUsername} onChange={(v) => update('memberUsername', v)} />
               </div>
             </div>
           </CollapsibleSection>
@@ -593,6 +796,12 @@ export default function WorkspaceX() {
             />
           </CollapsibleSection>
 
+          {/* ── Avatar ──────────────────────────────────────── */}
+          <CollapsibleSection icon="face" title="Avatar" defaultOpen={false}>
+            <SliderRow label="Size" value={s.avatarSize} min={16} max={80} unit="px" onChange={(v) => update('avatarSize', v)} />
+            <SliderRow label="Vertical Offset" value={s.avatarMarginTop} min={0} max={60} unit="px" onChange={(v) => update('avatarMarginTop', v)} />
+          </CollapsibleSection>
+
           {/* ── Message Visibility ─────────────────────────── */}
           <CollapsibleSection icon="visibility" title="Message Visibility" defaultOpen={false}>
             <ToggleRow label="Text Messages" value={true} onChange={() => {}} />
@@ -609,32 +818,14 @@ export default function WorkspaceX() {
             </div>
           </CollapsibleSection>
         </div>
-
-        {/* Footer: Download + Saved indicator */}
-        <div className="px-4 py-4 border-t border-outline-variant/50 flex items-center gap-3">
-          <button
-            onClick={handleExportCSS}
-            className="flex-1 bg-primary text-on-primary py-2.5 rounded-lg text-label-md font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            Download CSS
-          </button>
-          {savedIndicator && (
-            <span className="text-label-sm text-primary font-medium flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
-              Saved
-            </span>
-          )}
-        </div>
       </aside>
 
       {/* ─── Right Panel: Preview ──────────────────────────── */}
-      <section className="flex-1 flex flex-col items-center justify-center bg-surface-container-lowest relative">
+      <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0">
         {/* Preview Toolbar */}
         <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between">
-          {/* Left: Mode + Platform toggles */}
-          <div className="flex items-center gap-2">
-            {/* Mode toggle: Live / Gallery */}
+          {/* Left: Mode toggle */}
+          <div className="flex items-center gap-3">
             <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
               <button
                 onClick={() => setPreviewMode('live')}
@@ -660,49 +851,73 @@ export default function WorkspaceX() {
               </button>
             </div>
 
-            {/* Platform selector */}
-            <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-label-sm font-medium bg-primary text-on-primary shadow-sm">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4.9 19.1a10 10 0 0 1 0-14.2" />
-                  <path d="M7.8 16.2a6 6 0 0 1 0-8.4" />
-                  <circle cx="12" cy="12" r="2" />
-                  <path d="M16.2 7.8a6 6 0 0 1 0 8.4" />
-                  <path d="M19.1 4.9a10 10 0 0 1 0 14.2" />
-                </svg>
-                SS
-              </button>
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-label-sm font-medium text-on-surface-variant hover:text-on-surface">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.5.5c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.5 9.5.5 9.5.5s7.6 0 9.5-.5c1-.3 1.7-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6.4 3.5-6.4 3.5z" />
-                </svg>
-                YT
-              </button>
-            </div>
-
-            {/* Dimension display */}
-            <span className="text-label-sm text-on-surface-variant font-mono tabular-nums ml-2">
-              {previewWidth}×{previewHeight}
-            </span>
+            {/* Chroma Key Toggle */}
+            <button
+              onClick={() => update('chromaKey', !s.chromaKey)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
+                s.chromaKey
+                  ? 'bg-green-600/20 text-green-400 border border-green-600/30'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+              }`}
+              title={s.chromaKey ? 'Chroma Key ON — OBS-ready green background' : 'Toggle Chroma Key for OBS'}
+            >
+              <span className={`w-2 h-2 rounded-full ${s.chromaKey ? 'bg-green-400 animate-pulse' : 'bg-outline-variant'}`} />
+              <span className="material-symbols-outlined text-[13px]">grid_on</span>
+              Chroma Key
+            </button>
 
             {/* Mode indicator */}
             {previewMode === 'live' && (
-              <span className="flex items-center gap-1 text-label-sm text-green-400 ml-1">
+              <span className="flex items-center gap-1.5 text-label-sm text-green-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 {paused ? 'Paused' : `${displayIndex}/${LIVE_MESSAGES.length}`}
               </span>
             )}
             {previewMode === 'gallery' && (
-              <span className="text-label-sm text-on-surface-variant ml-1">
+              <span className="text-label-sm text-on-surface-variant">
                 {GALLERY_MESSAGES.length} states
               </span>
             )}
           </div>
 
           {/* Right: Controls */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* YouTube URL Input (only in Live mode) */}
+            {previewMode === 'live' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="YouTube URL or ID..."
+                  className={`w-48 bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
+                    urlError ? 'border-red-500/50' : 'border-outline-variant'
+                  }`}
+                />
+                <button
+                  onClick={handleYoutubePreview}
+                  disabled={!videoId}
+                  className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
+                    videoId
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
+                  }`}
+                  title={previewOpen ? 'Close Preview' : 'Open YouTube Preview'}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.5.5c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.5 9.5.5 9.5.5s7.6 0 9.5-.5c1-.3 1.7-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6.4 3.5-6.4 3.5z" />
+                  </svg>
+                  {previewOpen && (
+                    <span className="material-symbols-outlined text-[12px]">close</span>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Playback Controls (only in Live mode) */}
             {previewMode === 'live' && (
               <>
+                <div className="w-px h-4 bg-outline-variant/30" />
                 <button
                   onClick={() => { setDisplayIndex(0); setPaused(false) }}
                   className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
@@ -721,6 +936,8 @@ export default function WorkspaceX() {
                 </button>
               </>
             )}
+
+            <div className="w-px h-4 bg-outline-variant/30" />
             <button
               onClick={() => setShowSettings((v) => !v)}
               className="p-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
@@ -812,33 +1029,41 @@ export default function WorkspaceX() {
 
         {/* ─── Preview Content ────────────────────────────── */}
         <div
-          className="flex items-center justify-center transition-all duration-200"
-          style={{ width: previewWidth, height: previewHeight, maxWidth: '90vw', maxHeight: '80vh' }}
+          className="flex-1 transition-all duration-200"
+          style={{ maxHeight: 'calc(100vh - 180px)' }}
         >
-          {previewMode === 'live' && displayIndex === 0 && !paused ? (
-            /* Empty state while waiting for first message */
-            <div className="w-full max-w-[400px] h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-              <p className="text-body-md text-on-surface-variant text-center">
-                Waiting for chat...
-              </p>
-              <p className="text-label-sm text-on-surface-variant/60 text-center mt-2">
-                Messages will appear in ~{(messageSpeed / 1000).toFixed(1)}s
-              </p>
-            </div>
-          ) : previewMode === 'gallery' ? (
-            /* Gallery: ChatPreview with role-styled messages */
-            <ChatPreview messages={GALLERY_MESSAGES} css={previewCSS} showHeader={s.showHeader}>
-              <ChatPreview.Header />
-              <ChatPreview.Messages />
-            </ChatPreview>
-          ) : (
-            /* Live: ChatPreview with streaming messages */
-            <ChatPreview messages={visibleMessages} css={currentCSS} showHeader={s.showHeader}>
-              <ChatPreview.Header />
-              <ChatPreview.Messages />
-            </ChatPreview>
-          )}
+          <div
+            className="w-full h-full flex items-center justify-center p-6"
+            style={{ maxHeight: '100%' }}
+          >
+            {previewMode === 'live' && displayIndex === 0 && !paused ? (
+              /* Empty state while waiting for first message */
+              <div className="w-full max-w-[400px] h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-body-md text-on-surface-variant text-center">
+                  Waiting for chat...
+                </p>
+                <p className="text-label-sm text-on-surface-variant/60 text-center mt-2">
+                  Messages will appear in ~{(messageSpeed / 1000).toFixed(1)}s
+                </p>
+              </div>
+            ) : (
+              /* IM-style chat list (gallery or live) - full width, centered content */
+              <div
+                className="rounded-xl shadow-2xl overflow-hidden"
+                style={{
+                  width: '100%',
+                  height: `${previewHeight}px`,
+                  maxWidth: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: effectiveBg,
+                }}
+              >
+                <ImChatList messages={previewMode === 'gallery' ? GALLERY_MESSAGES : visibleMessages} settings={settings} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mode hint at bottom */}
@@ -850,6 +1075,12 @@ export default function WorkspaceX() {
           {previewMode === 'live' && displayIndex > 0 && (
             <span className="text-label-sm text-on-surface-variant/60">
               {displayIndex < LIVE_MESSAGES.length ? 'Streaming...' : '🔁 Looping'}
+            </span>
+          )}
+          {previewOpen && (
+            <span className="flex items-center gap-1.5 text-label-sm text-green-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Preview Window Open
             </span>
           )}
         </div>
