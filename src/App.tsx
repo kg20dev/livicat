@@ -7,6 +7,7 @@ import StylingPanel from './components/layout/StylingPanel'
 import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
+import { WorkspaceX } from './components/theme/WorkspaceX'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
@@ -94,7 +95,7 @@ const DEMO_MESSAGES = [
 /* ─── App ────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState('workspace')
+  const [activeNav, setActiveNav] = useState('workspace-x')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
   const [submittedUrl, setSubmittedUrl] = useState('')
@@ -288,6 +289,8 @@ export default function App() {
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />
+          ) : activeNav === 'workspace-x' ? (
+            <WorkspaceX />
           ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}

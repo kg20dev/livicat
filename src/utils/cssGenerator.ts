@@ -102,6 +102,24 @@ export interface LayoutSettings {
   backgroundStyle?: BackgroundStyle
 }
 
+export interface RoleColorSet {
+  background?: string
+  textColor?: string
+  usernameColor?: string
+}
+
+export interface RoleColors {
+  owner?: RoleColorSet
+  moderator?: RoleColorSet
+  member?: RoleColorSet
+}
+
+export interface BubbleTailSettings {
+  offset?: number
+  color?: string
+  borderWidth?: number
+}
+
 export interface ChatCSSSettings {
   fontUrl?: string
   container?: ContainerSettings
@@ -118,6 +136,8 @@ export interface ChatCSSSettings {
   general?: GeneralSettings
   animation?: AnimationSettings
   layout?: LayoutSettings
+  roleColors?: RoleColors
+  bubbleTail?: BubbleTailSettings
 }
 
 /* ─── CSS Variable Helpers ─────────────────────────────────────── */
@@ -127,7 +147,7 @@ export interface ChatCSSSettings {
  * These act as the single source of truth so individual rule blocks
  * can reference them with var().
  */
-function buildCSSVariables(settings: ChatCSSSettings): string {
+export function buildCSSVariables(settings: ChatCSSSettings): string {
   const vars: string[] = ['  /* Chat CSS Variables */']
 
   if (settings.general?.backgroundColor) {
@@ -201,6 +221,9 @@ function buildCSSVariables(settings: ChatCSSSettings): string {
   if (settings.avatar?.display) {
     vars.push(`  --chat-avatar-display: ${settings.avatar.display};`)
   }
+  if (settings.avatar?.marginTop) {
+    vars.push(`  --chat-avatar-margin-top: ${settings.avatar.marginTop};`)
+  }
 
   if (settings.timestamp?.color) {
     vars.push(`  --chat-timestamp-color: ${settings.timestamp.color};`)
@@ -225,6 +248,43 @@ function buildCSSVariables(settings: ChatCSSSettings): string {
     vars.push(`  --chat-scrollbar-thumb-radius: ${settings.scrollbar.thumbBorderRadius};`)
   }
 
+  if (settings.roleColors?.owner?.background) {
+    vars.push(`  --chat-owner-bg: ${settings.roleColors.owner.background};`)
+  }
+  if (settings.roleColors?.owner?.textColor) {
+    vars.push(`  --chat-owner-text: ${settings.roleColors.owner.textColor};`)
+  }
+  if (settings.roleColors?.owner?.usernameColor) {
+    vars.push(`  --chat-owner-username: ${settings.roleColors.owner.usernameColor};`)
+  }
+
+  if (settings.roleColors?.moderator?.background) {
+    vars.push(`  --chat-mod-bg: ${settings.roleColors.moderator.background};`)
+  }
+  if (settings.roleColors?.moderator?.textColor) {
+    vars.push(`  --chat-mod-text: ${settings.roleColors.moderator.textColor};`)
+  }
+  if (settings.roleColors?.moderator?.usernameColor) {
+    vars.push(`  --chat-mod-username: ${settings.roleColors.moderator.usernameColor};`)
+  }
+
+  if (settings.roleColors?.member?.background) {
+    vars.push(`  --chat-member-bg: ${settings.roleColors.member.background};`)
+  }
+  if (settings.roleColors?.member?.textColor) {
+    vars.push(`  --chat-member-text: ${settings.roleColors.member.textColor};`)
+  }
+  if (settings.roleColors?.member?.usernameColor) {
+    vars.push(`  --chat-member-username: ${settings.roleColors.member.usernameColor};`)
+  }
+
+  if (settings.bubbleTail?.offset !== undefined) {
+    vars.push(`  --chat-bubble-tail-offset: ${settings.bubbleTail.offset}px;`)
+  }
+  if (settings.bubbleTail?.color) {
+    vars.push(`  --chat-bubble-tail-color: ${settings.bubbleTail.color};`)
+  }
+
   if (vars.length === 1) return '' // only the comment, no vars
 
   return `:root {\n${vars.join('\n')}\n}\n`
@@ -232,7 +292,7 @@ function buildCSSVariables(settings: ChatCSSSettings): string {
 
 /* ─── Rule Generators ──────────────────────────────────────────── */
 
-function buildContainerRules(settings: ContainerSettings): string {
+export function buildContainerRules(settings: ContainerSettings): string {
   const rules: string[] = []
 
   if (settings.background) rules.push(`  background: ${settings.background} !important;`)
@@ -246,6 +306,8 @@ function buildContainerRules(settings: ContainerSettings): string {
   return `#contents, #chat {\n${rules.join('\n')}\n}\n`
 }
 
+/* ─── Message Rules ───────────────────────────────────────────────── */
+
 function buildMessageRules(settings: MessageSettings): string {
   const rules: string[] = []
 
@@ -256,12 +318,81 @@ function buildMessageRules(settings: MessageSettings): string {
   if (settings.borderRadius) rules.push(`  border-radius: var(--chat-msg-radius) !important;`)
   if (settings.padding) rules.push(`  padding: var(--chat-msg-padding) !important;`)
   if (settings.margin) rules.push(`  margin: var(--chat-msg-margin) !important;`)
-  if (settings.marginBottom) rules.push(`  margin-bottom: ${settings.marginBottom} !important;`)
   if (settings.opacity !== undefined) rules.push(`  opacity: var(--chat-msg-opacity);`)
 
   if (rules.length === 0) return ''
 
   return `yt-live-chat-text-message-renderer {\n${rules.join('\n')}\n}\n`
+}
+
+/* ─── Role-based styling rules ─────────────────────────────────── */
+
+function buildRoleColorRules(settings: ChatCSSSettings): string {
+  if (!settings.roleColors) return ''
+
+  const parts: string[] = []
+
+  // Owner styling
+  if (settings.roleColors.owner) {
+    if (settings.roleColors.owner.background) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="owner"] #message {
+  background: var(--chat-owner-bg) !important;
+}`)
+    }
+    if (settings.roleColors.owner.textColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="owner"] #message {
+  color: var(--chat-owner-text) !important;
+}`)
+    }
+    if (settings.roleColors.owner.usernameColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="owner"] #author-name {
+  color: var(--chat-owner-username) !important;
+      font-weight: 700 !important;
+}`)
+    }
+  }
+
+  // Moderator styling
+  if (settings.roleColors.moderator) {
+    if (settings.roleColors.moderator.background) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="moderator"] #message {
+  background: var(--chat-mod-bg) !important;
+}`)
+    }
+    if (settings.roleColors.moderator.textColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="moderator"] #message {
+  color: var(--chat-mod-text) !important;
+}`)
+    }
+    if (settings.roleColors.moderator.usernameColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="moderator"] #author-name {
+  color: var(--chat-mod-username) !important;
+      font-weight: 700 !important;
+}`)
+    }
+  }
+
+  // Member styling
+  if (settings.roleColors.member) {
+    if (settings.roleColors.member.background) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="member"] #message {
+  background: var(--chat-member-bg) !important;
+}`)
+    }
+    if (settings.roleColors.member.textColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="member"] #message {
+  color: var(--chat-member-text) !important;
+}`)
+    }
+    if (settings.roleColors.member.usernameColor) {
+      parts.push(`yt-live-chat-text-message-renderer[author-type="member"] #author-name {
+  color: var(--chat-member-username) !important;
+      font-weight: 600 !important;
+}`)
+    }
+  }
+
+  return parts.length > 0 ? parts.join('\n\n') : ''
 }
 
 function buildUsernameRules(settings: UsernameSettings): string {
@@ -334,7 +465,7 @@ function buildTimestampRules(settings: TimestampSettings): string {
   return `.timestamp, #timestamp {\n${rules.join('\n')}\n}\n`
 }
 
-function buildScrollbarRules(settings: ScrollbarSettings): string {
+export function buildScrollbarRules(settings: ScrollbarSettings): string {
   const parts: string[] = []
 
   if (settings.width || settings.trackColor) {
@@ -363,7 +494,7 @@ function buildScrollbarRules(settings: ScrollbarSettings): string {
   return `#chat::-webkit-scrollbar {\n  width: var(--chat-scrollbar-width, 8px) !important;\n}\n${parts.join('\n')}\n`
 }
 
-function buildHeaderRules(settings: HeaderSettings): string {
+export function buildHeaderRules(settings: HeaderSettings): string {
   const rules: string[] = []
 
   if (settings.display) rules.push(`  display: ${settings.display} !important;`)
@@ -373,7 +504,7 @@ function buildHeaderRules(settings: HeaderSettings): string {
   return `yt-live-chat-header-renderer {\n${rules.join('\n')}\n}\n`
 }
 
-function buildScrollButtonRules(settings: ScrollButtonSettings): string {
+export function buildScrollButtonRules(settings: ScrollButtonSettings): string {
   const rules: string[] = []
   if (settings.display) rules.push(`  display: ${settings.display} !important;`)
   if (settings.background) rules.push(`  background: ${settings.background} !important;`)
@@ -384,7 +515,7 @@ function buildScrollButtonRules(settings: ScrollButtonSettings): string {
   return `yt-live-chat-renderer yt-icon-button,\n#chat-scroll-button {\n${rules.join('\n')}\n}\n`
 }
 
-function buildEngagementMessagesRules(settings: EngagementMessagesSettings): string {
+export function buildEngagementMessagesRules(settings: EngagementMessagesSettings): string {
   const rules: string[] = []
 
   if (settings.display) rules.push(`  display: ${settings.display} !important;`)
@@ -394,7 +525,7 @@ function buildEngagementMessagesRules(settings: EngagementMessagesSettings): str
   return `yt-live-chat-viewer-engagement-message-renderer {\n${rules.join('\n')}\n}\n`
 }
 
-function buildChatDisclaimerRules(settings: ChatDisclaimerSettings): string {
+export function buildChatDisclaimerRules(settings: ChatDisclaimerSettings): string {
   const rules: string[] = []
 
   if (settings.display) rules.push(`  display: ${settings.display} !important;`)
@@ -623,6 +754,11 @@ export function generateChatCSS(settings: ChatCSSSettings): string {
 
   if (settings.container) {
     const rules = buildContainerRules(settings.container)
+    if (rules) parts.push(rules)
+  }
+
+  if (settings.roleColors) {
+    const rules = buildRoleColorRules(settings)
     if (rules) parts.push(rules)
   }
 

@@ -27,7 +27,7 @@ interface SidebarRootProps {
 }
 
 export default function Sidebar({
-  activeItem = 'workspace',
+  activeItem = 'workspace-x',
   onNavigate = () => {},
   children,
   className = '',
@@ -88,7 +88,9 @@ function SidebarNavItems({
   activeItem: string
   onNavigate: (item: string) => void
 }) {
-  const mainItems = [{ id: 'workspace', label: 'Workspace', icon: 'edit_square' }]
+  const mainItems: { id: string; label: string; icon: string }[] = [
+    { id: 'workspace-x', label: 'Workspace', icon: 'magic_button' },
+  ]
 
   const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]
 

@@ -73,8 +73,11 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    // always_on_top disabled on Windows — known WebView2 crashes with YouTube chat + OBS capture
-    .always_on_top(cfg!(not(target_os = "windows")))
+    // always_on_top disabled everywhere — it causes window capture issues:
+    // - Windows: WebView2 crashes with YouTube chat + OBS capture
+    // - macOS: OBS window capture can't find the window in its dropdown
+    // (The preview window is captured by OBS and doesn't need to float.)
+    .always_on_top(false)
     .user_agent(PREVIEW_USER_AGENT)
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
