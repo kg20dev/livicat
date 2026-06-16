@@ -4,48 +4,11 @@ import { FONT_OPTIONS } from '../../utils/fonts'
 export const scheme: SettingDef[] = [
   /* ── OBS ───────────────────────────────────────────────── */
   {
-    key: 'obs-width',
-    section: 'OBS',
-    type: 'range',
-    label: 'Width',
-    min: 300,
-    max: 1920,
-    default: 400,
-    unit: 'px',
-  },
-  {
-    key: 'obs-height',
-    section: 'OBS',
-    type: 'range',
-    label: 'Height',
-    min: 200,
-    max: 1080,
-    default: 600,
-    unit: 'px',
-  },
-  {
     key: 'chroma-key',
     section: 'OBS',
     type: 'toggle',
     label: 'Chroma Key Ready',
     default: false,
-  },
-  {
-    key: 'obs-background',
-    section: 'OBS',
-    type: 'color',
-    label: 'Background Color',
-    default: 'transparent',
-  },
-  {
-    key: 'obs-opacity',
-    section: 'OBS',
-    type: 'range',
-    label: 'Background Opacity',
-    min: 0,
-    max: 100,
-    default: 100,
-    unit: '%',
   },
 
   /* ── Bubble ────────────────────────────────────────────── */

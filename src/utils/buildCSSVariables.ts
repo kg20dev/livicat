@@ -120,29 +120,6 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('}')
   }
 
-  // ── OBS Container Settings ─────────────────────────────────────
-  const obsWidth = settings['obs-width'] as number | undefined
-  const obsHeight = settings['obs-height'] as number | undefined
-  const obsBackground = settings['obs-background'] as string | undefined
-  const obsOpacity = settings['obs-opacity'] as number | undefined
-
-  if (obsWidth || obsHeight || obsBackground || obsOpacity) {
-    lines.push('')
-    lines.push('/* OBS Container Settings */')
-    if (obsWidth) {
-      lines.push(`#chat, .livicat-chat-messages { max-width: ${obsWidth}px; }`)
-    }
-    if (obsHeight) {
-      lines.push(`#chat, .livicat-chat-messages { max-height: ${obsHeight}px; }`)
-    }
-    if (obsBackground && obsBackground !== 'transparent') {
-      const opacity = obsOpacity ?? 100
-      lines.push(
-        `body, html { background-color: ${obsBackground}${opacity < 100 ? Math.round(opacity / 100) : ''} !important; }`
-      )
-    }
-  }
-
   // ── Chroma key mode: green background for OBS keying ─────────
   if (settings['chroma-key']) {
     lines.push('')
