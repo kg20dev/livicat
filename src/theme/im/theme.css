@@ -46,11 +46,13 @@
 @keyframes theme-im-chip-slide {
   0% {
     opacity: 0;
-    transform: rotate(-4deg) translate(-20px, 18px) scale(0.9);
+    transform: rotate(-4deg)
+      translate(-20px, calc(18px + var(--chat-username-vertical-offset, 0px))) scale(0.9);
   }
   100% {
     opacity: 1;
-    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(1);
   }
 }
 
@@ -58,23 +60,25 @@
 @keyframes theme-im-chip-wiggle {
   0% {
     opacity: 0;
-    transform: rotate(-4deg) translate(2px, 18px) scale(0.9);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(0.9);
   }
   20% {
-    transform: rotate(-4deg) translate(-6px, 18px);
+    transform: rotate(-4deg) translate(-6px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
   40% {
-    transform: rotate(-4deg) translate(6px, 18px);
+    transform: rotate(-4deg) translate(6px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
   60% {
-    transform: rotate(-4deg) translate(-4px, 18px);
+    transform: rotate(-4deg) translate(-4px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
   80% {
-    transform: rotate(-4deg) translate(3px, 18px);
+    transform: rotate(-4deg) translate(3px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
   100% {
     opacity: 1;
-    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(1);
   }
 }
 
@@ -82,14 +86,17 @@
 @keyframes theme-im-chip-pop {
   0% {
     opacity: 0;
-    transform: rotate(-4deg) translate(2px, 18px) scale(0.5);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(0.5);
   }
   65% {
-    transform: rotate(-4deg) translate(2px, 18px) scale(1.12);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(1.12);
   }
   100% {
     opacity: 1;
-    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)))
+      scale(1);
   }
 }
 
@@ -97,11 +104,11 @@
 @keyframes theme-im-chip-fade {
   0% {
     opacity: 0;
-    transform: rotate(-4deg) translate(2px, 18px);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
   100% {
     opacity: 1;
-    transform: rotate(-4deg) translate(2px, 18px);
+    transform: rotate(-4deg) translate(2px, calc(18px + var(--chat-username-vertical-offset, 0px)));
   }
 }
 
@@ -283,15 +290,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .theme-im #author-photo,
-  .theme-im #author-name,
+  .theme-im #content #author-name,
   .theme-im #message,
   .theme-im yt-live-chat-text-message-renderer {
     animation: none !important;
-  }
-
-  .theme-im #author-name {
-    margin-top: 18px !important;
-    rotate: -4deg !important;
   }
 }
 

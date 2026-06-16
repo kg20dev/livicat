@@ -2,6 +2,15 @@ import type { SettingDef } from '../types'
 import { FONT_OPTIONS } from '../../utils/fonts'
 
 export const scheme: SettingDef[] = [
+  /* ── OBS ───────────────────────────────────────────────── */
+  {
+    key: 'chroma-key',
+    section: 'OBS',
+    type: 'toggle',
+    label: 'Chroma Key Ready',
+    default: false,
+  },
+
   /* ── Bubble ────────────────────────────────────────────── */
   {
     key: 'chat-msg-bg',
@@ -109,6 +118,16 @@ export const scheme: SettingDef[] = [
     type: 'toggle',
     label: 'Bold',
     default: true,
+  },
+  {
+    key: 'chat-username-vertical-offset',
+    section: 'Username',
+    type: 'range',
+    label: 'Vertical Offset',
+    min: -20,
+    max: 20,
+    default: 0,
+    unit: 'px',
   },
 
   /* ── Message ──────────────────────────────────────────── */
@@ -258,15 +277,6 @@ export const scheme: SettingDef[] = [
     section: 'YouTube',
     type: 'toggle',
     label: 'Hide Chat Footer',
-    default: false,
-  },
-
-  /* ── OBS ───────────────────────────────────────────────── */
-  {
-    key: 'chroma-key',
-    section: 'OBS',
-    type: 'toggle',
-    label: 'Chroma Key Ready',
     default: false,
   },
 

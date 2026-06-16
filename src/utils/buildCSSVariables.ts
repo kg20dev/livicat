@@ -123,6 +123,7 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   // ── Chroma key mode: green background for OBS keying ─────────
   if (settings['chroma-key']) {
     lines.push('')
+    lines.push('/* Chroma Key Mode */')
     lines.push('body, html {')
     lines.push('  background-color: #00b140 !important;')
     lines.push('  margin: 0 !important;')
