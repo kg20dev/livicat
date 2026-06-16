@@ -145,7 +145,7 @@ export function ThemePreview({
 
       {/* Chat messages container */}
       <div
-        className={`livicat-chat-messages theme-${themeId}`}
+        className={`livicat-chat-messages theme-${themeId} overflow-y-auto`}
         style={{ backgroundColor: backgroundColor ?? 'transparent' }}
       >
         {chatMessages.map((msg) => (
