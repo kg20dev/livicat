@@ -1,0 +1,79 @@
+/**
+ * Base Reset CSS for YouTube Live Chat
+ *
+ * Strips YouTube's default styling and sets up a clean flexbox layout.
+ * Themes layer their visual styling on top of this foundation.
+ *
+ * Uses .yt-live-chat-text-message-renderer class selector which works for:
+ *   - Demo preview: <div class="yt-live-chat-text-message-renderer">
+ *   - YouTube injection: JS adds this class to <yt-live-chat-text-message-renderer>
+ */
+
+/* ── Message container (flex row) ────────────────────────────── */
+
+.yt-live-chat-text-message-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 4px 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+  width: fit-content !important;
+}
+
+/* ── Hide unwanted YouTube elements ─────────────────────────── */
+
+#timestamp,
+#menu,
+#before-content-buttons,
+yt-live-chat-badge-renderer,
+#author-badges,
+#chat-badges,
+#deleted-state,
+#show-original {
+  display: none !important;
+}
+
+/* ── Avatar ─────────────────────────────────────────────────── */
+
+#author-photo {
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+/* ── Content column (name + message) ────────────────────────── */
+
+#content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── Author name chip wrapper ───────────────────────────────── */
+
+yt-live-chat-author-chip,
+#content > yt-live-chat-author-chip {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  line-height: 1 !important;
+}
+
+/* ── Message container ─────────────────────────────────────── */
+
+#message-container {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+}

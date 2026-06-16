@@ -4,10 +4,10 @@ import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
 import PreviewArea from './components/layout/PreviewArea'
 import StylingPanel from './components/layout/StylingPanel'
-import WorkspaceX from './components/layout/WorkspaceX'
 import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
+import { WorkspaceX } from './components/theme/WorkspaceX'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
@@ -290,7 +290,7 @@ export default function App() {
           {activeNav === 'settings' ? (
             <Settings />
           ) : activeNav === 'workspace-x' ? (
-            <WorkspaceX key="workspace-x" />
+            <WorkspaceX />
           ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}

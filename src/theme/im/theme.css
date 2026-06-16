@@ -1,0 +1,238 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  IM Bubble Theme — scoped CSS for YouTube Live Chat            ║
+   ║                                                                ║
+   ║  Principles from Emil Kowalski's design engineering skill:     ║
+   ║   - Custom easing: cubic-bezier(0.23, 1, 0.32, 1)             ║
+   ║   - Never animate from scale(0) — always start opacity + dim  ║
+   ║   - UI animations under 300ms                                 ║
+   ║   - prefers-reduced-motion support                            ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Custom Easing Curves (from Emil's skill) ─────────────────── */
+
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── Animation Keyframes ──────────────────────────────────────── */
+
+/* Message container entry: scale + slide */
+@keyframes theme-im-message-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Bubble pop-in: subtle scale with bounce */
+@keyframes theme-im-bubble-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Chip tilt-in: playful rotation */
+@keyframes theme-im-chip-in {
+  0% {
+    opacity: 0;
+    transform: rotate(10deg) translate(-20px, 0) scale(0.8);
+  }
+  70% {
+    opacity: 1;
+    transform: rotate(-6deg) translate(4px, 8px) scale(1.08);
+  }
+  100% {
+    transform: rotate(-4deg) translate(2px, 6px) scale(1);
+  }
+}
+
+/* Avatar scale-in */
+@keyframes theme-im-avatar-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Theme: IM (scoped via .theme-im) ──────────────────────────── */
+
+/* Avatar */
+.theme-im #author-photo {
+  width: var(--chat-avatar-width, 24px) !important;
+  height: var(--chat-avatar-width, 24px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  margin-top: var(--chat-avatar-margin-top, 0px) !important;
+  animation: theme-im-avatar-in 180ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+}
+
+.theme-im #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+}
+
+/* Username Chip */
+.theme-im #author-name {
+  position: relative !important;
+  z-index: 2 !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  color: var(--chat-username-color, #d6baff) !important;
+  font-size: var(--chat-username-font-size, 13px) !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
+  font-family: inherit !important;
+  line-height: 1.3 !important;
+  transform: rotate(-4deg) translate(2px, 6px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  animation: theme-im-chip-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  animation-delay: var(--chip-delay, 0.02s) !important;
+}
+
+/* Message Bubble */
+.theme-im #message {
+  position: relative !important;
+  z-index: 1 !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: var(--chat-msg-padding, 8px 14px) !important;
+  border: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-radius: var(--chat-border-radius, 12px) !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  color: var(--chat-msg-color, #e5e2e1) !important;
+  font-size: var(--chat-message-font-size, 14px) !important;
+  font-family: inherit !important;
+  font-weight: normal !important;
+  line-height: 1.4 !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+  animation: theme-im-bubble-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+}
+
+/* Bubble tail */
+.theme-im #message::before {
+  content: '' !important;
+  position: absolute !important;
+  left: var(--chat-tail-offset, -8px) !important;
+  top: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-left: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-bottom: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-radius: 3px 0 3px 3px !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  transform: rotate(45deg) !important;
+  z-index: 1 !important;
+}
+
+/* Message container spacing/animation */
+.theme-im .yt-live-chat-text-message-renderer {
+  margin-bottom: var(--chat-message-spacing, 10px) !important;
+  opacity: calc(var(--chat-message-opacity, 100) / 100) !important;
+  animation: theme-im-message-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+  transform-origin: left center !important;
+}
+
+/* ── Reduced Motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-im #author-photo,
+  .theme-im #author-name,
+  .theme-im #message,
+  .theme-im .yt-live-chat-text-message-renderer {
+    animation: none !important;
+  }
+
+  .theme-im #author-name {
+    transform: rotate(-4deg) translate(2px, 6px) !important;
+  }
+}
+
+/* ── Role Color Overrides ──────────────────────────────────── */
+
+/* Owner */
+.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #message {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  border-color: var(--chat-owner-text, #ffb347) !important;
+  color: var(--chat-owner-text, #ffb347) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #message::before {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  border-left-color: var(--chat-owner-text, #ffb347) !important;
+  border-bottom-color: var(--chat-owner-text, #ffb347) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #author-name {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  color: var(--chat-owner-username, #ffb347) !important;
+  font-weight: 700 !important;
+}
+
+/* Moderator */
+.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #message {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  border-color: var(--chat-mod-text, #47b5ff) !important;
+  color: var(--chat-mod-text, #47b5ff) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #message::before {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  border-left-color: var(--chat-mod-text, #47b5ff) !important;
+  border-bottom-color: var(--chat-mod-text, #47b5ff) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #author-name {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  color: var(--chat-mod-username, #47b5ff) !important;
+  font-weight: 700 !important;
+}
+
+/* Member */
+.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #message {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  border-color: var(--chat-member-text, #8bcc47) !important;
+  color: var(--chat-member-text, #8bcc47) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #message::before {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  border-left-color: var(--chat-member-text, #8bcc47) !important;
+  border-bottom-color: var(--chat-member-text, #8bcc47) !important;
+}
+.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #author-name {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  color: var(--chat-member-username, #ce93d8) !important;
+  font-weight: 600 !important;
+}
+
+/* Super Chat */
+.theme-im .yt-live-chat-text-message-renderer[data-role='super-chat'] #message {
+  background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
+  border-color: #ffd700 !important;
+  color: #1a1a1a !important;
+}
+
+/* Member Ship */
+.theme-im .yt-live-chat-text-message-renderer[data-role='member-ship'] #message {
+  background: #0d2818 !important;
+  border-color: #00b140 !important;
+  color: #00ff66 !important;
+}
