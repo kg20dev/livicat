@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { ThemePreview } from '../ThemePreview'
-import type { SettingDef } from '../../theme/types'
+import type { SettingDef } from '../../../theme/types'
 
 const mockScheme: SettingDef[] = [
   { key: 'messageBg', type: 'color', label: 'Background', default: '#1a1a1a' },

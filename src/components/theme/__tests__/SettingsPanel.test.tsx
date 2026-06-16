@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SettingsPanel } from '../SettingsPanel'
-import type { SettingDef } from '../../theme/types'
+import type { SettingDef } from '../../../theme/types'
 
 const mixedScheme: SettingDef[] = [
   { key: 'msgBg', type: 'color', label: 'Background', default: '#1a1a1a' },
