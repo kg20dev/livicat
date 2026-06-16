@@ -110,6 +110,16 @@ export const scheme: SettingDef[] = [
     label: 'Bold',
     default: true,
   },
+  {
+    key: 'chat-username-vertical-offset',
+    section: 'Username',
+    type: 'range',
+    label: 'Vertical Offset',
+    min: -20,
+    max: 20,
+    default: 0,
+    unit: 'px',
+  },
 
   /* ── Message ──────────────────────────────────────────── */
   {

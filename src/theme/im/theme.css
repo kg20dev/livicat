@@ -290,7 +290,7 @@
   }
 
   .theme-im #author-name {
-    margin-top: 18px !important;
+    margin-top: calc(18px + var(--chat-username-vertical-offset, 0px)) !important;
     rotate: -4deg !important;
   }
 }
