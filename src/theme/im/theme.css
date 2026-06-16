@@ -283,16 +283,20 @@
 
 @media (prefers-reduced-motion: reduce) {
   .theme-im #author-photo,
-  .theme-im #author-name,
+  .theme-im #content #author-name,
   .theme-im #message,
   .theme-im yt-live-chat-text-message-renderer {
     animation: none !important;
   }
 
-  .theme-im #author-name {
-    margin-top: calc(18px + var(--chat-username-vertical-offset, 0px)) !important;
+  .theme-im #content #author-name {
     rotate: -4deg !important;
   }
+}
+
+/* Username vertical offset (applies always, not just in reduced motion) */
+.theme-im #content #author-name {
+  margin-top: calc(18px + var(--chat-username-vertical-offset, 0px)) !important;
 }
 
 /* ── Role Color Overrides ──────────────────────────────────── */
