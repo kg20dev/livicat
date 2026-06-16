@@ -1,0 +1,407 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Colour Bubble Theme — scoped CSS for YouTube Live Chat       ║
+   ║                                                                ║
+   ║  Principles from Emil Kowalski's design engineering skill:     ║
+   ║   - Custom easing: cubic-bezier(0.23, 1, 0.32, 1)             ║
+   ║   - Never animate from scale(0) — always start opacity + dim  ║
+   ║   - UI animations under 300ms                                 ║
+   ║   - prefers-reduced-motion support                            ║
+   ║                                                                ║
+   ║  ⚠️ CRITICAL RULE:                                             ║
+   ║  If an element uses `transform` in @keyframes, its base CSS    ║
+   ║  must NOT have `!important` on `transform`. CSS spec says      ║
+   ║  keyframe declarations can NEVER override `!important` — the   ║
+   ║  animation silently degrades to opacity-only.                  ║
+   ║  Fix: use rotate / scale / margin-top instead of transform     ║
+   ║  for permanent positioning effects that would otherwise need   ║
+   ║  !important to beat YouTube's specificity.                     ║
+   ║                                                                ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-{id} stripped before YouTube injection.         ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Custom Easing Curves (from Emil's skill) ─────────────────── */
+
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── Animation Keyframes ──────────────────────────────────────── */
+
+/* Message container entry: scale + slide */
+@keyframes theme-im-message-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ─── Username (chip) entrance animations ─────────────────────── */
+
+/* Slide Left: slides in from the left with a tilt */
+@keyframes theme-im-chip-slide {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(-20px, 18px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Wiggle: oscillates left ↔ right while fading in */
+@keyframes theme-im-chip-wiggle {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px) scale(0.9);
+  }
+  20% {
+    transform: rotate(-4deg) translate(-6px, 18px);
+  }
+  40% {
+    transform: rotate(-4deg) translate(6px, 18px);
+  }
+  60% {
+    transform: rotate(-4deg) translate(-4px, 18px);
+  }
+  80% {
+    transform: rotate(-4deg) translate(3px, 18px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Pop: scales up with an overshoot bounce */
+@keyframes theme-im-chip-pop {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px) scale(0.5);
+  }
+  65% {
+    transform: rotate(-4deg) translate(2px, 18px) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Fade: simple opacity fade in at final position */
+@keyframes theme-im-chip-fade {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px);
+  }
+}
+
+/* ─── Message body entrance animations ─────────────────────────── */
+
+/* Slide Left: slides in from the left with a subtle scale pop */
+@keyframes theme-im-msg-slide {
+  0% {
+    opacity: 0;
+    transform: translateX(-15px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Bounce: overshoots right then settles left */
+@keyframes theme-im-msg-bounce {
+  0% {
+    opacity: 0;
+    transform: translateX(-25px) scale(0.95);
+  }
+  50% {
+    transform: translateX(10px) scale(1.05);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Pop: scales up with an overshoot */
+@keyframes theme-im-msg-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fade: simple opacity fade in at final position */
+@keyframes theme-im-msg-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Avatar scale-in */
+@keyframes theme-im-avatar-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Theme: IM (scoped via .theme-im) ──────────────────────────── */
+
+/* All selectors use `yt-live-chat-text-message-renderer` prefix for
+   YouTube specificity (YouTube uses `.style-scope` class + ID combos
+   that would beat bare `#author-name` selectors). Prefix `.theme-im`
+   is stripped before YouTube injection. Matches both demo and YouTube. */
+
+/* Avatar wrapper */
+.theme-im yt-live-chat-text-message-renderer #author-photo {
+  width: var(--chat-avatar-width, 24px) !important;
+  height: var(--chat-avatar-width, 24px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  line-height: 0 !important;
+  margin-top: calc(
+    var(--chat-avatar-margin-top, 0px) + var(--chat-avatar-vertical-offset, 0px)
+  ) !important;
+  animation: theme-im-avatar-in 180ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+}
+
+/* Avatar image — fills container 1:1 */
+.theme-im yt-live-chat-text-message-renderer #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* Username Chip — #content #author-name (specificity 0,2,0) beats
+   YouTube's #author-name.style-scope (also 0,2,0) because our CSS
+   is injected last in the document head. Also works whether or not
+   display: contents is applied on the chip wrapper. */
+.theme-im #content #author-name {
+  position: relative !important;
+  z-index: 2 !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  color: var(--chat-username-color, #d6baff) !important;
+  font-size: var(--chat-username-font-size, 13px) !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
+  font-family: inherit !important;
+  line-height: 1.3 !important;
+  margin-top: 18px !important;
+  rotate: -4deg !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  animation-duration: var(--chip-duration, 0.35s) !important;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation-fill-mode: both !important;
+  animation-delay: var(--chip-delay, 0.05s) !important;
+}
+
+/* Message Bubble */
+.theme-im yt-live-chat-text-message-renderer #message {
+  position: relative !important;
+  z-index: 1 !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: var(--chat-msg-padding, 8px 14px) !important;
+  border: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-radius: var(--chat-border-radius, 12px) !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  color: var(--chat-msg-color, #e5e2e1) !important;
+  font-size: var(--chat-message-font-size, 14px) !important;
+  font-family: inherit !important;
+  font-weight: normal !important;
+  line-height: 1.4 !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+  animation-duration: var(--animation-duration, 0.4s) !important;
+  animation-timing-function: var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) !important;
+  animation-fill-mode: both !important;
+}
+
+/* Bubble tail */
+.theme-im yt-live-chat-text-message-renderer #message::before {
+  content: '' !important;
+  position: absolute !important;
+  left: var(--chat-tail-offset, -8px) !important;
+  top: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-left: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-bottom: var(--chat-border-width, 2px) solid var(--chat-scrollbar-thumb, #888888) !important;
+  border-radius: 3px 0 3px 3px !important;
+  background: var(--chat-msg-bg, #1a1a1a) !important;
+  transform: rotate(45deg) !important;
+  z-index: 1 !important;
+}
+
+/* Message container spacing/animation */
+.theme-im yt-live-chat-text-message-renderer {
+  margin-bottom: var(--chat-message-spacing, 10px) !important;
+  opacity: calc(var(--chat-message-opacity, 100) / 100) !important;
+  animation: theme-im-message-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+  transform-origin: left center !important;
+}
+
+/* ── Reduced Motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-im #author-photo,
+  .theme-im #author-name,
+  .theme-im #message,
+  .theme-im yt-live-chat-text-message-renderer {
+    animation: none !important;
+  }
+
+  .theme-im #author-name {
+    margin-top: 18px !important;
+    rotate: -4deg !important;
+  }
+}
+
+/* ── Role Color Overrides ──────────────────────────────────── */
+
+/* Owner */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  border-color: var(--chat-owner-text, #ffb347) !important;
+  color: var(--chat-owner-text, #ffb347) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message::before {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  border-left-color: var(--chat-owner-text, #ffb347) !important;
+  border-bottom-color: var(--chat-owner-text, #ffb347) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name {
+  background: var(--chat-owner-bg, #2d1b00) !important;
+  color: var(--chat-owner-username, #ffb347) !important;
+  font-weight: 700 !important;
+}
+
+/* Moderator */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  border-color: var(--chat-mod-text, #47b5ff) !important;
+  color: var(--chat-mod-text, #47b5ff) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message::before {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  border-left-color: var(--chat-mod-text, #47b5ff) !important;
+  border-bottom-color: var(--chat-mod-text, #47b5ff) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name {
+  background: var(--chat-mod-bg, #001a2d) !important;
+  color: var(--chat-mod-username, #47b5ff) !important;
+  font-weight: 700 !important;
+}
+
+/* Member */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  border-color: var(--chat-member-text, #8bcc47) !important;
+  color: var(--chat-member-text, #8bcc47) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message::before {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  border-left-color: var(--chat-member-text, #8bcc47) !important;
+  border-bottom-color: var(--chat-member-text, #8bcc47) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name {
+  background: var(--chat-member-bg, #1a2d00) !important;
+  color: var(--chat-member-username, #ce93d8) !important;
+  font-weight: 600 !important;
+}
+
+/* Super Chat */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message {
+  background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
+  border-color: #ffd700 !important;
+  color: #1a1a1a !important;
+}
+
+/* Member Ship */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message {
+  background: #0d2818 !important;
+  border-color: #00b140 !important;
+  color: #00ff66 !important;
+}

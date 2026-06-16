@@ -1,5 +1,6 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import pkg from '../../../package.json'
+import { TauriService } from '../../services'
 
 /* ─── Context ──────────────────────────────────────────────────── */
 
@@ -26,7 +27,7 @@ interface SidebarRootProps {
 }
 
 export default function Sidebar({
-  activeItem = 'workspace',
+  activeItem = 'workspace-x',
   onNavigate = () => {},
   children,
   className = '',
@@ -46,11 +47,22 @@ export default function Sidebar({
 
 Sidebar.Header = function SidebarHeader({
   title = 'Livicat',
-  subtitle = `v${pkg.version}`,
+  subtitle: subtitleProp,
 }: {
   title?: string
   subtitle?: string
 }) {
+  // Read version from Rust binary at runtime (more reliable than build-time import)
+  // Falls back to pkg.version when Tauri is not available (web dev mode)
+  const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    TauriService.getAppVersion().then((v) => {
+      if (v) setRuntimeVersion(v)
+    })
+  }, [])
+
+  const subtitle = subtitleProp ?? `v${runtimeVersion ?? pkg.version}`
   return (
     <div className="px-gutter mb-8">
       <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
@@ -76,7 +88,9 @@ function SidebarNavItems({
   activeItem: string
   onNavigate: (item: string) => void
 }) {
-  const mainItems = [{ id: 'workspace', label: 'Workspace', icon: 'edit_square' }]
+  const mainItems: { id: string; label: string; icon: string }[] = [
+    { id: 'workspace-x', label: 'Workspace', icon: 'magic_button' },
+  ]
 
   const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]
 

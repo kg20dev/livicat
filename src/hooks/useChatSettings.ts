@@ -38,8 +38,11 @@ export const DEFAULT_SETTINGS: ChatSettings = {
 
   /* Spacing */
   messagePadding: 8,
+  messageInnerPadding: 0,
   messageBorderRadius: 6,
   avatarSize: 24,
+  avatarMarginTop: 0,
+  messageMarginBottom: 0,
 
   /* Effects */
   messageOpacity: 100,
@@ -56,11 +59,45 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   scrollButtonBorderRadius: 20,
   scrollButtonOpacity: 90,
 
+  /* Layout */
+  nameMessageLayout: 'left-right',
+  backgroundStyle: 'full-block',
+
   /* Other */
   messageSpacing: 'normal',
   theme: 'dark',
   animationSpeed: 'normal',
   newMessageAnimation: 'default',
+
+  /* Chroma key */
+  chromaKey: false,
+
+  /* IM-style bubble settings */
+  bubbleBorderWidth: 2,
+  bubbleTailOffset: -10,
+  bubbleMaxWidth: 400,
+  bubblePadding: 12,
+
+  /* IM-style role colors */
+  ownerBg: '#2a1e00',
+  ownerText: '#ffd700',
+  ownerUsername: '#ffd700',
+  modBg: '#0d2b1e',
+  modText: '#66bb6a',
+  modUsername: '#66bb6a',
+  memberBg: '#1a0d2b',
+  memberText: '#ce93d8',
+  memberUsername: '#ce93d8',
+}
+
+/* ─── Reset to Factory Defaults ──────────────────────────────────── */
+
+export function clearStoredSettings(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Storage unavailable
+  }
 }
 
 /* ─── Presets ───────────────────────────────────────────────────── */
@@ -101,6 +138,7 @@ export const PRESETS: Preset[] = [
       messagePadding: 6,
       avatarSize: 20,
       messageSpacing: 'compact',
+      messageMarginBottom: 2,
       scrollButtonBackground: '#2a2a2a',
       scrollButtonBorderRadius: 4,
     },
@@ -116,7 +154,9 @@ export const PRESETS: Preset[] = [
       timestampFontSize: 14,
       messagePadding: 12,
       avatarSize: 32,
+      avatarMarginTop: 6,
       messageSpacing: 'comfortable',
+      messageMarginBottom: 12,
       animationSpeed: 'slow',
       scrollButtonBackground: '#444444',
       scrollButtonBorderRadius: 24,
@@ -133,6 +173,7 @@ export const PRESETS: Preset[] = [
       containerOpacity: 80,
       messageOpacity: 90,
       messageFontSize: 16,
+      messageMarginBottom: 4,
       showGlow: true,
       scrollButtonBackground: 'rgba(0, 0, 0, 0.5)',
       scrollButtonColor: '#ffffff',
@@ -151,8 +192,10 @@ export const PRESETS: Preset[] = [
       timestampColor: '#666666',
       accentColor: '#ff00ff',
       messageBorderRadius: 12,
+      avatarMarginTop: 4,
       showGlow: true,
       messageOpacity: 95,
+      messageMarginBottom: 8,
       scrollbarColor: '#ff00ff',
       scrollButtonBackground: '#ff00ff',
       scrollButtonColor: '#000000',
@@ -245,7 +288,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       fontFamily: settings.fontFamily || undefined,
     },
     container: {
-      background: settings.messageBackgroundColor || undefined,
+      background: settings.backgroundColor || undefined,
       borderRadius: settings.messageBorderRadius ? `${settings.messageBorderRadius}px` : undefined,
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
     },
@@ -258,6 +301,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
       opacity: settings.messageOpacity ? settings.messageOpacity / 100 : undefined,
       margin: spacingMap[settings.messageSpacing] || undefined,
+      marginBottom: settings.messageMarginBottom ? `${settings.messageMarginBottom}px` : undefined,
     },
     username: {
       color: settings.usernameColor || undefined,
@@ -267,12 +311,14 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
     messageText: {
       color: settings.messageColor || undefined,
       fontSize: settings.messageFontSize ? `${settings.messageFontSize}px` : undefined,
+      padding: settings.messageInnerPadding ? `${settings.messageInnerPadding}px` : undefined,
     },
     avatar: {
       width: settings.avatarSize ? `${settings.avatarSize}px` : undefined,
       height: settings.avatarSize ? `${settings.avatarSize}px` : undefined,
       borderRadius: settings.avatarSize ? '50%' : undefined,
       display: settings.showAvatars ? undefined : 'none',
+      marginTop: settings.avatarMarginTop ? `${settings.avatarMarginTop}px` : undefined,
     },
     timestamp: {
       color: settings.timestampColor || undefined,
@@ -304,6 +350,31 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
     animation: {
       style: settings.newMessageAnimation || undefined,
       speed: settings.animationSpeed || undefined,
+    },
+    layout: {
+      nameMessageLayout: settings.nameMessageLayout || undefined,
+      backgroundStyle: settings.backgroundStyle || undefined,
+    },
+    roleColors: {
+      owner: {
+        background: settings.ownerBg || undefined,
+        textColor: settings.ownerText || undefined,
+        usernameColor: settings.ownerUsername || undefined,
+      },
+      moderator: {
+        background: settings.modBg || undefined,
+        textColor: settings.modText || undefined,
+        usernameColor: settings.modUsername || undefined,
+      },
+      member: {
+        background: settings.memberBg || undefined,
+        textColor: settings.memberText || undefined,
+        usernameColor: settings.memberUsername || undefined,
+      },
+    },
+    bubbleTail: {
+      offset: settings.bubbleTailOffset ?? undefined,
+      borderWidth: settings.bubbleBorderWidth ?? undefined,
     },
   }
 }
@@ -354,7 +425,7 @@ export function useChatSettings() {
     const preset = PRESETS.find((p) => p.name === presetName)
     if (preset) {
       setSettings((prev) => {
-        const newSettings = { ...prev, ...preset.settings }
+        const newSettings = { ...prev, ...preset.settings, messageInnerPadding: 0 }
         saveSettings(newSettings)
         return newSettings
       })
@@ -408,5 +479,6 @@ export function useChatSettings() {
     importSettings,
     savedIndicator,
     presets: PRESETS,
+    clearSettings: clearStoredSettings,
   }
 }

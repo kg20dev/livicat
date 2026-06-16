@@ -26,6 +26,7 @@ export interface Message {
   message: string
   avatarSeed: string | number
   timestamp?: string
+  role?: 'owner' | 'moderator' | 'member' | 'member-ship' | 'super-chat' | 'default'
 }
 
 interface ChatPreviewRootProps {
@@ -101,6 +102,7 @@ ChatPreview.Messages = function ChatPreviewMessages() {
               message={msg.message}
               avatarSeed={msg.avatarSeed}
               timestamp={showTimestamps ? msg.timestamp : undefined}
+              role={msg.role}
             />
           ))}
         </div>

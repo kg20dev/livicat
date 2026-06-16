@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, useRef, useEffect } from 'react'
+import { createContext, useContext, useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import { useChatSettings, settingsToCSS, PRESETS } from '../../hooks/useChatSettings'
 import type { ChatSettings } from '../../types/app'
 import { loadWebFont } from '../../utils/fonts'
@@ -111,16 +111,16 @@ export default function StylingPanel({
 StylingPanel.Header = function StylingPanelHeader({ title = 'Styling Panel' }: { title?: string }) {
   const { savedIndicator } = useStylingPanelContext()
   return (
-    <div className="p-gutter border-b border-outline-variant flex items-center justify-between bg-surface-container-low/50 backdrop-blur-sm">
+    <div className="px-5 py-4 border-b border-outline-variant/50 flex items-center justify-between">
       <h2 className="font-title-lg text-title-lg text-on-surface font-semibold">{title}</h2>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {savedIndicator && (
-          <span className="text-label-md text-primary animate-pulse font-medium flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+          <span className="text-label-md text-primary font-medium flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[18px]">check_circle</span>
             Saved
           </span>
         )}
-        <span className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">
+        <span className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary text-[20px]">
           history
         </span>
       </div>
@@ -132,26 +132,35 @@ StylingPanel.Section = function StylingPanelSection({
   icon,
   title,
   children,
+  collapsible = false,
+  defaultOpen = true,
 }: {
   icon: string
   title: string
   children: React.ReactNode
+  collapsible?: boolean
+  defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <div className="relative">
-      {/* Section header - minimal */}
-      <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
-          {icon}
-        </span>
-        <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
+    <div className="bg-surface-container-low rounded-xl px-4 py-4 mb-3">
+      <div
+        className={`flex items-center gap-2 ${collapsible ? 'cursor-pointer select-none' : ''} ${open ? 'mb-4' : ''}`}
+        onClick={() => collapsible && setOpen((v) => !v)}
+      >
+        <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
+        <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
+        {collapsible && (
+          <span
+            className="material-symbols-outlined text-on-surface-variant text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
+            expand_more
+          </span>
+        )}
       </div>
-
-      {/* Section content */}
-      <div className="px-1 py-2 space-y-2">{children}</div>
-
-      {/* Section separator */}
-      <div className="border-t border-outline-variant/40 my-4" />
+      {open && <div className="space-y-3">{children}</div>}
     </div>
   )
 }
@@ -182,13 +191,13 @@ StylingPanel.ControlGroup = function StylingPanelControlGroup({
   children: React.ReactNode
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {label && (
-        <div className="flex items-center gap-1.5 py-1">
-          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/70">
+        <div className="flex items-center gap-1.5 py-0.5">
+          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/60">
             tune
           </span>
-          <span className="text-label-sm font-medium text-on-surface-variant/80 uppercase tracking-wide">
+          <span className="text-label-sm font-medium text-on-surface-variant/70 uppercase tracking-wider">
             {label}
           </span>
         </div>
@@ -218,31 +227,29 @@ StylingPanel.Slider = function StylingPanelSlider({
 
   return (
     <div>
-      <div className="flex justify-between mb-2 items-center">
-        <span className="text-label-md text-on-surface-variant font-medium">{label}</span>
-        <span className="text-label-md font-bold text-primary text-sm bg-primary/10 px-2 py-0.5 rounded">
+      <div className="flex justify-between mb-1.5 items-center">
+        <span className="text-label-md text-on-surface font-medium">{label}</span>
+        <span className="text-label-sm text-on-surface-variant tabular-nums">
           {value}
           {unit}
         </span>
       </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) =>
-            updateSetting(settingKey, Number(e.target.value) as ChatSettings[typeof settingKey])
-          }
-          className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer slider-thumb"
-          style={{
-            background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${
-              ((value - min) / (max - min)) * 100
-            }%, var(--color-surface-container-highest) ${((value - min) / (max - min)) * 100}%, var(--color-surface-container-highest) 100%)`,
-          }}
-        />
-      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) =>
+          updateSetting(settingKey, Number(e.target.value) as ChatSettings[typeof settingKey])
+        }
+        className="w-full h-1 bg-surface-container-highest rounded-full appearance-none cursor-pointer slider-thumb"
+        style={{
+          background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${
+            ((value - min) / (max - min)) * 100
+          }%, var(--color-surface-container-highest) ${((value - min) / (max - min)) * 100}%, var(--color-surface-container-highest) 100%)`,
+        }}
+      />
     </div>
   )
 }
@@ -258,21 +265,17 @@ StylingPanel.Toggle = function StylingPanelToggle({
   const value = settings[settingKey] as boolean
 
   return (
-    <div className="flex justify-between items-center group">
-      <span className="text-label-md text-on-surface-variant font-medium group-hover:text-on-surface transition-colors">
-        {label}
-      </span>
+    <div className="flex justify-between items-center py-0.5">
+      <span className="text-label-md text-on-surface font-medium">{label}</span>
       <button
         onClick={() => updateSetting(settingKey, !value as ChatSettings[typeof settingKey])}
-        className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-200 ease-out ${
-          value
-            ? 'bg-primary shadow-lg shadow-primary/30'
-            : 'bg-surface-container-highest hover:bg-outline'
+        className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-150 ${
+          value ? 'bg-primary' : 'bg-surface-container-highest'
         }`}
       >
         <div
-          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ease-out shadow-sm ${
-            value ? 'right-1' : 'left-1'
+          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-150 ${
+            value ? 'translate-x-5' : 'translate-x-0.5'
           }`}
         />
       </button>
@@ -291,26 +294,22 @@ StylingPanel.ColorField = function StylingPanelColorField({
   const value = settings[settingKey] as string
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-label-md text-on-surface-variant font-medium">{label}</span>
-        <div
-          className="w-4 h-4 rounded border border-outline-variant shadow-sm"
-          style={{ backgroundColor: value }}
-        />
-      </div>
-      <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg p-1.5 hover:border-primary/50 transition-colors">
-        <div className="relative w-8 h-8 shrink-0">
+    <div>
+      <span className="text-label-md text-on-surface-variant mb-1.5 block font-medium">
+        {label}
+      </span>
+      <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-md p-1.5">
+        <div className="relative w-7 h-7 shrink-0">
           <input
             type="color"
             value={value}
             onChange={(e) =>
               updateSetting(settingKey, e.target.value as ChatSettings[typeof settingKey])
             }
-            className="absolute inset-[-4px] w-[200%] h-[200%] cursor-pointer opacity-0"
+            className="absolute inset-[-2px] w-[120%] h-[120%] cursor-pointer opacity-0"
           />
           <div
-            className="w-full h-full rounded border border-outline-variant"
+            className="w-full h-full rounded border border-outline-variant/60"
             style={{ backgroundColor: value }}
           />
         </div>
@@ -320,7 +319,7 @@ StylingPanel.ColorField = function StylingPanelColorField({
           onChange={(e) =>
             updateSetting(settingKey, e.target.value as ChatSettings[typeof settingKey])
           }
-          className="flex-1 bg-transparent text-code-sm font-code-sm uppercase outline-none text-on-surface placeholder:text-on-surface-variant/50"
+          className="flex-1 bg-transparent text-code-sm font-code-sm uppercase outline-none text-on-surface placeholder:text-on-surface-variant/40"
           placeholder="#000000"
         />
       </div>
@@ -347,12 +346,12 @@ StylingPanel.Select = function StylingPanelSelect({
         onChange={(e) =>
           updateSetting(settingKey, e.target.value as ChatSettings[typeof settingKey])
         }
-        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer relative"
+        className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-2 px-3 text-on-surface outline-none appearance-none cursor-pointer hover:border-primary/40 focus:border-primary text-label-md"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23cdc3d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23998ba2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 8px center',
-          backgroundSize: '16px',
+          backgroundPosition: 'right 10px center',
+          backgroundSize: '14px',
         }}
       >
         {options.map((opt) => (
@@ -373,7 +372,7 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
     { value: 'default', label: 'None', icon: 'block' },
     { value: 'blink', label: 'Blink', icon: 'visibility' },
     { value: 'glowing', label: 'Glowing', icon: 'auto_awesome' },
-    { value: 'fade', label: 'Fade', icon: 'fade_on_image' },
+    { value: 'fade', label: 'Fade', icon: 'opacity' },
     { value: 'slide', label: 'Slide', icon: 'arrow_right_alt' },
     { value: 'bounce', label: 'Bounce', icon: 'restart_alt' },
   ]
@@ -390,24 +389,18 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
                 option.value as ChatSettings['newMessageAnimation']
               )
             }
-            className={`p-2.5 rounded-lg border transition-all duration-200 text-left ${
+            className={`p-2.5 rounded-md border text-left transition-colors duration-150 ${
               value === option.value
-                ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
-                : 'border-outline-variant bg-surface-container-lowest hover:border-primary/30 hover:bg-surface-container-low'
+                ? 'border-primary bg-primary/8'
+                : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
             }`}
           >
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary">
                 {option.icon}
               </span>
               <span className="text-label-sm font-medium text-on-surface">{option.label}</span>
             </div>
-            {value === option.value && (
-              <div className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px] text-primary">check</span>
-                <span className="text-label-sm text-on-surface-variant/70">Active</span>
-              </div>
-            )}
           </button>
         ))}
       </div>
@@ -439,7 +432,7 @@ StylingPanel.NumberField = function StylingPanelNumberField({
         onChange={(e) =>
           updateSetting(settingKey, Number(e.target.value) as ChatSettings[typeof settingKey])
         }
-        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2.5 text-on-surface outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-2 px-3 text-on-surface outline-none hover:border-primary/40 focus:border-primary text-label-md tabular-nums"
       />
     </StylingPanel.Field>
   )
@@ -447,6 +440,24 @@ StylingPanel.NumberField = function StylingPanelNumberField({
 
 StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
   const { settings, updateSettings } = useStylingPanelContext()
+
+  // WorkspaceX-specific IM settings that should never be affected by presets
+  const IM_SETTINGS_TO_PRESERVE = [
+    'bubbleBorderWidth',
+    'bubbleTailOffset',
+    'bubbleMaxWidth',
+    'bubblePadding',
+    'chromaKey',
+    'ownerBg',
+    'ownerText',
+    'ownerUsername',
+    'modBg',
+    'modText',
+    'modUsername',
+    'memberBg',
+    'memberText',
+    'memberUsername',
+  ] as const
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -459,20 +470,31 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
         return (
           <button
             key={preset.name}
-            onClick={() => updateSettings(preset.settings)}
-            className={`text-left p-2.5 rounded-lg border transition-all duration-200 ${
+            onClick={() => {
+              // Preserve IM-specific settings when applying presets
+              const preservedSettings = IM_SETTINGS_TO_PRESERVE.reduce(
+                (acc, key) => ({ ...acc, [key]: settings[key as keyof ChatSettings] }),
+                {}
+              )
+              updateSettings({ ...preset.settings, ...preservedSettings, messageInnerPadding: 0 })
+            }}
+            className={`text-left p-2.5 rounded-md border transition-colors duration-150 ${
               isActive
-                ? 'border-primary bg-primary/10'
-                : 'border-outline-variant bg-surface-container-lowest hover:border-primary/30'
+                ? 'border-primary bg-primary/8'
+                : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-[16px] text-primary">
+              <span
+                className={`material-symbols-outlined text-[16px] ${
+                  isActive ? 'text-primary' : 'text-on-surface-variant/60'
+                }`}
+              >
                 auto_awesome
               </span>
               <span className="text-label-sm font-medium text-on-surface">{preset.label}</span>
             </div>
-            <span className="text-label-sm text-on-surface-variant/70 block leading-tight">
+            <span className="text-label-sm text-on-surface-variant/60 block leading-tight">
               {preset.description}
             </span>
           </button>
@@ -482,31 +504,302 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
   )
 }
 
-/* Hero Section - special treatment for Quick Presets */
+/* Hero Section - subtle primary tint for Quick Presets */
 StylingPanel.HeroSection = function StylingPanelHeroSection({
   icon,
   title,
   children,
+  collapsible = false,
+  defaultOpen = true,
 }: {
   icon: string
   title: string
   children: React.ReactNode
+  collapsible?: boolean
+  defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <div className="relative mb-4">
-      {/* Hero header - minimal */}
-      <div className="flex items-center gap-2 px-1 py-2">
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
-          {icon}
-        </span>
-        <h3 className="text-label-md font-medium text-on-surface">{title}</h3>
+    <div className="bg-primary/[0.04] rounded-xl px-4 py-4 mb-3 border border-primary/10">
+      <div
+        className={`flex items-center gap-2 ${collapsible ? 'cursor-pointer select-none' : ''} ${open ? 'mb-4' : ''}`}
+        onClick={() => collapsible && setOpen((v) => !v)}
+      >
+        <span className="material-symbols-outlined text-primary text-[20px]">{icon}</span>
+        <h3 className="text-label-md font-semibold text-on-surface flex-1">{title}</h3>
+        {collapsible && (
+          <span
+            className="material-symbols-outlined text-primary text-[18px] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+          >
+            expand_more
+          </span>
+        )}
       </div>
+      {open && <div>{children}</div>}
+    </div>
+  )
+}
 
-      {/* Hero content */}
-      <div className="px-1 py-2">{children}</div>
+/* ─── Layout Controls ─────────────────────────────────────────── */
 
-      {/* Section separator */}
-      <div className="border-t border-outline-variant/40 my-4" />
+StylingPanel.NameMessageLayout = function StylingPanelNameMessageLayout() {
+  const { settings, updateSetting } = useStylingPanelContext()
+  const value = settings.nameMessageLayout as string
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => updateSetting('nameMessageLayout', 'left-right')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'left-right'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="19"
+              rx="3.5"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="4"
+              width="7"
+              height="12"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="13"
+              y="4"
+              width="15"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="13"
+              y="11"
+              width="10"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Left → Right</span>
+        </div>
+      </button>
+      <button
+        onClick={() => updateSetting('nameMessageLayout', 'top-bottom')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'top-bottom'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="19"
+              rx="3.5"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="4"
+              width="7"
+              height="12"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="13"
+              y="3"
+              width="15"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="13"
+              y="11"
+              width="12"
+              height="5"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Top → Bottom</span>
+        </div>
+      </button>
+    </div>
+  )
+}
+
+StylingPanel.BackgroundStyle = function StylingPanelBackgroundStyle() {
+  const { settings, updateSetting } = useStylingPanelContext()
+  const value = settings.backgroundStyle as string
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => updateSetting('backgroundStyle', 'full-block')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'full-block'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="currentColor"
+              className="text-primary/[0.15]"
+            />
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="12"
+              y="5"
+              width="16"
+              height="3"
+              rx="1"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="12"
+              y="11"
+              width="10"
+              height="3"
+              rx="1"
+              fill="currentColor"
+              className="text-on-surface-variant/40"
+            />
+            <rect
+              x="4"
+              y="5"
+              width="6"
+              height="9"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Full Block</span>
+        </div>
+      </button>
+      <button
+        onClick={() => updateSetting('backgroundStyle', 'inline-text')}
+        className={`p-3 rounded-lg border text-left transition-colors duration-150 ${
+          value === 'inline-text'
+            ? 'border-primary bg-primary/8'
+            : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="21"
+              rx="3.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="15"
+              y="4"
+              width="13"
+              height="5"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/[0.15]"
+            />
+            <rect
+              x="15"
+              y="4"
+              width="13"
+              height="5"
+              rx="1.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-primary/40"
+            />
+            <rect
+              x="17"
+              y="6"
+              width="9"
+              height="2"
+              rx="0.7"
+              fill="currentColor"
+              className="text-primary"
+            />
+            <rect
+              x="14"
+              y="12"
+              width="10"
+              height="4"
+              rx="1.5"
+              fill="currentColor"
+              className="text-on-surface-variant/[0.15]"
+            />
+            <rect
+              x="14"
+              y="12"
+              width="10"
+              height="4"
+              rx="1.5"
+              fill="none"
+              stroke="currentColor"
+              className="text-outline-variant"
+            />
+            <rect
+              x="4"
+              y="5"
+              width="6"
+              height="9"
+              rx="1.5"
+              fill="currentColor"
+              className="text-primary/40"
+            />
+          </svg>
+          <span className="text-label-sm font-medium text-on-surface">Inline Text</span>
+        </div>
+      </button>
     </div>
   )
 }

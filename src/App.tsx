@@ -7,6 +7,7 @@ import StylingPanel from './components/layout/StylingPanel'
 import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
+import { WorkspaceX } from './components/theme/WorkspaceX'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
@@ -94,7 +95,7 @@ const DEMO_MESSAGES = [
 /* ─── App ────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState('workspace')
+  const [activeNav, setActiveNav] = useState('workspace-x')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
   const [submittedUrl, setSubmittedUrl] = useState('')
@@ -288,6 +289,8 @@ export default function App() {
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />
+          ) : activeNav === 'workspace-x' ? (
+            <WorkspaceX />
           ) : activeNav === 'workspace' ? (
             <>
               {/* Preview Area (line 187) */}
@@ -314,9 +317,14 @@ export default function App() {
               {/* Styling Panel */}
               <StylingPanel onCSSChange={setGeneratedCSS}>
                 <StylingPanel.Header />
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
                   {/* Hero Section: Quick Presets */}
-                  <StylingPanel.HeroSection icon="auto_awesome" title="Quick Presets">
+                  <StylingPanel.HeroSection
+                    icon="auto_awesome"
+                    title="Quick Presets"
+                    collapsible
+                    defaultOpen={true}
+                  >
                     <StylingPanel.PresetSelector />
                   </StylingPanel.HeroSection>
 
@@ -324,7 +332,10 @@ export default function App() {
                   <StylingPanel.Section icon="layers" title="Generic">
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-3">
-                        <StylingPanel.ColorField settingKey="backgroundColor" label="Background" />
+                        <StylingPanel.ColorField
+                          settingKey="backgroundColor"
+                          label="Page Background"
+                        />
                         <StylingPanel.ColorField settingKey="accentColor" label="Accent" />
                       </div>
                       <StylingPanel.Slider
@@ -338,7 +349,7 @@ export default function App() {
                   </StylingPanel.Section>
 
                   {/* Section: Header */}
-                  <StylingPanel.Section icon="header" title="Header">
+                  <StylingPanel.Section icon="title" title="Header">
                     <div className="space-y-2">
                       <StylingPanel.Toggle settingKey="showHeader" label="Show Header" />
                     </div>
@@ -420,6 +431,18 @@ export default function App() {
                           max={100}
                         />
                       </div>
+                      <StylingPanel.Slider
+                        settingKey="messageMarginBottom"
+                        label="Bottom Margin"
+                        min={0}
+                        max={40}
+                      />
+                      <StylingPanel.Slider
+                        settingKey="messageInnerPadding"
+                        label="Inner Padding"
+                        min={0}
+                        max={20}
+                      />
                       <div className="grid grid-cols-2 gap-3">
                         <StylingPanel.Toggle settingKey="showAvatars" label="Avatars" />
                         <StylingPanel.Toggle settingKey="showTimestamps" label="Timestamps" />
@@ -438,6 +461,18 @@ export default function App() {
                     </div>
                   </StylingPanel.Section>
 
+                  {/* Section: Message Layout */}
+                  <StylingPanel.Section icon="space_dashboard" title="Message Layout">
+                    <div className="space-y-4">
+                      <StylingPanel.Field label="Name & Message">
+                        <StylingPanel.NameMessageLayout />
+                      </StylingPanel.Field>
+                      <StylingPanel.Field label="Background Card Area">
+                        <StylingPanel.BackgroundStyle />
+                      </StylingPanel.Field>
+                    </div>
+                  </StylingPanel.Section>
+
                   {/* Section: Avatar */}
                   <StylingPanel.Section icon="face" title="Avatar">
                     <div className="space-y-2">
@@ -446,6 +481,12 @@ export default function App() {
                         label="Avatar Size"
                         min={16}
                         max={64}
+                      />
+                      <StylingPanel.Slider
+                        settingKey="avatarMarginTop"
+                        label="Top Margin"
+                        min={0}
+                        max={40}
                       />
                     </div>
                   </StylingPanel.Section>
@@ -496,7 +537,7 @@ export default function App() {
                   </StylingPanel.Section>
 
                   {/* Section: Scrollbar */}
-                  <StylingPanel.Section icon="scroll" title="Scrollbar">
+                  <StylingPanel.Section icon="swipe_vertical" title="Scrollbar">
                     <div className="space-y-2">
                       <StylingPanel.Slider
                         settingKey="scrollbarWidth"

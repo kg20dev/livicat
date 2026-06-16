@@ -1,0 +1,229 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Neon Sticker Theme — scoped CSS for YouTube Live Chat          ║
+   ║                                                                ║
+   ║  Principles from Emil Kowalski's design engineering skill:     ║
+   ║   - Custom easing: cubic-bezier(0.23, 1, 0.32, 1)             ║
+   ║   - Never animate from scale(0) — always start opacity + dim  ║
+   ║   - UI animations under 300ms                                 ║
+   ║   - prefers-reduced-motion support                            ║
+   ║                                                                ║
+   ║  ⚠️ CRITICAL RULE:                                             ║
+   ║  If an element uses `transform` in @keyframes, its base CSS    ║
+   ║  must NOT have `!important` on `transform`. CSS spec says      ║
+   ║  keyframe declarations can NEVER override `!important` — the   ║
+   ║  animation silently degrades to opacity-only.                  ║
+   ║  Fix: fold permanent transforms (skew etc.) into the           ║
+   ║  animation keyframes so they persist throughout. Read more     ║
+   ║  at `src/theme/im/theme.css` header.                           ║
+   ║                                                                ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-{id} stripped before YouTube injection.         ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Animation Keyframes ──────────────────────────────────────── */
+
+@keyframes theme-ink-sticker-message-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) skew(var(--skewAngle, 0deg));
+  }
+  100% {
+    opacity: 1;
+    transform: skew(var(--skewAngle, 0deg));
+  }
+}
+
+/* Neon blip: rapid on/off blinks for the first ~0.5s, then a brief
+   off pause, then a slow glow-up — like a flickering neon sign. */
+@keyframes theme-ink-sticker-neon {
+  0% {
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  } /* blink 1 on */
+  10% {
+    opacity: 0;
+  } /* blink 1 off */
+  14% {
+    opacity: 1;
+  } /* blink 2 on */
+  18% {
+    opacity: 0;
+  } /* blink 2 off */
+  22% {
+    opacity: 1;
+  } /* blink 3 on */
+  26% {
+    opacity: 0;
+  } /* blink 3 off */
+  50% {
+    opacity: 0;
+  } /* pause while off */
+  100% {
+    opacity: 1;
+  } /* slow fade on */
+}
+
+/* ── Theme: Neon Sticker (scoped via .theme-ink-sticker) ──────── */
+
+/* All selectors use `yt-live-chat-text-message-renderer` prefix for
+   YouTube specificity (YouTube uses `.style-scope` class + ID combos
+   that would beat bare `#author-name` selectors). */
+
+/* Avatar wrapper */
+.theme-ink-sticker yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 2px solid var(--strokeColor, #333333) !important;
+  line-height: 0 !important;
+  margin-top: var(--chat-avatar-vertical-offset, 0px) !important;
+}
+
+/* Avatar image — fills container 1:1 */
+.theme-ink-sticker yt-live-chat-text-message-renderer #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* Username — with neon entrance blip + subtle glow */
+.theme-ink-sticker yt-live-chat-text-message-renderer #author-name {
+  font-size: var(--usernameFontSize, 14px) !important;
+  font-weight: 600 !important;
+  color: var(--usernameColor, #bb86fc) !important;
+  margin-bottom: 0 !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  text-shadow: 0 0 var(--glowSpread, 6px) var(--usernameColor, #bb86fc) !important;
+  animation: theme-ink-sticker-neon 2s cubic-bezier(0.23, 1, 0.32, 1) both !important;
+}
+
+/* Message Text */
+.theme-ink-sticker yt-live-chat-text-message-renderer #message {
+  color: var(--messageColor, #e0e0e0) !important;
+  font-size: var(--messageFontSize, 14px) !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+  -webkit-text-stroke: var(--strokeWidth, 1px) var(--strokeColor, #333333) !important;
+  text-stroke: var(--strokeWidth, 1px) var(--strokeColor, #333333) !important;
+}
+
+/* Message container (styled card) */
+.theme-ink-sticker yt-live-chat-text-message-renderer {
+  padding: 10px 14px !important;
+  background: var(--messageBg, #1a1a2e) !important;
+  border-radius: var(--chat-border-radius, 6px) !important;
+  transform: skew(var(--skewAngle, 0deg));
+  max-width: var(--chat-max-width, 400px) !important;
+  width: fit-content !important;
+  box-shadow: var(--shadowOffset, 3px) var(--shadowOffset, 3px) 0 var(--shadowColor, #000000) !important;
+  opacity: calc(var(--messageOpacity, 100) / 100) !important;
+  animation: theme-ink-sticker-message-in 250ms cubic-bezier(0.23, 1, 0.32, 1) both !important;
+  margin-bottom: 6px !important;
+}
+
+/* ── Reduced Motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-ink-sticker yt-live-chat-text-message-renderer {
+    animation: none !important;
+  }
+
+  .theme-ink-sticker yt-live-chat-text-message-renderer {
+    transform: skew(var(--skewAngle, 0deg)) !important;
+  }
+
+  .theme-ink-sticker yt-live-chat-text-message-renderer #author-name {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ── Role Color Overrides ──────────────────────────────────── */
+
+/* Owner */
+:is(
+  .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  background: var(--ownerBg, #3d1a00) !important;
+  border: 1px solid var(--ownerText, #ff8c42) !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name {
+  color: var(--ownerText, #ff8c42) !important;
+}
+
+/* Moderator */
+:is(
+  .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  background: var(--modBg, #001f3d) !important;
+  border: 1px solid var(--modText, #4296ff) !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name {
+  color: var(--modText, #4296ff) !important;
+}
+
+/* Member */
+:is(
+  .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member']
+) {
+  background: var(--memberBg, #0d2818) !important;
+  border: 1px solid var(--memberText, #42cc8b) !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name {
+  color: var(--memberText, #42cc8b) !important;
+}
+
+/* Super Chat */
+:is(
+  .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  background: linear-gradient(135deg, #3d2f00, #4a2800) !important;
+  border: 1px solid #ffd700 !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name {
+  color: #ffd700 !important;
+}
+
+/* Member Ship */
+:is(
+  .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  background: #0d2818 !important;
+  border: 1px solid #00b140 !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name {
+  color: #00b140 !important;
+}

@@ -48,6 +48,27 @@ jobs:
           echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
           echo "Should create release: $SHOULD_RELEASE"
 
+      - name: Validate version was bumped
+        run: |
+          CURRENT_VERSION="${{ steps.get_version.outputs.version }}"
+          LATEST_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "v0.0.0")
+          LATEST_VERSION="${LATEST_TAG#v}"
+          echo "Current version: $CURRENT_VERSION"
+          echo "Latest release:  $LATEST_VERSION"
+          if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+            echo "❌ ERROR: Version $CURRENT_VERSION matches the latest release!"
+            echo "Bump the version in package.json before merging to release/app."
+            echo ""
+            echo "To fix:"
+            echo "  1. Update \"version\" in package.json"
+            echo "  2. Run: node scripts/sync-version.cjs"
+            echo "  3. Commit and push"
+            exit 1
+          fi
+          echo "✅ Version $CURRENT_VERSION is new (latest release: $LATEST_VERSION)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Validate Aptabase Analytics Key
         run: |
           echo "Checking Aptabase configuration..."
@@ -111,9 +132,19 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install cargo-tauri CLI
-        run: cargo install tauri-cli --version "^2"
+        # Pin to 2.10 with --locked to avoid conflicting trait impl between
+        # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
+        # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: error
+          command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -150,6 +181,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
+
+      - name: Ad-hoc sign and prepare macOS bundle
+        run: |
+          DMG_DIR="src-tauri/target/release/bundle/dmg"
+          APP_PATH="$DMG_DIR/Livicat.app"
+
+          # Ad-hoc sign the .app bundle (in case Tauri's built-in signing didn't apply)
+          if [ -d "$APP_PATH" ]; then
+            echo "Ad-hoc signing .app bundle..."
+            codesign --force --deep --sign - "$APP_PATH"
+            codesign --verify --deep --strict "$APP_PATH" && echo "✅ Signature verified"
+          else
+            echo "⚠️ .app not found at $APP_PATH, trying alternative paths..."
+            find src-tauri/target/release/bundle -name "*.app" -type d -exec codesign --force --deep --sign - {} \;
+          fi
+
+          # Strip quarantine flag from .dmg so it doesn't carry the attribute into the download
+          for dmg in "$DMG_DIR"/*.dmg; do
+            if [ -f "$dmg" ]; then
+              xattr -rd com.apple.quarantine "$dmg" 2>/dev/null || true
+              echo "✅ Quarantine stripped from $(basename "$dmg")"
+            fi
+          done
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -177,9 +233,19 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install cargo-tauri CLI
-        run: cargo install tauri-cli --version "^2"
+        # Pin to 2.10 with --locked to avoid conflicting trait impl between
+        # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
+        # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: error
+          command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -228,6 +294,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4

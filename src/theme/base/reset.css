@@ -1,0 +1,108 @@
+/**
+ * Base Reset CSS for YouTube Live Chat
+ *
+ * Strips YouTube's default styling and sets up a clean flexbox layout.
+ * Themes layer their visual styling on top of this foundation.
+ *
+ * Matches YouTube's native DOM exactly:
+ *   <yt-live-chat-text-message-renderer>         ← container (flex row)
+ *     <div id="author-photo">                     ← avatar wrapper
+ *       <img src="..." />
+ *     </div>
+ *     <div id="content">                          ← content column
+ *       <div id="author-name">Username</div>       ← or inside <yt-live-chat-author-chip>
+ *       <div id="message-container">              ← message wrapper
+ *         <div id="message">Message text</div>
+ *       </div>
+ *       <div id="timestamp">...</div>              ← hidden
+ *     </div>
+ *   </yt-live-chat-text-message-renderer>
+ */
+
+/* ── Message container (flex row) ────────────────────────────── */
+
+yt-live-chat-text-message-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 4px 8px !important;
+  margin: 0 !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+  width: fit-content !important;
+  font-family: var(--chat-font-family, inherit) !important;
+}
+
+/* ── Avatar wrapper ─────────────────────────────────────────── */
+
+yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  line-height: 0 !important;
+}
+
+yt-live-chat-text-message-renderer #author-photo img {
+  display: block !important;
+  border-radius: 50% !important;
+}
+
+/* ── Content column (name + message) ────────────────────────── */
+
+yt-live-chat-text-message-renderer #content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── Author name chip wrapper (YouTube only) ────────────────── */
+/* Uses #content prefix (specificity 0,2,1) to reliably beat
+   YouTube's .style-scope class selectors (specificity 0,1,1). */
+
+yt-live-chat-text-message-renderer #content yt-live-chat-author-chip {
+  display: contents !important;
+}
+
+/* ── Author name ────────────────────────────────────────────── */
+
+yt-live-chat-text-message-renderer #author-name {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── Message container (YouTube wraps #message in this) ─────── */
+
+yt-live-chat-text-message-renderer #content #message-container {
+  display: contents !important;
+}
+
+/* ── Message text ───────────────────────────────────────────── */
+
+yt-live-chat-text-message-renderer #message {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
+/* ── Hide unwanted YouTube elements ─────────────────────────── */
+
+yt-live-chat-text-message-renderer #timestamp,
+yt-live-chat-text-message-renderer #menu,
+yt-live-chat-text-message-renderer #before-content-buttons,
+yt-live-chat-text-message-renderer yt-live-chat-badge-renderer,
+yt-live-chat-text-message-renderer #author-badges,
+yt-live-chat-text-message-renderer #chat-badges,
+yt-live-chat-text-message-renderer #deleted-state,
+yt-live-chat-text-message-renderer #show-original {
+  display: none !important;
+}
