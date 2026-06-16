@@ -2,6 +2,15 @@ import type { SettingDef } from '../types'
 import { FONT_OPTIONS } from '../../utils/fonts'
 
 export const scheme: SettingDef[] = [
+  /* ── OBS ───────────────────────────────────────────────── */
+  {
+    key: 'chroma-key',
+    section: 'OBS',
+    type: 'toggle',
+    label: 'Chroma Key Ready',
+    default: false,
+  },
+
   /* ── Colors ─────────────────────────────────────────────── */
   { key: 'messageBg', section: 'Colors', type: 'color', label: 'Background', default: '#1a1a2e' },
   {
@@ -229,15 +238,6 @@ export const scheme: SettingDef[] = [
     section: 'YouTube',
     type: 'toggle',
     label: 'Hide Chat Footer',
-    default: false,
-  },
-
-  /* ── OBS ───────────────────────────────────────────────── */
-  {
-    key: 'chroma-key',
-    section: 'OBS',
-    type: 'toggle',
-    label: 'Chroma Key Ready',
     default: false,
   },
 

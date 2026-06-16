@@ -127,7 +127,9 @@ describe('ThemePreview', () => {
 
     const chatMessages = container.querySelector('.livicat-chat-messages') as HTMLElement
     expect(chatMessages).not.toBeNull()
-    expect(chatMessages.style.backgroundColor).toBe('rgb(0, 177, 64)')
+    // Background color is now on parent wrapper div
+    const wrapper = chatMessages.parentElement as HTMLElement
+    expect(wrapper.style.backgroundColor).toBe('rgb(0, 177, 64)')
   })
 
   it('renders role-based messages with data-role attribute', () => {

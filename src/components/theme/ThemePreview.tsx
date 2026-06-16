@@ -144,7 +144,7 @@ export function ThemePreview({
   const isGallery = mode === 'gallery'
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex items-start overflow-auto">
       {/* Injected theme CSS */}
       <style id={`theme-css-${themeId}`}>{fullCss}</style>
 
@@ -182,47 +182,69 @@ export function ThemePreview({
                         0 1px 2px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-            overflow: hidden;
+            overflow: visible;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
           }
 
           .livicat-gallery-card:hover {
-            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
                         0 2px 4px rgba(0, 0, 0, 0.08);
             border-color: rgba(255, 255, 255, 0.2);
           }
 
-          /* Ensure theme message renderer fills the card */
+          /* Scale chat message to fit within card using transform */
           .livicat-gallery-card > yt-live-chat-text-message-renderer {
-            width: 100%;
+            transform-origin: center center;
+            transform: scale(0.6);
+            width: 500px;
+            flex-shrink: 0;
+          }
+
+          /* Responsive scaling for different screen sizes */
+          @media (min-width: 768px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.75);
+              width: 500px;
+            }
+          }
+
+          @media (min-width: 1024px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.85);
+              width: 500px;
+            }
           }
         `}</style>
       )}
 
       {/* Chat messages container */}
-      {isGallery ? (
-        /* Gallery mode: Grid layout with themed cards */
-        <div
-          className="livicat-gallery-grid overflow-y-auto"
-          style={{ backgroundColor: backgroundColor ?? 'transparent' }}
-        >
-          {chatMessages.map((msg) => (
-            <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
-              <ChatMessage message={msg} showAvatar={showAvatars} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* Live mode: Vertical stack (original layout) */
-        <div
-          className={`livicat-chat-messages theme-${themeId} overflow-y-auto`}
-          style={{ backgroundColor: backgroundColor ?? 'transparent' }}
-        >
-          {chatMessages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} showAvatar={showAvatars} />
-          ))}
-        </div>
-      )}
+      <div
+        className="w-full h-full flex flex-col"
+        style={{
+          backgroundColor: backgroundColor ?? 'transparent',
+        }}
+      >
+        {isGallery ? (
+          /* Gallery mode: Grid layout with themed cards */
+          <div className="livicat-gallery-grid overflow-y-auto h-full">
+            {chatMessages.map((msg) => (
+              <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
+                <ChatMessage message={msg} showAvatar={showAvatars} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Live mode: Vertical stack (original layout) */
+          <div className={`livicat-chat-messages theme-${themeId} overflow-y-auto h-full`}>
+            {chatMessages.map((msg) => (
+              <ChatMessage key={msg.id} message={msg} showAvatar={showAvatars} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
