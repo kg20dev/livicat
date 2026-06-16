@@ -144,7 +144,7 @@ export function ThemePreview({
   const isGallery = mode === 'gallery'
 
   return (
-    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center overflow-auto">
       {/* Injected theme CSS */}
       <style id={`theme-css-${themeId}`}>{fullCss}</style>
 

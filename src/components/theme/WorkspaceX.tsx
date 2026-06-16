@@ -643,7 +643,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
 
         {/* Preview content */}
         <div
-          className="flex-1 transition-all duration-200 overflow-hidden"
+          className="flex-1 transition-all duration-200 overflow-auto"
           style={{
             maxHeight: responsive.isPortrait ? 'calc(100vh - 200px)' : 'calc(100vh - 180px)',
           }}
@@ -666,7 +666,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               </div>
             ) : (
               <div
-                className="rounded-xl shadow-2xl overflow-hidden"
+                className="rounded-xl shadow-2xl"
                 style={{
                   aspectRatio: `${previewWidth}/${previewHeight}`,
                   width: responsive.isPortrait
