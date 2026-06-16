@@ -80,6 +80,7 @@
   overflow: hidden !important;
   border: 2px solid var(--strokeColor, #333333) !important;
   line-height: 0 !important;
+  margin-top: var(--chat-avatar-vertical-offset, 0px) !important;
 }
 
 /* Avatar image — fills container 1:1 */

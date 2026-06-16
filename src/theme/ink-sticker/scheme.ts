@@ -50,6 +50,16 @@ export const scheme: SettingDef[] = [
     default: 28,
     unit: 'px',
   },
+  {
+    key: 'chat-avatar-vertical-offset',
+    section: 'Typography',
+    type: 'range',
+    label: 'Avatar Vertical Offset',
+    min: -20,
+    max: 20,
+    default: 0,
+    unit: 'px',
+  },
 
   /* ── Effects ────────────────────────────────────────────── */
   {
