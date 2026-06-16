@@ -36,13 +36,30 @@ export default function Sidebar({
   className = '',
 }: SidebarRootProps) {
   const { isCollapsed, toggle } = useSidebarCollapsed()
+  const isVisible = !isCollapsed
+
+  const handleBackdropClick = () => {
+    if (isVisible) {
+      toggle()
+    }
+  }
 
   return (
     <SidebarContext.Provider value={{ activeItem, onNavigate, isCollapsed, toggle }}>
+      {/* Backdrop overlay */}
+      {isVisible && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300 ease-in-out"
+          onClick={handleBackdropClick}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Floating sidebar */}
       <aside
-        className={`h-screen fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col z-[60] transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-16' : 'w-[280px]'
-        } ${className}`}
+        className={`h-screen fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-x-0' : '-translate-x-full'
+        } w-[280px] ${className}`}
       >
         {children}
       </aside>
@@ -59,7 +76,7 @@ Sidebar.Header = function SidebarHeader({
   title?: string
   subtitle?: string
 }) {
-  const { isCollapsed, toggle } = useSidebarContext()
+  const { toggle } = useSidebarContext()
 
   // Read version from Rust binary at runtime (more reliable than build-time import)
   // Falls back to pkg.version when Tauri is not available (web dev mode)
@@ -75,47 +92,36 @@ Sidebar.Header = function SidebarHeader({
 
   return (
     <div className="px-gutter mb-8 relative">
-      {/* Collapsible icon toggle */}
+      {/* Close button for floating sidebar */}
       <button
         onClick={toggle}
-        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 z-10"
-        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="absolute right-2 top-2 p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 z-10"
+        title="Close menu"
+        aria-label="Close menu"
       >
-        <span className="material-symbols-outlined text-on-surface-variant">
-          {isCollapsed ? 'menu_open' : 'menu'}
-        </span>
+        <span className="material-symbols-outlined text-on-surface-variant">close</span>
       </button>
 
-      {/* Livicat icon - responsive size */}
-      <div
-        className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'ml-8 scale-75' : 'ml-12'}`}
-      >
-        <img
-          src="/livicat-icon.png"
-          alt="Livicat"
-          className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-8 h-8' : 'w-12 h-12'}`}
-        />
+      {/* Livicat icon */}
+      <div className="ml-2 mt-6">
+        <img src="/livicat-icon.png" alt="Livicat" className="w-12 h-12" />
       </div>
 
-      {/* Title and subtitle - hide when collapsed */}
-      {!isCollapsed && (
-        <div className="transition-all duration-300 ease-in-out opacity-100 ml-12">
-          <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
-          <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
-        </div>
-      )}
+      {/* Title and subtitle */}
+      <div className="ml-2 mt-4">
+        <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
+        <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
+      </div>
     </div>
   )
 }
 
 Sidebar.Nav = function SidebarNav() {
-  const { activeItem, onNavigate, isCollapsed } = useSidebarContext()
+  const { activeItem, onNavigate } = useSidebarContext()
 
   return (
-    <nav
-      className={`flex-1 transition-all duration-300 ease-in-out ${isCollapsed ? 'px-2' : 'px-4'} space-y-1`}
-    >
-      <SidebarNavItems activeItem={activeItem} onNavigate={onNavigate} isCollapsed={isCollapsed} />
+    <nav className="flex-1 px-4 space-y-1">
+      <SidebarNavItems activeItem={activeItem} onNavigate={onNavigate} />
     </nav>
   )
 }
@@ -123,11 +129,9 @@ Sidebar.Nav = function SidebarNav() {
 function SidebarNavItems({
   activeItem,
   onNavigate,
-  isCollapsed,
 }: {
   activeItem: string
   onNavigate: (item: string) => void
-  isCollapsed: boolean
 }) {
   const mainItems: { id: string; label: string; icon: string }[] = [
     { id: 'workspace-x', label: 'Workspace', icon: 'magic_button' },
@@ -147,17 +151,15 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 ${
-              isCollapsed ? 'px-2 py-3 justify-center' : 'px-4 py-3'
-            } ${
+            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
               isActive
                 ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
                 : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
             }`}
-            title={isCollapsed ? item.label : undefined}
+            title={item.label}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
-            {!isCollapsed && <span>{item.label}</span>}
+            <span>{item.label}</span>
           </a>
         )
       })}
@@ -176,17 +178,15 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 ${
-              isCollapsed ? 'px-2 py-3 justify-center' : 'px-4 py-3'
-            } ${
+            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
               isActive
                 ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
                 : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
             }`}
-            title={isCollapsed ? item.label : undefined}
+            title={item.label}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
-            {!isCollapsed && <span>{item.label}</span>}
+            <span>{item.label}</span>
           </a>
         )
       })}

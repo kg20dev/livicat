@@ -12,20 +12,14 @@ describe('useSidebarCollapsed', () => {
     localStorage.clear()
   })
 
-  it('should initialize as expanded by default', () => {
+  it('should initialize as collapsed (hidden) by default', () => {
     const { result } = renderHook(() => useSidebarCollapsed())
 
-    expect(result.current.isCollapsed).toBe(false)
+    expect(result.current.isCollapsed).toBe(true)
   })
 
   it('should toggle collapsed state', () => {
     const { result } = renderHook(() => useSidebarCollapsed())
-
-    expect(result.current.isCollapsed).toBe(false)
-
-    act(() => {
-      result.current.toggle()
-    })
 
     expect(result.current.isCollapsed).toBe(true)
 
@@ -34,22 +28,28 @@ describe('useSidebarCollapsed', () => {
     })
 
     expect(result.current.isCollapsed).toBe(false)
+
+    act(() => {
+      result.current.toggle()
+    })
+
+    expect(result.current.isCollapsed).toBe(true)
   })
 
   it('should set collapsed state explicitly', () => {
     const { result } = renderHook(() => useSidebarCollapsed())
 
     act(() => {
-      result.current.setCollapsed(true)
-    })
-
-    expect(result.current.isCollapsed).toBe(true)
-
-    act(() => {
       result.current.setCollapsed(false)
     })
 
     expect(result.current.isCollapsed).toBe(false)
+
+    act(() => {
+      result.current.setCollapsed(true)
+    })
+
+    expect(result.current.isCollapsed).toBe(true)
   })
 
   it('should persist state to localStorage', () => {
@@ -59,21 +59,21 @@ describe('useSidebarCollapsed', () => {
       result.current.toggle()
     })
 
-    expect(localStorage.getItem('livicat_sidebar_collapsed')).toBe('true')
+    expect(localStorage.getItem('livicat_sidebar_visible')).toBe('true')
 
     act(() => {
       result.current.toggle()
     })
 
-    expect(localStorage.getItem('livicat_sidebar_collapsed')).toBe('false')
+    expect(localStorage.getItem('livicat_sidebar_visible')).toBe('false')
   })
 
   it('should restore state from localStorage', () => {
-    localStorage.setItem('livicat_sidebar_collapsed', 'true')
+    localStorage.setItem('livicat_sidebar_visible', 'true')
 
     const { result } = renderHook(() => useSidebarCollapsed())
 
-    expect(result.current.isCollapsed).toBe(true)
+    expect(result.current.isCollapsed).toBe(false)
   })
 
   it('should handle localStorage errors gracefully', () => {
@@ -90,7 +90,7 @@ describe('useSidebarCollapsed', () => {
       result.current.toggle()
     })
 
-    expect(result.current.isCollapsed).toBe(true)
+    expect(result.current.isCollapsed).toBe(false)
 
     // Restore original
     localStorage.setItem = originalSetItem

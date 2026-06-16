@@ -1,34 +1,37 @@
 /**
- * useSidebarCollapsed — Manage sidebar collapsed state with persistence
+ * useSidebarFloating — Manage floating sidebar state with persistence
  *
  * Features:
- * - Persist collapsed state in localStorage
- * - Provide toggle function
+ * - Persist floating visibility state in localStorage
+ * - Provide toggle function for show/hide
  * - Initialize from localStorage on mount
+ * - Default to hidden (floating sidebar is an overlay)
  */
 
 import { useState, useCallback } from 'react'
 
-const STORAGE_KEY = 'livicat_sidebar_collapsed'
+const STORAGE_KEY = 'livicat_sidebar_visible'
 
 export function useSidebarCollapsed() {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
+    if (typeof window === 'undefined') return true
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      return stored === 'true'
+      // Default to collapsed (hidden) when floating
+      return stored !== 'true'
     } catch {
-      return false
+      return true
     }
   })
 
   const toggle = useCallback(() => {
     setIsCollapsed((prev) => {
       const newValue = !prev
+      const isVisible = !newValue
       try {
-        localStorage.setItem(STORAGE_KEY, String(newValue))
+        localStorage.setItem(STORAGE_KEY, String(isVisible))
       } catch (error) {
-        console.warn('[useSidebarCollapsed] Failed to persist state:', error)
+        console.warn('[useSidebarFloating] Failed to persist state:', error)
       }
       return newValue
     })
@@ -36,10 +39,11 @@ export function useSidebarCollapsed() {
 
   const setCollapsed = useCallback((collapsed: boolean) => {
     setIsCollapsed(() => {
+      const isVisible = !collapsed
       try {
-        localStorage.setItem(STORAGE_KEY, String(collapsed))
+        localStorage.setItem(STORAGE_KEY, String(isVisible))
       } catch (error) {
-        console.warn('[useSidebarCollapsed] Failed to persist state:', error)
+        console.warn('[useSidebarFloating] Failed to persist state:', error)
       }
       return collapsed
     })

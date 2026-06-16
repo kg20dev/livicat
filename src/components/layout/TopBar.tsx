@@ -13,7 +13,7 @@ interface TopBarRootProps {
 export default function TopBar({ children, className = '' }: TopBarRootProps) {
   return (
     <header
-      className={`h-16 fixed top-0 right-0 left-[280px] z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin ${className}`}
+      className={`h-16 fixed top-0 right-0 left-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-container-margin ${className}`}
     >
       {children}
     </header>
@@ -27,6 +27,24 @@ TopBar.Left = function TopBarLeft({ title = 'Live Chat Studio' }: { title?: stri
     <div className="flex items-center gap-4">
       <span className="font-headline-sm text-headline-sm font-black text-on-surface">{title}</span>
     </div>
+  )
+}
+
+TopBar.MenuButton = function TopBarMenuButton({
+  onToggle,
+  isCollapsed,
+}: {
+  onToggle: () => void
+  isCollapsed: boolean
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95"
+      title={isCollapsed ? 'Open menu' : 'Close menu'}
+    >
+      <span className="material-symbols-outlined text-on-surface-variant">menu</span>
+    </button>
   )
 }
 

@@ -106,7 +106,7 @@ export default function App() {
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   // Sidebar state
-  const { isCollapsed } = useSidebarCollapsed()
+  const { isCollapsed, toggle } = useSidebarCollapsed()
 
   // Analytics states
   const [showLoading, setShowLoading] = useState(true)
@@ -284,15 +284,12 @@ export default function App() {
       {/* TopBar */}
       <TopBar>
         <TopBar.Left />
+        <TopBar.MenuButton onToggle={toggle} isCollapsed={isCollapsed} />
         <TopBar.Right />
       </TopBar>
 
-      {/* Main Content (line 185) */}
-      <main
-        className={`pt-16 h-screen flex transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'ml-16' : 'ml-[280px]'
-        }`}
-      >
+      {/* Main Content - full width, no sidebar margin */}
+      <main className="pt-16 h-screen flex">
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />
