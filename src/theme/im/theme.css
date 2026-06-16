@@ -148,7 +148,7 @@
 }
 
 /* Message container spacing/animation */
-.theme-im .yt-live-chat-text-message-renderer {
+.theme-im :is(.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer) {
   margin-bottom: var(--chat-message-spacing, 10px) !important;
   opacity: calc(var(--chat-message-opacity, 100) / 100) !important;
   animation: theme-im-message-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
@@ -161,7 +161,7 @@
   .theme-im #author-photo,
   .theme-im #author-name,
   .theme-im #message,
-  .theme-im .yt-live-chat-text-message-renderer {
+  .theme-im :is(.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer) {
     animation: none !important;
   }
 
@@ -173,65 +173,109 @@
 /* ── Role Color Overrides ──────────────────────────────────── */
 
 /* Owner */
-.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #message {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message {
   background: var(--chat-owner-bg, #2d1b00) !important;
   border-color: var(--chat-owner-text, #ffb347) !important;
   color: var(--chat-owner-text, #ffb347) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #message::before {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message::before {
   background: var(--chat-owner-bg, #2d1b00) !important;
   border-left-color: var(--chat-owner-text, #ffb347) !important;
   border-bottom-color: var(--chat-owner-text, #ffb347) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='owner'] #author-name {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name {
   background: var(--chat-owner-bg, #2d1b00) !important;
   color: var(--chat-owner-username, #ffb347) !important;
   font-weight: 700 !important;
 }
 
 /* Moderator */
-.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #message {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message {
   background: var(--chat-mod-bg, #001a2d) !important;
   border-color: var(--chat-mod-text, #47b5ff) !important;
   color: var(--chat-mod-text, #47b5ff) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #message::before {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message::before {
   background: var(--chat-mod-bg, #001a2d) !important;
   border-left-color: var(--chat-mod-text, #47b5ff) !important;
   border-bottom-color: var(--chat-mod-text, #47b5ff) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='moderator'] #author-name {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name {
   background: var(--chat-mod-bg, #001a2d) !important;
   color: var(--chat-mod-username, #47b5ff) !important;
   font-weight: 700 !important;
 }
 
 /* Member */
-.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #message {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message {
   background: var(--chat-member-bg, #1a2d00) !important;
   border-color: var(--chat-member-text, #8bcc47) !important;
   color: var(--chat-member-text, #8bcc47) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #message::before {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message::before {
   background: var(--chat-member-bg, #1a2d00) !important;
   border-left-color: var(--chat-member-text, #8bcc47) !important;
   border-bottom-color: var(--chat-member-text, #8bcc47) !important;
 }
-.theme-im .yt-live-chat-text-message-renderer[data-role='member'] #author-name {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name {
   background: var(--chat-member-bg, #1a2d00) !important;
   color: var(--chat-member-username, #ce93d8) !important;
   font-weight: 600 !important;
 }
 
 /* Super Chat */
-.theme-im .yt-live-chat-text-message-renderer[data-role='super-chat'] #message {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message {
   background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
   border-color: #ffd700 !important;
   color: #1a1a1a !important;
 }
 
 /* Member Ship */
-.theme-im .yt-live-chat-text-message-renderer[data-role='member-ship'] #message {
+:is(
+    .theme-im .yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message {
   background: #0d2818 !important;
   border-color: #00b140 !important;
   color: #00ff66 !important;

@@ -4,14 +4,14 @@
  * Strips YouTube's default styling and sets up a clean flexbox layout.
  * Themes layer their visual styling on top of this foundation.
  *
- * Uses .yt-live-chat-text-message-renderer class selector which works for:
+ * Uses :is() to match BOTH selectors for compatibility:
  *   - Demo preview: <div class="yt-live-chat-text-message-renderer">
- *   - YouTube injection: JS adds this class to <yt-live-chat-text-message-renderer>
+ *   - YouTube injection: <yt-live-chat-text-message-renderer> (element)
  */
 
 /* ── Message container (flex row) ────────────────────────────── */
 
-.yt-live-chat-text-message-renderer {
+:is(.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer) {
   display: flex !important;
   flex-direction: row !important;
   align-items: flex-start !important;
