@@ -649,7 +649,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
           }}
         >
           <div
-            className={`w-full h-full flex items-center justify-center ${
+            className={`w-full h-full flex items-start ${
               responsive.isPortrait ? 'p-4 pt-24' : 'p-6 pt-16'
             }`}
             style={{ position: 'relative' }}
@@ -668,12 +668,12 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               <div
                 className="rounded-xl shadow-2xl"
                 style={{
-                  aspectRatio: `${previewWidth}/${previewHeight}`,
-                  width: responsive.isPortrait
-                    ? 'min(100%, calc((100vh - 200px - 32px) * ${previewWidth} / ${previewHeight}))'
-                    : 'auto',
-                  maxWidth: responsive.isPortrait ? 'none' : `${previewWidth}px`,
-                  maxHeight: responsive.isPortrait ? 'none' : `${previewHeight}px`,
+                  aspectRatio:
+                    previewMode === 'gallery' ? undefined : `${previewWidth}/${previewHeight}`,
+                  width: previewMode === 'gallery' ? '100%' : '100%',
+                  maxWidth: previewMode === 'gallery' ? 'none' : '100%',
+                  height: previewMode === 'gallery' ? 'auto' : 'auto',
+                  maxHeight: previewMode === 'gallery' ? 'none' : '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   background: effectiveBg,

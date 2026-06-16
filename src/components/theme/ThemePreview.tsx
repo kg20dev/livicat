@@ -144,7 +144,7 @@ export function ThemePreview({
   const isGallery = mode === 'gallery'
 
   return (
-    <div className="w-full h-full flex items-center justify-center overflow-auto">
+    <div className="w-full h-full flex items-start overflow-auto">
       {/* Injected theme CSS */}
       <style id={`theme-css-${themeId}`}>{fullCss}</style>
 
@@ -183,6 +183,7 @@ export function ThemePreview({
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
             overflow: hidden;
+            aspect-ratio: 3 / 1;
           }
 
           .livicat-gallery-card:hover {
