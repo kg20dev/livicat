@@ -14,6 +14,7 @@ import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
 import { FONT_OPTIONS } from './utils/fonts'
 import { trackEventAsync, isAnalyticsEnabled } from './utils/analytics'
+import { useSidebarCollapsed } from './hooks/useSidebarCollapsed'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -103,6 +104,9 @@ export default function App() {
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle')
   const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
+
+  // Sidebar state
+  const { isCollapsed, toggle } = useSidebarCollapsed()
 
   // Analytics states
   const [showLoading, setShowLoading] = useState(true)
@@ -275,17 +279,18 @@ export default function App() {
       <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
         <Sidebar.Header />
         <Sidebar.Nav />
-        <Sidebar.ExportButton onExport={handleExportCSS} />
       </Sidebar>
 
       {/* TopBar */}
       <TopBar>
-        <TopBar.Left />
-        <TopBar.Right />
+        <TopBar.LogoButton onClick={toggle} title={isCollapsed ? 'Open menu' : 'Close menu'} />
+        <TopBar.Right>
+          <TopBar.Version />
+        </TopBar.Right>
       </TopBar>
 
-      {/* Main Content (line 185) */}
-      <main className="ml-[280px] pt-16 h-screen flex">
+      {/* Main Content - full width, no sidebar margin */}
+      <main className="pt-16 h-screen flex">
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />

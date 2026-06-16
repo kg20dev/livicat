@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import pkg from '../../../package.json'
 import { TauriService } from '../../services'
+import { useSidebarCollapsed } from '../../hooks/useSidebarCollapsed'
 
 /* ─── Context ──────────────────────────────────────────────────── */
 
 interface SidebarContext {
   activeItem: string
   onNavigate: (item: string) => void
+  isCollapsed: boolean
+  toggle: () => void
 }
 
 const SidebarContext = createContext<SidebarContext | null>(null)
@@ -32,10 +35,31 @@ export default function Sidebar({
   children,
   className = '',
 }: SidebarRootProps) {
+  const { isCollapsed, toggle } = useSidebarCollapsed()
+  const isVisible = !isCollapsed
+
+  const handleBackdropClick = () => {
+    if (isVisible) {
+      toggle()
+    }
+  }
+
   return (
-    <SidebarContext.Provider value={{ activeItem, onNavigate }}>
+    <SidebarContext.Provider value={{ activeItem, onNavigate, isCollapsed, toggle }}>
+      {/* Backdrop overlay */}
+      {isVisible && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300 ease-in-out"
+          onClick={handleBackdropClick}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Floating sidebar */}
       <aside
-        className={`h-screen w-[280px] fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col py-panel-padding z-[60] ${className}`}
+        className={`h-screen fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-x-0' : '-translate-x-full'
+        } w-[280px] ${className}`}
       >
         {children}
       </aside>
@@ -52,6 +76,8 @@ Sidebar.Header = function SidebarHeader({
   title?: string
   subtitle?: string
 }) {
+  const { toggle } = useSidebarContext()
+
   // Read version from Rust binary at runtime (more reliable than build-time import)
   // Falls back to pkg.version when Tauri is not available (web dev mode)
   const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
@@ -63,10 +89,29 @@ Sidebar.Header = function SidebarHeader({
   }, [])
 
   const subtitle = subtitleProp ?? `v${runtimeVersion ?? pkg.version}`
+
   return (
-    <div className="px-gutter mb-8">
-      <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
-      <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
+    <div className="px-gutter mb-8 relative">
+      {/* Close button for floating sidebar */}
+      <button
+        onClick={toggle}
+        className="absolute right-2 top-2 p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 z-10"
+        title="Close menu"
+        aria-label="Close menu"
+      >
+        <span className="material-symbols-outlined text-on-surface-variant">close</span>
+      </button>
+
+      {/* Livicat icon */}
+      <div className="ml-2 mt-6">
+        <img src="/livicat-icon.png" alt="Livicat" className="w-12 h-12" />
+      </div>
+
+      {/* Title and subtitle */}
+      <div className="ml-2 mt-4">
+        <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
+        <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
+      </div>
     </div>
   )
 }
@@ -106,11 +151,12 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
               isActive
                 ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
                 : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
             }`}
+            title={item.label}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             <span>{item.label}</span>
@@ -132,11 +178,12 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
               isActive
                 ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
                 : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
             }`}
+            title={item.label}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             <span>{item.label}</span>
@@ -144,26 +191,6 @@ function SidebarNavItems({
         )
       })}
     </>
-  )
-}
-
-Sidebar.ExportButton = function SidebarExportButton({
-  label = 'Export CSS',
-  onExport = () => {},
-}: {
-  label?: string
-  onExport?: () => void
-}) {
-  return (
-    <div className="px-4 mt-auto">
-      <button
-        onClick={onExport}
-        className="w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
-      >
-        <span className="material-symbols-outlined">download</span>
-        {label}
-      </button>
-    </div>
   )
 }
 

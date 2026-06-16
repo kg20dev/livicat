@@ -286,3 +286,39 @@ yt-live-chat-author-chip {
   flex-direction: column;
   gap: 4px;
 }
+
+/* ─── Responsive Utilities ─────────────────────────────────────── */
+
+/* Smooth transitions for collapsible elements */
+.transition-sidebar {
+  transition:
+    width 0.3s ease-in-out,
+    margin-left 0.3s ease-in-out,
+    padding 0.3s ease-in-out;
+}
+
+/* Hide scrollbar when collapsed but keep functionality */
+.sidebar-collapsed .custom-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-collapsed .custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Portrait mode optimizations */
+@media (aspect-ratio < 1) {
+  .portrait-optimize {
+    flex-direction: column !important;
+  }
+
+  .portrait-hide {
+    display: none !important;
+  }
+
+  .portrait-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

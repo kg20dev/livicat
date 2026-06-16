@@ -23,6 +23,7 @@ import { CollapsibleSection } from './CollapsibleSection'
 import { ThemePreview } from './ThemePreview'
 import { useThemeSettings } from '../../hooks/useThemeSettings'
 import { useElectronPreview } from '../../hooks/useElectronPreview'
+import { useResponsive } from '../../hooks/useResponsive'
 import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
@@ -96,7 +97,7 @@ export function WorkspaceX() {
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
       {/* ─── Top bar: theme selector (outside key — stays mounted) ── */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-surface border-b border-outline-variant/50">
+      <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-surface border-b border-outline-variant/50 flex-wrap">
         <span className="material-symbols-outlined text-primary">magic_button</span>
         <span className="text-title-md font-bold text-on-surface">Workspace X</span>
         <div className="w-px h-5 bg-outline-variant/30 mx-1" />
@@ -125,6 +126,7 @@ export function WorkspaceX() {
 function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   const { manifest, scheme } = theme
   const { settings, updateSetting } = useThemeSettings(manifest.storageKey, scheme)
+  const responsive = useResponsive()
 
   const effectiveBg = (settings['chroma-key'] as boolean)
     ? '#00b140'
@@ -444,31 +446,86 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
 
   const sections = useMemo(() => groupBySection(scheme), [scheme])
   const themeCss = theme.css
+  const [showSettings, setShowSettings] = useState(false)
 
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* ─── Left Panel ──────────────────────────────────────── */}
-      <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
-        {/* Scrollable settings */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-          {sections.map(({ section, items }) => (
-            <CollapsibleSection
-              key={section}
-              icon={getSectionIcon(section)}
-              title={section}
-              defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
-            >
-              <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
-            </CollapsibleSection>
-          ))}
+      {!responsive.isPortrait && (
+        <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
+          {/* Scrollable settings */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
+            {sections.map(({ section, items }) => (
+              <CollapsibleSection
+                key={section}
+                icon={getSectionIcon(section)}
+                title={section}
+                defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
+              >
+                <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+              </CollapsibleSection>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      {/* ─── Portrait Settings Toggle Button ──────────────────── */}
+      {responsive.isPortrait && (
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="fixed top-20 right-4 z-50 bg-primary text-on-primary p-3 rounded-full shadow-lg hover:opacity-90 transition-opacity active:scale-95"
+          title="Toggle settings panel"
+        >
+          <span className="material-symbols-outlined">{showSettings ? 'close' : 'tune'}</span>
+        </button>
+      )}
+
+      {/* ─── Portrait Settings Panel ──────────────────────────── */}
+      {responsive.isPortrait && showSettings && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            className="absolute right-0 top-0 bottom-0 w-[360px] max-w-[85vw] bg-surface shadow-xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-outline-variant">
+              <h3 className="text-title-md font-bold text-on-surface">Settings</h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="p-2 rounded-lg hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
+              {sections.map(({ section, items }) => (
+                <CollapsibleSection
+                  key={section}
+                  icon={getSectionIcon(section)}
+                  title={section}
+                  defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
+                >
+                  <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                </CollapsibleSection>
+              ))}
+            </div>
+          </div>
         </div>
-      </aside>
+      )}
 
       {/* ─── Right Panel: Preview ────────────────────────────── */}
       <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0">
         {/* Toolbar */}
-        <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div
+          className={`absolute top-4 z-10 flex items-center justify-between transition-all duration-300 ${
+            responsive.isPortrait ? 'left-4 right-4 flex-wrap gap-2' : 'left-6 right-6'
+          }`}
+        >
+          <div
+            className={`flex items-center ${responsive.isPortrait ? 'w-full justify-between' : 'gap-3'}`}
+          >
             <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
               <button
                 onClick={() => setPreviewMode('live')}
@@ -479,7 +536,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">play_arrow</span>
-                Live
+                {responsive.isPortrait ? '' : 'Live'}
               </button>
               <button
                 onClick={() => setPreviewMode('gallery')}
@@ -490,7 +547,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">grid_view</span>
-                Gallery
+                {responsive.isPortrait ? '' : 'Gallery'}
               </button>
             </div>
 
@@ -507,17 +564,21 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center ${responsive.isPortrait ? 'w-full justify-end' : 'gap-2'}`}
+          >
             {previewMode === 'live' && (
-              <div className="flex items-center gap-2">
+              <div
+                className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full' : 'gap-2'}`}
+              >
                 <input
                   type="text"
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
-                  placeholder="YouTube URL or ID..."
-                  className={`w-48 bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
+                  placeholder="YouTube URL..."
+                  className={`bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
                     urlError ? 'border-red-500/50' : 'border-outline-variant'
-                  }`}
+                  } ${responsive.isPortrait ? 'flex-1' : 'w-48'}`}
                 />
                 <button
                   onClick={handleYoutubePreview}
@@ -539,7 +600,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               </div>
             )}
 
-            {previewMode === 'live' && (
+            {previewMode === 'live' && !responsive.isPortrait && (
               <>
                 <div className="w-px h-4 bg-outline-variant/30" />
                 <button
@@ -567,26 +628,24 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 </button>
               </>
             )}
-
-            <div className="w-px h-4 bg-outline-variant/30" />
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface-container-high text-label-sm text-on-surface-variant">
-              <span className="material-symbols-outlined text-[13px]">info</span>
-              {previewWidth}×{previewHeight}
-            </div>
           </div>
         </div>
 
         {/* Preview content */}
         <div
-          className="flex-1 transition-all duration-200"
-          style={{ maxHeight: 'calc(100vh - 180px)' }}
+          className="flex-1 transition-all duration-200 overflow-auto"
+          style={{
+            maxHeight: responsive.isPortrait ? 'calc(100vh - 200px)' : 'calc(100vh - 180px)',
+          }}
         >
           <div
-            className="w-full h-full flex items-center justify-center p-6 pt-16"
-            style={{ maxHeight: '100%' }}
+            className={`w-full h-full flex items-start ${
+              responsive.isPortrait ? 'p-4 pt-24' : 'p-6 pt-16'
+            }`}
+            style={{ position: 'relative' }}
           >
             {previewMode === 'live' && displayIndex === 0 && !paused ? (
-              <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8 mt-16">
+              <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
                 <p className="text-body-md text-on-surface-variant text-center">
                   Waiting for chat...
@@ -597,14 +656,18 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               </div>
             ) : (
               <div
-                className="rounded-xl shadow-2xl overflow-hidden"
+                className="rounded-xl shadow-2xl"
                 style={{
-                  width: '100%',
-                  height: `${previewHeight}px`,
-                  maxWidth: '100%',
+                  aspectRatio:
+                    previewMode === 'gallery' ? undefined : `${previewWidth}/${previewHeight}`,
+                  width: previewMode === 'gallery' ? '100%' : '100%',
+                  maxWidth: previewMode === 'gallery' ? 'none' : '100%',
+                  height: previewMode === 'gallery' ? 'auto' : 'auto',
+                  maxHeight: previewMode === 'gallery' ? 'none' : '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   background: effectiveBg,
+                  position: 'relative',
                 }}
               >
                 <ThemePreview
@@ -627,7 +690,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
         </div>
 
         {/* Status bar */}
-        <div className="absolute bottom-6 left-6 right-6 z-10 flex items-center justify-between">
+        <div
+          className={`absolute bottom-6 z-10 flex items-center justify-between transition-all duration-300 ${
+            responsive.isPortrait ? 'left-4 right-4' : 'left-6 right-6'
+          }`}
+        >
           <span className="text-label-sm text-on-surface-variant">
             {previewOpen && (
               <span className="flex items-center gap-1.5 text-green-400">
