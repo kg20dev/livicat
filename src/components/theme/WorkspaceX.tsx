@@ -652,6 +652,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
             className={`w-full h-full flex items-center justify-center ${
               responsive.isPortrait ? 'p-4 pt-24' : 'p-6 pt-16'
             }`}
+            style={{ position: 'relative' }}
           >
             {previewMode === 'live' && displayIndex === 0 && !paused ? (
               <div className="w-full max-w-full h-full glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-8">
@@ -667,13 +668,12 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               <div
                 className="rounded-xl shadow-2xl overflow-hidden"
                 style={{
-                  width: responsive.isPortrait ? '100%' : `${previewWidth}px`,
-                  maxWidth: responsive.isPortrait ? '100%' : `${previewWidth}px`,
-                  height: responsive.isPortrait ? 'auto' : `${previewHeight}px`,
+                  aspectRatio: `${previewWidth}/${previewHeight}`,
+                  width: responsive.isPortrait
+                    ? 'min(100%, calc((100vh - 200px - 32px) * ${previewWidth} / ${previewHeight}))'
+                    : 'auto',
+                  maxWidth: responsive.isPortrait ? 'none' : `${previewWidth}px`,
                   maxHeight: responsive.isPortrait ? 'none' : `${previewHeight}px`,
-                  aspectRatio: responsive.isPortrait
-                    ? `${previewWidth}/${previewHeight}`
-                    : undefined,
                   display: 'flex',
                   flexDirection: 'column',
                   background: effectiveBg,
