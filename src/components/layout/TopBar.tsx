@@ -22,6 +22,30 @@ export default function TopBar({ children, className = '' }: TopBarRootProps) {
 
 /* ─── Sub-components ────────────────────────────────────────────── */
 
+TopBar.LogoButton = function TopBarLogoButton({
+  onClick,
+  title = 'Open menu',
+}: {
+  onClick: () => void
+  title?: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 p-2 pr-4 rounded-lg hover:bg-surface-container-high transition-all active:scale-95 group hover:shadow-sm"
+      title={title}
+      aria-label={title}
+    >
+      <img
+        src="/livicat-icon.png"
+        alt="Livicat"
+        className="w-8 h-8 transition-transform group-hover:rotate-12"
+      />
+      <span className="font-headline-sm text-headline-sm font-black text-on-surface">Livicat</span>
+    </button>
+  )
+}
+
 TopBar.Left = function TopBarLeft({ title = 'Live Chat Studio' }: { title?: string }) {
   return (
     <div className="flex items-center gap-4">

@@ -283,8 +283,7 @@ export default function App() {
 
       {/* TopBar */}
       <TopBar>
-        <TopBar.Left />
-        <TopBar.MenuButton onToggle={toggle} isCollapsed={isCollapsed} />
+        <TopBar.LogoButton onClick={toggle} title={isCollapsed ? 'Open menu' : 'Close menu'} />
         <TopBar.Right />
       </TopBar>
 
