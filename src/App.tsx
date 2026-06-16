@@ -301,32 +301,55 @@ export default function App() {
             <WorkspaceX />
           ) : activeNav === 'workspace' ? (
             <>
-              <div className={`flex transition-all duration-300 ${isSlimMode ? 'gap-0' : 'gap-4'}`}>
+              <div className="flex gap-4">
                 {/* Preview Area */}
-                <div className={`${isSlimMode ? 'flex-1' : 'w-3/5'} transition-all duration-300`}>
-                  <PreviewArea
-                    messages={displayMessages}
-                    mode={mode}
-                    activeTab={activeTab}
-                    url={url}
-                    submittedUrl={submittedUrl}
-                    videoInfo={videoInfo}
-                    fetchStatus={fetchStatus}
-                    fetchError={fetchError}
-                    injectedCSS={generatedCSS}
-                    onTabChange={handleTabChange}
-                    onUrlChange={setUrl}
-                    onFetch={handleFetch}
-                  >
-                    <PreviewArea.ToolBar />
-                    {!isSlimMode && <PreviewArea.VideoInfo />}
-                    <PreviewArea.Chat />
-                    <PreviewArea.Actions />
-                  </PreviewArea>
-                </div>
+                {!isSlimMode && (
+                  <div className="w-3/5 transition-all duration-300">
+                    <PreviewArea
+                      messages={displayMessages}
+                      mode={mode}
+                      activeTab={activeTab}
+                      url={url}
+                      submittedUrl={submittedUrl}
+                      videoInfo={videoInfo}
+                      fetchStatus={fetchStatus}
+                      fetchError={fetchError}
+                      injectedCSS={generatedCSS}
+                      onTabChange={handleTabChange}
+                      onUrlChange={setUrl}
+                      onFetch={handleFetch}
+                    >
+                      <PreviewArea.ToolBar />
+                      <PreviewArea.VideoInfo />
+                      <PreviewArea.Chat />
+                      <PreviewArea.Actions />
+                    </PreviewArea>
+                  </div>
+                )}
 
                 {/* Styling Panel */}
-                <div className={`${isSlimMode ? 'w-96' : 'w-2/5'} transition-all duration-300`}>
+                <div className={`${isSlimMode ? 'w-full' : 'w-2/5'} transition-all duration-300`}>
+                  {isSlimMode && (
+                    <div className="mb-4 p-4 bg-surface-container-highest rounded-lg border border-outline-variant flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-primary">check_circle</span>
+                        <div>
+                          <p className="text-label-md font-semibold text-on-surface">
+                            YouTube URL loaded
+                          </p>
+                          <p className="text-label-sm text-on-surface-variant">
+                            Preview closed - focus on styling
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsSlimMode(false)}
+                        className="px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md font-medium hover:bg-primary/90 transition-all"
+                      >
+                        Reopen Preview
+                      </button>
+                    </div>
+                  )}
                   <StylingPanel onCSSChange={setGeneratedCSS}>
                     <StylingPanel.Header />
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
