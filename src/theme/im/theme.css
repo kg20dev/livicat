@@ -189,7 +189,9 @@
   overflow: hidden !important;
   flex-shrink: 0 !important;
   line-height: 0 !important;
-  margin-top: var(--chat-avatar-margin-top, 0px) !important;
+  margin-top: calc(
+    var(--chat-avatar-margin-top, 0px) + var(--chat-avatar-vertical-offset, 0px)
+  ) !important;
   animation: theme-im-avatar-in 180ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
 }
 
