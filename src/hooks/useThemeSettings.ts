@@ -9,6 +9,10 @@ import { useState, useCallback } from 'react'
 import type { ThemeSettings } from '../theme/types'
 import type { SettingDef } from '../theme/types'
 
+// App version for settings migration
+const APP_VERSION = '0.9.0'
+const VERSION_KEY = '__livicat_settings_version__'
+
 /* ─── Internal: load from localStorage ─────────────────────────── */
 
 function loadSettings(storageKey: string, scheme: SettingDef[]): ThemeSettings {
@@ -16,9 +20,15 @@ function loadSettings(storageKey: string, scheme: SettingDef[]): ThemeSettings {
     const raw = localStorage.getItem(storageKey)
     if (raw) {
       const parsed = JSON.parse(raw)
-      // Merge with defaults so new fields always get a value
-      const defaults = getDefaults(scheme)
-      return { ...defaults, ...parsed }
+      const storedVersion = localStorage.getItem(`${storageKey}${VERSION_KEY}`)
+
+      // If version mismatch or no version stored → migrate
+      if (storedVersion !== APP_VERSION) {
+        return migrateSettings(parsed, scheme, storedVersion)
+      }
+
+      // Version matches → return as-is (no structure changes)
+      return parsed
     }
   } catch {
     // Corrupted or unavailable storage — use defaults
@@ -26,9 +36,30 @@ function loadSettings(storageKey: string, scheme: SettingDef[]): ThemeSettings {
   return getDefaults(scheme)
 }
 
+function migrateSettings(parsed: ThemeSettings, scheme: SettingDef[]): ThemeSettings {
+  const validKeys = new Set(scheme.map((d) => d.key))
+
+  // Add missing fields with defaults
+  for (const def of scheme) {
+    if (!(def.key in parsed)) {
+      parsed[def.key] = def.default
+    }
+  }
+
+  // Remove unknown keys (cleanup removed settings)
+  for (const key of Object.keys(parsed)) {
+    if (!validKeys.has(key)) {
+      delete parsed[key]
+    }
+  }
+
+  return parsed
+}
+
 function saveSettings(storageKey: string, settings: ThemeSettings): void {
   try {
     localStorage.setItem(storageKey, JSON.stringify(settings))
+    localStorage.setItem(`${storageKey}${VERSION_KEY}`, APP_VERSION)
   } catch {
     // Storage unavailable (quota exceeded, private mode, etc.)
   }
