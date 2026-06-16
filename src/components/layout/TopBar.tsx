@@ -43,14 +43,9 @@ TopBar.LogoButton = function TopBarLogoButton({
         alt="Livicat"
         className="w-8 h-8 transition-transform group-hover:rotate-12"
       />
-      <div className="flex flex-col">
-        <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight">
-          Livicat
-        </span>
-        <span className="text-[10px] text-on-surface-variant/50 font-normal leading-none -mt-1">
-          v{packageJson.version}
-        </span>
-      </div>
+      <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight">
+        Livicat
+      </span>
     </button>
   )
 }
@@ -83,6 +78,14 @@ TopBar.MenuButton = function TopBarMenuButton({
 
 TopBar.Right = function TopBarRight({ children }: { children?: React.ReactNode }) {
   return <div className="flex items-center gap-4">{children}</div>
+}
+
+TopBar.Version = function TopBarVersion() {
+  return (
+    <span className="text-[10px] text-on-surface-variant/50 font-normal leading-none">
+      v{packageJson.version}
+    </span>
+  )
 }
 
 export type { TopBarRootProps }

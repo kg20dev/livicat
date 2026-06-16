@@ -284,7 +284,9 @@ export default function App() {
       {/* TopBar */}
       <TopBar>
         <TopBar.LogoButton onClick={toggle} title={isCollapsed ? 'Open menu' : 'Close menu'} />
-        <TopBar.Right />
+        <TopBar.Right>
+          <TopBar.Version />
+        </TopBar.Right>
       </TopBar>
 
       {/* Main Content - full width, no sidebar margin */}
