@@ -628,16 +628,6 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 </button>
               </>
             )}
-
-            {!responsive.isPortrait && (
-              <>
-                <div className="w-px h-4 bg-outline-variant/30" />
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface-container-high text-label-sm text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[13px]">info</span>
-                  {previewWidth}×{previewHeight}
-                </div>
-              </>
-            )}
           </div>
         </div>
 
