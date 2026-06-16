@@ -98,6 +98,16 @@ export const scheme: SettingDef[] = [
     label: 'Stroke Color',
     default: '#333333',
   },
+  {
+    key: 'glowSpread',
+    section: 'Effects',
+    type: 'range',
+    label: 'Glow Spread',
+    min: 0,
+    max: 30,
+    default: 6,
+    unit: 'px',
+  },
 
   /* ── Frame ──────────────────────────────────────────────── */
   { key: 'includeFrame', section: 'Frame', type: 'toggle', label: 'Include Frame', default: false },
@@ -145,6 +155,55 @@ export const scheme: SettingDef[] = [
       { value: 'slow', label: 'Slow' },
       { value: 'normal', label: 'Normal' },
     ],
+  },
+  {
+    key: 'chat-margin-left',
+    section: 'Common',
+    type: 'range',
+    label: 'Screen Margin Left',
+    min: 0,
+    max: 100,
+    default: 0,
+    unit: 'px',
+  },
+  {
+    key: 'chat-font-family',
+    section: 'Common',
+    type: 'select',
+    label: 'Font Family',
+    default: 'inherit',
+    options: [
+      { value: 'inherit', label: 'Default' },
+      { value: '"Roboto", sans-serif', label: 'Roboto' },
+      { value: '"Inter", sans-serif', label: 'Inter' },
+      { value: '"Segoe UI", system-ui, sans-serif', label: 'Segoe UI' },
+      { value: 'Arial, sans-serif', label: 'Arial' },
+      { value: '"Helvetica Neue", Helvetica, sans-serif', label: 'Helvetica' },
+      { value: '"Courier New", monospace', label: 'Courier New' },
+    ],
+  },
+
+  /* ── YouTube ──────────────────────────────────────────── */
+  {
+    key: 'hide-youtube-generic',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Generic Messages',
+    default: false,
+  },
+  {
+    key: 'hide-youtube-header',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Chat Header',
+    default: false,
+  },
+  {
+    key: 'hide-youtube-footer',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Chat Footer',
+    default: false,
   },
 
   /* ── Role Colors ────────────────────────────────────────── */

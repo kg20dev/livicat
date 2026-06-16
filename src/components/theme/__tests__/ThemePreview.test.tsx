@@ -21,6 +21,12 @@ const mockCss = `
   height: 28px;
   border-radius: 50%;
 }
+.theme-test #author-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .theme-test #author-name {
   padding: 2px 10px;
   background: var(--messageBg);
@@ -56,9 +62,13 @@ describe('ThemePreview', () => {
     const messages = container.querySelectorAll('[data-role]')
     expect(messages.length).toBeGreaterThan(0)
 
-    // Should have avatar
-    const avatars = container.querySelector('#author-photo')
-    expect(avatars).not.toBeNull()
+    // Should have avatar wrapper
+    const photos = container.querySelector('#author-photo')
+    expect(photos).not.toBeNull()
+
+    // Should have avatar image
+    const avatarImgs = container.querySelector('#author-photo img')
+    expect(avatarImgs).not.toBeNull()
 
     // Should have username
     const names = container.querySelector('#author-name')
@@ -86,8 +96,8 @@ describe('ThemePreview', () => {
       <ThemePreview themeId="test" themeCss={mockCss} settings={mockSettings} scheme={mockScheme} />
     )
 
-    const avatars = container.querySelector('#author-photo')
-    expect(avatars).not.toBeNull()
+    const photos = container.querySelector('#author-photo')
+    expect(photos).not.toBeNull()
   })
 
   it('hides avatars when showAvatars is false', () => {
@@ -100,8 +110,8 @@ describe('ThemePreview', () => {
       />
     )
 
-    const avatars = container.querySelector('#author-photo')
-    expect(avatars).toBeNull()
+    const photos = container.querySelector('#author-photo')
+    expect(photos).toBeNull()
   })
 
   it('uses the provided backgroundColor', () => {

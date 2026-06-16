@@ -179,6 +179,81 @@ export const scheme: SettingDef[] = [
       { value: 'normal', label: 'Normal' },
     ],
   },
+  {
+    key: 'chat-username-animation',
+    section: 'Animation',
+    type: 'select',
+    label: 'Username Entrance',
+    default: 'slide',
+    options: [
+      { value: 'slide', label: 'Slide Left' },
+      { value: 'wiggle', label: 'Wiggle' },
+      { value: 'pop', label: 'Pop' },
+      { value: 'fade', label: 'Fade' },
+    ],
+  },
+  {
+    key: 'chat-message-animation',
+    section: 'Animation',
+    type: 'select',
+    label: 'Message Entrance',
+    default: 'slide',
+    options: [
+      { value: 'slide', label: 'Slide Left' },
+      { value: 'bounce', label: 'Bounce' },
+      { value: 'pop', label: 'Pop' },
+      { value: 'fade', label: 'Fade' },
+    ],
+  },
+  {
+    key: 'chat-margin-left',
+    section: 'Common',
+    type: 'range',
+    label: 'Screen Margin Left',
+    min: 0,
+    max: 100,
+    default: 0,
+    unit: 'px',
+  },
+  {
+    key: 'chat-font-family',
+    section: 'Common',
+    type: 'select',
+    label: 'Font Family',
+    default: 'inherit',
+    options: [
+      { value: 'inherit', label: 'Default' },
+      { value: '"Roboto", sans-serif', label: 'Roboto' },
+      { value: '"Inter", sans-serif', label: 'Inter' },
+      { value: '"Segoe UI", system-ui, sans-serif', label: 'Segoe UI' },
+      { value: 'Arial, sans-serif', label: 'Arial' },
+      { value: '"Helvetica Neue", Helvetica, sans-serif', label: 'Helvetica' },
+      { value: '"Courier New", monospace', label: 'Courier New' },
+    ],
+  },
+
+  /* ── YouTube ──────────────────────────────────────────── */
+  {
+    key: 'hide-youtube-generic',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Generic Messages',
+    default: false,
+  },
+  {
+    key: 'hide-youtube-header',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Chat Header',
+    default: false,
+  },
+  {
+    key: 'hide-youtube-footer',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Chat Footer',
+    default: false,
+  },
 
   /* ── Visibility ────────────────────────────────────────── */
   {

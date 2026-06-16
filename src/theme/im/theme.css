@@ -1,11 +1,23 @@
 /* ══════════════════════════════════════════════════════════════════
-   ║  IM Bubble Theme — scoped CSS for YouTube Live Chat            ║
+   ║  Colour Bubble Theme — scoped CSS for YouTube Live Chat       ║
    ║                                                                ║
    ║  Principles from Emil Kowalski's design engineering skill:     ║
    ║   - Custom easing: cubic-bezier(0.23, 1, 0.32, 1)             ║
    ║   - Never animate from scale(0) — always start opacity + dim  ║
    ║   - UI animations under 300ms                                 ║
    ║   - prefers-reduced-motion support                            ║
+   ║                                                                ║
+   ║  ⚠️ CRITICAL RULE:                                             ║
+   ║  If an element uses `transform` in @keyframes, its base CSS    ║
+   ║  must NOT have `!important` on `transform`. CSS spec says      ║
+   ║  keyframe declarations can NEVER override `!important` — the   ║
+   ║  animation silently degrades to opacity-only.                  ║
+   ║  Fix: use rotate / scale / margin-top instead of transform     ║
+   ║  for permanent positioning effects that would otherwise need   ║
+   ║  !important to beat YouTube's specificity.                     ║
+   ║                                                                ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-{id} stripped before YouTube injection.         ║
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Custom Easing Curves (from Emil's skill) ─────────────────── */
@@ -28,14 +40,111 @@
   }
 }
 
-/* Bubble pop-in: subtle scale with bounce */
-@keyframes theme-im-bubble-in {
+/* ─── Username (chip) entrance animations ─────────────────────── */
+
+/* Slide Left: slides in from the left with a tilt */
+@keyframes theme-im-chip-slide {
   0% {
     opacity: 0;
-    transform: scale(0.95);
+    transform: rotate(-4deg) translate(-20px, 18px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Wiggle: oscillates left ↔ right while fading in */
+@keyframes theme-im-chip-wiggle {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px) scale(0.9);
+  }
+  20% {
+    transform: rotate(-4deg) translate(-6px, 18px);
+  }
+  40% {
+    transform: rotate(-4deg) translate(6px, 18px);
   }
   60% {
-    transform: scale(1.04);
+    transform: rotate(-4deg) translate(-4px, 18px);
+  }
+  80% {
+    transform: rotate(-4deg) translate(3px, 18px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Pop: scales up with an overshoot bounce */
+@keyframes theme-im-chip-pop {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px) scale(0.5);
+  }
+  65% {
+    transform: rotate(-4deg) translate(2px, 18px) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px) scale(1);
+  }
+}
+
+/* Fade: simple opacity fade in at final position */
+@keyframes theme-im-chip-fade {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translate(2px, 18px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-4deg) translate(2px, 18px);
+  }
+}
+
+/* ─── Message body entrance animations ─────────────────────────── */
+
+/* Slide Left: slides in from the left with a subtle scale pop */
+@keyframes theme-im-msg-slide {
+  0% {
+    opacity: 0;
+    transform: translateX(-15px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Bounce: overshoots right then settles left */
+@keyframes theme-im-msg-bounce {
+  0% {
+    opacity: 0;
+    transform: translateX(-25px) scale(0.95);
+  }
+  50% {
+    transform: translateX(10px) scale(1.05);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Pop: scales up with an overshoot */
+@keyframes theme-im-msg-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.08);
   }
   100% {
     opacity: 1;
@@ -43,18 +152,13 @@
   }
 }
 
-/* Chip tilt-in: playful rotation */
-@keyframes theme-im-chip-in {
+/* Fade: simple opacity fade in at final position */
+@keyframes theme-im-msg-fade {
   0% {
     opacity: 0;
-    transform: rotate(10deg) translate(-20px, 0) scale(0.8);
-  }
-  70% {
-    opacity: 1;
-    transform: rotate(-6deg) translate(4px, 8px) scale(1.08);
   }
   100% {
-    transform: rotate(-4deg) translate(2px, 6px) scale(1);
+    opacity: 1;
   }
 }
 
@@ -72,25 +176,37 @@
 
 /* ── Theme: IM (scoped via .theme-im) ──────────────────────────── */
 
-/* Avatar */
-.theme-im #author-photo {
+/* All selectors use `yt-live-chat-text-message-renderer` prefix for
+   YouTube specificity (YouTube uses `.style-scope` class + ID combos
+   that would beat bare `#author-name` selectors). Prefix `.theme-im`
+   is stripped before YouTube injection. Matches both demo and YouTube. */
+
+/* Avatar wrapper */
+.theme-im yt-live-chat-text-message-renderer #author-photo {
   width: var(--chat-avatar-width, 24px) !important;
   height: var(--chat-avatar-width, 24px) !important;
   border-radius: 50% !important;
   overflow: hidden !important;
+  flex-shrink: 0 !important;
+  line-height: 0 !important;
   margin-top: var(--chat-avatar-margin-top, 0px) !important;
   animation: theme-im-avatar-in 180ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
 }
 
-.theme-im #author-photo img {
+/* Avatar image — fills container 1:1 */
+.theme-im yt-live-chat-text-message-renderer #author-photo img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   border-radius: 50% !important;
+  display: block !important;
 }
 
-/* Username Chip */
-.theme-im #author-name {
+/* Username Chip — #content #author-name (specificity 0,2,0) beats
+   YouTube's #author-name.style-scope (also 0,2,0) because our CSS
+   is injected last in the document head. Also works whether or not
+   display: contents is applied on the chip wrapper. */
+.theme-im #content #author-name {
   position: relative !important;
   z-index: 2 !important;
   display: inline-block !important;
@@ -104,14 +220,17 @@
   font-weight: var(--chat-username-font-weight, 700) !important;
   font-family: inherit !important;
   line-height: 1.3 !important;
-  transform: rotate(-4deg) translate(2px, 6px) !important;
+  margin-top: 18px !important;
+  rotate: -4deg !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-  animation: theme-im-chip-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
-  animation-delay: var(--chip-delay, 0.02s) !important;
+  animation-duration: var(--chip-duration, 0.35s) !important;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation-fill-mode: both !important;
+  animation-delay: var(--chip-delay, 0.05s) !important;
 }
 
 /* Message Bubble */
-.theme-im #message {
+.theme-im yt-live-chat-text-message-renderer #message {
   position: relative !important;
   z-index: 1 !important;
   display: inline-block !important;
@@ -126,13 +245,16 @@
   font-family: inherit !important;
   font-weight: normal !important;
   line-height: 1.4 !important;
+  overflow: visible !important;
   overflow-wrap: anywhere !important;
   white-space: pre-wrap !important;
-  animation: theme-im-bubble-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
+  animation-duration: var(--animation-duration, 0.4s) !important;
+  animation-timing-function: var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) !important;
+  animation-fill-mode: both !important;
 }
 
 /* Bubble tail */
-.theme-im #message::before {
+.theme-im yt-live-chat-text-message-renderer #message::before {
   content: '' !important;
   position: absolute !important;
   left: var(--chat-tail-offset, -8px) !important;
@@ -148,7 +270,7 @@
 }
 
 /* Message container spacing/animation */
-.theme-im :is(.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer) {
+.theme-im yt-live-chat-text-message-renderer {
   margin-bottom: var(--chat-message-spacing, 10px) !important;
   opacity: calc(var(--chat-message-opacity, 100) / 100) !important;
   animation: theme-im-message-in 250ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both !important;
@@ -161,12 +283,13 @@
   .theme-im #author-photo,
   .theme-im #author-name,
   .theme-im #message,
-  .theme-im :is(.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer) {
+  .theme-im yt-live-chat-text-message-renderer {
     animation: none !important;
   }
 
   .theme-im #author-name {
-    transform: rotate(-4deg) translate(2px, 6px) !important;
+    margin-top: 18px !important;
+    rotate: -4deg !important;
   }
 }
 
@@ -174,7 +297,7 @@
 
 /* Owner */
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
     .theme-im yt-live-chat-text-message-renderer[author-type='owner']
   )
   #message {
@@ -183,7 +306,7 @@
   color: var(--chat-owner-text, #ffb347) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
     .theme-im yt-live-chat-text-message-renderer[author-type='owner']
   )
   #message::before {
@@ -192,7 +315,7 @@
   border-bottom-color: var(--chat-owner-text, #ffb347) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
     .theme-im yt-live-chat-text-message-renderer[author-type='owner']
   )
   #author-name {
@@ -203,7 +326,7 @@
 
 /* Moderator */
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
     .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
   )
   #message {
@@ -212,7 +335,7 @@
   color: var(--chat-mod-text, #47b5ff) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
     .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
   )
   #message::before {
@@ -221,7 +344,7 @@
   border-bottom-color: var(--chat-mod-text, #47b5ff) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
     .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
   )
   #author-name {
@@ -232,7 +355,7 @@
 
 /* Member */
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
     .theme-im yt-live-chat-text-message-renderer[author-type='member']
   )
   #message {
@@ -241,7 +364,7 @@
   color: var(--chat-member-text, #8bcc47) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
     .theme-im yt-live-chat-text-message-renderer[author-type='member']
   )
   #message::before {
@@ -250,7 +373,7 @@
   border-bottom-color: var(--chat-member-text, #8bcc47) !important;
 }
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
     .theme-im yt-live-chat-text-message-renderer[author-type='member']
   )
   #author-name {
@@ -261,7 +384,7 @@
 
 /* Super Chat */
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='super-chat'],
     .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #message {
@@ -272,7 +395,7 @@
 
 /* Member Ship */
 :is(
-    .theme-im .yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-im yt-live-chat-text-message-renderer[data-role='member-ship'],
     .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #message {

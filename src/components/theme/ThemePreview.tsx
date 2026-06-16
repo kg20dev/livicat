@@ -4,12 +4,16 @@
  * Renders demo messages using YouTube's native DOM structure for consistency.
  * The active theme's CSS (injected via <style>) handles all styling.
  *
- * HTML structure (matches YouTube):
+ * HTML structure (matches YouTube's live_chat popout exactly):
  *   <div class="theme-{id}">
  *     <yt-live-chat-text-message-renderer data-role="...">
- *       <img id="author-photo" />
+ *       <div id="author-photo">
+ *         <img src="..." alt="" />
+ *       </div>
  *       <div id="content">
- *         <div id="author-name">username</div>
+ *         <yt-live-chat-author-chip>
+ *           <div id="author-name">username</div>
+ *         </yt-live-chat-author-chip>
  *         <div id="message-container">
  *           <div id="message">message text</div>
  *         </div>
@@ -158,18 +162,20 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.avatarSeed}`
 
   return (
-    <div
-      className="yt-live-chat-text-message-renderer"
-      id={message.id}
-      data-role={message.role ?? 'default'}
-    >
-      {showAvatar && <img id="author-photo" src={avatarUrl} alt="" />}
+    <yt-live-chat-text-message-renderer data-role={message.role ?? 'default'}>
+      {showAvatar && (
+        <div id="author-photo">
+          <img src={avatarUrl} alt="" />
+        </div>
+      )}
       <div id="content">
-        <div id="author-name">{message.username}</div>
+        <yt-live-chat-author-chip>
+          <div id="author-name">{message.username}</div>
+        </yt-live-chat-author-chip>
         <div id="message-container">
           <div id="message">{message.message}</div>
         </div>
       </div>
-    </div>
+    </yt-live-chat-text-message-renderer>
   )
 }

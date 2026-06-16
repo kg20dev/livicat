@@ -7,7 +7,7 @@ export const reset = baseResetCss
 
 export const manifest: ThemeManifest = {
   id: 'im',
-  name: 'IM Bubble',
+  name: 'Colour Bubble',
   creator: 'Livicat',
   description: 'Classic IM-style chat with rotated name chips and bubble tails',
   route: 'im',

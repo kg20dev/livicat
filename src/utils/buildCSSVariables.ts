@@ -3,12 +3,32 @@
  *
  * Converts theme settings into CSS variable declarations.
  * Handles animation speed mapping, message spacing, and username weight.
+ * Also injects @import for Google Fonts when a web font is selected.
  */
 
 import type { SettingDef, ThemeSettings } from '../theme/types'
 
+/** Option value → Google Font name for fonts we need to load from the web. */
+function getGoogleFontImport(fontFamily: string): string | null {
+  const FONT_MAP: Record<string, string> = {
+    '"Roboto", sans-serif': 'Roboto',
+    '"Inter", sans-serif': 'Inter',
+  }
+  const fontName = FONT_MAP[fontFamily]
+  if (!fontName) return null
+  const encoded = fontName.replace(/ /g, '+')
+  return `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700&display=swap');`
+}
+
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
-  const lines: string[] = [':root {']
+  const imports: string[] = []
+  // Check for Google Font import
+  const fontFamily = settings['chat-font-family'] as string | undefined
+  if (fontFamily) {
+    const fontImport = getGoogleFontImport(fontFamily)
+    if (fontImport) imports.push(fontImport)
+  }
+  const lines: string[] = imports.length > 0 ? [...imports, '', ':root {'] : [':root {']
   for (const def of scheme) {
     const value = settings[def.key] ?? def.default
     // Append unit for numeric range settings (px, em etc.)
@@ -46,6 +66,63 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   const bold = settings['chat-username-font-weight']
   lines.push(`  --chat-username-font-weight: ${bold ? 700 : 400};`)
 
+  // Close :root block
   lines.push('}')
+
+  // ── Animation-name rules (IM theme only) ───────────────────────
+  // Emitted as direct CSS rules (NOT CSS variables) because
+  // var(--foo) in animation-name doesn't always resolve inside
+  // YouTube's custom element DOM.
+  //
+  // Guard: only emit when the scheme has animation settings (IM).
+  const hasChipAnim = scheme.some((d) => d.key === 'chat-username-animation')
+  const hasMsgAnim = scheme.some((d) => d.key === 'chat-message-animation')
+  if (hasChipAnim || hasMsgAnim) {
+    const CHIP_ANIMS: Record<string, string> = {
+      slide: 'theme-im-chip-slide',
+      wiggle: 'theme-im-chip-wiggle',
+      pop: 'theme-im-chip-pop',
+      fade: 'theme-im-chip-fade',
+    }
+    const MSG_ANIMS: Record<string, string> = {
+      slide: 'theme-im-msg-slide',
+      bounce: 'theme-im-msg-bounce',
+      pop: 'theme-im-msg-pop',
+      fade: 'theme-im-msg-fade',
+    }
+    const chipType = (settings['chat-username-animation'] as string) ?? 'slide'
+    const msgType = (settings['chat-message-animation'] as string) ?? 'slide'
+    const chipAnimName = CHIP_ANIMS[chipType] ?? 'theme-im-chip-slide'
+    const msgAnimName = MSG_ANIMS[msgType] ?? 'theme-im-msg-slide'
+    lines.push('')
+    lines.push(`#content #author-name { animation-name: ${chipAnimName} !important; }`)
+    lines.push(`#content #message { animation-name: ${msgAnimName} !important; }`)
+  }
+
+  // ── YouTube element hiding rules (all themes) ──────────────────
+  // These target YouTube's DOM directly, no theme prefix needed.
+  if (settings['hide-youtube-generic']) {
+    lines.push('')
+    lines.push('yt-live-chat-placeholder-message-renderer,')
+    lines.push('yt-live-chat-membership-item-renderer,')
+    lines.push('yt-live-chat-viewer-engagement-message-renderer,')
+    lines.push('yt-live-chat-legacy-paid-message-renderer,')
+    lines.push('yt-live-chat-purchase-message-renderer {')
+    lines.push('  display: none !important;')
+    lines.push('}')
+  }
+  if (settings['hide-youtube-header']) {
+    lines.push('')
+    lines.push('yt-live-chat-header-renderer {')
+    lines.push('  display: none !important;')
+    lines.push('}')
+  }
+  if (settings['hide-youtube-footer']) {
+    lines.push('')
+    lines.push('yt-live-chat-input-renderer {')
+    lines.push('  display: none !important;')
+    lines.push('}')
+  }
+
   return lines.join('\n')
 }

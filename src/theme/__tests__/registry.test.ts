@@ -76,7 +76,7 @@ describe('Theme Registry', () => {
       expect(theme!.manifest.id).toBe('im')
     })
 
-    it('returns the Ink Sticker bundle for "ink-sticker"', () => {
+    it('returns the Neon Sticker bundle for "ink-sticker"', () => {
       const theme = getThemeByRoute('ink-sticker')
       expect(theme).toBeDefined()
       expect(theme!.manifest.id).toBe('ink-sticker')

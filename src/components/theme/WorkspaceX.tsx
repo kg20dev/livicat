@@ -387,6 +387,19 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
     return () => window.removeEventListener('electron-preview-closed', handleClosed)
   }, [])
 
+  /* ─── Build CSS for YouTube injection ──────────────────────────── */
+
+  const buildYoutubeCss = useCallback(() => {
+    const inlineCss = buildCSSVariables(settings, scheme)
+    // Strip .theme-{id} scoping prefix for YouTube injection —
+    // YouTube's page has no .theme-{id} wrapper element, so selectors
+    // like `.theme-im #author-photo` would never match.
+    const unscopedCss = theme.css.replace(new RegExp(`\\.theme-${manifest.id}\\s`, 'g'), '')
+    return theme.reset
+      ? [inlineCss, theme.reset, unscopedCss].join('\n\n')
+      : [inlineCss, unscopedCss].join('\n\n')
+  }, [settings, scheme, theme.css, theme.reset, manifest.id])
+
   /* ─── YouTube preview ────────────────────────────────────────── */
 
   const validation = useMemo(() => validateYouTubeUrl(youtubeUrl), [youtubeUrl])
@@ -403,7 +416,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      openPreview(videoId, '')
+      // Pass real CSS to openPreview so the Tauri on_page_load handler
+      // injects it when YouTube's DOM is ready — 300ms after setPreviewOpen
+      // is too early for YouTube's page to have finished loading.
+      const css = buildYoutubeCss()
+      openPreview(videoId, css)
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {
@@ -411,25 +428,17 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview])
+  }, [previewOpen, videoId, openPreview, closePreview, buildYoutubeCss])
 
-  /* ─── CSS injection for YouTube preview ─────────────────── */
+  /* ─── CSS re-injection on settings change ──────────────────── */
 
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      const inlineCss = buildCSSVariables(settings, scheme)
-      // Strip .theme-{id} scoping prefix for YouTube injection —
-      // YouTube's page has no .theme-{id} wrapper element, so selectors
-      // like `.theme-im #author-photo` would never match.
-      const unscopedCss = theme.css.replace(new RegExp(`\\.theme-${manifest.id}\\s`, 'g'), '')
-      const css = theme.reset
-        ? [inlineCss, theme.reset, unscopedCss].join('\n\n')
-        : [inlineCss, unscopedCss].join('\n\n')
-      updateCSS(css)
+      updateCSS(buildYoutubeCss())
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, settings, scheme, theme.reset, theme.css, updateCSS, manifest.id])
+  }, [previewOpen, buildYoutubeCss, updateCSS])
 
   /* ─── Layout ─────────────────────────────────────────────────── */
 
