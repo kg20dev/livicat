@@ -182,20 +182,38 @@ export function ThemePreview({
                         0 1px 2px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-            overflow: hidden;
-            aspect-ratio: 16 / 9;
+            overflow: visible;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
           }
 
           .livicat-gallery-card:hover {
-            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
                         0 2px 4px rgba(0, 0, 0, 0.08);
             border-color: rgba(255, 255, 255, 0.2);
           }
 
-          /* Ensure theme message renderer fills the card */
+          /* Scale chat message to fit within card using transform */
           .livicat-gallery-card > yt-live-chat-text-message-renderer {
+            transform-origin: center center;
+            transform: scale(0.6);
             width: 100%;
+            max-width: 500px;
+          }
+
+          /* Responsive scaling for different screen sizes */
+          @media (min-width: 768px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.75);
+            }
+          }
+
+          @media (min-width: 1024px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.85);
+            }
           }
         `}</style>
       )}
