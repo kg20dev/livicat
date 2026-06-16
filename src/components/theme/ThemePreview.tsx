@@ -183,7 +183,7 @@ export function ThemePreview({
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
             overflow: hidden;
-            aspect-ratio: 3 / 1;
+            aspect-ratio: 16 / 9;
           }
 
           .livicat-gallery-card:hover {
