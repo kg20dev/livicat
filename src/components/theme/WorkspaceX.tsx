@@ -419,13 +419,17 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
     if (!previewOpen) return
     const timer = setTimeout(() => {
       const inlineCss = buildCSSVariables(settings, scheme)
+      // Strip .theme-{id} scoping prefix for YouTube injection —
+      // YouTube's page has no .theme-{id} wrapper element, so selectors
+      // like `.theme-im #author-photo` would never match.
+      const unscopedCss = theme.css.replace(new RegExp(`\\.theme-${manifest.id}\\s`, 'g'), '')
       const css = theme.reset
-        ? [inlineCss, theme.reset, theme.css].join('\n\n')
-        : [inlineCss, theme.css].join('\n\n')
+        ? [inlineCss, theme.reset, unscopedCss].join('\n\n')
+        : [inlineCss, unscopedCss].join('\n\n')
       updateCSS(css)
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, settings, scheme, theme.reset, theme.css, updateCSS])
+  }, [previewOpen, settings, scheme, theme.reset, theme.css, updateCSS, manifest.id])
 
   /* ─── Layout ─────────────────────────────────────────────────── */
 
