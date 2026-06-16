@@ -133,9 +133,7 @@ describe('SettingsPanel', () => {
 
   it('renders without crashing with unknown control type', () => {
     const onChange = vi.fn()
-    const badScheme: SettingDef[] = [
-      { key: 'bad', type: 'color', label: 'Bad', default: '' },
-    ]
+    const badScheme: SettingDef[] = [{ key: 'bad', type: 'color', label: 'Bad', default: '' }]
     expect(() =>
       render(<SettingsPanel scheme={badScheme} values={{}} onChange={onChange} />)
     ).not.toThrow()
