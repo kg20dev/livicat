@@ -303,7 +303,7 @@ export default function App() {
             <>
               <div className={`flex transition-all duration-300 ${isSlimMode ? 'gap-0' : 'gap-4'}`}>
                 {/* Preview Area */}
-                <div className={`${isSlimMode ? 'w-full' : 'w-3/5'} transition-all duration-300`}>
+                <div className={`${isSlimMode ? 'flex-1' : 'w-3/5'} transition-all duration-300`}>
                   <PreviewArea
                     messages={displayMessages}
                     mode={mode}
@@ -326,7 +326,7 @@ export default function App() {
                 </div>
 
                 {/* Styling Panel */}
-                <div className={`${isSlimMode ? 'w-80' : 'w-2/5'} transition-all duration-300`}>
+                <div className={`${isSlimMode ? 'w-96' : 'w-2/5'} transition-all duration-300`}>
                   <StylingPanel onCSSChange={setGeneratedCSS}>
                     <StylingPanel.Header />
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter">
