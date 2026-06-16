@@ -614,6 +614,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                   settings={settings}
                   scheme={scheme}
                   backgroundColor={effectiveBg}
+                  mode={previewMode}
                   messages={
                     previewMode === 'gallery'
                       ? GALLERY_MESSAGES

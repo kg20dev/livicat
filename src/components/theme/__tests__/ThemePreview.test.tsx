@@ -141,4 +141,62 @@ describe('ThemePreview', () => {
     const modMsg = container.querySelector('[data-role="moderator"]')
     expect(modMsg).not.toBeNull()
   })
+
+  it('renders gallery mode with grid layout', () => {
+    const { container } = render(
+      <ThemePreview
+        themeId="test"
+        themeCss={mockCss}
+        settings={mockSettings}
+        scheme={mockScheme}
+        mode="gallery"
+      />
+    )
+
+    // Should render gallery grid container
+    const galleryGrid = container.querySelector('.livicat-gallery-grid')
+    expect(galleryGrid).not.toBeNull()
+
+    // Should render gallery cards
+    const galleryCards = container.querySelectorAll('.livicat-gallery-card')
+    expect(galleryCards.length).toBeGreaterThan(0)
+
+    // Each card should have theme class
+    const firstCard = galleryCards[0] as HTMLElement
+    expect(firstCard.classList.contains('theme-test')).toBe(true)
+
+    // Should inject gallery-specific styles in one of the style tags
+    const styleTags = container.querySelectorAll('style')
+    const hasGalleryStyles = Array.from(styleTags).some(
+      (style) => style.textContent && style.textContent.includes('livicat-gallery-grid')
+    )
+    expect(hasGalleryStyles).toBe(true)
+  })
+
+  it('renders live mode with vertical stack layout', () => {
+    const { container } = render(
+      <ThemePreview
+        themeId="test"
+        themeCss={mockCss}
+        settings={mockSettings}
+        scheme={mockScheme}
+        mode="live"
+      />
+    )
+
+    // Should render chat messages container (not gallery grid)
+    const chatMessages = container.querySelector('.livicat-chat-messages')
+    expect(chatMessages).not.toBeNull()
+
+    // Should not render gallery grid
+    const galleryGrid = container.querySelector('.livicat-gallery-grid')
+    expect(galleryGrid).toBeNull()
+
+    // Should not inject gallery-specific styles
+    const styleTags = container.querySelectorAll('style')
+    const hasGalleryStyles = Array.from(styleTags).some(
+      (style) => style.textContent && style.textContent.includes('livicat-gallery-grid')
+    )
+    expect(hasGalleryStyles).toBe(false)
+  })
 })
