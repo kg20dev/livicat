@@ -1,4 +1,5 @@
 import type { SettingDef } from '../types'
+import { FONT_OPTIONS } from '../../utils/fonts'
 
 export const scheme: SettingDef[] = [
   /* ── Bubble ────────────────────────────────────────────── */
@@ -223,12 +224,7 @@ export const scheme: SettingDef[] = [
     default: 'inherit',
     options: [
       { value: 'inherit', label: 'Default' },
-      { value: '"Roboto", sans-serif', label: 'Roboto' },
-      { value: '"Inter", sans-serif', label: 'Inter' },
-      { value: '"Segoe UI", system-ui, sans-serif', label: 'Segoe UI' },
-      { value: 'Arial, sans-serif', label: 'Arial' },
-      { value: '"Helvetica Neue", Helvetica, sans-serif', label: 'Helvetica' },
-      { value: '"Courier New", monospace', label: 'Courier New' },
+      ...FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label })),
     ],
   },
 
@@ -252,6 +248,15 @@ export const scheme: SettingDef[] = [
     section: 'YouTube',
     type: 'toggle',
     label: 'Hide Chat Footer',
+    default: false,
+  },
+
+  /* ── OBS ───────────────────────────────────────────────── */
+  {
+    key: 'chroma-key',
+    section: 'OBS',
+    type: 'toggle',
+    label: 'Chroma Key Ready',
     default: false,
   },
 

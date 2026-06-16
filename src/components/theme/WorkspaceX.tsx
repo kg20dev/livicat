@@ -126,7 +126,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   const { manifest, scheme } = theme
   const { settings, updateSetting } = useThemeSettings(manifest.storageKey, scheme)
 
-  const effectiveBg = (settings.chromaKey as boolean)
+  const effectiveBg = (settings['chroma-key'] as boolean)
     ? '#00b140'
     : ((settings.backgroundColor as string) ?? 'transparent')
 

@@ -95,7 +95,7 @@ const DEMO_MESSAGES = [
 /* ─── App ────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState('workspace')
+  const [activeNav, setActiveNav] = useState('workspace-x')
   const [activeTab, setActiveTab] = useState('Testing Mode')
   const [url, setUrl] = useState('')
   const [submittedUrl, setSubmittedUrl] = useState('')

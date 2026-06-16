@@ -7,17 +7,13 @@
  */
 
 import type { SettingDef, ThemeSettings } from '../theme/types'
+import { getFontUrl } from './fonts'
 
-/** Option value → Google Font name for fonts we need to load from the web. */
+/** Option value → Google Font @import rule, or null for system fonts. */
 function getGoogleFontImport(fontFamily: string): string | null {
-  const FONT_MAP: Record<string, string> = {
-    '"Roboto", sans-serif': 'Roboto',
-    '"Inter", sans-serif': 'Inter',
-  }
-  const fontName = FONT_MAP[fontFamily]
-  if (!fontName) return null
-  const encoded = fontName.replace(/ /g, '+')
-  return `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700&display=swap');`
+  const url = getFontUrl(fontFamily)
+  if (!url) return null
+  return `@import url('${url}');`
 }
 
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
@@ -121,6 +117,22 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('')
     lines.push('yt-live-chat-input-renderer {')
     lines.push('  display: none !important;')
+    lines.push('}')
+  }
+
+  // ── Chroma key mode: green background for OBS keying ─────────
+  if (settings['chroma-key']) {
+    lines.push('')
+    lines.push('body, html {')
+    lines.push('  background-color: #00b140 !important;')
+    lines.push('  margin: 0 !important;')
+    lines.push('  padding: 0 !important;')
+    lines.push('}')
+    lines.push('yt-live-chat-app,')
+    lines.push('yt-live-chat-item-list-renderer,')
+    lines.push('#chat-messages,')
+    lines.push('.livicat-chat-messages {')
+    lines.push('  background-color: #00b140 !important;')
     lines.push('}')
   }
 
