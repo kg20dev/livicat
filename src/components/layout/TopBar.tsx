@@ -3,6 +3,8 @@
  * These features are hidden until they're ready for use.
  */
 
+import packageJson from '../../../package.json'
+
 /* ─── Root ──────────────────────────────────────────────────────── */
 
 interface TopBarRootProps {
@@ -41,7 +43,14 @@ TopBar.LogoButton = function TopBarLogoButton({
         alt="Livicat"
         className="w-8 h-8 transition-transform group-hover:rotate-12"
       />
-      <span className="font-headline-sm text-headline-sm font-black text-on-surface">Livicat</span>
+      <div className="flex flex-col">
+        <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight">
+          Livicat
+        </span>
+        <span className="text-label-xs text-on-surface-variant/60 font-medium leading-none mt-0.5">
+          v{packageJson.version}
+        </span>
+      </div>
     </button>
   )
 }
