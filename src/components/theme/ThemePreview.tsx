@@ -199,20 +199,22 @@ export function ThemePreview({
           .livicat-gallery-card > yt-live-chat-text-message-renderer {
             transform-origin: center center;
             transform: scale(0.6);
-            width: 100%;
-            max-width: 500px;
+            width: 500px;
+            flex-shrink: 0;
           }
 
           /* Responsive scaling for different screen sizes */
           @media (min-width: 768px) {
             .livicat-gallery-card > yt-live-chat-text-message-renderer {
               transform: scale(0.75);
+              width: 500px;
             }
           }
 
           @media (min-width: 1024px) {
             .livicat-gallery-card > yt-live-chat-text-message-renderer {
               transform: scale(0.85);
+              width: 500px;
             }
           }
         `}</style>
