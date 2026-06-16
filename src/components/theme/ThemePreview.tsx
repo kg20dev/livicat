@@ -144,7 +144,7 @@ export function ThemePreview({
   const isGallery = mode === 'gallery'
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex items-center justify-center overflow-hidden">
       {/* Injected theme CSS */}
       <style id={`theme-css-${themeId}`}>{fullCss}</style>
 
@@ -200,29 +200,30 @@ export function ThemePreview({
       )}
 
       {/* Chat messages container */}
-      {isGallery ? (
-        /* Gallery mode: Grid layout with themed cards */
-        <div
-          className="livicat-gallery-grid overflow-y-auto"
-          style={{ backgroundColor: backgroundColor ?? 'transparent' }}
-        >
-          {chatMessages.map((msg) => (
-            <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
-              <ChatMessage message={msg} showAvatar={showAvatars} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* Live mode: Vertical stack (original layout) */
-        <div
-          className={`livicat-chat-messages theme-${themeId} overflow-y-auto`}
-          style={{ backgroundColor: backgroundColor ?? 'transparent' }}
-        >
-          {chatMessages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} showAvatar={showAvatars} />
-          ))}
-        </div>
-      )}
+      <div
+        className="w-full h-full flex flex-col"
+        style={{
+          backgroundColor: backgroundColor ?? 'transparent',
+        }}
+      >
+        {isGallery ? (
+          /* Gallery mode: Grid layout with themed cards */
+          <div className="livicat-gallery-grid overflow-y-auto h-full">
+            {chatMessages.map((msg) => (
+              <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
+                <ChatMessage message={msg} showAvatar={showAvatars} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Live mode: Vertical stack (original layout) */
+          <div className={`livicat-chat-messages theme-${themeId} overflow-y-auto h-full`}>
+            {chatMessages.map((msg) => (
+              <ChatMessage key={msg.id} message={msg} showAvatar={showAvatars} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
