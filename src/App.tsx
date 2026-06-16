@@ -14,6 +14,7 @@ import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
 import { FONT_OPTIONS } from './utils/fonts'
 import { trackEventAsync, isAnalyticsEnabled } from './utils/analytics'
+import { useSidebarCollapsed } from './hooks/useSidebarCollapsed'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -103,6 +104,9 @@ export default function App() {
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle')
   const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
+
+  // Sidebar state
+  const { isCollapsed } = useSidebarCollapsed()
 
   // Analytics states
   const [showLoading, setShowLoading] = useState(true)
@@ -275,7 +279,6 @@ export default function App() {
       <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
         <Sidebar.Header />
         <Sidebar.Nav />
-        <Sidebar.ExportButton onExport={handleExportCSS} />
       </Sidebar>
 
       {/* TopBar */}
@@ -285,7 +288,11 @@ export default function App() {
       </TopBar>
 
       {/* Main Content (line 185) */}
-      <main className="ml-[280px] pt-16 h-screen flex">
+      <main
+        className={`pt-16 h-screen flex transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'ml-16' : 'ml-[280px]'
+        }`}
+      >
         <ErrorBoundary>
           {activeNav === 'settings' ? (
             <Settings />
