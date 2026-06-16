@@ -47,7 +47,7 @@ TopBar.LogoButton = function TopBarLogoButton({
         <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight">
           Livicat
         </span>
-        <span className="text-label-xs text-on-surface-variant/60 font-medium leading-none mt-0.5">
+        <span className="text-[10px] text-on-surface-variant/50 font-normal leading-none -mt-1">
           v{packageJson.version}
         </span>
       </div>
