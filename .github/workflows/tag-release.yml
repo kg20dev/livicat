@@ -1,0 +1,194 @@
+name: Tag Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  prepare-release:
+    name: Prepare Release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      pr_number: ${{ steps.create-pr.outputs.pull-request-number }}
+      pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF_NAME#v}
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Sync version from tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          npm version $VERSION --no-git-tag-version
+          node scripts/sync-version.cjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: |
+            {
+              "categories": [
+                {"title": "🚀 Features", "labels": ["feature", "feat"]},
+                {"title": "🐛 Bug Fixes", "labels": ["bug", "fix"]},
+                {"title": "📝 Documentation", "labels": ["documentation", "docs"]},
+                {"title": "🔧 Maintenance", "labels": ["maintenance", "chore", "refactor"]},
+                {"title": "⚡ Performance", "labels": ["performance", "perf"]},
+                {"title": "🧪 Tests", "labels": ["test", "tests"]}
+              ],
+              "template": "# {{CHANGELOG}}\n\n{{CATEGORIES}}",
+              "categoryTemplate": "## {{TITLE}}\n{{ITEMS}}\n",
+              "itemTemplate": "- {{COMMIT_MESSAGE}} ([#{{ISSUE_NUMBER}}]({{ISSUE_URL}})) ({{AUTHOR}})",
+              "maxIssues": 50
+            }
+          fromTag: ${{ github.event.repository.releases[0].tag_name || 'v0.0.0' }}
+          toTag: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release PR
+        id: create-pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: release/app
+          head: main
+          title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
+          body: |
+            ## Release ${{ github.ref_name }}
+            
+            Auto-generated release PR from tag push.
+            
+            ### 📋 Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ---
+            
+            ### ✅ Pre-merge Checklist
+            - [ ] All CI checks pass
+            - [ ] Version matches tag: ${{ steps.version.outputs.version }}
+            - [ ] Changelog reviewed
+            - [ ] Manual approval given
+            
+            > **Note**: This PR requires manual approval before merge. No auto-merge.
+          labels: |
+            release
+            automated
+          draft: false
+          add-paths: |
+            package.json
+            src-tauri/Cargo.toml
+            src-tauri/tauri.conf.json
+
+  require-approval:
+    name: Require Manual Approval
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for PR approval
+        run: |
+          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
+          echo "Waiting for approval on PR #$PR_NUMBER..."
+          echo "PR URL: ${{ needs.prepare-release.outputs.pr_url }}"
+          
+          # Wait for required reviews
+          while true; do
+            REVIEWS=$(gh pr view $PR_NUMBER --json reviews --jq '.reviews[] | select(.state=="APPROVED") | .author.login' 2>/dev/null | wc -l)
+            if [ "$REVIEWS" -ge 1 ]; then
+              echo "✅ PR approved"
+              break
+            fi
+            echo "⏳ Waiting for approval... (checking every 30s)"
+            sleep 30
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  merge-release:
+    name: Merge to Release Branch
+    needs: [prepare-release, require-approval]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge PR
+        run: |
+          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
+          gh pr merge $PR_NUMBER --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-release:
+    name: Build & Create Release
+    needs: merge-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release/app
+        uses: actions/checkout@v4
+        with:
+          ref: release/app
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Release ${{ github.ref_name }}"
+          releaseBody: |
+            See [changelog](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})
+          args: --target all
