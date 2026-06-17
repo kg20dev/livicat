@@ -49,6 +49,8 @@ coverage
 .agents
 
 # Local planning / tracking files
+AGENTS.md
+AGENTS_KARPATHY.md
 ANALYTICS_IMPLEMENTATION_PLAN.md
 APTABASE_SETUP_SUMMARY.md
 src-tauri/.env
