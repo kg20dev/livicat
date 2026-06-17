@@ -431,8 +431,8 @@ await invoke('trigger_crash_test', { crashType: 'fake_crash' });
 ```typescript
 // Track event
 app.track_event('css_exported', {
-  preset: 'Neon',
-  animation: 'Glowing'
+  format: 'css',
+  method: 'download',
 });
 
 // Built-in events
@@ -446,7 +446,7 @@ app.track_event('preview_opened', { videoId: '...' });
 - `youtube_fetched` — Video metadata fetched
 - `preview_opened` — Preview window opened
 - `preview_duration` — Time preview was open
-- `preset_selected` — Preset theme chosen
+- `preset_selected` — Theme preset applied
 - `customization_changed` — Any setting changed
 - `session_duration` — Total app session time
 
@@ -628,7 +628,7 @@ git push
 
 **Events Tracked:**
 - App launches
-- Feature usage (presets, animations)
+- Feature usage (themes, animations)
 - CSS exports
 - Preview opens
 - Session duration
@@ -724,7 +724,7 @@ echo "SENTRY_DSN=..." > src-tauri/.env
 
 **Examples:**
 ```bash
-feat(styling): add dark mode preset (Refs #42)
+feat(styling): add dark mode theme (Refs #42)
 fix(preview): resolve crash on Windows (Refs #13)
 docs(readme): update installation instructions (Refs #28)
 ```
@@ -850,15 +850,14 @@ App.tsx
 ├── ErrorBoundary
 │   └── TopBar
 ├── Sidebar
-│   ├── Navigation
-│   └── Export CSS Button
+│   └── Navigation
 ├── PreviewArea
 │   ├── UrlInputBar
 │   ├── ChatPreview
 │   │   └── ChatMessage[]
 │   └── LoadingScreen
 └── StylingPanel
-    ├── Preset Selector
+    ├── Theme Selector
     ├── Color Pickers
     ├── Font Selector
     ├── Animation Selector
