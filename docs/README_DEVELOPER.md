@@ -837,7 +837,7 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential \
 
 ### **Documentation**
 
-- [docs/STREAMER.md](docs/STREAMER.md) — End-user guide
+- [STREAMER.md](STREAMER.md) — End-user guide
 - [BUILD.md](BUILD.md) — Build instructions
 - [TESTING.md](TESTING.md) — Testing guide
 - [RELEASE.md](RELEASE.md) — Release workflow
