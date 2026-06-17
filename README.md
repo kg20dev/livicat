@@ -31,17 +31,11 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ## ✨ Features
 
 - 🎨 **Theme Plugin System** — Portable self-contained theme packages (Colour Bubble, Neon Sticker, Ink Sticker)
-- 🎨 **7+ Preset Themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
 - ✨ **Message Animations** — Slide, Wiggle, Pop, Fade with customizable speed
 - 🪟 **Two OBS Methods** — CSS Export or Live Preview
 - ⚡ **Real-Time Preview** — Always-on-top popup window with gallery mode
-- 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels, mobile-friendly
+- 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels
 - 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
-- 📊 **Privacy-First Analytics** — Aptabase with consent
-- 🔒 **Error Reporting** — Sentry crash tracking
-- 🚀 **Lightweight** — ~10MB Tauri (vs 115MB Electron)
-- 🐧 **Cross-Platform** — macOS, Windows, Linux (AppImage)
-- 🔄 **Automated Releases** — Tag-triggered CI/CD with changelog generation
 
 ---
 
