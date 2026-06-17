@@ -8,7 +8,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ![Release](https://img.shields.io/github/v/release/kg20dev/livicat)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
+![Size](https://img.shields.io/badge/binary%20size-~8%20MB-brightgreen)
 ![macOS](https://img.shields.io/badge/macOS-supported-brightgreen?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
@@ -33,7 +33,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 - 🎨 **Theme Plugin System** — Portable self-contained theme packages (Colour Bubble, Neon Sticker)
 - ✨ **Message Animations** — Slide, Wiggle, Pop, Fade with customizable speed
 - 🪟 **Two OBS Methods** — CSS Export or Live Preview
-- ⚡ **Real-Time Preview** — Always-on-top popup window with gallery mode
+- ⚡ **Real-Time Preview** — Popup window with gallery mode
 - 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels
 - 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
 
@@ -84,8 +84,8 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📊 Stats
 
-- **Size:** ~10MB (91% smaller than Electron)
-- **Tests:** 182+ tests
+- **Size:** ~8MB (93% smaller than Electron)
+- **Tests:** 239+ tests
 - **Languages:** TypeScript, Rust, React
 - **Platforms:** macOS, Windows
 - **License:** MIT

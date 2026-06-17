@@ -20,9 +20,8 @@
 - 🎉 Your stream looks more professional
 
 **Why streamers love it:**
-- 🎨 **7 preset themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
+- 🎨 **8 preset themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
 - ⚡ **Real-time preview** — See changes instantly as you customize
-- 🪟 **Always-on-top window** — Stays visible while you work in OBS
 - 📤 **One-click OBS setup** — No complex configuration needed
 - 🪞 **Works in two ways** — Browser source OR window capture
 
@@ -90,7 +89,7 @@ https://youtu.be/dQw4w9WgXcQ
 ### **Step 3: Customize Your Chat**
 - **Pick a preset** — Click "Preset" and choose a theme
 - **Adjust colors** — Change background, username, message colors
-- **Choose fonts** — Pick from 12 Google Fonts
+- **Choose fonts** — Pick from 15+ Google Fonts
 - **Add animations** — Make new messages glow, slide, or bounce
 - **Toggle elements** — Show/hide avatars, timestamps, badges
 
@@ -128,13 +127,13 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 8. Click **OK**
 
 **✅ Pros:** Works in web mode, no Tauri needed
-**❌ Cons:** Manual setup, can't use always-on-top window
+**❌ Cons:** Manual setup
 
 ---
 
 ### **Method 2: Live Preview (Window Capture)** ⭐
 
-**Best for:** Streamers, always-on-top overlay, easier setup
+**Best for:** Streamers, easier setup
 
 #### **Step-by-Step:**
 
@@ -156,7 +155,7 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 >
 > <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
-**✅ Pros:** One-click setup, always-on-top, easier workflow
+**✅ Pros:** One-click setup, easier workflow
 **❌ Cons:** Requires Livicat desktop app
 
 ---
@@ -167,7 +166,6 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 |---------|---------------------|------------------------|
 | **OBS Source Type** | Browser Source | Window Capture |
 | **Setup Complexity** | Medium (manual CSS) | Easy (one click) |
-| **Always-on-Top** | ❌ No | ✅ Yes |
 | **Requirements** | Web browser only | Livicat desktop app |
 | **CSS Updates** | Manual re-export | Instant (automatic) |
 | **Best For** | Testing, web users | **Streamers, production** |
@@ -196,11 +194,11 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 - **Slide** — Slide in from side
 - **Bounce** — Bouncy arrival animation
 
-### **Typography (12 Google Fonts)**
-- **Sans-serif:** Inter, Roboto, Open Sans, Lato
-- **Display:** Montserrat, Poppins, Bebas Neue
+### **Typography (15+ Google Fonts)**
+- **Sans-serif:** Inter, Roboto, Open Sans, Lato, Source Sans 3, Ubuntu
+- **Display:** Montserrat, Poppins, Oswald, Raleway, Quicksand, Playfair Display
 - **Monospace:** Fira Code, JetBrains Mono
-- **More:** Nunito, Raleway, Oswald
+- **More:** Nunito
 
 ### **Visual Settings**
 | Setting | Options |
@@ -282,7 +280,6 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+Shift+E` | Export CSS (Method 1) |
-| `Ctrl+Shift+P` | Open Live Preview (Method 2) |
 
 ---
 
@@ -293,7 +290,7 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 3. **Keep it readable** — Don't make font too small or text too transparent
 4. **Use animations sparingly** — Too much motion can distract viewers
 5. **Save your favorites** — Screenshots of settings you like for future streams
-6. **Always-on-top is your friend** — Keeps chat visible while you work
+6. **Preview popup stays on top** — Keeps chat visible while you work in OBS
 
 ---
 
@@ -316,11 +313,8 @@ See [README_DEVELOPER.md](README_DEVELOPER.md) for technical details.
 ## 📝 What's Next?
 
 **Coming soon:**
-- 🔔 Sound notifications for new messages
 - 🎯 More preset themes
 - 🌊 More animation styles
-- 📊 Chat statistics dashboard
-- 🪟 Multi-window support for multiple chats
 
 ---
 

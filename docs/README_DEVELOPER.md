@@ -63,7 +63,6 @@ Livicat is a **cross-platform desktop application** built with **Tauri 2** that 
                     │                      │
                     │ • macOS: WKWebView   │
                     │ • Windows: WebView2 │
-                    │ • Linux: WebKitGTK  │
                     └──────────────────────┘
                                  │
                                  ▼
@@ -95,11 +94,7 @@ xcode-select --install
 - [WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
 - [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) with C++ workload
 
-**Linux:**
-```bash
-sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
-  libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-```
+
 
 ### **Setup Steps**
 
@@ -293,8 +288,6 @@ async fn open_preview_window(
 **Platform-Specific WebViews:**
 - **macOS:** WKWebView (system framework)
 - **Windows:** WebView2 (Edge runtime)
-- **Linux:** WebKitGTK (GTK3 library)
-
 #### **4. CSS Injection** (Rust)
 
 **Method:** JavaScript injection via `eval()`
@@ -581,7 +574,6 @@ npm run tauri:build
 # Platform-specific builds
 npm run tauri:build:mac                    # macOS Apple Silicon
 npm run tauri:build -- --target x86_64-pc-windows-msvc  # Windows
-npm run tauri:build -- --target x86_64-unknown-linux-gnu  # Linux
 ```
 
 ### **Build Output**
@@ -591,7 +583,6 @@ npm run tauri:build -- --target x86_64-unknown-linux-gnu  # Linux
 **Artifacts:**
 - **macOS:** `.dmg` (disk image), `.app` (application bundle)
 - **Windows:** `.msi` (installer), `.exe` (NSIS installer)
-- **Linux:** `.deb` (Debian package), `.AppImage` (portable)
 
 ### **Release Workflow**
 
@@ -687,7 +678,7 @@ echo "SENTRY_DSN=..." > src-tauri/.env
    - [CODING_RULES.md](CODING_RULES.md) — Code standards
 
 2. **Create Issue**
-   - Use [feature_request.md](.github/ISSUE_TEMPLATE/feature_request.md) or [bug_report.md](.github/ISSUE_TEMPLATE/bug_report.md)
+   - Use [feature_request.md](../.github/ISSUE_TEMPLATE/feature_request.md) or [bug_report.md](../.github/ISSUE_TEMPLATE/bug_report.md)
    - Get approval before starting work
 
 3. **Create Branch**
@@ -805,14 +796,6 @@ npm run tauri:build
 # https://visualstudio.microsoft.com/downloads/
 ```
 
-**Build fails on Linux:**
-```bash
-# Install dependencies
-sudo apt install libwebkit2gtk-4.1-dev build-essential \
-  curl wget file libxdo-dev libssl-dev \
-  libayatana-appindicator3-dev librsvg2-dev
-```
-
 ### **WebView Issues**
 
 **CSS not injecting:**
@@ -827,7 +810,6 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential \
   <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
 **Preview window crashes (Windows):**
-- Disable always-on-top (known WebView2 issue)
 - Update WebView2 Runtime
 - Check Sentry for crash reports
 
@@ -935,7 +917,6 @@ Styled YouTube Chat
    - Reduce bundle size
 
 5. **Multi-Platform**
-   - Add Linux ARM64 support
    - Optimize for older Windows versions
 
 ---
