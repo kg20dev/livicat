@@ -30,13 +30,18 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## ✨ Features
 
-- 🎨 **7 Preset Themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
-- ✨ **6 Message Animations** — Blink, Glowing, Fade, Slide, Bounce
+- 🎨 **Theme Plugin System** — Portable self-contained theme packages (Colour Bubble, Neon Sticker, Ink Sticker)
+- 🎨 **7+ Preset Themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
+- ✨ **Message Animations** — Slide, Wiggle, Pop, Fade with customizable speed
 - 🪟 **Two OBS Methods** — CSS Export or Live Preview
-- ⚡ **Real-Time Preview** — Always-on-top popup window
+- ⚡ **Real-Time Preview** — Always-on-top popup window with gallery mode
+- 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels, mobile-friendly
+- 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
 - 📊 **Privacy-First Analytics** — Aptabase with consent
 - 🔒 **Error Reporting** — Sentry crash tracking
-- 🚀 **Lightweight** — 8MB Tauri (vs 115MB Electron)
+- 🚀 **Lightweight** — ~10MB Tauri (vs 115MB Electron)
+- 🐧 **Cross-Platform** — macOS, Windows, Linux (AppImage)
+- 🔄 **Automated Releases** — Tag-triggered CI/CD with changelog generation
 
 ---
 
@@ -58,7 +63,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📥 Download
 
-🎉 **[Latest Release: v0.8.0](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release: v0.9.1](https://github.com/kg20dev/livicat/releases)**
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
