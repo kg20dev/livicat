@@ -88,36 +88,57 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "Bump version to ${{ steps.version.outputs.version }}"
+
+      - name: Save changelog
+        if: steps.prev_tag.outputs.tag != ''
+        run: |
+          cat > /tmp/changelog.md << 'C4NG3L0G'
+          ${{ steps.changelog.outputs.changelog }}
+          C4NG3L0G
+
       - name: Create Release PR
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.RELEASE_PAT }}
-          base: release/app
-          title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
-          body: |
-            ## Release ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="release/v$VERSION"
+          git push origin "HEAD:$BRANCH"
 
-            Auto-generated release PR from tag push.
+          # Build PR body
+          echo "## Release v$VERSION" > /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "Auto-generated release PR from tag push." >> /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "### 📋 Changes" >> /tmp/pr-body.md
+          if [ -s /tmp/changelog.md ]; then
+            cat /tmp/changelog.md >> /tmp/pr-body.md
+          else
+            echo "No changelog (first release or no previous tag)." >> /tmp/pr-body.md
+          fi
+          echo "" >> /tmp/pr-body.md
+          echo "---" >> /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "### ✅ Checklist" >> /tmp/pr-body.md
+          echo "- [ ] CI checks pass" >> /tmp/pr-body.md
+          echo "- [ ] Version matches tag: $VERSION" >> /tmp/pr-body.md
+          echo "- [ ] Changelog reviewed" >> /tmp/pr-body.md
+          echo "- [ ] Merge manually when ready" >> /tmp/pr-body.md
 
-            ### 📋 Changes
-            ${{ steps.changelog.outputs.changelog }}
-
-            ---
-
-            ### ✅ Checklist
-            - [ ] CI checks pass
-            - [ ] Version matches tag: ${{ steps.version.outputs.version }}
-            - [ ] Changelog reviewed
-            - [ ] Merge manually when ready
-          labels: |
-            release
-            automated
-          draft: false
-          add-paths: |
-            package.json
-            src-tauri/Cargo.toml
-            src-tauri/tauri.conf.json
+          PR_URL=$(gh pr create \
+            --base release/app \
+            --head "$BRANCH" \
+            --title "[$VERSION] Release v$VERSION" \
+            --body-file /tmp/pr-body.md \
+            --label "release,automated")
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_URL##*/}" >> $GITHUB_OUTPUT
 
   # After you merge this PR to release/app:
   #   - build-tauri.yml builds macOS + Windows and creates the release
