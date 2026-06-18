@@ -175,15 +175,6 @@ export const scheme: SettingDef[] = [
     ],
   },
 
-  /* ── Visibility ────────────────────────────────────────── */
-  {
-    key: 'show-avatars',
-    section: 'Visibility',
-    type: 'toggle',
-    label: 'Show Avatars',
-    default: true,
-  },
-
   /* ── Role Colors ───────────────────────────────────────── */
   {
     key: 'chat-owner-username',

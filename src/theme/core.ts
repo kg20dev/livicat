@@ -206,6 +206,13 @@ export const CORE_SCHEME: SettingDef[] = [
     unit: 'px',
     cssVar: 'chat-avatar-vertical-offset',
   },
+  {
+    key: 'show-avatars',
+    section: 'Avatar',
+    type: 'toggle',
+    label: 'Show Avatars',
+    default: true,
+  },
 
   /* ── Role-specific colors ─────────────────────────────── */
   {

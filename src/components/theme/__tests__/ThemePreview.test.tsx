@@ -6,13 +6,13 @@ import type { SettingDef } from '../../../theme/types'
 const mockScheme: SettingDef[] = [
   { key: 'messageBg', type: 'color', label: 'Background', default: '#1a1a1a' },
   { key: 'fontSize', type: 'range', label: 'Font Size', min: 10, max: 48, default: 14, unit: 'px' },
-  { key: 'showAvatars', type: 'toggle', label: 'Show Avatars', default: true },
+  { key: 'show-avatars', type: 'toggle', label: 'Show Avatars', default: true },
 ]
 
 const mockSettings = {
   messageBg: '#ff0000',
   fontSize: 20,
-  showAvatars: true,
+  'show-avatars': true,
 }
 
 const mockCss = `
@@ -105,7 +105,7 @@ describe('ThemePreview', () => {
       <ThemePreview
         themeId="test"
         themeCss={mockCss}
-        settings={{ ...mockSettings, showAvatars: false }}
+        settings={{ ...mockSettings, 'show-avatars': false }}
         scheme={mockScheme}
       />
     )
