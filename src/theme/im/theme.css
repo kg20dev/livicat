@@ -217,8 +217,8 @@
 
 /* Avatar wrapper */
 .theme-im yt-live-chat-text-message-renderer #author-photo {
-  width: var(--chat-avatar-width, 24px) !important;
-  height: var(--chat-avatar-width, 24px) !important;
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
   border-radius: 50% !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;

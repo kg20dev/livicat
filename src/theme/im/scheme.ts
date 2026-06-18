@@ -135,18 +135,6 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Avatar ────────────────────────────────────────────── */
-  {
-    key: 'chat-avatar-width',
-    section: 'Avatar',
-    type: 'range',
-    label: 'Size',
-    min: 16,
-    max: 80,
-    default: 24,
-    unit: 'px',
-  },
-
   /* ── Animation (Colour Bubble specific) ───────────────── */
   {
     key: 'chat-username-animation',
