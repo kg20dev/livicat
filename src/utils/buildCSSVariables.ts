@@ -6,7 +6,12 @@
  * Also injects @import for Google Fonts when a web font is selected.
  */
 
-import type { SettingDef, ThemeSettings } from '../theme/types'
+import type {
+  SettingDef,
+  ThemeSettings,
+  HarmonyInvertOptions,
+  DerivationEntry,
+} from '../theme/types'
 import { getFontUrl } from './fonts'
 
 /** Option value → Google Font @import rule, or null for system fonts. */
@@ -16,25 +21,25 @@ function getGoogleFontImport(fontFamily: string): string | null {
   return `@import url('${url}');`
 }
 
-/* ── Contrasting chip helper ────────────────────────────────────── */
-/**
- * Derive a chip background from a role bubble background.
- * Keeps the same hue (harmony) but shifts lightness in the opposite
- * direction — dark bubbles get a medium-light chip, light bubbles
- * get a darker chip — so the chip clearly stands out from the bubble.
- */
-function chipFromBg(hex: string): string {
-  const h = hex.replace('#', '')
-  let r = parseInt(h.substring(0, 2), 16) / 255
-  let g = parseInt(h.substring(2, 4), 16) / 255
-  let b = parseInt(h.substring(4, 6), 16) / 255
+/* ── HSL utilities ─────────────────────────────────────────────── */
 
+interface Hsl {
+  h: number
+  s: number
+  l: number
+}
+
+/** Extract HSL from a 6-digit hex color string. */
+function hexToHsl(hex: string): Hsl {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16) / 255
+  const g = parseInt(h.substring(2, 4), 16) / 255
+  const b = parseInt(h.substring(4, 6), 16) / 255
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   let hue = 0
   let sat = 0
   const lit = (max + min) / 2
-
   if (max !== min) {
     const d = max - min
     sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min)
@@ -50,13 +55,11 @@ function chipFromBg(hex: string): string {
         break
     }
   }
+  return { h: hue, s: sat, l: lit }
+}
 
-  // Same hue, shift lightness in opposite direction
-  const targetL = lit < 0.35 ? 0.45 : 0.3
-  // Boost saturation for dark bgs, keep original for light bgs
-  const targetS = lit < 0.35 ? Math.max(sat, 0.65) : sat
-
-  // HSL → RGB
+/** Convert HSL to a 6-digit hex string. */
+function hslToHex(h: number, s: number, l: number): string {
   const fn = (p: number, q: number, t: number) => {
     if (t < 0) t += 1
     if (t > 1) t -= 1
@@ -65,15 +68,38 @@ function chipFromBg(hex: string): string {
     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
     return p
   }
-
-  const q = targetL < 0.5 ? targetL * (1 + targetS) : targetL + targetS - targetL * targetS
-  const p = 2 * targetL - q
-
-  r = Math.round(fn(p, q, hue + 1 / 3) * 255)
-  g = Math.round(fn(p, q, hue) * 255)
-  b = Math.round(fn(p, q, hue - 1 / 3) * 255)
-
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
+  const r = Math.round(fn(p, q, h + 1 / 3) * 255)
+  const g = Math.round(fn(p, q, h) * 255)
+  const b = Math.round(fn(p, q, h - 1 / 3) * 255)
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
+/* ── Harmony invert lightness ────────────────────────────────── */
+
+/**
+ * Keep the same hue, shift lightness in the opposite direction,
+ * and scale saturation by a factor.
+ *
+ * Default (no options): light text → very dark, muted.
+ *                        dark text → very light, muted.
+ *
+ * For chip backgrounds from bubble backgrounds, pass chip-specific
+ * options (darker target, boosted sat for dark sources).
+ */
+export function harmonyInvertColor(hex: string, options?: HarmonyInvertOptions): string {
+  const { h, s, l } = hexToHsl(hex)
+  const {
+    lightThreshold = 0.5,
+    darkTargetL = 0.2,
+    lightTargetL = 0.8,
+    satScale = 0.35,
+    boostDarkSat = false,
+  } = options ?? {}
+  const targetL = l >= lightThreshold ? darkTargetL : lightTargetL
+  const targetS = boostDarkSat && l < lightThreshold ? Math.max(s, 0.65) : s * satScale
+  return hslToHex(h, targetS, targetL)
 }
 
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
@@ -98,11 +124,32 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     }
     // Derive chip background from role bg colors
     // Same hue, opposite lightness — chip stands out from the bubble
-    if (cssName.endsWith('-bg') && def.type === 'color') {
-      const chipVar = cssName.replace(/-bg$/, '-chip-bg')
+    // Supports both kebab-case (--chat-owner-bg → --chat-owner-chip-bg)
+    // and camelCase (--messageBg → --messageChipBg, --ownerBg → --ownerChipBg)
+    if ((cssName.endsWith('-bg') || cssName.endsWith('Bg')) && def.type === 'color') {
+      const chipVar = cssName.endsWith('-bg')
+        ? cssName.replace(/-bg$/, '-chip-bg')
+        : cssName.replace(/Bg$/, 'ChipBg')
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
-      lines.push(`  --${chipVar}: ${chipFromBg(hex)};`)
+      lines.push(
+        `  --${chipVar}: ${harmonyInvertColor(hex, { lightThreshold: 0.35, darkTargetL: 0.3, lightTargetL: 0.45, satScale: 1, boostDarkSat: true })};`
+      )
+    }
+
+    // Derive contrast color via theme-specific derivationMap (e.g. strokeMap).
+    // A plain string entry uses default harmonyInvertColor options (stroke style).
+    // An object entry can specify per-target options (e.g. glow stays light).
+    // Only fires when the scheme array has a derivationMap attached.
+    const derivationMap = (scheme as { strokeMap?: Record<string, DerivationEntry> }).strokeMap
+    if (derivationMap && cssName in derivationMap && def.type === 'color') {
+      const entry = derivationMap[cssName]
+      const target = typeof entry === 'string' ? entry : entry.target
+      const opts: HarmonyInvertOptions | undefined =
+        typeof entry === 'string' ? undefined : entry.options
+      const hex =
+        typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
+      lines.push(`  --${target}: ${harmonyInvertColor(hex, opts)};`)
     }
   }
 

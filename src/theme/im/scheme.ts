@@ -16,9 +16,7 @@ export const coreCssVarMap: Record<string, string> = {
   'message-spacing': 'chat-message-spacing',
   'animation-speed': 'chat-animation-speed',
   'username-bold': 'chat-username-font-weight',
-  'username-font-size': 'usernameFontSize',
-  'message-font-size': 'messageFontSize',
-  'avatar-size': 'avatarSize',
+  'font-weight-message': 'chat-message-font-weight',
   'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
   'owner-bg': 'chat-owner-bg',
   'owner-text': 'chat-owner-text',
@@ -34,13 +32,6 @@ export const coreCssVarMap: Record<string, string> = {
 
 export const scheme: SettingDef[] = [
   /* ── Bubble ────────────────────────────────────────────── */
-  {
-    key: 'chat-scrollbar-thumb',
-    section: 'Bubble',
-    type: 'color',
-    label: 'Border Color',
-    default: '#888888',
-  },
   {
     key: 'chat-border-width',
     section: 'Bubble',
@@ -134,16 +125,6 @@ export const scheme: SettingDef[] = [
 
   /* ── Username ──────────────────────────────────────────── */
   {
-    key: 'chat-username-font-size',
-    section: 'Username',
-    type: 'range',
-    label: 'Size',
-    min: 10,
-    max: 40,
-    default: 13,
-    unit: 'px',
-  },
-  {
     key: 'chat-username-vertical-offset',
     section: 'Username',
     type: 'range',
@@ -151,30 +132,6 @@ export const scheme: SettingDef[] = [
     min: -20,
     max: 20,
     default: 0,
-    unit: 'px',
-  },
-
-  /* ── Message ──────────────────────────────────────────── */
-  {
-    key: 'chat-message-font-size',
-    section: 'Message',
-    type: 'range',
-    label: 'Content Font Size',
-    min: 10,
-    max: 48,
-    default: 14,
-    unit: 'px',
-  },
-
-  /* ── Avatar ────────────────────────────────────────────── */
-  {
-    key: 'chat-avatar-width',
-    section: 'Avatar',
-    type: 'range',
-    label: 'Size',
-    min: 16,
-    max: 80,
-    default: 24,
     unit: 'px',
   },
 
@@ -204,15 +161,6 @@ export const scheme: SettingDef[] = [
       { value: 'pop', label: 'Pop' },
       { value: 'fade', label: 'Fade' },
     ],
-  },
-
-  /* ── Visibility ────────────────────────────────────────── */
-  {
-    key: 'show-avatars',
-    section: 'Visibility',
-    type: 'toggle',
-    label: 'Show Avatars',
-    default: true,
   },
 
   /* ── Role Colors ───────────────────────────────────────── */

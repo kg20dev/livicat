@@ -1,4 +1,4 @@
-import type { SettingDef } from '../types'
+import type { SettingDef, DerivationEntry } from '../types'
 
 /**
  * Neon Sticker (Ink Sticker) — theme-specific settings only.
@@ -7,6 +7,28 @@ import type { SettingDef } from '../types'
  * `coreCssVarMap` maps each core key → this theme's CSS variable name
  * so buildCSSVariables emits the correct `--var-name`.
  */
+
+/**
+ * Maps source CSS variable names → derived CSS variable details.
+ * buildCSSVariables uses this to auto-derive harmonious colors
+ * via harmonyInvertColor(). Only themes that export this get auto-derivation.
+ *
+ * A plain string target uses default harmonyInvertColor options (stroke style).
+ * An object with `target` + `options` allows per-entry tuning.
+ */
+export const strokeMap: Record<string, DerivationEntry> = {
+  messageColor: 'strokeColor',
+  usernameColor: {
+    target: 'glowColor',
+    options: { darkTargetL: 0.65, lightTargetL: 0.65, satScale: 0.85 },
+  },
+  ownerText: 'ownerStroke',
+  modText: 'modStroke',
+  memberText: 'memberStroke',
+  superchatText: 'superchatStroke',
+  membershipText: 'membershipStroke',
+}
+
 export const coreCssVarMap: Record<string, string> = {
   bg: 'messageBg',
   'text-color': 'messageColor',
@@ -16,9 +38,7 @@ export const coreCssVarMap: Record<string, string> = {
   'message-spacing': 'chat-message-spacing',
   'animation-speed': 'animationSpeed',
   'username-bold': 'chat-username-font-weight',
-  'username-font-size': 'usernameFontSize',
-  'message-font-size': 'messageFontSize',
-  'avatar-size': 'avatarSize',
+  'font-weight-message': 'messageFontWeight',
   'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
   'owner-bg': 'ownerBg',
   'owner-text': 'ownerText',
@@ -75,13 +95,6 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
   {
-    key: 'strokeColor',
-    section: 'Effects',
-    type: 'color',
-    label: 'Stroke Color',
-    default: '#333333',
-  },
-  {
     key: 'glowSpread',
     section: 'Effects',
     type: 'range',
@@ -90,13 +103,6 @@ export const scheme: SettingDef[] = [
     max: 30,
     default: 6,
     unit: 'px',
-  },
-  {
-    key: 'glowColor',
-    section: 'Effects',
-    type: 'color',
-    label: 'Glow Color',
-    default: '#bb86fc',
   },
   {
     key: 'chat-max-width',

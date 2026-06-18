@@ -138,7 +138,7 @@ export function ThemePreview({
     ? [inlineCss, resetCss, themeCss].join('\n\n')
     : [inlineCss, themeCss].join('\n\n')
 
-  const showAvatars = (settings.showAvatars as boolean) ?? true
+  const showAvatars = (settings['show-avatars'] as boolean) ?? true
   const chatMessages = messages ?? DEMO_MESSAGES
 
   const isGallery = mode === 'gallery'
