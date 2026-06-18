@@ -249,208 +249,224 @@ export function WorkspaceX() {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      {/* ─── Top bar: compact theme selector (outside key — stays mounted) ── */}
-      <div className="flex-shrink-0 bg-surface border-b border-outline-variant/50 px-5 py-3">
-        {/* Row 1: Theme dropdown + Recent themes */}
-        <div className="flex items-center gap-4">
-          {/* Dropdown */}
-          <div className="relative z-20">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="glass-liquid-input px-4 py-2.5 rounded-lg flex items-center gap-3 min-w-[280px] hover:border-primary/50 transition-all duration-200 group"
-            >
-              <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
-              <div className="flex-1 text-left">
-                <div className="text-label-lg font-bold text-on-surface">
-                  {theme?.manifest.name ?? 'Select Theme'}
-                </div>
-                <div className="text-label-sm text-on-surface-variant/70 truncate">
-                  {theme?.manifest.description ?? 'Choose a theme to customize'}
-                </div>
-              </div>
-              <span
-                className={`material-symbols-outlined text-on-surface-variant transition-transform duration-200 ${
-                  dropdownOpen ? 'rotate-180' : ''
-                }`}
+      {/* ─── Top bar: theme selector (outside key — stays mounted) ── */}
+      <div className="flex-shrink-0 bg-surface border-b border-outline-variant/50">
+        <div className="px-5 py-4">
+          {/* Main theme selector row */}
+          <div className="flex items-start gap-6">
+            {/* Current Theme Display */}
+            <div className="relative z-20">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="glass-liquid-input px-4 py-3 rounded-xl flex items-center gap-3 min-w-[320px] hover:border-primary/60 transition-all duration-200 group"
               >
-                expand_more
-              </span>
-            </button>
-
-            {/* Dropdown Panel */}
-            {dropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-[400px] bg-surface-container rounded-xl shadow-2xl border border-outline-variant/50 overflow-hidden">
-                {/* Search input */}
-                <div className="p-3 border-b border-outline-variant/30">
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant/50">
-                      search
-                    </span>
-                    <input
-                      type="text"
-                      value={dropdownSearch}
-                      onChange={(e) => {
-                        setDropdownSearch(e.target.value)
-                        setSelectedIndex(0)
-                      }}
-                      placeholder="Search themes..."
-                      className="w-full pl-9 pr-8 py-2 bg-surface-container-high rounded-md text-label-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/30"
-                      autoFocus
-                    />
-                    {dropdownSearch && (
-                      <button
-                        onClick={() => {
-                          setDropdownSearch('')
-                          setSelectedIndex(0)
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-surface-container-highest transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">
-                          close
-                        </span>
-                      </button>
-                    )}
+                <span className="material-symbols-outlined text-primary text-[22px]">palette</span>
+                <div className="flex-1 text-left">
+                  <div className="text-label-lg font-bold text-on-surface">
+                    {theme?.manifest.name ?? 'Select Theme'}
+                  </div>
+                  <div className="text-label-sm text-on-surface-variant/70 truncate">
+                    {theme?.manifest.description ?? 'Choose a theme to customize'}
                   </div>
                 </div>
+                <span
+                  className={`material-symbols-outlined text-on-surface-variant/80 transition-transform duration-200 ${
+                    dropdownOpen ? 'rotate-180' : ''
+                  }`}
+                >
+                  expand_more
+                </span>
+              </button>
 
-                {/* Theme list */}
-                <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
-                  {filteredThemes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <span className="material-symbols-outlined text-[40px] text-on-surface-variant/30 mb-2">
-                        search_off
+              {/* Dropdown Panel */}
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 mt-3 w-[420px] bg-surface-container rounded-xl shadow-2xl border border-outline-variant/50 overflow-hidden glass-liquid-medium">
+                  {/* Search input */}
+                  <div className="p-4 border-b border-outline-variant/30">
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/50">
+                        search
                       </span>
-                      <p className="text-body-sm text-on-surface-variant/70">No themes found</p>
-                    </div>
-                  ) : (
-                    filteredThemes.map((t, idx) => {
-                      const isSelected = selectedThemeId === t.manifest.id
-                      const isHovered = idx === selectedIndex
-
-                      return (
+                      <input
+                        type="text"
+                        value={dropdownSearch}
+                        onChange={(e) => {
+                          setDropdownSearch(e.target.value)
+                          setSelectedIndex(0)
+                        }}
+                        placeholder="Search themes..."
+                        className="w-full pl-10 pr-9 py-2.5 bg-surface-container-high rounded-lg text-label-md text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                        autoFocus
+                      />
+                      {dropdownSearch && (
                         <button
-                          key={t.manifest.id}
                           onClick={() => {
-                            setSelectedThemeId(t.manifest.id)
-                            updateRecentThemes(t.manifest.id)
-                            setDropdownOpen(false)
                             setDropdownSearch('')
                             setSelectedIndex(0)
                           }}
-                          onMouseEnter={() => setSelectedIndex(idx)}
-                          className={`
-                            w-full px-4 py-3 text-left transition-all duration-150 border-l-3
-                            ${
-                              isSelected
-                                ? 'bg-primary/10 border-primary'
-                                : isHovered
-                                  ? 'bg-surface-container-high border-primary/60'
-                                  : 'bg-transparent border-transparent hover:bg-surface-container-high/50'
-                            }
-                          `}
-                          style={{ borderLeftWidth: '3px' }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-surface-container-highest transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            {/* Mini palette preview */}
-                            <div className="flex rounded overflow-hidden h-5 w-12 border border-outline-variant/30 flex-shrink-0">
-                              {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
-                                const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
-                                const color =
-                                  def && typeof def.default === 'string' ? def.default : '#888'
-                                return (
-                                  <div
-                                    key={key}
-                                    className="flex-1"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                )
-                              })}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div
-                                className={`text-label-md font-semibold truncate ${
-                                  isSelected ? 'text-primary' : 'text-on-surface'
-                                }`}
-                              >
-                                {t.manifest.name}
-                              </div>
-                              <div className="text-label-sm text-on-surface-variant/70 truncate">
-                                {t.manifest.description}
-                              </div>
-                            </div>
-
-                            {isSelected && (
-                              <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">
-                                check_circle
-                              </span>
-                            )}
-                          </div>
+                          <span className="material-symbols-outlined text-[18px] text-on-surface-variant/60">
+                            close
+                          </span>
                         </button>
-                      )
-                    })
-                  )}
-                </div>
+                      )}
+                    </div>
+                  </div>
 
-                {/* Footer */}
-                <div className="px-4 py-2 border-t border-outline-variant/30 bg-surface-container-highest/50 flex items-center justify-between">
-                  <span className="text-label-sm text-on-surface-variant/70">
-                    Showing{' '}
-                    <span className="font-semibold text-primary">{filteredThemes.length}</span> of{' '}
-                    {THEMES.length}
+                  {/* Theme list */}
+                  <div className="max-h-[340px] overflow-y-auto custom-scrollbar">
+                    {filteredThemes.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10">
+                        <span className="material-symbols-outlined text-[44px] text-on-surface-variant/30 mb-3">
+                          search_off
+                        </span>
+                        <p className="text-body-md text-on-surface-variant/70">No themes found</p>
+                      </div>
+                    ) : (
+                      filteredThemes.map((t, idx) => {
+                        const isSelected = selectedThemeId === t.manifest.id
+                        const isHovered = idx === selectedIndex
+
+                        return (
+                          <button
+                            key={t.manifest.id}
+                            onClick={() => {
+                              setSelectedThemeId(t.manifest.id)
+                              updateRecentThemes(t.manifest.id)
+                              setDropdownOpen(false)
+                              setDropdownSearch('')
+                              setSelectedIndex(0)
+                            }}
+                            onMouseEnter={() => setSelectedIndex(idx)}
+                            className={`
+                              w-full px-4 py-3.5 text-left transition-all duration-150 border-l-3
+                              ${
+                                isSelected
+                                  ? 'bg-primary/12 border-primary'
+                                  : isHovered
+                                    ? 'bg-surface-container-high border-primary/60'
+                                    : 'bg-transparent border-transparent hover:bg-surface-container-high/50'
+                              }
+                            `}
+                            style={{ borderLeftWidth: '3px' }}
+                          >
+                            <div className="flex items-center gap-3">
+                              {/* Mini palette preview */}
+                              <div className="flex rounded overflow-hidden h-6 w-14 border border-outline-variant/30 flex-shrink-0">
+                                {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
+                                  const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+                                  const color =
+                                    def && typeof def.default === 'string' ? def.default : '#888'
+                                  return (
+                                    <div
+                                      key={key}
+                                      className="flex-1"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  )
+                                })}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className={`text-label-md font-semibold truncate ${
+                                    isSelected ? 'text-primary' : 'text-on-surface'
+                                  }`}
+                                >
+                                  {t.manifest.name}
+                                </div>
+                                <div className="text-label-sm text-on-surface-variant/70 truncate">
+                                  {t.manifest.description}
+                                </div>
+                              </div>
+
+                              {isSelected && (
+                                <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0">
+                                  check_circle
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-3 border-t border-outline-variant/30 bg-surface-container-highest/50 flex items-center justify-between">
+                    <span className="text-label-sm text-on-surface-variant/70">
+                      Showing{' '}
+                      <span className="font-semibold text-primary">{filteredThemes.length}</span> of{' '}
+                      {THEMES.length}
+                    </span>
+                    <span className="text-label-sm text-on-surface-variant/50">Use ↑↓ Enter</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Themes Section */}
+            {recentThemes.length > 0 && (
+              <div className="flex-1 flex flex-col gap-2 max-w-[600px]">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">
+                    history
                   </span>
-                  <span className="text-label-sm text-on-surface-variant/50">Use ↑↓ Enter</span>
+                  <span className="text-label-sm font-semibold text-on-surface-variant/70 tracking-wide uppercase">
+                    Recent
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {recentThemes.map((id) => {
+                    const t = getThemeById(id)
+                    if (!t) return null
+
+                    const isSelected = selectedThemeId === id
+
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setSelectedThemeId(id)
+                          updateRecentThemes(id)
+                        }}
+                        className={`
+                          glass-liquid-card px-4 py-2 rounded-lg flex items-center gap-2.5
+                          transition-all duration-200 hover:scale-[1.02] hover:border-primary/40
+                          ${isSelected ? 'ring-2 ring-primary/60 border-primary/60' : ''}
+                        `}
+                        title={t.manifest.name}
+                      >
+                        {/* Mini color dot */}
+                        <div
+                          className="w-3.5 h-3.5 rounded-full border border-outline-variant/40 flex-shrink-0"
+                          style={{
+                            backgroundColor: (() => {
+                              const def = t.scheme.find((s) => s.key === 'bg' || s.cssVar === 'bg')
+                              return def && typeof def.default === 'string' ? def.default : '#888'
+                            })(),
+                          }}
+                        />
+                        <span
+                          className={`text-label-md font-medium truncate max-w-[120px] ${
+                            isSelected ? 'text-primary' : 'text-on-surface-variant'
+                          }`}
+                        >
+                          {t.manifest.name}
+                        </span>
+                        {isSelected && (
+                          <span className="material-symbols-outlined text-primary text-[16px]">
+                            check
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
           </div>
-
-          {/* Recent Themes */}
-          {recentThemes.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-label-sm text-on-surface-variant/60">Recent:</span>
-              <div className="flex items-center gap-1.5">
-                {recentThemes.map((id) => {
-                  const t = getThemeById(id)
-                  if (!t) return null
-
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => {
-                        setSelectedThemeId(id)
-                        updateRecentThemes(id)
-                      }}
-                      className={`
-                        glass-liquid-card px-3 py-1.5 rounded-full flex items-center gap-2
-                        transition-all duration-200 hover:scale-105
-                        ${selectedThemeId === id ? 'ring-2 ring-primary/50' : ''}
-                      `}
-                      title={t.manifest.name}
-                    >
-                      {/* Mini color dot */}
-                      <div
-                        className="w-3 h-3 rounded-full border border-outline-variant/30 flex-shrink-0"
-                        style={{
-                          backgroundColor: (() => {
-                            const def = t.scheme.find((s) => s.key === 'bg' || s.cssVar === 'bg')
-                            return def && typeof def.default === 'string' ? def.default : '#888'
-                          })(),
-                        }}
-                      />
-                      <span
-                        className={`text-label-sm font-medium truncate max-w-[100px] ${
-                          selectedThemeId === id ? 'text-primary' : 'text-on-surface-variant'
-                        }`}
-                      >
-                        {t.manifest.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
