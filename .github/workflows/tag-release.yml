@@ -60,11 +60,13 @@ jobs:
       - name: Get previous tag
         id: prev_tag
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~ 2>/dev/null || echo "")
+          # List all v-prefix git tags sorted descending, exclude current tag
+          PREV_TAG=$(git tag --sort=-version:refname -l "v*" | grep -v "^${GITHUB_REF_NAME}$" | head -1)
           echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
-          echo "Previous tag: ${PREV_TAG:-none}"
+          echo "Previous tag: ${PREV_TAG:-none (first release)}"
 
       - name: Generate changelog
+        if: steps.prev_tag.outputs.tag != ''
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
         with:
