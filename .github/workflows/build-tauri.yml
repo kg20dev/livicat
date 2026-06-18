@@ -30,7 +30,7 @@ jobs:
       should_release: ${{ steps.check_release.outputs.should_release }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Get version from package.json
         id: get_version
@@ -96,10 +96,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -111,7 +111,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@v4
         with:
           name: livicat-frontend
           path: dist/
@@ -125,16 +125,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
 
@@ -142,7 +142,7 @@ jobs:
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
         # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -150,7 +150,7 @@ jobs:
           command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
+        uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           cache-on-failure: true
@@ -159,7 +159,7 @@ jobs:
         run: npm ci
 
       - name: Download frontend build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@v4
         with:
           name: livicat-frontend
           path: dist
@@ -211,7 +211,7 @@ jobs:
           done
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@v4
         with:
           name: livicat-macos
           path: |
@@ -227,16 +227,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
 
@@ -244,7 +244,7 @@ jobs:
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
         # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -252,13 +252,13 @@ jobs:
           command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
+        uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           cache-on-failure: true
 
       - name: Cache WiX binaries (Windows installer tool)
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@v4
         with:
           path: ~\AppData\Local\Temp\wix314-binaries
           key: wix314-${{ runner.os }}-v1
@@ -267,7 +267,7 @@ jobs:
         run: npm ci
 
       - name: Download frontend build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@v4
         with:
           name: livicat-frontend
           path: dist
@@ -302,7 +302,7 @@ jobs:
           SENTRY_ENVIRONMENT: production
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@v4
         with:
           name: livicat-windows
           path: |
@@ -318,16 +318,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Download macOS artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@v4
         with:
           name: livicat-macos
           path: artifacts/macos
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@v4
         with:
           name: livicat-windows
           path: artifacts/windows
@@ -341,7 +341,7 @@ jobs:
           find artifacts/windows -type f
 
       - name: Create Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
