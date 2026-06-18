@@ -22,6 +22,10 @@ export const coreCssVarMap: Record<string, string> = {
   'mod-text': 'modText',
   'member-bg': 'memberBg',
   'member-text': 'memberText',
+  'superchat-bg': 'superchatBg',
+  'superchat-text': 'superchatText',
+  'membership-bg': 'membershipBg',
+  'membership-text': 'membershipText',
 }
 
 export const scheme: SettingDef[] = [

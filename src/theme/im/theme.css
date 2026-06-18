@@ -442,18 +442,18 @@
     .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #message {
-  background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
-  border-color: #ffd700 !important;
-  color: #1a1a1a !important;
+  background: var(--chat-superchat-bg, #ffd700) !important;
+  border-color: var(--chat-superchat-text, #1a1a1a) !important;
+  color: var(--chat-superchat-text, #1a1a1a) !important;
 }
 :is(
     .theme-im yt-live-chat-text-message-renderer[data-role='super-chat'],
     .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #message::before {
-  background: #ffd700 !important;
-  border-left-color: #ffd700 !important;
-  border-bottom-color: #ffd700 !important;
+  background: var(--chat-superchat-bg, #ffd700) !important;
+  border-left-color: var(--chat-superchat-text, #1a1a1a) !important;
+  border-bottom-color: var(--chat-superchat-text, #1a1a1a) !important;
 }
 
 /* Member Ship */
@@ -462,18 +462,18 @@
     .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #message {
-  background: #0d2818 !important;
-  border-color: #00b140 !important;
-  color: #00ff66 !important;
+  background: var(--chat-membership-bg, #0d2818) !important;
+  border-color: var(--chat-membership-text, #00b140) !important;
+  color: var(--chat-membership-text, #00ff66) !important;
 }
 :is(
     .theme-im yt-live-chat-text-message-renderer[data-role='member-ship'],
     .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #message::before {
-  background: #0d2818 !important;
-  border-left-color: #00b140 !important;
-  border-bottom-color: #00b140 !important;
+  background: var(--chat-membership-bg, #0d2818) !important;
+  border-left-color: var(--chat-membership-text, #00b140) !important;
+  border-bottom-color: var(--chat-membership-text, #00b140) !important;
 }
 
 /* ── Punctuation badge role colors ──────────────────────────── */
@@ -514,8 +514,8 @@
     .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #message[data-punct]::after {
-  background: #ffd700 !important;
-  color: #1a1a1a !important;
+  background: var(--chat-superchat-text, #1a1a1a) !important;
+  color: var(--chat-superchat-bg, #ffd700) !important;
 }
 
 /* Member Ship */
@@ -524,6 +524,6 @@
     .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #message[data-punct]::after {
-  background: #00b140 !important;
-  color: #0d2818 !important;
+  background: var(--chat-membership-text, #00b140) !important;
+  color: var(--chat-membership-bg, #0d2818) !important;
 }

@@ -188,4 +188,36 @@ export const CORE_SCHEME: SettingDef[] = [
     label: 'Member Text',
     default: '#8bcc47',
   },
+
+  /* ── Super Chat ───────────────────────────────────────── */
+  {
+    key: 'superchat-bg',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Super Chat Bubble Background',
+    default: '#ffd700',
+  },
+  {
+    key: 'superchat-text',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Super Chat Accent',
+    default: '#1a1a1a',
+  },
+
+  /* ── Membership ───────────────────────────────────────── */
+  {
+    key: 'membership-bg',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Membership Bubble Background',
+    default: '#0d2818',
+  },
+  {
+    key: 'membership-text',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Membership Accent',
+    default: '#00ff66',
+  },
 ]

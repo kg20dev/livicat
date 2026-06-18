@@ -201,15 +201,15 @@
   .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='super-chat'],
   .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
 ) {
-  background: linear-gradient(135deg, #3d2f00, #4a2800) !important;
-  border: 1px solid #ffd700 !important;
+  background: var(--superchatBg, #3d2f00) !important;
+  border: 1px solid var(--superchatText, #ffd700) !important;
 }
 :is(
     .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='super-chat'],
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #author-name {
-  color: #ffd700 !important;
+  color: var(--superchatText, #ffd700) !important;
 }
 
 /* Member Ship */
@@ -217,13 +217,13 @@
   .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member-ship'],
   .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
 ) {
-  background: #0d2818 !important;
-  border: 1px solid #00b140 !important;
+  background: var(--membershipBg, #0d2818) !important;
+  border: 1px solid var(--membershipText, #00b140) !important;
 }
 :is(
     .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member-ship'],
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #author-name {
-  color: #00b140 !important;
+  color: var(--membershipText, #00b140) !important;
 }
