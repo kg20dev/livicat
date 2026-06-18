@@ -166,6 +166,13 @@
   #author-name {
   color: var(--ownerUsername, #ff8c42) !important;
 }
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message {
+  color: var(--ownerText, #ff8c42) !important;
+}
 
 /* Moderator */
 :is(
@@ -181,6 +188,13 @@
   )
   #author-name {
   color: var(--modUsername, #4296ff) !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message {
+  color: var(--modText, #4296ff) !important;
 }
 
 /* Member */
@@ -198,6 +212,13 @@
   #author-name {
   color: var(--memberUsername, #ce93d8) !important;
 }
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message {
+  color: var(--memberText, #42cc8b) !important;
+}
 
 /* Super Chat */
 :is(
@@ -214,6 +235,13 @@
   #author-name {
   color: var(--superchatUsername, #ffd700) !important;
 }
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message {
+  color: var(--superchatText, #ffd700) !important;
+}
 
 /* Member Ship */
 :is(
@@ -229,4 +257,11 @@
   )
   #author-name {
   color: var(--membershipUsername, #ffffff) !important;
+}
+:is(
+    .theme-ink-sticker yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message {
+  color: var(--membershipText, #00b140) !important;
 }

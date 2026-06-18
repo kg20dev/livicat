@@ -93,22 +93,33 @@ interface RoleGroup {
 
 function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
   const roleMap: Record<string, { icon: string; keys: string[] }> = {
-    Owner: { icon: 'star', keys: ['owner-bg', 'owner-text', 'chat-owner-username'] },
-    Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text', 'chat-mod-username'] },
-    Member: { icon: 'group', keys: ['member-bg', 'member-text', 'chat-member-username'] },
+    Owner: { icon: 'star', keys: ['owner-bg', 'owner-text'] },
+    Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text'] },
+    Member: { icon: 'group', keys: ['member-bg', 'member-text'] },
     'Super Chat': {
       icon: 'monetization_on',
-      keys: ['superchat-bg', 'superchat-text', 'chat-superchat-username'],
+      keys: ['superchat-bg', 'superchat-text'],
     },
     Membership: {
       icon: 'card_membership',
-      keys: ['membership-bg', 'membership-text', 'chat-membership-username'],
+      keys: ['membership-bg', 'membership-text'],
     },
+  }
+
+  // Theme-specific username color keys (separate from core role colors)
+  const roleKeysForTheme: Record<string, string[]> = {
+    Owner: ['chat-owner-username'],
+    Moderator: ['chat-mod-username'],
+    Member: ['chat-member-username'],
+    'Super Chat': ['chat-superchat-username'],
+    Membership: ['chat-membership-username'],
   }
 
   const groups: RoleGroup[] = []
   for (const [role, { icon, keys }] of Object.entries(roleMap)) {
-    const matched = items.filter((def) => keys.includes(def.key))
+    const usernameKeys = roleKeysForTheme[role] || []
+    const allKeys = [...keys, ...usernameKeys]
+    const matched = items.filter((def) => allKeys.includes(def.key))
     if (matched.length > 0) {
       groups.push({ role, icon, items: matched })
     }
