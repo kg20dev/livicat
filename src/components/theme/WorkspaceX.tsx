@@ -510,7 +510,9 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* ─── Left Panel: Settings ───────────────────────────────── */}
-      {!responsive.isPortrait && (
+      {/* Always show in landscape. In portrait, show only when YouTube
+          preview is open (no split-screen needed, settings takes full width). */}
+      {(!responsive.isPortrait || demoPreviewHidden) && (
         <aside
           className={`${demoPreviewHidden ? 'w-full' : 'w-[360px]'} bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0 transition-all duration-300`}
         >
@@ -610,7 +612,8 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
       )}
 
       {/* ─── Portrait Settings Toggle Button ──────────────────── */}
-      {responsive.isPortrait && (
+      {/* Hidden when demoPreviewHidden is true — settings already visible */}
+      {responsive.isPortrait && !demoPreviewHidden && (
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="fixed top-20 right-4 z-50 bg-primary text-on-primary p-3 rounded-full shadow-lg hover:opacity-90 transition-opacity active:scale-95"
@@ -621,7 +624,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
       )}
 
       {/* ─── Portrait Settings Panel ──────────────────────────── */}
-      {responsive.isPortrait && showSettings && (
+      {responsive.isPortrait && showSettings && !demoPreviewHidden && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => setShowSettings(false)}
