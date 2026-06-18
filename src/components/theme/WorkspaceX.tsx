@@ -504,12 +504,12 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                       <div className="space-y-4">
                         {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
                           <div key={role}>
-                            {idx > 0 && <hr className="border-outline-variant/20 my-[-2px]" />}
-                            <div className="flex items-center gap-1.5 mb-2 mt-1">
-                              <span className="material-symbols-outlined text-[16px] text-primary">
+                            {idx > 0 && <hr className="border-outline-variant/15 my-1" />}
+                            <div className="flex items-center gap-1 mb-1.5">
+                              <span className="material-symbols-outlined text-[13px] text-on-surface-variant/70">
                                 {icon}
                               </span>
-                              <span className="text-label-sm font-semibold text-on-surface">
+                              <span className="text-[11px] font-medium text-on-surface-variant/80 tracking-wide">
                                 {role}
                               </span>
                             </div>
@@ -603,12 +603,12 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                         <div className="space-y-4">
                           {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
                             <div key={role}>
-                              {idx > 0 && <hr className="border-outline-variant/20 my-[-2px]" />}
-                              <div className="flex items-center gap-1.5 mb-2 mt-1">
-                                <span className="material-symbols-outlined text-[16px] text-primary">
+                              {idx > 0 && <hr className="border-outline-variant/15 my-1" />}
+                              <div className="flex items-center gap-1 mb-1.5">
+                                <span className="material-symbols-outlined text-[13px] text-on-surface-variant/70">
                                   {icon}
                                 </span>
-                                <span className="text-label-sm font-semibold text-on-surface">
+                                <span className="text-[11px] font-medium text-on-surface-variant/80 tracking-wide">
                                   {role}
                                 </span>
                               </div>
