@@ -629,7 +629,12 @@ function WorkspaceBody({
             {themeGroups.length > 0 && (
               <div className="space-y-3">
                 <hr className="border-outline-variant/30 my-1" />
+
+                {/* Theme Settings Header - matching Core Settings aesthetic */}
                 <div className="flex items-center gap-2 px-1 py-1">
+                  <span className="material-symbols-outlined text-[18px] text-secondary/70">
+                    palette
+                  </span>
                   <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
                     Theme: {manifest.name}
                   </span>
@@ -730,7 +735,12 @@ function WorkspaceBody({
               {themeGroups.length > 0 && (
                 <div className="space-y-3">
                   <hr className="border-outline-variant/30 my-1" />
+
+                  {/* Theme Settings Header - matching Core Settings aesthetic */}
                   <div className="flex items-center gap-2 px-1 py-1">
+                    <span className="material-symbols-outlined text-[18px] text-secondary/70">
+                      palette
+                    </span>
                     <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
                       Theme: {manifest.name}
                     </span>
