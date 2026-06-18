@@ -100,7 +100,7 @@
   margin-bottom: 0 !important;
   display: inline-block !important;
   width: fit-content !important;
-  text-shadow: 0 0 var(--glowSpread, 6px) var(--usernameColor, #bb86fc) !important;
+  text-shadow: 0 0 var(--glowSpread, 6px) var(--glowColor, #bb86fc) !important;
   animation: theme-ink-sticker-neon 2s cubic-bezier(0.23, 1, 0.32, 1) both !important;
 }
 

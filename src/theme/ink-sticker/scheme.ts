@@ -126,6 +126,13 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
   {
+    key: 'glowColor',
+    section: 'Effects',
+    type: 'color',
+    label: 'Glow Color',
+    default: '#bb86fc',
+  },
+  {
     key: 'chat-max-width',
     section: 'Effects',
     type: 'range',
