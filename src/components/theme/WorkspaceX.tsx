@@ -28,6 +28,9 @@ import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
+/* ─── Core sections (shared across themes) ───────────────────── */
+const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Role Colors'])
+
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
 
 const SECTION_ICONS: Record<string, string> = {
@@ -80,6 +83,39 @@ function groupBySection(
   return groups
 }
 
+/* ─── Role color sub-grouping ──────────────────────────────────── */
+
+interface RoleGroup {
+  role: string
+  icon: string
+  items: ThemeBundle['scheme']
+}
+
+function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
+  const roleMap: Record<string, { icon: string; keys: string[] }> = {
+    Owner: { icon: 'star', keys: ['owner-bg', 'owner-text', 'chat-owner-username'] },
+    Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text', 'chat-mod-username'] },
+    Member: { icon: 'group', keys: ['member-bg', 'member-text', 'chat-member-username'] },
+    'Super Chat': {
+      icon: 'monetization_on',
+      keys: ['superchat-bg', 'superchat-text', 'chat-superchat-username'],
+    },
+    Membership: {
+      icon: 'card_membership',
+      keys: ['membership-bg', 'membership-text', 'chat-membership-username'],
+    },
+  }
+
+  const groups: RoleGroup[] = []
+  for (const [role, { icon, keys }] of Object.entries(roleMap)) {
+    const matched = items.filter((def) => keys.includes(def.key))
+    if (matched.length > 0) {
+      groups.push({ role, icon, items: matched })
+    }
+  }
+  return groups
+}
+
 /* ─── WorkspaceX Component ─────────────────────────────────────── */
 
 export function WorkspaceX() {
@@ -101,18 +137,67 @@ export function WorkspaceX() {
         <span className="material-symbols-outlined text-primary">magic_button</span>
         <span className="text-title-md font-bold text-on-surface">Workspace X</span>
         <div className="w-px h-5 bg-outline-variant/30 mx-1" />
-        <select
-          value={selectedThemeId}
-          onChange={(e) => setSelectedThemeId(e.target.value)}
-          className="bg-surface-container-high text-on-surface text-label-md font-medium rounded-lg px-3 py-1.5 border border-outline-variant outline-none cursor-pointer hover:border-primary/40 focus:border-primary transition-colors"
-        >
-          {THEMES.map((t) => (
-            <option key={t.manifest.id} value={t.manifest.id}>
-              {t.manifest.name}
-            </option>
-          ))}
-        </select>
-        <span className="text-label-sm text-on-surface-variant">by {theme.manifest.creator}</span>
+
+        {/* Theme Cards — scrollable row, scales to 50+ themes */}
+        <div className="flex overflow-x-auto gap-2 flex-1 flex-nowrap py-1 no-scrollbar">
+          {THEMES.map((t) => {
+            // Extract key colors for palette swatches
+            const byKey = (key: string, fallback: string) => {
+              const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+              return def && typeof def.default === 'string' ? def.default : fallback
+            }
+            const palette = [
+              { label: 'BG', color: byKey('bg', '#0d0d0d') },
+              { label: 'Card', color: byKey('chat-msg-bg', byKey('messageBg', '#1a1a1a')) },
+              { label: 'Text', color: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')) },
+              {
+                label: 'Accent',
+                color: byKey('chat-scrollbar-thumb', byKey('strokeColor', '#888888')),
+              },
+            ]
+            const isSelected = selectedThemeId === t.manifest.id
+
+            return (
+              <button
+                key={t.manifest.id}
+                onClick={() => setSelectedThemeId(t.manifest.id)}
+                className={`
+                  flex-shrink-0 w-[160px] bg-surface-container-high rounded-lg p-2.5
+                  border-2 transition-all duration-200 cursor-pointer text-left
+                  ${
+                    isSelected
+                      ? 'border-primary ring-2 ring-primary/30'
+                      : 'border-outline-variant hover:border-primary/40 hover:bg-surface-container-higher'
+                  }
+                `}
+              >
+                {/* Color palette bar */}
+                <div className="flex rounded-md overflow-hidden h-5 mb-2 border border-black/5">
+                  {palette.map((c) => (
+                    <div
+                      key={c.label}
+                      className="flex-1"
+                      style={{ backgroundColor: c.color }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+
+                {/* Theme Name */}
+                <div
+                  className={`text-label-sm font-bold mb-0.5 ${isSelected ? 'text-primary' : 'text-on-surface'}`}
+                >
+                  {t.manifest.name}
+                </div>
+
+                {/* Description */}
+                <div className="text-[11px] text-on-surface-variant/80 leading-tight truncate">
+                  {t.manifest.description}
+                </div>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
@@ -120,6 +205,24 @@ export function WorkspaceX() {
     </div>
   )
 }
+
+/* ─── Live message role assignment (static — no component deps) ─── */
+
+type _LiveRole = 'default' | 'owner' | 'moderator' | 'member' | 'super-chat' | 'member-ship'
+
+const _ROLE_WEIGHTS: { role: _LiveRole; weight: number }[] = [
+  { role: 'default', weight: 60 },
+  { role: 'member', weight: 18 },
+  { role: 'moderator', weight: 10 },
+  { role: 'owner', weight: 5 },
+  { role: 'member-ship', weight: 4 },
+  { role: 'super-chat', weight: 3 },
+]
+
+const _pickRole: () => _LiveRole = (() => {
+  const pool = _ROLE_WEIGHTS.flatMap(({ role, weight }) => Array<_LiveRole>(weight).fill(role))
+  return () => pool[Math.floor(Math.random() * pool.length)]
+})()
 
 /* ─── WorkspaceBody — All stateful content, remounts on theme switch ── */
 
@@ -148,148 +251,90 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   /* ─── Live message streaming ─────────────────────────────────── */
 
   const LIVE_MESSAGES = useMemo(
-    () => [
-      {
-        id: 'l1',
-        username: 'NeonNights',
-        message: 'Hey everyone! 🎉',
-        avatarSeed: 58,
+    () =>
+      (
+        [
+          { id: 'l1', username: 'NeonNights', message: 'Hey everyone! 🎉', avatarSeed: 58 },
+          { id: 'l2', username: 'StreamKing', message: 'Love the stream! 🔥', avatarSeed: 70 },
+          {
+            id: 'l3',
+            username: 'GamerPro_99',
+            message: 'How do I save this theme?',
+            avatarSeed: 5,
+          },
+          {
+            id: 'l4',
+            username: 'PixelPanda',
+            message: 'Can we get more animations?',
+            avatarSeed: 33,
+          },
+          {
+            id: 'l5',
+            username: 'VibeCheck',
+            message: 'This editor is a lifesaver!',
+            avatarSeed: 26,
+          },
+          {
+            id: 'l6',
+            username: 'ChatMaster',
+            message: 'Check out my new stream setup!',
+            avatarSeed: 42,
+          },
+          {
+            id: 'l7',
+            username: 'LiveWire',
+            message: 'First time watching, hi! 👋',
+            avatarSeed: 15,
+          },
+          {
+            id: 'l8',
+            username: 'NeonNights',
+            message: 'Loving the typography options.',
+            avatarSeed: 58,
+          },
+          { id: 'l9', username: 'ShadowFox', message: 'That play was insane! 😱', avatarSeed: 89 },
+          { id: 'l10', username: 'CyberBeam', message: 'What song is this? 🎵', avatarSeed: 44 },
+          {
+            id: 'l11',
+            username: 'VelvetVoice',
+            message: 'Can someone explain the rules?',
+            avatarSeed: 12,
+          },
+          {
+            id: 'l12',
+            username: 'StreamKing',
+            message: 'Hype! Hype! Hype! 🔥🔥🔥',
+            avatarSeed: 70,
+          },
+          { id: 'l13', username: 'GamerPro_99', message: 'GG everyone!', avatarSeed: 5 },
+          { id: 'l14', username: 'PixelPanda', message: 'New subscriber here! 🎊', avatarSeed: 33 },
+          {
+            id: 'l15',
+            username: 'VibeCheck',
+            message: 'This is so relaxing to watch',
+            avatarSeed: 26,
+          },
+          { id: 'l16', username: 'ShadowFox', message: 'The quality is amazing', avatarSeed: 89 },
+          {
+            id: 'l17',
+            username: 'ChatMaster',
+            message: 'How long have you been streaming?',
+            avatarSeed: 42,
+          },
+          {
+            id: 'l18',
+            username: 'VelvetVoice',
+            message: "Keep it up, you're doing great!",
+            avatarSeed: 12,
+          },
+          { id: 'l19', username: 'LiveWire', message: 'LMAO 😂😂😂', avatarSeed: 15 },
+          { id: 'l20', username: 'CyberBeam', message: "What's your rank?", avatarSeed: 44 },
+        ] as const
+      ).map((msg) => ({
+        ...msg,
         timestamp: '10:23 AM',
-      },
-      {
-        id: 'l2',
-        username: 'StreamKing',
-        message: 'Love the stream! 🔥',
-        avatarSeed: 70,
-        timestamp: '10:23 AM',
-      },
-      {
-        id: 'l3',
-        username: 'GamerPro_99',
-        message: 'How do I save this theme?',
-        avatarSeed: 5,
-        timestamp: '10:24 AM',
-      },
-      {
-        id: 'l4',
-        username: 'PixelPanda',
-        message: 'Can we get more animations?',
-        avatarSeed: 33,
-        timestamp: '10:24 AM',
-      },
-      {
-        id: 'l5',
-        username: 'VibeCheck',
-        message: 'This editor is a lifesaver!',
-        avatarSeed: 26,
-        timestamp: '10:25 AM',
-      },
-      {
-        id: 'l6',
-        username: 'ChatMaster',
-        message: 'Check out my new stream setup!',
-        avatarSeed: 42,
-        timestamp: '10:25 AM',
-      },
-      {
-        id: 'l7',
-        username: 'LiveWire',
-        message: 'First time watching, hi! 👋',
-        avatarSeed: 15,
-        timestamp: '10:26 AM',
-      },
-      {
-        id: 'l8',
-        username: 'NeonNights',
-        message: 'Loving the typography options.',
-        avatarSeed: 58,
-        timestamp: '10:26 AM',
-      },
-      {
-        id: 'l9',
-        username: 'ShadowFox',
-        message: 'That play was insane! 😱',
-        avatarSeed: 89,
-        timestamp: '10:27 AM',
-      },
-      {
-        id: 'l10',
-        username: 'CyberBeam',
-        message: 'What song is this? 🎵',
-        avatarSeed: 44,
-        timestamp: '10:27 AM',
-      },
-      {
-        id: 'l11',
-        username: 'VelvetVoice',
-        message: 'Can someone explain the rules?',
-        avatarSeed: 12,
-        timestamp: '10:28 AM',
-      },
-      {
-        id: 'l12',
-        username: 'StreamKing',
-        message: 'Hype! Hype! Hype! 🔥🔥🔥',
-        avatarSeed: 70,
-        timestamp: '10:28 AM',
-      },
-      {
-        id: 'l13',
-        username: 'GamerPro_99',
-        message: 'GG everyone!',
-        avatarSeed: 5,
-        timestamp: '10:29 AM',
-      },
-      {
-        id: 'l14',
-        username: 'PixelPanda',
-        message: 'New subscriber here! 🎊',
-        avatarSeed: 33,
-        timestamp: '10:29 AM',
-      },
-      {
-        id: 'l15',
-        username: 'VibeCheck',
-        message: 'This is so relaxing to watch',
-        avatarSeed: 26,
-        timestamp: '10:30 AM',
-      },
-      {
-        id: 'l16',
-        username: 'ShadowFox',
-        message: 'The quality is amazing',
-        avatarSeed: 89,
-        timestamp: '10:30 AM',
-      },
-      {
-        id: 'l17',
-        username: 'ChatMaster',
-        message: 'How long have you been streaming?',
-        avatarSeed: 42,
-        timestamp: '10:31 AM',
-      },
-      {
-        id: 'l18',
-        username: 'VelvetVoice',
-        message: "Keep it up, you're doing great!",
-        avatarSeed: 12,
-        timestamp: '10:31 AM',
-      },
-      {
-        id: 'l19',
-        username: 'LiveWire',
-        message: 'LMAO 😂😂😂',
-        avatarSeed: 15,
-        timestamp: '10:32 AM',
-      },
-      {
-        id: 'l20',
-        username: 'CyberBeam',
-        message: "What's your rank?",
-        avatarSeed: 44,
-        timestamp: '10:32 AM',
-      },
-    ],
+        role: _pickRole(),
+      })),
     []
   )
 
@@ -448,13 +493,27 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   /* ─── Layout ─────────────────────────────────────────────────── */
 
   const sections = useMemo(() => groupBySection(scheme), [scheme])
+  const { coreGroups, themeGroups } = useMemo(() => {
+    const core: { section: string; items: ThemeBundle['scheme'] }[] = []
+    const theme: typeof core = []
+    for (const g of sections) {
+      if (CORE_SECTION_NAMES.has(g.section)) {
+        core.push(g)
+      } else {
+        theme.push(g)
+      }
+    }
+    return { coreGroups: core, themeGroups: theme }
+  }, [sections])
   const themeCss = theme.css
   const [showSettings, setShowSettings] = useState(false)
 
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* ─── Left Panel: Settings ───────────────────────────────── */}
-      {!responsive.isPortrait && (
+      {/* Always show in landscape. In portrait, show only when YouTube
+          preview is open (no split-screen needed, settings takes full width). */}
+      {(!responsive.isPortrait || demoPreviewHidden) && (
         <aside
           className={`${demoPreviewHidden ? 'w-full' : 'w-[360px]'} bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0 transition-all duration-300`}
         >
@@ -484,22 +543,78 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
           )}
           {/* Scrollable settings */}
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-            {sections.map(({ section, items }) => (
-              <CollapsibleSection
-                key={section}
-                icon={getSectionIcon(section)}
-                title={section}
-                defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
-              >
-                <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
-              </CollapsibleSection>
-            ))}
+            {/* ★ Core Settings — shared across all themes */}
+            {coreGroups.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-1 py-1">
+                  <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
+                    ★ Core Settings
+                  </span>
+                </div>
+                {coreGroups.map(({ section, items }) => (
+                  <CollapsibleSection
+                    key={section}
+                    icon={getSectionIcon(section)}
+                    title={section}
+                    defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+                  >
+                    {section === 'Role Colors' ? (
+                      <div className="space-y-4">
+                        {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
+                          <div key={role}>
+                            {idx > 0 && <hr className="border-outline-variant/15 my-1" />}
+                            <div className="flex items-center gap-1 mb-1.5">
+                              <span className="material-symbols-outlined text-[13px] text-on-surface-variant/70">
+                                {icon}
+                              </span>
+                              <span className="text-[11px] font-medium text-on-surface-variant/80 tracking-wide">
+                                {role}
+                              </span>
+                            </div>
+                            <SettingsPanel
+                              scheme={roleItems}
+                              values={settings}
+                              onChange={updateSetting}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    )}
+                  </CollapsibleSection>
+                ))}
+              </div>
+            )}
+
+            {/* Theme-specific settings */}
+            {themeGroups.length > 0 && (
+              <div className="space-y-3">
+                <hr className="border-outline-variant/30 my-1" />
+                <div className="flex items-center gap-2 px-1 py-1">
+                  <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                    Theme: {manifest.name}
+                  </span>
+                </div>
+                {themeGroups.map(({ section, items }) => (
+                  <CollapsibleSection
+                    key={section}
+                    icon={getSectionIcon(section)}
+                    title={section}
+                    defaultOpen={section !== 'Visibility'}
+                  >
+                    <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                  </CollapsibleSection>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
       )}
 
       {/* ─── Portrait Settings Toggle Button ──────────────────── */}
-      {responsive.isPortrait && (
+      {/* Hidden when demoPreviewHidden is true — settings already visible */}
+      {responsive.isPortrait && !demoPreviewHidden && (
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="fixed top-20 right-4 z-50 bg-primary text-on-primary p-3 rounded-full shadow-lg hover:opacity-90 transition-opacity active:scale-95"
@@ -510,7 +625,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
       )}
 
       {/* ─── Portrait Settings Panel ──────────────────────────── */}
-      {responsive.isPortrait && showSettings && (
+      {responsive.isPortrait && showSettings && !demoPreviewHidden && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => setShowSettings(false)}
@@ -529,16 +644,69 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-              {sections.map(({ section, items }) => (
-                <CollapsibleSection
-                  key={section}
-                  icon={getSectionIcon(section)}
-                  title={section}
-                  defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
-                >
-                  <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
-                </CollapsibleSection>
-              ))}
+              {coreGroups.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1 py-1">
+                    <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
+                      ★ Core Settings
+                    </span>
+                  </div>
+                  {coreGroups.map(({ section, items }) => (
+                    <CollapsibleSection
+                      key={section}
+                      icon={getSectionIcon(section)}
+                      title={section}
+                      defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+                    >
+                      {section === 'Role Colors' ? (
+                        <div className="space-y-4">
+                          {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
+                            <div key={role}>
+                              {idx > 0 && <hr className="border-outline-variant/15 my-1" />}
+                              <div className="flex items-center gap-1 mb-1.5">
+                                <span className="material-symbols-outlined text-[13px] text-on-surface-variant/70">
+                                  {icon}
+                                </span>
+                                <span className="text-[11px] font-medium text-on-surface-variant/80 tracking-wide">
+                                  {role}
+                                </span>
+                              </div>
+                              <SettingsPanel
+                                scheme={roleItems}
+                                values={settings}
+                                onChange={updateSetting}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                      )}
+                    </CollapsibleSection>
+                  ))}
+                </div>
+              )}
+
+              {themeGroups.length > 0 && (
+                <div className="space-y-3">
+                  <hr className="border-outline-variant/30 my-1" />
+                  <div className="flex items-center gap-2 px-1 py-1">
+                    <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                      Theme: {manifest.name}
+                    </span>
+                  </div>
+                  {themeGroups.map(({ section, items }) => (
+                    <CollapsibleSection
+                      key={section}
+                      icon={getSectionIcon(section)}
+                      title={section}
+                      defaultOpen={section !== 'Visibility'}
+                    >
+                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    </CollapsibleSection>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -279,7 +279,12 @@ export default function App() {
       )}
 
       {/* Sidebar (line 137-161) */}
-      <Sidebar activeItem={activeNav} onNavigate={setActiveNav}>
+      <Sidebar
+        activeItem={activeNav}
+        onNavigate={setActiveNav}
+        isCollapsed={isCollapsed}
+        toggle={toggle}
+      >
         <Sidebar.Header />
         <Sidebar.Nav />
       </Sidebar>

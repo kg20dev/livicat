@@ -16,10 +16,70 @@ function getGoogleFontImport(fontFamily: string): string | null {
   return `@import url('${url}');`
 }
 
+/* ── Contrasting chip helper ────────────────────────────────────── */
+/**
+ * Derive a chip background from a role bubble background.
+ * Keeps the same hue (harmony) but shifts lightness in the opposite
+ * direction — dark bubbles get a medium-light chip, light bubbles
+ * get a darker chip — so the chip clearly stands out from the bubble.
+ */
+function chipFromBg(hex: string): string {
+  const h = hex.replace('#', '')
+  let r = parseInt(h.substring(0, 2), 16) / 255
+  let g = parseInt(h.substring(2, 4), 16) / 255
+  let b = parseInt(h.substring(4, 6), 16) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let hue = 0
+  let sat = 0
+  const lit = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        hue = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        hue = ((b - r) / d + 2) / 6
+        break
+      case b:
+        hue = ((r - g) / d + 4) / 6
+        break
+    }
+  }
+
+  // Same hue, shift lightness in opposite direction
+  const targetL = lit < 0.35 ? 0.45 : 0.3
+  // Boost saturation for dark bgs, keep original for light bgs
+  const targetS = lit < 0.35 ? Math.max(sat, 0.65) : sat
+
+  // HSL → RGB
+  const fn = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1
+    if (t > 1) t -= 1
+    if (t < 1 / 6) return p + (q - p) * 6 * t
+    if (t < 1 / 2) return q
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+    return p
+  }
+
+  const q = targetL < 0.5 ? targetL * (1 + targetS) : targetL + targetS - targetL * targetS
+  const p = 2 * targetL - q
+
+  r = Math.round(fn(p, q, hue + 1 / 3) * 255)
+  g = Math.round(fn(p, q, hue) * 255)
+  b = Math.round(fn(p, q, hue - 1 / 3) * 255)
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
   const imports: string[] = []
   // Check for Google Font import
-  const fontFamily = settings['chat-font-family'] as string | undefined
+  const fontFamily = settings['font-family'] as string | undefined
   if (fontFamily) {
     const fontImport = getGoogleFontImport(fontFamily)
     if (fontImport) imports.push(fontImport)
@@ -27,17 +87,27 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   const lines: string[] = imports.length > 0 ? [...imports, '', ':root {'] : [':root {']
   for (const def of scheme) {
     const value = settings[def.key] ?? def.default
+    // Use cssVar when set, otherwise fall back to the UI key
+    const cssName = def.cssVar || def.key
     // Append unit for numeric range settings (px, em etc.)
     // Skip '%' — used in calc(.../100) and needs to remain unitless
     if (def.type === 'range' && def.unit && def.unit !== '%') {
-      lines.push(`  --${def.key}: ${value}${def.unit};`)
+      lines.push(`  --${cssName}: ${value}${def.unit};`)
     } else {
-      lines.push(`  --${def.key}: ${value};`)
+      lines.push(`  --${cssName}: ${value};`)
+    }
+    // Derive chip background from role bg colors
+    // Same hue, opposite lightness — chip stands out from the bubble
+    if (cssName.endsWith('-bg') && def.type === 'color') {
+      const chipVar = cssName.replace(/-bg$/, '-chip-bg')
+      const hex =
+        typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
+      lines.push(`  --${chipVar}: ${chipFromBg(hex)};`)
     }
   }
 
-  // Animation-derived variables (for IM theme)
-  const animSpeed = (settings['chat-animation-speed'] as string) ?? 'normal'
+  // Animation-derived variables
+  const animSpeed = (settings['animation-speed'] as string) ?? 'normal'
   if (animSpeed === 'none') {
     lines.push('  --animation-duration: 0s;')
     lines.push('  --chip-duration: 0s;')
@@ -52,14 +122,14 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('  --chip-delay: 0.05s;')
   }
 
-  // Message spacing (for IM theme)
-  const spacing = (settings['chat-message-spacing'] as string) ?? 'normal'
+  // Message spacing (computed px values)
+  const spacing = (settings['message-spacing'] as string) ?? 'normal'
   if (spacing === 'compact') lines.push('  --chat-message-spacing: 4px;')
   else if (spacing === 'comfortable') lines.push('  --chat-message-spacing: 16px;')
   else lines.push('  --chat-message-spacing: 10px;')
 
-  // Username weight (for IM theme)
-  const bold = settings['chat-username-font-weight']
+  // Username weight (computed 400/700)
+  const bold = settings['username-bold']
   lines.push(`  --chat-username-font-weight: ${bold ? 700 : 400};`)
 
   // Close :root block

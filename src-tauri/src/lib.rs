@@ -140,25 +140,25 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
-//     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
-//     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
-//     #[cfg(target_os = "windows")]
-//     {
-//         let window_clone = window.clone();
-//         std::thread::spawn(move || {
-//             loop {
-//                 std::thread::sleep(std::time::Duration::from_millis(500));
-//                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
-//                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
-//                     Ok(_) => {}
-//                     Err(e) => {
-//                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
-//                         break;
-//                     }
-//                 }
-//             }
-//         });
-//     }
+    //     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
+    //     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
+    //     #[cfg(target_os = "windows")]
+    //     {
+    //         let window_clone = window.clone();
+    //         std::thread::spawn(move || {
+    //             loop {
+    //                 std::thread::sleep(std::time::Duration::from_millis(500));
+    //                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
+    //                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
+    //                     Ok(_) => {}
+    //                     Err(e) => {
+    //                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         });
+    //     }
 
     Ok(())
 }
@@ -270,10 +270,42 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
                 style.textContent = {};
                 document.head.appendChild(style);
                 console.log('[Livicat] CSS injected successfully');
-                return true;
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
-                return false;
+            }}
+
+            /* ── Punctuation badge observer (injected once) ── */
+            if (!window.__livicat_punct) {{
+                window.__livicat_punct = true;
+                function __livicat_set_punct(el) {{
+                    var text = el.textContent || '';
+                    if (/[?!]$/.test(text)) {{
+                        el.setAttribute('data-punct', text.slice(-1));
+                    }} else {{
+                        el.removeAttribute('data-punct');
+                    }}
+                }}
+                var __livicat_obs = new MutationObserver(function(muts) {{
+                    for (var i = 0; i < muts.length; i++) {{
+                        var nodes = muts[i].addedNodes;
+                        for (var j = 0; j < nodes.length; j++) {{
+                            var n = nodes[j];
+                            if (n.nodeType === 1) {{
+                                if (n.matches && n.matches('yt-live-chat-text-message-renderer')) {{
+                                    var m = n.querySelector('#message');
+                                    if (m) __livicat_set_punct(m);
+                                }}
+                                if (n.id === 'message' || n.querySelector && n.querySelector('#message')) {{
+                                    var m = n.id === 'message' ? n : n.querySelector('#message');
+                                    if (m) __livicat_set_punct(m);
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+                __livicat_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                document.querySelectorAll('yt-live-chat-text-message-renderer #message').forEach(__livicat_set_punct);
+                console.log('[Livicat] Punct observer ready');
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?
@@ -283,7 +315,7 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection script executed");
+    println!("[Livicat] CSS injection + punct observer executed");
     Ok(())
 }
 
@@ -449,7 +481,7 @@ pub fn run() {
              --in-process-gpu \
              --disable-frame-rate-limit \
              --disable-backgrounding-occluded-windows \
-             --disable-background-timer-throttling"
+             --disable-background-timer-throttling",
         );
         println!("[Livicat] Set WebView2 browser flags: --disable-gpu --disable-software-rasterizer --in-process-gpu --disable-frame-rate-limit --disable-backgrounding-occluded-windows --disable-background-timer-throttling");
     }
