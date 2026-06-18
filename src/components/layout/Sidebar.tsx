@@ -27,6 +27,9 @@ interface SidebarRootProps {
   onNavigate?: (item: string) => void
   children: React.ReactNode
   className?: string
+  /** Shared collapsed state from parent — avoids duplicate hook instances */
+  isCollapsed?: boolean
+  toggle?: () => void
 }
 
 export default function Sidebar({
@@ -34,8 +37,12 @@ export default function Sidebar({
   onNavigate = () => {},
   children,
   className = '',
+  isCollapsed: externalCollapsed,
+  toggle: externalToggle,
 }: SidebarRootProps) {
-  const { isCollapsed, toggle } = useSidebarCollapsed()
+  const internal = useSidebarCollapsed()
+  const isCollapsed = externalCollapsed ?? internal.isCollapsed
+  const toggle = externalToggle ?? internal.toggle
   const isVisible = !isCollapsed
 
   const handleBackdropClick = () => {
