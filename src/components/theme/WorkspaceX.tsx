@@ -29,7 +29,7 @@ import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
 /* ─── Core sections (shared across themes) ───────────────────── */
-const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Typography', 'Avatar', 'Role Colors'])
+const CORE_SECTION_NAMES = new Set(['OBS', 'Common', 'YouTube', 'Typography', 'Avatar', 'Role Colors'])
 
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
 
@@ -40,12 +40,9 @@ const SECTION_ICONS: Record<string, string> = {
   Avatar: 'face',
   Common: 'tune',
   Visibility: 'visibility',
-  Role Colors: 'palette',
-  Colors: 'palette',
+  'Role Colors': 'palette',
   Typography: 'text_fields',
   Effects: 'brush',
-  Avatar: 'face', // duplicate, but used for avatar section
-}
   Frame: 'frame_reload',
 }
 
@@ -95,6 +92,7 @@ interface RoleGroup {
 
 function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
   const roleMap: Record<string, { icon: string; keys: string[] }> = {
+    Default: { icon: 'palette', keys: ['bg', 'text-color', 'username-color'] },
     Owner: { icon: 'star', keys: ['owner-bg', 'owner-text'] },
     Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text'] },
     Member: { icon: 'group', keys: ['member-bg', 'member-text'] },
@@ -669,7 +667,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                       key={section}
                       icon={getSectionIcon(section)}
                       title={section}
-                      defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+defaultOpen={section !== 'YouTube'}
                     >
                       {section === 'Role Colors' ? (
                         <div className="space-y-4">

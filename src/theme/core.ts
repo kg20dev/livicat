@@ -23,26 +23,26 @@ export const CORE_SCHEME: SettingDef[] = [
     default: false,
   },
 
-  /* ── Colors ──────────────────────────────────────────────── */
+  /* ── Role Colors (includes general defaults) ────────────── */
   {
     key: 'bg',
-    section: 'Colors',
+    section: 'Role Colors',
     type: 'color',
     label: 'Background',
     default: '#1a1a1a',
   },
   {
     key: 'text-color',
-    section: 'Colors',
+    section: 'Role Colors',
     type: 'color',
     label: 'Text Color',
     default: '#e5e2e1',
   },
   {
     key: 'username-color',
-    section: 'Colors',
+    section: 'Role Colors',
     type: 'color',
-    label: 'Username',
+    label: 'Username Color',
     default: '#d6baff',
   },
 
@@ -92,13 +92,6 @@ export const CORE_SCHEME: SettingDef[] = [
     ],
   },
   {
-    key: 'username-bold',
-    section: 'Common',
-    type: 'toggle',
-    label: 'Bold Username',
-    default: true,
-  },
-  {
     key: 'margin-left',
     cssVar: 'chat-margin-left',
     section: 'Common',
@@ -108,18 +101,6 @@ export const CORE_SCHEME: SettingDef[] = [
     max: 100,
     default: 0,
     unit: 'px',
-  },
-  {
-    key: 'font-family',
-    cssVar: 'chat-font-family',
-    section: 'Common',
-    type: 'select',
-    label: 'Font Family',
-    default: 'inherit',
-    options: [
-      { value: 'inherit', label: 'Default' },
-      ...FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label })),
-    ],
   },
 
   /* ── YouTube ──────────────────────────────────────────── */
@@ -147,6 +128,18 @@ export const CORE_SCHEME: SettingDef[] = [
 
   /* ── Typography ────────────────────────────────────────── */
   {
+    key: 'font-family',
+    cssVar: 'chat-font-family',
+    section: 'Typography',
+    type: 'select',
+    label: 'Font Family',
+    default: 'inherit',
+    options: [
+      { value: 'inherit', label: 'Default' },
+      ...FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label })),
+    ],
+  },
+  {
     key: 'usernameFontSize',
     section: 'Typography',
     type: 'range',
@@ -167,6 +160,27 @@ export const CORE_SCHEME: SettingDef[] = [
     default: 14,
     unit: 'px',
     cssVar: 'messageFontSize',
+  },
+  {
+    key: 'font-weight-message',
+    section: 'Typography',
+    type: 'select',
+    label: 'Message Weight',
+    default: '400',
+    options: [
+      { value: '400', label: 'Normal (400)' },
+      { value: '500', label: 'Medium (500)' },
+      { value: '600', label: 'Semibold (600)' },
+      { value: '700', label: 'Bold (700)' },
+    ],
+    cssVar: 'chat-message-font-weight',
+  },
+  {
+    key: 'username-bold',
+    section: 'Typography',
+    type: 'toggle',
+    label: 'Bold Username',
+    default: true,
   },
 
   /* ── Avatar ────────────────────────────────────────────── */
@@ -193,9 +207,7 @@ export const CORE_SCHEME: SettingDef[] = [
     cssVar: 'chat-avatar-vertical-offset',
   },
 
-  /* ── Common ──────────────────────────────────────────────── */
-
-  /* ── Role Colors ────────────────────────────────────────── */
+  /* ── Role-specific colors ─────────────────────────────── */
   {
     key: 'owner-bg',
     section: 'Role Colors',

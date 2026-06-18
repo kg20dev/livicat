@@ -108,6 +108,7 @@
 .theme-ink-sticker yt-live-chat-text-message-renderer #message {
   color: var(--messageColor, #e0e0e0) !important;
   font-size: var(--messageFontSize, 14px) !important;
+  font-weight: var(--messageFontWeight, 400) !important;
   line-height: 1.5 !important;
   overflow-wrap: anywhere !important;
   white-space: pre-wrap !important;
