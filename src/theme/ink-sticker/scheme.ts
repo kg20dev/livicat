@@ -8,12 +8,13 @@ import type { SettingDef } from '../types'
  * so buildCSSVariables emits the correct `--var-name`.
  */
 /**
- * Maps text color CSS variable names → stroke CSS variable names.
- * buildCSSVariables uses this to auto-derive harmonious stroke values
- * via harmonyInvertColor(). Only themes that support text stroke export this.
+ * Maps source CSS variable names → derived CSS variable names.
+ * buildCSSVariables uses this to auto-derive harmonious colors
+ * via harmonyInvertColor(). Only themes that export this get auto-derivation.
  */
 export const strokeMap: Record<string, string> = {
   messageColor: 'strokeColor',
+  usernameColor: 'glowColor',
   ownerText: 'ownerStroke',
   modText: 'modStroke',
   memberText: 'memberStroke',
@@ -95,13 +96,6 @@ export const scheme: SettingDef[] = [
     max: 30,
     default: 6,
     unit: 'px',
-  },
-  {
-    key: 'glowColor',
-    section: 'Effects',
-    type: 'color',
-    label: 'Glow Color',
-    default: '#bb86fc',
   },
   {
     key: 'chat-max-width',
