@@ -168,10 +168,13 @@ export const CORE_SCHEME: SettingDef[] = [
     label: 'Message Weight',
     default: '400',
     options: [
+      { value: '300', label: 'Light (300)' },
       { value: '400', label: 'Normal (400)' },
       { value: '500', label: 'Medium (500)' },
       { value: '600', label: 'Semibold (600)' },
       { value: '700', label: 'Bold (700)' },
+      { value: '800', label: 'Extra Bold (800)' },
+      { value: '900', label: 'Black (900)' },
     ],
     cssVar: 'chat-message-font-weight',
   },
