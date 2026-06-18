@@ -131,14 +131,21 @@ jobs:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for PR approval
+      - name: Wait for PR approval or merge
         run: |
           PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
           echo "Waiting for approval on PR #$PR_NUMBER..."
           echo "PR URL: ${{ needs.prepare-release.outputs.pr_url }}"
           
-          # Wait for required reviews
           while true; do
+            # Check if PR was already merged (user merged from UI)
+            STATE=$(gh pr view $PR_NUMBER --json state,merged --jq '.state' 2>/dev/null)
+            MERGED=$(gh pr view $PR_NUMBER --json state,merged --jq '.merged' 2>/dev/null)
+            if [ "$MERGED" = "true" ]; then
+              echo "✅ PR already merged — proceeding"
+              exit 0
+            fi
+            # Check for approval
             REVIEWS=$(gh pr view $PR_NUMBER --json reviews --jq '.reviews[] | select(.state=="APPROVED") | .author.login' 2>/dev/null | wc -l)
             if [ "$REVIEWS" -ge 1 ]; then
               echo "✅ PR approved"
@@ -164,10 +171,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PAT }}
 
-      - name: Merge PR
+      - name: Merge PR (if not already merged)
         run: |
           PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
-          gh pr merge $PR_NUMBER --squash --delete-branch
+          MERGED=$(gh pr view $PR_NUMBER --json merged --jq '.merged' 2>/dev/null)
+          if [ "$MERGED" = "true" ]; then
+            echo "✅ PR #$PR_NUMBER already merged — skipping merge"
+          else
+            gh pr merge $PR_NUMBER --squash --delete-branch
+          fi
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
 
