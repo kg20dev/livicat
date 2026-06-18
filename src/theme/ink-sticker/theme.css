@@ -161,7 +161,7 @@
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='owner']
   )
   #author-name {
-  color: var(--ownerText, #ff8c42) !important;
+  color: var(--ownerUsername, #ff8c42) !important;
 }
 
 /* Moderator */
@@ -177,7 +177,7 @@
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='moderator']
   )
   #author-name {
-  color: var(--modText, #4296ff) !important;
+  color: var(--modUsername, #4296ff) !important;
 }
 
 /* Member */
@@ -193,7 +193,7 @@
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member']
   )
   #author-name {
-  color: var(--memberText, #42cc8b) !important;
+  color: var(--memberUsername, #ce93d8) !important;
 }
 
 /* Super Chat */
@@ -209,7 +209,7 @@
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #author-name {
-  color: var(--superchatText, #ffd700) !important;
+  color: var(--superchatUsername, #ffd700) !important;
 }
 
 /* Member Ship */
@@ -225,5 +225,5 @@
     .theme-ink-sticker yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #author-name {
-  color: var(--membershipText, #00b140) !important;
+  color: var(--membershipUsername, #ffffff) !important;
 }

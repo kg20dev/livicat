@@ -157,6 +157,48 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
+  /* ── Role Colors (username shades, matching Colour Bubble for consistency) ── */
+  {
+    key: 'chat-owner-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Owner Username',
+    default: '#ff8c42',
+    cssVar: 'ownerUsername',
+  },
+  {
+    key: 'chat-mod-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Mod Username',
+    default: '#4296ff',
+    cssVar: 'modUsername',
+  },
+  {
+    key: 'chat-member-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Member Username',
+    default: '#ce93d8',
+    cssVar: 'memberUsername',
+  },
+  {
+    key: 'chat-superchat-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Super Chat Username',
+    default: '#ffd700',
+    cssVar: 'superchatUsername',
+  },
+  {
+    key: 'chat-membership-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Membership Username',
+    default: '#ffffff',
+    cssVar: 'membershipUsername',
+  },
+
   /* ── Frame ──────────────────────────────────────────────── */
   { key: 'includeFrame', section: 'Frame', type: 'toggle', label: 'Include Frame', default: false },
   {
