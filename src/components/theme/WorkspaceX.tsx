@@ -206,6 +206,24 @@ export function WorkspaceX() {
   )
 }
 
+/* ─── Live message role assignment (static — no component deps) ─── */
+
+type _LiveRole = 'default' | 'owner' | 'moderator' | 'member' | 'super-chat' | 'member-ship'
+
+const _ROLE_WEIGHTS: { role: _LiveRole; weight: number }[] = [
+  { role: 'default', weight: 60 },
+  { role: 'member', weight: 18 },
+  { role: 'moderator', weight: 10 },
+  { role: 'owner', weight: 5 },
+  { role: 'member-ship', weight: 4 },
+  { role: 'super-chat', weight: 3 },
+]
+
+const _pickRole: () => _LiveRole = (() => {
+  const pool = _ROLE_WEIGHTS.flatMap(({ role, weight }) => Array<_LiveRole>(weight).fill(role))
+  return () => pool[Math.floor(Math.random() * pool.length)]
+})()
+
 /* ─── WorkspaceBody — All stateful content, remounts on theme switch ── */
 
 function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
@@ -231,23 +249,6 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   const [demoPreviewHidden, setDemoPreviewHidden] = useState(false)
 
   /* ─── Live message streaming ─────────────────────────────────── */
-
-  type LiveRole = 'default' | 'owner' | 'moderator' | 'member' | 'super-chat' | 'member-ship'
-
-  const ROLE_WEIGHTS: { role: LiveRole; weight: number }[] = [
-    { role: 'default', weight: 60 },
-    { role: 'member', weight: 18 },
-    { role: 'moderator', weight: 10 },
-    { role: 'owner', weight: 5 },
-    { role: 'member-ship', weight: 4 },
-    { role: 'super-chat', weight: 3 },
-  ]
-
-  const weightedRoles = ROLE_WEIGHTS.flatMap(({ role, weight }) => Array(weight).fill(role))
-
-  function pickRole(): LiveRole {
-    return weightedRoles[Math.floor(Math.random() * weightedRoles.length)]
-  }
 
   const LIVE_MESSAGES = useMemo(
     () =>
@@ -332,7 +333,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
       ).map((msg) => ({
         ...msg,
         timestamp: '10:23 AM',
-        role: pickRole(),
+        role: _pickRole(),
       })),
     []
   )
