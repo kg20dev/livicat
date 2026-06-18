@@ -248,7 +248,9 @@ export function ThemePreview({
           <div className="livicat-gallery-grid overflow-y-auto h-full">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
-                <span className="livicat-gallery-label">{ROLE_LABELS[msg.role ?? 'default'] ?? msg.role}</span>
+                <span className="livicat-gallery-label">
+                  {ROLE_LABELS[msg.role ?? 'default'] ?? msg.role}
+                </span>
                 <ChatMessage message={msg} showAvatar={showAvatars} />
               </div>
             ))}
@@ -294,7 +296,10 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
           <div id="author-name">{message.username}</div>
         </yt-live-chat-author-chip>
         <div id="message-container">
-          <div id="message" data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}>
+          <div
+            id="message"
+            data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}
+          >
             {message.message}
           </div>
         </div>
