@@ -332,3 +332,77 @@ yt-live-chat-author-chip {
     max-width: 100% !important;
   }
 }
+
+/* ─── Luminous Red Logo Hover Effect ───────────────────────────────── */
+.logo-luminous-hover {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.logo-luminous-hover .logo-icon {
+  transition: all 0.3s ease;
+  filter: brightness(1) saturate(1);
+}
+
+.logo-luminous-hover .logo-text {
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover state - luminous red glow */
+.logo-luminous-hover:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 68, 68, 0.1),
+    0 0 20px rgba(255, 68, 68, 0.3),
+    0 0 40px rgba(255, 68, 68, 0.2),
+    0 0 60px rgba(255, 68, 68, 0.1);
+  border-color: rgba(255, 68, 68, 0.3);
+  backdrop-filter: blur(20px) saturate(130%) brightness(1.15);
+}
+
+.logo-luminous-hover:hover .logo-icon {
+  filter: brightness(1.3) saturate(1.2) drop-shadow(0 0 12px rgba(255, 68, 68, 0.8));
+  transform: rotate(12deg) scale(1.1);
+}
+
+.logo-luminous-hover:hover .logo-text {
+  background: linear-gradient(135deg, #ff4444 0%, #ff8888 50%, #ff4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.6));
+  animation: textShimmer 2s ease-in-out infinite;
+}
+
+/* Shimmer animation for text on hover */
+@keyframes textShimmer {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(255, 68, 68, 0.9));
+  }
+}
+
+/* Focus state for accessibility */
+.logo-luminous-hover:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px rgba(255, 68, 68, 0.1),
+    0 0 20px rgba(255, 68, 68, 0.4),
+    0 0 40px rgba(255, 68, 68, 0.3),
+    0 0 0 4px rgba(255, 68, 68, 0.2);
+}
+
+/* Active state */
+.logo-luminous-hover:active {
+  transform: scale(0.95);
+  box-shadow:
+    0 0 0 1px rgba(255, 68, 68, 0.15),
+    0 0 12px rgba(255, 68, 68, 0.4),
+    0 0 20px rgba(255, 68, 68, 0.2);
+}

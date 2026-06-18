@@ -34,16 +34,16 @@ TopBar.LogoButton = function TopBarLogoButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2 pr-4 rounded-lg glass-light hover:glass-medium transition-all active:scale-95 group"
+      className="flex items-center gap-2 p-2 pr-4 rounded-lg glass-light hover:glass-medium transition-all active:scale-95 group logo-luminous-hover"
       title={title}
       aria-label={title}
     >
       <img
         src="/livicat-icon.png"
         alt="Livicat"
-        className="w-8 h-8 transition-transform group-hover:rotate-12"
+        className="w-8 h-8 transition-transform group-hover:rotate-12 logo-icon"
       />
-      <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight">
+      <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight logo-text">
         Livicat
       </span>
     </button>
