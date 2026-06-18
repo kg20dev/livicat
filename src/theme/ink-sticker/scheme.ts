@@ -62,7 +62,7 @@ export const scheme: SettingDef[] = [
     type: 'range',
     label: 'Avatar Vertical Offset',
     min: -20,
-    max: 20,
+    max: 60,
     default: 0,
     unit: 'px',
   },
