@@ -245,7 +245,7 @@
   z-index: 2 !important;
   display: inline-block !important;
   width: fit-content !important;
-  max-width: 100% !important;
+  max-width: var(--chat-max-width, 400px) !important;
   padding: 2px 10px !important;
   border-radius: 12px !important;
   background: var(--chat-msg-chip-bg, #737373) !important;
@@ -269,7 +269,7 @@
   z-index: 1 !important;
   display: inline-block !important;
   width: fit-content !important;
-  max-width: 100% !important;
+  max-width: var(--chat-max-width, 400px) !important;
   padding: var(--chat-msg-padding, 8px 14px) !important;
   border: var(--chat-border-width, 2px) solid var(--chat-msg-color, #e5e2e1) !important;
   border-radius: var(--chat-border-radius, 12px) !important;
