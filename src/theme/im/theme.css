@@ -309,12 +309,12 @@
   position: absolute !important;
   top: -10px !important;
   right: -10px !important;
-  width: 24px !important;
-  height: 24px !important;
+  width: var(--chat-punct-size, 24px) !important;
+  height: var(--chat-punct-size, 24px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 16px !important;
+  font-size: calc(var(--chat-punct-size, 24px) * 0.65) !important;
   font-weight: 900 !important;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
   line-height: 1 !important;

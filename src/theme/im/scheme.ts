@@ -93,6 +93,16 @@ export const scheme: SettingDef[] = [
     default: 400,
     unit: 'px',
   },
+  {
+    key: 'chat-punct-size',
+    section: 'Bubble',
+    type: 'range',
+    label: 'Punct Badge Size',
+    min: 16,
+    max: 40,
+    default: 24,
+    unit: 'px',
+  },
 
   /* ── Username ──────────────────────────────────────────── */
   {
