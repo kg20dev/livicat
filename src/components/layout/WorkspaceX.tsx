@@ -583,7 +583,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
   const hex = value.replace('#', '')
   return (
     <div className="color-picker-container">
-        <div className="flex items-center gap-0 glass-input border border-outline-variant rounded-md overflow-hidden">
+      <div className="flex items-center gap-0 glass-input border border-outline-variant rounded-md overflow-hidden">
         <div className="relative w-8 h-8 shrink-0">
           <input
             type="color"

@@ -30,7 +30,7 @@ const mockCss = `
 .theme-test #author-name {
   padding: 2px 10px;
   background: var(--messageBg);
-  color: #d6baff;
+  color: #ff4444;
   border-radius: 12px;
 }
 .theme-test #message {

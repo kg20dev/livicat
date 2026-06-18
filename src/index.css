@@ -6,10 +6,10 @@
 @theme {
   /* ─── Colors (from stitch tailwind.config) ──────────────────────── */
   --color-on-tertiary-container: #292a2a;
-  --color-surface-tint: #d6baff;
+  --color-surface-tint: #ff4444;
   --color-outline: #968d9f;
   --color-secondary-fixed-dim: #c8c6c6;
-  --color-primary-fixed-dim: #d6baff;
+  --color-primary-fixed-dim: #ff4444;
   --color-on-error-container: #ffdad6;
   --color-inverse-on-surface: #313030;
   --color-error: #ffb4ab;
@@ -21,7 +21,7 @@
   --color-on-tertiary: #303030;
   --color-tertiary-fixed: #e4e2e1;
   --color-on-background: #e5e2e1;
-  --color-on-primary: #430089;
+  --color-on-primary: #3a0000;
   --color-on-secondary-container: #b6b5b4;
   --color-surface: #131313;
   --color-surface-dim: #131313;
@@ -32,24 +32,24 @@
   --color-inverse-surface: #e5e2e1;
   --color-on-secondary-fixed: #1b1c1c;
   --color-background: #131313;
-  --color-on-primary-fixed: #280056;
+  --color-on-primary-fixed: #1a0000;
   --color-on-secondary: #303030;
-  --color-on-primary-container: #3a0078;
+  --color-on-primary-container: #2d0000;
   --color-tertiary: #c8c6c6;
-  --color-primary-fixed: #ecdcff;
+  --color-primary-fixed: #ffc8c8;
   --color-on-surface: #e5e2e1;
   --color-surface-container-highest: #353534;
   --color-secondary-container: #474747;
-  --color-primary-container: #ab73ff;
+  --color-primary-container: #ff8888;
   --color-surface-container-high: #2a2a2a;
   --color-surface-container: #201f1f;
   --color-on-surface-variant: #cdc3d6;
   --color-outline-variant: #4b4453;
-  --color-on-primary-fixed-variant: #5e1ab1;
-  --color-primary: #d6baff;
+  --color-on-primary-fixed-variant: #b31a1a;
+  --color-primary: #ff4444;
   --color-surface-container-low: #1c1b1b;
   --color-surface-variant: #353534;
-  --color-inverse-primary: #763bca;
+  --color-inverse-primary: #b33a3a;
   --color-surface-container-lowest: #0e0e0e;
   --color-error-container: #93000a;
 
@@ -151,7 +151,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(169, 112, 255, 0.05) 0%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 68, 68, 0.05) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -173,14 +173,14 @@
   border-radius: 50%;
   background: var(--color-primary);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(214, 186, 255, 0.4);
+  box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4);
   transition: all 0.2s ease;
   border: 2px solid #fff;
 }
 
 .slider-thumb::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 2px 8px rgba(214, 186, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.6);
 }
 
 .slider-thumb::-webkit-slider-thumb:active {
@@ -193,14 +193,14 @@
   border-radius: 50%;
   background: var(--color-primary);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(214, 186, 255, 0.4);
+  box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4);
   transition: all 0.2s ease;
   border: 2px solid #fff;
 }
 
 .slider-thumb::-moz-range-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 2px 8px rgba(214, 186, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.6);
 }
 
 .slider-thumb::-moz-range-thumb:active {

@@ -97,9 +97,7 @@ export default function StylingPanel({
 
   return (
     <StylingPanelContext.Provider value={contextValue}>
-      <aside
-        className={`w-[360px] glass-medium flex flex-col h-full overflow-hidden ${className}`}
-      >
+      <aside className={`w-[360px] glass-medium flex flex-col h-full overflow-hidden ${className}`}>
         {children}
       </aside>
     </StylingPanelContext.Provider>
@@ -298,7 +296,7 @@ StylingPanel.ColorField = function StylingPanelColorField({
       <span className="text-label-md text-on-surface-variant mb-1.5 block font-medium">
         {label}
       </span>
-       <div className="flex items-center gap-2 glass-input rounded-md p-1.5">
+      <div className="flex items-center gap-2 glass-input rounded-md p-1.5">
         <div className="relative w-7 h-7 shrink-0">
           <input
             type="color"
@@ -389,10 +387,8 @@ StylingPanel.AnimationStyleSelector = function StylingPanelAnimationStyleSelecto
                 option.value as ChatSettings['newMessageAnimation']
               )
             }
-             className={`p-2.5 rounded-md border text-left transition-all duration-150 ${
-              value === option.value
-                ? 'glass-accent'
-                : 'glass-card hover:glass-light'
+            className={`p-2.5 rounded-md border text-left transition-all duration-150 ${
+              value === option.value ? 'glass-accent' : 'glass-card hover:glass-light'
             }`}
           >
             <div className="flex items-center gap-2">
@@ -479,9 +475,7 @@ StylingPanel.PresetSelector = function StylingPanelPresetSelector() {
               updateSettings({ ...preset.settings, ...preservedSettings, messageInnerPadding: 0 })
             }}
             className={`text-left p-2.5 rounded-md border transition-all duration-150 ${
-              isActive
-                ? 'glass-accent'
-                : 'glass-card hover:glass-light'
+              isActive ? 'glass-accent' : 'glass-card hover:glass-light'
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
@@ -552,11 +546,9 @@ StylingPanel.NameMessageLayout = function StylingPanelNameMessageLayout() {
     <div className="grid grid-cols-2 gap-2">
       <button
         onClick={() => updateSetting('nameMessageLayout', 'left-right')}
-         className={`p-3 rounded-lg border text-left transition-all duration-150 ${
-           value === 'left-right'
-             ? 'glass-accent'
-             : 'glass-card hover:glass-light'
-         }`}
+        className={`p-3 rounded-lg border text-left transition-all duration-150 ${
+          value === 'left-right' ? 'glass-accent' : 'glass-card hover:glass-light'
+        }`}
       >
         <div className="flex flex-col items-center gap-1.5">
           <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
@@ -602,11 +594,9 @@ StylingPanel.NameMessageLayout = function StylingPanelNameMessageLayout() {
       </button>
       <button
         onClick={() => updateSetting('nameMessageLayout', 'top-bottom')}
-         className={`p-3 rounded-lg border text-left transition-all duration-150 ${
-           value === 'top-bottom'
-             ? 'glass-accent'
-             : 'glass-card hover:glass-light'
-         }`}
+        className={`p-3 rounded-lg border text-left transition-all duration-150 ${
+          value === 'top-bottom' ? 'glass-accent' : 'glass-card hover:glass-light'
+        }`}
       >
         <div className="flex flex-col items-center gap-1.5">
           <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
@@ -662,11 +652,9 @@ StylingPanel.BackgroundStyle = function StylingPanelBackgroundStyle() {
     <div className="grid grid-cols-2 gap-2">
       <button
         onClick={() => updateSetting('backgroundStyle', 'full-block')}
-         className={`p-3 rounded-lg border text-left transition-all duration-150 ${
-           value === 'full-block'
-             ? 'glass-accent'
-             : 'glass-card hover:glass-light'
-         }`}
+        className={`p-3 rounded-lg border text-left transition-all duration-150 ${
+          value === 'full-block' ? 'glass-accent' : 'glass-card hover:glass-light'
+        }`}
       >
         <div className="flex flex-col items-center gap-1.5">
           <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
@@ -722,11 +710,9 @@ StylingPanel.BackgroundStyle = function StylingPanelBackgroundStyle() {
       </button>
       <button
         onClick={() => updateSetting('backgroundStyle', 'inline-text')}
-         className={`p-3 rounded-lg border text-left transition-all duration-150 ${
-           value === 'inline-text'
-             ? 'glass-accent'
-             : 'glass-card hover:glass-light'
-         }`}
+        className={`p-3 rounded-lg border text-left transition-all duration-150 ${
+          value === 'inline-text' ? 'glass-accent' : 'glass-card hover:glass-light'
+        }`}
       >
         <div className="flex flex-col items-center gap-1.5">
           <svg width="32" height="22" viewBox="0 0 32 22" fill="none">

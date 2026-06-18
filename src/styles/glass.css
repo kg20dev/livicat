@@ -1,15 +1,20 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * LIVICAT GLASSMORPHISM UI SYSTEM - WINDOWS WEBVIEW2 SAFE
+ * LIVICAT GLASSMORPHISM UI SYSTEM - LIQUID GLASS RED THEME
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- * A 4-tier glass system built with pure CSS utilities. Zero JavaScript, zero
- * runtime overhead, perfect integration with Tailwind CSS v4.3.0.
+ * A premium liquid glass system with black/white base and red accents.
+ * Enhanced transparency, smoother gradients, stronger blur for depth.
+ *
+ * Theme: Liquid Glass Red
+ * - Base: Black/white with high transparency (0.15-0.25 opacity)
+ * - Accent: Red (#ff4444) with glow effects
+ * - Blur: Enhanced (20-24px) for liquid depth effect
  *
  * WINDOWS WEBVIEW2 COMPATIBILITY:
  * - @supports queries detect backdrop-filter capability
  * - Solid color fallbacks when blur unsupported
- * - Reduced blur values (max 16px) to prevent rendering artifacts
+ * - Reduced blur values (max 24px) to prevent rendering artifacts
  * - Limited GPU layers (translateZ only on interactive elements)
  * - will-change removed from static elements to prevent memory bloat
  * - -webkit-backdrop-filter for Safari compatibility
@@ -18,13 +23,47 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   LIQUID GLASS RED THEME VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Red Accent Colors */
+  --glass-accent-red: #ff4444;
+  --glass-accent-red-bright: #ff6666;
+  --glass-accent-red-glow: rgba(255, 68, 68, 0.4);
+  --glass-accent-red-subtle: rgba(255, 68, 68, 0.25);
+  --glass-accent-red-faint: rgba(255, 68, 68, 0.12);
+
+  /* Liquid Base Colors - Enhanced Transparency */
+  --glass-base-black-ultra: rgba(0, 0, 0, 0.15);
+  --glass-base-black-light: rgba(0, 0, 0, 0.22);
+  --glass-base-black-medium: rgba(0, 0, 0, 0.28);
+  --glass-base-black-heavy: rgba(0, 0, 0, 0.35);
+
+  --glass-base-white-ultra: rgba(255, 255, 255, 0.15);
+  --glass-base-white-light: rgba(255, 255, 255, 0.22);
+  --glass-base-white-medium: rgba(255, 255, 255, 0.28);
+  --glass-base-white-heavy: rgba(255, 255, 255, 0.35);
+
+  /* Edge & Border Highlights */
+  --glass-edge-white: rgba(255, 255, 255, 0.18);
+  --glass-edge-subtle: rgba(255, 255, 255, 0.1);
+  --glass-edge-faint: rgba(255, 255, 255, 0.05);
+
+  /* Blur Intensities */
+  --glass-blur-light: 20px;
+  --glass-blur-medium: 24px;
+  --glass-blur-heavy: 28px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    TIER 1: HEAVY (Base Layer)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .glass-heavy {
   /* Foundation: Darkest background for maximum depth */
   background: rgba(19, 19, 19, 0.85);
-  /* Strong border with subtle purple tint */
+  /* Strong border with subtle red tint */
   border: 1px solid rgba(255, 255, 255, 0.12);
   /* Inner glow for depth */
   box-shadow:
@@ -196,20 +235,16 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .glass-accent {
-  /* Interactive layer: Enhanced with purple accent */
-  background: linear-gradient(
-    135deg,
-    rgba(214, 186, 255, 0.15) 0%,
-    rgba(118, 59, 202, 0.12) 100%
-  );
-  /* Strong border with purple glow */
-  border: 1px solid rgba(214, 186, 255, 0.3);
+  /* Interactive layer: Enhanced with red accent */
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.15) 0%, rgba(204, 51, 51, 0.12) 100%);
+  /* Strong border with red glow */
+  border: 1px solid rgba(255, 68, 68, 0.3);
   /* Glow effect + depth */
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 0 1px rgba(214, 186, 255, 0.1),
-    0 4px 16px rgba(214, 186, 255, 0.25),
-    0 0 20px rgba(214, 186, 255, 0.15);
+    0 0 0 1px rgba(255, 68, 68, 0.1),
+    0 4px 16px rgba(255, 68, 68, 0.25),
+    0 0 20px rgba(255, 68, 68, 0.15);
   /* Interactive rounding */
   border-radius: var(--radius-lg);
   /* Smooth transitions */
@@ -235,34 +270,26 @@
 
 /* Hover state: Enhanced glow + slight lift - GPU acceleration only here */
 .glass-accent:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(214, 186, 255, 0.2) 0%,
-    rgba(118, 59, 202, 0.16) 100%
-  );
-  border-color: rgba(214, 186, 255, 0.5);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(204, 51, 51, 0.16) 100%);
+  border-color: rgba(255, 68, 68, 0.5);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 0 0 1px rgba(214, 186, 255, 0.2),
-    0 6px 24px rgba(214, 186, 255, 0.35),
-    0 0 30px rgba(214, 186, 255, 0.2);
+    0 0 0 1px rgba(255, 68, 68, 0.2),
+    0 6px 24px rgba(255, 68, 68, 0.35),
+    0 0 30px rgba(255, 68, 68, 0.2);
   transform: translateY(-1px) translateZ(0); /* GPU layer only during hover */
   will-change: transform; /* Only hint during interaction */
 }
 
 /* Active state: Pressed with reduced glow */
 .glass-accent:active {
-  background: linear-gradient(
-    135deg,
-    rgba(214, 186, 255, 0.25) 0%,
-    rgba(118, 59, 202, 0.2) 100%
-  );
-  border-color: rgba(214, 186, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(204, 51, 51, 0.2) 100%);
+  border-color: rgba(255, 68, 68, 0.6);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 1px rgba(214, 186, 255, 0.15),
-    0 2px 8px rgba(214, 186, 255, 0.3),
-    0 0 12px rgba(214, 186, 255, 0.15);
+    0 0 0 1px rgba(255, 68, 68, 0.15),
+    0 2px 8px rgba(255, 68, 68, 0.3),
+    0 0 12px rgba(255, 68, 68, 0.15);
   transform: translateY(1px);
 }
 
@@ -272,15 +299,15 @@
   outline-offset: 3px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 0 1px rgba(214, 186, 255, 0.1),
-    0 4px 16px rgba(214, 186, 255, 0.25),
-    0 0 20px rgba(214, 186, 255, 0.15),
-    0 0 0 4px rgba(214, 186, 255, 0.3);
+    0 0 0 1px rgba(255, 68, 68, 0.1),
+    0 4px 16px rgba(255, 68, 68, 0.25),
+    0 0 20px rgba(255, 68, 68, 0.15),
+    0 0 0 4px rgba(255, 68, 68, 0.3);
 }
 
 /* Disabled state: Muted appearance */
 .glass-accent:disabled,
-.glass-accent[aria-disabled="true"] {
+.glass-accent[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
   background: rgba(42, 42, 42, 0.5);
@@ -290,7 +317,437 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   SPECIALIZED VARIANTS
+   LIQUID GLASS RED THEME VARIANTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 1 LIQUID: HEAVY (Base Layer) - Ultra Transparent Black
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-liquid-heavy {
+  /* Ultra transparent black for liquid effect */
+  background: var(--glass-base-black-heavy);
+  /* White edge for glass definition */
+  border: 1px solid var(--glass-edge-white);
+  /* Multi-layer depth shadow */
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Smooth rounded corners */
+  border-radius: var(--radius-lg);
+  /* Elegant transitions */
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Enhanced blur for liquid depth */
+@supports (backdrop-filter: blur(28px)) {
+  .glass-liquid-heavy {
+    backdrop-filter: blur(var(--glass-blur-heavy)) saturate(120%) brightness(1.08);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(28px)) {
+  .glass-liquid-heavy {
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(120%) brightness(1.08);
+  }
+}
+
+/* Hover state - Enhanced liquid glow */
+.glass-liquid-heavy:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-white),
+    0 6px 24px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 20px var(--glass-accent-red-faint);
+}
+
+/* Active state - Pressed liquid effect */
+.glass-liquid-heavy:active {
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Focus state - Red accent highlight */
+.glass-liquid-heavy:focus-visible {
+  outline: 2px solid var(--glass-accent-red);
+  outline-offset: 2px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 4px 16px var(--glass-accent-red-subtle),
+    0 0 24px var(--glass-accent-red-faint);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 2 LIQUID: MEDIUM (Content Layer) - Balanced Transparency
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-liquid-medium {
+  /* Medium transparency for content panels */
+  background: var(--glass-base-black-medium);
+  /* Delicate white edge */
+  border: 1px solid var(--glass-edge-subtle);
+  /* Refined depth */
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 2px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Medium blur for balanced depth */
+@supports (backdrop-filter: blur(24px)) {
+  .glass-liquid-medium {
+    backdrop-filter: blur(var(--glass-blur-medium)) saturate(115%) brightness(1.05);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(24px)) {
+  .glass-liquid-medium {
+    -webkit-backdrop-filter: blur(var(--glass-blur-medium)) saturate(115%) brightness(1.05);
+  }
+}
+
+/* Hover - Gentle liquid brightening */
+.glass-liquid-medium:hover {
+  background: rgba(0, 0, 0, 0.32);
+  border-color: var(--glass-edge-white);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 4px 16px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 16px var(--glass-accent-red-faint);
+}
+
+/* Active - Pressed */
+.glass-liquid-medium:active {
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Focus - Red glow */
+.glass-liquid-medium:focus-visible {
+  outline: 2px solid var(--glass-accent-red);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 0 16px var(--glass-accent-red-subtle);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 3 LIQUID: LIGHT (Overlay Layer) - High Transparency
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-liquid-light {
+  /* Light transparency for overlays */
+  background: var(--glass-base-black-light);
+  /* Subtle border */
+  border: 1px solid var(--glass-edge-faint);
+  /* Minimal depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Light blur for subtle depth */
+@supports (backdrop-filter: blur(20px)) {
+  .glass-liquid-light {
+    backdrop-filter: blur(var(--glass-blur-light)) saturate(110%) brightness(1.03);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(20px)) {
+  .glass-liquid-light {
+    -webkit-backdrop-filter: blur(var(--glass-blur-light)) saturate(110%) brightness(1.03);
+  }
+}
+
+/* Hover - Soft brightening */
+.glass-liquid-light:hover {
+  background: rgba(0, 0, 0, 0.26);
+  border-color: var(--glass-edge-subtle);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 3px 12px rgba(0, 0, 0, 0.2),
+    0 0 12px var(--glass-accent-red-faint);
+}
+
+/* Active - Pressed */
+.glass-liquid-light:active {
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Focus - Red accent */
+.glass-liquid-light:focus-visible {
+  outline: 2px solid var(--glass-accent-red);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 0 12px var(--glass-accent-red-subtle);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 4 LIQUID: ACCENT (Interactive Layer) - Red Glowing Glass
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-liquid-accent {
+  /* Interactive layer with red gradient */
+  background: linear-gradient(
+    135deg,
+    var(--glass-accent-red-subtle) 0%,
+    rgba(204, 51, 51, 0.18) 100%
+  );
+  /* Red glowing border */
+  border: 1px solid var(--glass-accent-red);
+  /* Multi-layer red glow + depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 4px 20px var(--glass-accent-red-subtle),
+    0 0 32px var(--glass-accent-red-faint),
+    0 0 48px var(--glass-accent-red-faint);
+  border-radius: var(--radius-lg);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+/* Enhanced blur with red tint */
+@supports (backdrop-filter: blur(26px)) {
+  .glass-liquid-accent {
+    backdrop-filter: blur(26px) saturate(130%) brightness(1.15);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(26px)) {
+  .glass-liquid-accent {
+    -webkit-backdrop-filter: blur(26px) saturate(130%) brightness(1.15);
+  }
+}
+
+/* Hover - Intense red glow with lift */
+.glass-liquid-accent:hover {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(204, 51, 51, 0.22) 100%);
+  border-color: var(--glass-accent-red-bright);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px var(--glass-accent-red),
+    0 0 0 2px var(--glass-accent-red-glow),
+    0 6px 28px var(--glass-accent-red-glow),
+    0 0 40px var(--glass-accent-red-subtle),
+    0 0 60px var(--glass-accent-red-faint);
+  transform: translateY(-2px) translateZ(0); /* GPU layer only during hover */
+  will-change: transform; /* Only hint during interaction */
+}
+
+/* Active - Pressed with sustained glow */
+.glass-liquid-accent:active {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.3) 0%, rgba(204, 51, 51, 0.25) 100%);
+  border-color: #ff3333;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 2px 12px var(--glass-accent-red-glow),
+    0 0 20px var(--glass-accent-red-subtle);
+  transform: translateY(0);
+}
+
+/* Focus - Maximum red glow for accessibility */
+.glass-liquid-accent:focus-visible {
+  outline: 2px solid var(--glass-accent-red-bright);
+  outline-offset: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px var(--glass-accent-red-glow),
+    0 0 0 3px var(--glass-accent-red-subtle),
+    0 0 0 6px var(--glass-accent-red-faint),
+    0 4px 20px var(--glass-accent-red-subtle),
+    0 0 32px var(--glass-accent-red-faint);
+}
+
+/* Disabled - Muted */
+.glass-liquid-accent:disabled,
+.glass-liquid-accent[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--glass-base-black-light);
+  border-color: var(--glass-edge-faint);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SPECIALIZED LIQUID VARIANTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Seamless variant - no border for layered glass */
+.glass-liquid-seamless {
+  background: var(--glass-base-black-medium);
+  border: none;
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 2px 12px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+@supports (backdrop-filter: blur(24px)) {
+  .glass-liquid-seamless {
+    backdrop-filter: blur(var(--glass-blur-medium)) saturate(115%) brightness(1.05);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(24px)) {
+  .glass-liquid-seamless {
+    -webkit-backdrop-filter: blur(var(--glass-blur-medium)) saturate(115%) brightness(1.05);
+  }
+}
+
+/* Input field variant - Liquid glass input */
+.glass-liquid-input {
+  background: var(--glass-base-black-light);
+  border: 1px solid var(--glass-edge-subtle);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+@supports (backdrop-filter: blur(22px)) {
+  .glass-liquid-input {
+    backdrop-filter: blur(22px) saturate(112%) brightness(1.04);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(22px)) {
+  .glass-liquid-input {
+    -webkit-backdrop-filter: blur(22px) saturate(112%) brightness(1.04);
+  }
+}
+
+/* Hover - Red glow on border */
+.glass-liquid-input:hover {
+  border-color: var(--glass-accent-red);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 0 0 2px var(--glass-accent-red-glow),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus - Strong red glow */
+.glass-liquid-input:focus {
+  border-color: var(--glass-accent-red-bright);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 0 0 3px var(--glass-accent-red-glow),
+    0 0 0 6px var(--glass-accent-red-subtle),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  outline: none;
+}
+
+/* Card variant - For panels and sections */
+.glass-liquid-card {
+  background: var(--glass-base-black-light);
+  border: 1px solid var(--glass-edge-faint);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-faint),
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+@supports (backdrop-filter: blur(18px)) {
+  .glass-liquid-card {
+    backdrop-filter: blur(18px) saturate(108%) brightness(1.02);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(18px)) {
+  .glass-liquid-card {
+    -webkit-backdrop-filter: blur(18px) saturate(108%) brightness(1.02);
+  }
+}
+
+/* Hover - Enhanced depth */
+.glass-liquid-card:hover {
+  background: rgba(0, 0, 0, 0.26);
+  border-color: var(--glass-edge-subtle);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge-subtle),
+    0 4px 12px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 16px var(--glass-accent-red-faint);
+}
+
+/* Primary accent - Strongest red glow */
+.glass-liquid-accent-primary {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.3) 0%, rgba(204, 51, 51, 0.25) 100%);
+  border: 1px solid var(--glass-accent-red-bright);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px var(--glass-accent-red),
+    0 0 0 2px var(--glass-accent-red-glow),
+    0 6px 24px var(--glass-accent-red-glow),
+    0 0 40px var(--glass-accent-red-subtle),
+    0 0 64px var(--glass-accent-red-faint);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+@supports (backdrop-filter: blur(26px)) {
+  .glass-liquid-accent-primary {
+    backdrop-filter: blur(26px) saturate(135%) brightness(1.18);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(26px)) {
+  .glass-liquid-accent-primary {
+    -webkit-backdrop-filter: blur(26px) saturate(135%) brightness(1.18);
+  }
+}
+
+/* Hover - Maximum intensity */
+.glass-liquid-accent-primary:hover {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.4) 0%, rgba(204, 51, 51, 0.35) 100%);
+  border-color: #ff8888;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 1px var(--glass-accent-red-bright),
+    0 0 0 3px var(--glass-accent-red),
+    0 8px 32px var(--glass-accent-red),
+    0 0 56px var(--glass-accent-red-glow),
+    0 0 80px var(--glass-accent-red-subtle);
+  transform: translateY(-2px) translateZ(0);
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ORIGINAL GLASSMORPHISM (Preserved for fallback/reference)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 /* Heavy variant without border (for seamless layers) */
@@ -335,17 +792,17 @@
 }
 
 .glass-input:hover {
-  border-color: rgba(214, 186, 255, 0.3);
+  border-color: rgba(255, 68, 68, 0.3);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 0 2px rgba(214, 186, 255, 0.1);
+    0 0 0 2px rgba(255, 68, 68, 0.1);
 }
 
 .glass-input:focus {
-  border-color: rgba(214, 186, 255, 0.5);
+  border-color: rgba(255, 68, 68, 0.5);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 0 3px rgba(214, 186, 255, 0.15);
+    0 0 0 3px rgba(255, 68, 68, 0.15);
   outline: none;
 }
 
@@ -382,17 +839,13 @@
 
 /* Accent variant for primary actions */
 .glass-accent-primary {
-  background: linear-gradient(
-    135deg,
-    rgba(214, 186, 255, 0.25) 0%,
-    rgba(118, 59, 202, 0.2) 100%
-  );
-  border: 1px solid rgba(214, 186, 255, 0.4);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(204, 51, 51, 0.2) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.4);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 1px rgba(214, 186, 255, 0.15),
-    0 6px 20px rgba(214, 186, 255, 0.3),
-    0 0 25px rgba(214, 186, 255, 0.2);
+    0 0 0 1px rgba(255, 68, 68, 0.15),
+    0 6px 20px rgba(255, 68, 68, 0.3),
+    0 0 25px rgba(255, 68, 68, 0.2);
   border-radius: var(--radius-lg);
   transition: all 0.2s ease;
 }
@@ -410,17 +863,13 @@
 }
 
 .glass-accent-primary:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(214, 186, 255, 0.35) 0%,
-    rgba(118, 59, 202, 0.28) 100%
-  );
-  border-color: rgba(214, 186, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.35) 0%, rgba(204, 51, 51, 0.28) 100%);
+  border-color: rgba(255, 68, 68, 0.6);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 0 0 1px rgba(214, 186, 255, 0.25),
-    0 8px 28px rgba(214, 186, 255, 0.4),
-    0 0 35px rgba(214, 186, 255, 0.25);
+    0 0 0 1px rgba(255, 68, 68, 0.25),
+    0 8px 28px rgba(255, 68, 68, 0.4),
+    0 0 35px rgba(255, 68, 68, 0.25);
   transform: translateY(-2px) translateZ(0); /* GPU layer only during hover */
   will-change: transform; /* Only hint during interaction */
 }
