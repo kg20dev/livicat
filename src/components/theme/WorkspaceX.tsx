@@ -139,10 +139,20 @@ export function WorkspaceX() {
         <div className="w-px h-5 bg-outline-variant/30 mx-1" />
 
         {/* Theme Cards */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap gap-3">
           {THEMES.map((t) => {
-            // Extract first 5 color settings for palette
-            const colorSettings = t.scheme.filter((s) => s.type === 'color').slice(0, 5)
+            // Extract key colors for mini preview
+            const byKey = (key: string, fallback: string) => {
+              const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+              return def && typeof def.default === 'string' ? def.default : fallback
+            }
+            const colors = {
+              accent: byKey('chat-scrollbar-thumb', byKey('strokeColor', '#888888')),
+              msgBg: byKey('chat-msg-bg', byKey('messageBg', '#1a1a1a')),
+              text: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')),
+              username: byKey('chat-username-color', byKey('usernameColor', '#bb86fc')),
+              bg: byKey('bg', '#0d0d0d'),
+            }
             const isSelected = selectedThemeId === t.manifest.id
 
             return (
@@ -150,8 +160,9 @@ export function WorkspaceX() {
                 key={t.manifest.id}
                 onClick={() => setSelectedThemeId(t.manifest.id)}
                 className={`
-                  relative group bg-surface-container-high rounded-lg p-2.5 
+                  relative group bg-surface-container-high rounded-lg p-3
                   border-2 transition-all duration-200 cursor-pointer
+                  min-w-[180px] w-[200px]
                   ${
                     isSelected
                       ? 'border-primary ring-2 ring-primary/30'
@@ -159,22 +170,22 @@ export function WorkspaceX() {
                   }
                 `}
               >
-                {/* Color Palette */}
-                <div className="flex items-center gap-1 mb-2">
-                  {colorSettings.map((colorDef) => (
-                    <div
-                      key={colorDef.key}
-                      className="w-3 h-3 rounded-full border border-black/10"
-                      style={{
-                        backgroundColor:
-                          typeof colorDef.default === 'string' ? colorDef.default : '#888888',
-                      }}
-                      title={colorDef.label}
-                    />
-                  ))}
-                  {colorSettings.length === 0 && (
-                    <div className="w-3 h-3 rounded-full bg-outline-variant/30" />
-                  )}
+                {/* Mini Chat Preview */}
+                <div
+                  className="mb-2 rounded-md overflow-hidden"
+                  style={{
+                    backgroundColor: colors.bg,
+                    borderLeft: `3px solid ${colors.accent}`,
+                    height: '50px',
+                    padding: '6px',
+                  }}
+                >
+                  <div className="text-[8px] font-bold mb-1" style={{ color: colors.username }}>
+                    Name
+                  </div>
+                  <div className="text-[8px]" style={{ color: colors.text }}>
+                    Message!
+                  </div>
                 </div>
 
                 {/* Theme Name */}
@@ -188,7 +199,7 @@ export function WorkspaceX() {
                 </div>
 
                 {/* Description */}
-                <div className="text-label-sm text-on-surface-variant truncate max-w-[120px]">
+                <div className="text-label-sm text-on-surface-variant line-clamp-2 h-[2.5em] overflow-hidden">
                   {t.manifest.description}
                 </div>
               </button>

@@ -9,7 +9,8 @@ export const manifest: ThemeManifest = {
   id: 'im',
   name: 'Colour Bubble',
   creator: 'Livicat',
-  description: 'Classic IM-style chat with rotated name chips and bubble tails',
+  description:
+    'Playful bubble chat with role-tinted messages, animated name tags, and punctuation effects',
   route: 'im',
   storageKey: 'livicat_x_im',
 }
