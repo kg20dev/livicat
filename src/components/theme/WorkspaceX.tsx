@@ -133,6 +133,12 @@ export function WorkspaceX() {
   const [selectedThemeId, setSelectedThemeId] = useState(THEMES[0]?.manifest.id ?? '')
   const theme = useMemo(() => getThemeById(selectedThemeId), [selectedThemeId])
 
+  // Track which sections are open — persists across theme switches
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+  const toggleSection = useCallback((section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))
+  }, [])
+
   if (!theme) {
     return (
       <div className="flex items-center justify-center h-full w-full">
@@ -212,7 +218,12 @@ export function WorkspaceX() {
       </div>
 
       {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
-      <WorkspaceBody key={selectedThemeId} theme={theme} />
+      <WorkspaceBody
+        key={selectedThemeId}
+        theme={theme}
+        openSections={openSections}
+        toggleSection={toggleSection}
+      />
     </div>
   )
 }
@@ -237,7 +248,15 @@ const _pickRole: () => _LiveRole = (() => {
 
 /* ─── WorkspaceBody — All stateful content, remounts on theme switch ── */
 
-function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
+function WorkspaceBody({
+  theme,
+  openSections,
+  toggleSection,
+}: {
+  theme: ThemeBundle
+  openSections: Record<string, boolean>
+  toggleSection: (section: string) => void
+}) {
   const { manifest, scheme } = theme
   const { settings, updateSetting } = useThemeSettings(manifest.storageKey, scheme)
   const responsive = useResponsive()
@@ -564,10 +583,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 </div>
                 {coreGroups.map(({ section, items }) => (
                   <CollapsibleSection
-                    key={section}
+                    key={`core-${section}`}
                     icon={getSectionIcon(section)}
                     title={section}
-                    defaultOpen={false}
+                    open={openSections[`core-${section}`] ?? false}
+                    onToggle={() => toggleSection(`core-${section}`)}
                   >
                     {section === 'Role Colors' ? (
                       <div className="space-y-4">
@@ -609,10 +629,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                 </div>
                 {themeGroups.map(({ section, items }) => (
                   <CollapsibleSection
-                    key={section}
+                    key={`theme-${section}`}
                     icon={getSectionIcon(section)}
                     title={section}
-                    defaultOpen={false}
+                    open={openSections[`theme-${section}`] ?? false}
+                    onToggle={() => toggleSection(`theme-${section}`)}
                   >
                     <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
                   </CollapsibleSection>
@@ -664,10 +685,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                   </div>
                   {coreGroups.map(({ section, items }) => (
                     <CollapsibleSection
-                      key={section}
+                      key={`core-${section}`}
                       icon={getSectionIcon(section)}
                       title={section}
-                      defaultOpen={false}
+                      open={openSections[`core-${section}`] ?? false}
+                      onToggle={() => toggleSection(`core-${section}`)}
                     >
                       {section === 'Role Colors' ? (
                         <div className="space-y-4">
@@ -708,10 +730,11 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                   </div>
                   {themeGroups.map(({ section, items }) => (
                     <CollapsibleSection
-                      key={section}
+                      key={`theme-${section}`}
                       icon={getSectionIcon(section)}
                       title={section}
-                      defaultOpen={false}
+                      open={openSections[`theme-${section}`] ?? false}
+                      onToggle={() => toggleSection(`theme-${section}`)}
                     >
                       <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
                     </CollapsibleSection>
