@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -88,23 +88,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate PR creation permissions
-        id: perm_check
-        run: |
-          # The default GITHUB_TOKEN requires "Allow GitHub Actions to create
-          # pull requests" under Settings → Actions → General.
-          # If this step fails, create a classic PAT with "repo" scope, add it
-          # as RELEASE_PAT in Settings → Secrets and variables → Actions, and
-          # replace GITHUB_TOKEN below with secrets.RELEASE_PAT.
-          echo "Using GITHUB_TOKEN for PR creation..."
-          echo "If this fails, go to repo Settings → Actions → General and"
-          echo "enable 'Allow GitHub Actions to create and approve pull requests'."
-
       - name: Create Release PR
         id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Uses a PAT because org settings disable GITHUB_TOKEN from
+          # creating PRs. Create a classic PAT (repo scope) and add it as
+          # RELEASE_PAT in Settings → Secrets and variables → Actions.
+          token: ${{ secrets.RELEASE_PAT }}
           base: release/app
           title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
           body: |
@@ -155,7 +146,7 @@ jobs:
             sleep 30
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
 
   merge-release:
     name: Merge to Release Branch
@@ -169,14 +160,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Merge PR
         run: |
           PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
           gh pr merge $PR_NUMBER --squash --delete-branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
 
   # Release is handled by build-tauri.yml (push to release/**)
   # which runs proper cross-platform builds (macOS + Windows).
