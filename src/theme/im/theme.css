@@ -466,7 +466,7 @@
   #content
   #author-name {
   background: var(--chat-superchat-chip-bg, #998100) !important;
-  color: var(--chat-superchat-text, #1a1a1a) !important;
+  color: var(--chat-superchat-username, #ffd700) !important;
   font-weight: 700 !important;
 }
 
@@ -496,7 +496,7 @@
   #content
   #author-name {
   background: var(--chat-membership-chip-bg, #28bd65) !important;
-  color: var(--chat-membership-text, #00b140) !important;
+  color: var(--chat-membership-username, #ffffff) !important;
   font-weight: 700 !important;
 }
 

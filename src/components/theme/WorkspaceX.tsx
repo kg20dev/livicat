@@ -96,8 +96,14 @@ function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
     Owner: { icon: 'star', keys: ['owner-bg', 'owner-text', 'chat-owner-username'] },
     Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text', 'chat-mod-username'] },
     Member: { icon: 'group', keys: ['member-bg', 'member-text', 'chat-member-username'] },
-    'Super Chat': { icon: 'monetization_on', keys: ['superchat-bg', 'superchat-text'] },
-    Membership: { icon: 'card_membership', keys: ['membership-bg', 'membership-text'] },
+    'Super Chat': {
+      icon: 'monetization_on',
+      keys: ['superchat-bg', 'superchat-text', 'chat-superchat-username'],
+    },
+    Membership: {
+      icon: 'card_membership',
+      keys: ['membership-bg', 'membership-text', 'chat-membership-username'],
+    },
   }
 
   const groups: RoleGroup[] = []

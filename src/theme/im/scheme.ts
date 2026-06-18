@@ -213,4 +213,18 @@ export const scheme: SettingDef[] = [
     label: 'Member Username',
     default: '#ce93d8',
   },
+  {
+    key: 'chat-superchat-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Super Chat Username',
+    default: '#ffd700',
+  },
+  {
+    key: 'chat-membership-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Membership Username',
+    default: '#ffffff',
+  },
 ]
