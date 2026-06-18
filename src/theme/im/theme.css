@@ -455,6 +455,15 @@
   border-left-color: var(--chat-superchat-text, #1a1a1a) !important;
   border-bottom-color: var(--chat-superchat-text, #1a1a1a) !important;
 }
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name {
+  background: var(--chat-superchat-bg, #ffd700) !important;
+  color: var(--chat-superchat-text, #1a1a1a) !important;
+  font-weight: 700 !important;
+}
 
 /* Member Ship */
 :is(
@@ -474,6 +483,15 @@
   background: var(--chat-membership-bg, #0d2818) !important;
   border-left-color: var(--chat-membership-text, #00b140) !important;
   border-bottom-color: var(--chat-membership-text, #00b140) !important;
+}
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name {
+  background: var(--chat-membership-bg, #0d2818) !important;
+  color: var(--chat-membership-text, #00b140) !important;
+  font-weight: 700 !important;
 }
 
 /* ── Punctuation badge role colors ──────────────────────────── */
