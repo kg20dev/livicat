@@ -101,10 +101,7 @@
   display: inline-block !important;
   width: fit-content !important;
   text-shadow: 0 0 var(--glowSpread, 6px) var(--glowColor, #bb86fc) !important;
-  animation-name: theme-ink-sticker-neon !important;
-  animation-duration: var(--chip-duration, 2s) !important;
-  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1) !important;
-  animation-fill-mode: both !important;
+  animation: theme-ink-sticker-neon 2s cubic-bezier(0.23, 1, 0.32, 1) both !important;
 }
 
 /* Message Text */
