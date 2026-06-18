@@ -16,17 +16,64 @@ function getGoogleFontImport(fontFamily: string): string | null {
   return `@import url('${url}');`
 }
 
-/* ── Tint helper ──────────────────────────────────────────────── */
-/** Lighten a hex color by mixing with white at the given ratio (0–1). */
-export function tintHex(hex: string, amount: number): string {
+/* ── Contrasting chip helper ────────────────────────────────────── */
+/**
+ * Derive a chip background from a role bubble background.
+ * Keeps the same hue (harmony) but shifts lightness in the opposite
+ * direction — dark bubbles get a medium-light chip, light bubbles
+ * get a darker chip — so the chip clearly stands out from the bubble.
+ */
+function chipFromBg(hex: string): string {
   const h = hex.replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16)
-  const g = parseInt(h.substring(2, 4), 16)
-  const b = parseInt(h.substring(4, 6), 16)
-  const tr = Math.round(r + (255 - r) * amount)
-  const tg = Math.round(g + (255 - g) * amount)
-  const tb = Math.round(b + (255 - b) * amount)
-  return `#${tr.toString(16).padStart(2, '0')}${tg.toString(16).padStart(2, '0')}${tb.toString(16).padStart(2, '0')}`
+  let r = parseInt(h.substring(0, 2), 16) / 255
+  let g = parseInt(h.substring(2, 4), 16) / 255
+  let b = parseInt(h.substring(4, 6), 16) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let hue = 0
+  let sat = 0
+  const lit = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        hue = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        hue = ((b - r) / d + 2) / 6
+        break
+      case b:
+        hue = ((r - g) / d + 4) / 6
+        break
+    }
+  }
+
+  // Same hue, shift lightness in opposite direction
+  const targetL = lit < 0.35 ? 0.45 : 0.3
+  // Boost saturation for dark bgs, keep original for light bgs
+  const targetS = lit < 0.35 ? Math.max(sat, 0.65) : sat
+
+  // HSL → RGB
+  const fn = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1
+    if (t > 1) t -= 1
+    if (t < 1 / 6) return p + (q - p) * 6 * t
+    if (t < 1 / 2) return q
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+    return p
+  }
+
+  const q = targetL < 0.5 ? targetL * (1 + targetS) : targetL + targetS - targetL * targetS
+  const p = 2 * targetL - q
+
+  r = Math.round(fn(p, q, hue + 1 / 3) * 255)
+  g = Math.round(fn(p, q, hue) * 255)
+  b = Math.round(fn(p, q, hue - 1 / 3) * 255)
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
 }
 
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
@@ -49,15 +96,13 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     } else {
       lines.push(`  --${cssName}: ${value};`)
     }
-    // Derive tinted chip background for role bg colors
-    // (lighter version so the chip stands out against the bubble,
-    //  not against the overall dark chat background)
+    // Derive chip background from role bg colors
+    // Same hue, opposite lightness — chip stands out from the bubble
     if (cssName.endsWith('-bg') && def.type === 'color') {
       const chipVar = cssName.replace(/-bg$/, '-chip-bg')
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
-      const tinted = tintHex(hex, 0.3)
-      lines.push(`  --${chipVar}: ${tinted};`)
+      lines.push(`  --${chipVar}: ${chipFromBg(hex)};`)
     }
   }
 
