@@ -169,12 +169,12 @@ export const CORE_SCHEME: SettingDef[] = [
     cssVar: 'messageFontSize',
   },
 
-  /* ── Common ──────────────────────────────────────────────── */
+  /* ── Avatar ────────────────────────────────────────────── */
   {
     key: 'avatarSize',
-    section: 'Common',
+    section: 'Avatar',
     type: 'range',
-    label: 'Avatar Size',
+    label: 'Size',
     min: 16,
     max: 80,
     default: 28,
@@ -183,15 +183,17 @@ export const CORE_SCHEME: SettingDef[] = [
   },
   {
     key: 'chat-avatar-vertical-offset',
-    section: 'Common',
+    section: 'Avatar',
     type: 'range',
-    label: 'Avatar Vertical Offset',
+    label: 'Vertical Offset',
     min: -20,
     max: 60,
     default: 0,
     unit: 'px',
     cssVar: 'chat-avatar-vertical-offset',
   },
+
+  /* ── Common ──────────────────────────────────────────────── */
 
   /* ── Role Colors ────────────────────────────────────────── */
   {

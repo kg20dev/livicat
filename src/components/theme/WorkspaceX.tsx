@@ -29,7 +29,7 @@ import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
 /* ─── Core sections (shared across themes) ───────────────────── */
-const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Typography', 'Role Colors'])
+const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Typography', 'Avatar', 'Role Colors'])
 
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
 
@@ -40,10 +40,12 @@ const SECTION_ICONS: Record<string, string> = {
   Avatar: 'face',
   Common: 'tune',
   Visibility: 'visibility',
-  'Role Colors': 'palette',
+  Role Colors: 'palette',
   Colors: 'palette',
   Typography: 'text_fields',
   Effects: 'brush',
+  Avatar: 'face', // duplicate, but used for avatar section
+}
   Frame: 'frame_reload',
 }
 
