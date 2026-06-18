@@ -8,7 +8,6 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-  actions: write
 
 jobs:
   prepare-release:
@@ -60,10 +59,9 @@ jobs:
       - name: Get previous tag
         id: prev_tag
         run: |
-          # List all v-prefix git tags sorted descending, exclude current tag
           PREV_TAG=$(git tag --sort=-version:refname -l "v*" | grep -v "^${GITHUB_REF_NAME}$" | head -1)
           echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
-          echo "Previous tag: ${PREV_TAG:-none (first release)}"
+          echo "Previous tag: ${PREV_TAG:-none}"
 
       - name: Generate changelog
         if: steps.prev_tag.outputs.tag != ''
@@ -94,29 +92,24 @@ jobs:
         id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
-          # Uses a PAT because org settings disable GITHUB_TOKEN from
-          # creating PRs. Create a classic PAT (repo scope) and add it as
-          # RELEASE_PAT in Settings → Secrets and variables → Actions.
           token: ${{ secrets.RELEASE_PAT }}
           base: release/app
           title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
           body: |
             ## Release ${{ github.ref_name }}
-            
+
             Auto-generated release PR from tag push.
-            
+
             ### 📋 Changes
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ---
-            
-            ### ✅ Pre-merge Checklist
-            - [ ] All CI checks pass
+
+            ### ✅ Checklist
+            - [ ] CI checks pass
             - [ ] Version matches tag: ${{ steps.version.outputs.version }}
             - [ ] Changelog reviewed
-            - [ ] Manual approval given
-            
-            > **Note**: This PR requires manual approval before merge. No auto-merge.
+            - [ ] Merge manually when ready
           labels: |
             release
             automated
@@ -126,62 +119,6 @@ jobs:
             src-tauri/Cargo.toml
             src-tauri/tauri.conf.json
 
-  require-approval:
-    name: Require Manual Approval
-    needs: prepare-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for PR approval or merge
-        run: |
-          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
-          echo "Waiting for approval on PR #$PR_NUMBER..."
-          echo "PR URL: ${{ needs.prepare-release.outputs.pr_url }}"
-          
-          while true; do
-            # Check if PR was already merged (user merged from UI)
-            STATE=$(gh pr view $PR_NUMBER --json state,merged --jq '.state' 2>/dev/null)
-            MERGED=$(gh pr view $PR_NUMBER --json state,merged --jq '.merged' 2>/dev/null)
-            if [ "$MERGED" = "true" ]; then
-              echo "✅ PR already merged — proceeding"
-              exit 0
-            fi
-            # Check for approval
-            REVIEWS=$(gh pr view $PR_NUMBER --json reviews --jq '.reviews[] | select(.state=="APPROVED") | .author.login' 2>/dev/null | wc -l)
-            if [ "$REVIEWS" -ge 1 ]; then
-              echo "✅ PR approved"
-              break
-            fi
-            echo "⏳ Waiting for approval... (checking every 30s)"
-            sleep 30
-          done
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
-
-  merge-release:
-    name: Merge to Release Branch
-    needs: [prepare-release, require-approval]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
-
-      - name: Merge PR (if not already merged)
-        run: |
-          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
-          MERGED=$(gh pr view $PR_NUMBER --json merged --jq '.merged' 2>/dev/null)
-          if [ "$MERGED" = "true" ]; then
-            echo "✅ PR #$PR_NUMBER already merged — skipping merge"
-          else
-            gh pr merge $PR_NUMBER --squash --delete-branch
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
-
-  # Release is handled by build-tauri.yml (push to release/**)
-  # which runs proper cross-platform builds (macOS + Windows).
+  # After you merge this PR to release/app:
+  #   - build-tauri.yml builds macOS + Windows and creates the release
+  #   - auto-tag-and-release.yml creates the tag (skipped if already exists)
