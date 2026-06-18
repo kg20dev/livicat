@@ -22,13 +22,13 @@ jobs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PAT }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
           cache: 'npm'
@@ -66,7 +66,7 @@ jobs:
 
       - name: Generate changelog
         id: changelog
-        uses: mikepenz/release-changelog-builder-action@v4
+        uses: mikepenz/release-changelog-builder-action@32e3c96f29a6532607f638797455e9e98cfc703d
         with:
           configuration: |
             {
@@ -90,7 +90,7 @@ jobs:
 
       - name: Create Release PR
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c
         with:
           # Uses a PAT because org settings disable GITHUB_TOKEN from
           # creating PRs. Create a classic PAT (repo scope) and add it as
@@ -157,7 +157,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PAT }}

@@ -10,16 +10,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
         with:
           toolchain: stable
 
@@ -27,7 +27,7 @@ jobs:
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
         # Retry up to 3 times to handle transient network errors (e.g., fl/at registry)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -35,7 +35,7 @@ jobs:
           command: cargo install tauri-cli --version "^2.10" --locked
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
         with:
           workspaces: src-tauri
           cache-on-failure: true
@@ -59,14 +59,14 @@ jobs:
           SENTRY_ENVIRONMENT: development
 
       - name: Upload Windows installer (msi)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: livicat-windows-dev-msi
           path: src-tauri/target/release/bundle/msi/*.msi
           retention-days: 30
 
       - name: Upload Windows installer (exe)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: livicat-windows-dev-exe
           path: src-tauri/target/release/bundle/nsis/*.exe
