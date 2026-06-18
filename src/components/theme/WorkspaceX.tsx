@@ -83,6 +83,33 @@ function groupBySection(
   return groups
 }
 
+/* ─── Role color sub-grouping ──────────────────────────────────── */
+
+interface RoleGroup {
+  role: string
+  icon: string
+  items: ThemeBundle['scheme']
+}
+
+function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
+  const roleMap: Record<string, { icon: string; keys: string[] }> = {
+    Owner: { icon: 'star', keys: ['owner-bg', 'owner-text', 'chat-owner-username'] },
+    Moderator: { icon: 'verified', keys: ['mod-bg', 'mod-text', 'chat-mod-username'] },
+    Member: { icon: 'group', keys: ['member-bg', 'member-text', 'chat-member-username'] },
+    'Super Chat': { icon: 'monetization_on', keys: ['superchat-bg', 'superchat-text'] },
+    Membership: { icon: 'card_membership', keys: ['membership-bg', 'membership-text'] },
+  }
+
+  const groups: RoleGroup[] = []
+  for (const [role, { icon, keys }] of Object.entries(roleMap)) {
+    const matched = items.filter((def) => keys.includes(def.key))
+    if (matched.length > 0) {
+      groups.push({ role, icon, items: matched })
+    }
+  }
+  return groups
+}
+
 /* ─── WorkspaceX Component ─────────────────────────────────────── */
 
 export function WorkspaceX() {
@@ -473,7 +500,30 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                     title={section}
                     defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
                   >
-                    <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    {section === 'Role Colors' ? (
+                      <div className="space-y-4">
+                        {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
+                          <div key={role}>
+                            {idx > 0 && <hr className="border-outline-variant/20 my-[-2px]" />}
+                            <div className="flex items-center gap-1.5 mb-2 mt-1">
+                              <span className="material-symbols-outlined text-[16px] text-primary">
+                                {icon}
+                              </span>
+                              <span className="text-label-sm font-semibold text-on-surface">
+                                {role}
+                              </span>
+                            </div>
+                            <SettingsPanel
+                              scheme={roleItems}
+                              values={settings}
+                              onChange={updateSetting}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    )}
                   </CollapsibleSection>
                 ))}
               </div>
@@ -549,7 +599,30 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                       title={section}
                       defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
                     >
-                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                      {section === 'Role Colors' ? (
+                        <div className="space-y-4">
+                          {groupRoleColors(items).map(({ role, icon, items: roleItems }, idx) => (
+                            <div key={role}>
+                              {idx > 0 && <hr className="border-outline-variant/20 my-[-2px]" />}
+                              <div className="flex items-center gap-1.5 mb-2 mt-1">
+                                <span className="material-symbols-outlined text-[16px] text-primary">
+                                  {icon}
+                                </span>
+                                <span className="text-label-sm font-semibold text-on-surface">
+                                  {role}
+                                </span>
+                              </div>
+                              <SettingsPanel
+                                scheme={roleItems}
+                                values={settings}
+                                onChange={updateSetting}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                      )}
                     </CollapsibleSection>
                   ))}
                 </div>
