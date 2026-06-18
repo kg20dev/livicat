@@ -102,16 +102,16 @@ Sidebar.Header = function SidebarHeader({
         <span className="material-symbols-outlined text-on-surface-variant">close</span>
       </button>
 
-      {/* Livicat icon */}
-      <div className="ml-2 mt-6">
+      {/* Livicat icon — clickable to toggle sidebar */}
+      <button onClick={toggle} className="ml-2 mt-6 text-left">
         <img src="/livicat-icon.png" alt="Livicat" className="w-12 h-12" />
-      </div>
+      </button>
 
-      {/* Title and subtitle */}
-      <div className="ml-2 mt-4">
+      {/* Title and subtitle — clickable to toggle sidebar */}
+      <button onClick={toggle} className="ml-2 mt-4 text-left">
         <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
         <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
-      </div>
+      </button>
     </div>
   )
 }
