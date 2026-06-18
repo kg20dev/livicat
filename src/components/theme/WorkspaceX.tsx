@@ -169,7 +169,7 @@ export function WorkspaceX() {
               { label: 'Text', color: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')) },
               {
                 label: 'Accent',
-                color: byKey('chat-scrollbar-thumb', byKey('strokeColor', '#888888')),
+                color: byKey('chat-scrollbar-thumb', byKey('glowColor', '#888888')),
               },
             ]
             const isSelected = selectedThemeId === t.manifest.id

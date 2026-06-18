@@ -7,6 +7,20 @@ import type { SettingDef } from '../types'
  * `coreCssVarMap` maps each core key → this theme's CSS variable name
  * so buildCSSVariables emits the correct `--var-name`.
  */
+/**
+ * Maps text color CSS variable names → stroke CSS variable names.
+ * buildCSSVariables uses this to auto-derive harmonious stroke values
+ * via harmonyInvertColor(). Only themes that support text stroke export this.
+ */
+export const strokeMap: Record<string, string> = {
+  messageColor: 'strokeColor',
+  ownerText: 'ownerStroke',
+  modText: 'modStroke',
+  memberText: 'memberStroke',
+  superchatText: 'superchatStroke',
+  membershipText: 'membershipStroke',
+}
+
 export const coreCssVarMap: Record<string, string> = {
   bg: 'messageBg',
   'text-color': 'messageColor',
@@ -71,13 +85,6 @@ export const scheme: SettingDef[] = [
     default: 1,
     step: 0.5,
     unit: 'px',
-  },
-  {
-    key: 'strokeColor',
-    section: 'Effects',
-    type: 'color',
-    label: 'Stroke Color',
-    default: '#333333',
   },
   {
     key: 'glowSpread',

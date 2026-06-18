@@ -13,7 +13,7 @@ import { CORE_SCHEME } from './core'
 import { manifest as imManifest, css as imCss, reset as imReset } from './im/manifest'
 import { scheme as imScheme, coreCssVarMap as imCssVarMap } from './im/scheme'
 import { manifest as inkManifest, css as inkCss, reset as inkReset } from './ink-sticker/manifest'
-import { scheme as inkScheme, coreCssVarMap as inkCssVarMap } from './ink-sticker/scheme'
+import { scheme as inkScheme, coreCssVarMap as inkCssVarMap, strokeMap as inkStrokeMap } from './ink-sticker/scheme'
 
 /**
  * Merge core + theme-specific scheme into a single flat array.
@@ -22,21 +22,24 @@ import { scheme as inkScheme, coreCssVarMap as inkCssVarMap } from './ink-sticke
  */
 function mergeScheme(
   themeScheme: ThemeBundle['scheme'],
-  cssVarMap: Record<string, string>
+  cssVarMap: Record<string, string>,
+  strokeMap?: Record<string, string>,
 ): ThemeBundle['scheme'] {
   const mappedCore = CORE_SCHEME.map((def) => {
     const cssVar = cssVarMap[def.key]
     if (!cssVar) return def
     return { ...def, cssVar } as SettingDef
   })
-  return [...mappedCore, ...themeScheme]
+  const result = [...mappedCore, ...themeScheme]
+  if (strokeMap) Object.assign(result, { strokeMap })
+  return result
 }
 
 const themes: ThemeBundle[] = [
   { manifest: imManifest, scheme: mergeScheme(imScheme, imCssVarMap), css: imCss, reset: imReset },
   {
     manifest: inkManifest,
-    scheme: mergeScheme(inkScheme, inkCssVarMap),
+    scheme: mergeScheme(inkScheme, inkCssVarMap, inkStrokeMap),
     css: inkCss,
     reset: inkReset,
   },
