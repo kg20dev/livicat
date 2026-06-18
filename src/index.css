@@ -360,7 +360,15 @@ yt-live-chat-author-chip {
     0 0 40px rgba(255, 68, 68, 0.2),
     0 0 60px rgba(255, 68, 68, 0.1);
   border-color: rgba(255, 68, 68, 0.3);
-  backdrop-filter: blur(20px) saturate(130%) brightness(1.15);
+  /* Solid fallback for browsers without backdrop-filter support */
+  background: rgba(255, 68, 68, 0.08);
+}
+
+/* Windows WebView2-safe backdrop-filter (max 16px blur) */
+@supports (backdrop-filter: blur(16px)) {
+  .logo-luminous-hover:hover {
+    backdrop-filter: blur(16px) saturate(130%) brightness(1.15);
+  }
 }
 
 .logo-luminous-hover:hover .logo-icon {
@@ -379,7 +387,8 @@ yt-live-chat-author-chip {
 
 /* Shimmer animation for text on hover */
 @keyframes textShimmer {
-  0%, 100% {
+  0%,
+  100% {
     filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.6));
   }
   50% {
