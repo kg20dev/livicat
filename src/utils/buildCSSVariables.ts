@@ -23,9 +23,9 @@ interface Hsl { h: number; s: number; l: number }
 /** Extract HSL from a 6-digit hex color string. */
 function hexToHsl(hex: string): Hsl {
   const h = hex.replace('#', '')
-  let r = parseInt(h.substring(0, 2), 16) / 255
-  let g = parseInt(h.substring(2, 4), 16) / 255
-  let b = parseInt(h.substring(4, 6), 16) / 255
+  const r = parseInt(h.substring(0, 2), 16) / 255
+  const g = parseInt(h.substring(2, 4), 16) / 255
+  const b = parseInt(h.substring(4, 6), 16) / 255
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   let hue = 0
@@ -124,7 +124,7 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     // A plain string entry uses default harmonyInvertColor options (stroke style).
     // An object entry can specify per-target options (e.g. glow stays light).
     // Only fires when the scheme array has a derivationMap attached.
-    const derivationMap = (scheme as Record<string, any>).strokeMap as Record<string, DerivationEntry> | undefined
+    const derivationMap = (scheme as { strokeMap?: Record<string, DerivationEntry> }).strokeMap
     if (derivationMap && cssName in derivationMap && def.type === 'color') {
       const entry = derivationMap[cssName]
       const target = typeof entry === 'string' ? entry : entry.target

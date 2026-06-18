@@ -113,7 +113,6 @@ describe('harmonyInvertColor (chip style)', () => {
     const result = harmonyInvertColor('#2d1b00', CHIP_OPTS) // dark orange
     expect(result.startsWith('#')).toBe(true)
     const r = parseInt(result.slice(1, 3), 16)
-    const g = parseInt(result.slice(3, 5), 16)
     const b = parseInt(result.slice(5, 7), 16)
     // Should still be warm (red highest, blue lowest)
     expect(r).toBeGreaterThan(b)
