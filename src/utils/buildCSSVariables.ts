@@ -98,8 +98,12 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     }
     // Derive chip background from role bg colors
     // Same hue, opposite lightness — chip stands out from the bubble
-    if (cssName.endsWith('-bg') && def.type === 'color') {
-      const chipVar = cssName.replace(/-bg$/, '-chip-bg')
+    // Supports both kebab-case (--chat-owner-bg → --chat-owner-chip-bg)
+    // and camelCase (--messageBg → --messageChipBg, --ownerBg → --ownerChipBg)
+    if ((cssName.endsWith('-bg') || cssName.endsWith('Bg')) && def.type === 'color') {
+      const chipVar = cssName.endsWith('-bg')
+        ? cssName.replace(/-bg$/, '-chip-bg')
+        : cssName.replace(/Bg$/, 'ChipBg')
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
       lines.push(`  --${chipVar}: ${chipFromBg(hex)};`)

@@ -97,6 +97,9 @@
   font-size: var(--usernameFontSize, 14px) !important;
   font-weight: var(--chat-username-font-weight, 600) !important;
   color: var(--usernameColor, #bb86fc) !important;
+  background: var(--messageChipBg, #4a4a7a) !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
   margin-bottom: 0 !important;
   display: inline-block !important;
   width: fit-content !important;
