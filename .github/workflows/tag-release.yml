@@ -86,7 +86,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: release/app
-          head: main
           title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
           body: |
             ## Release ${{ github.ref_name }}
@@ -159,36 +158,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-release:
-    name: Build & Create Release
-    needs: merge-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout release/app
-        uses: actions/checkout@v4
-        with:
-          ref: release/app
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Release ${{ github.ref_name }}"
-          releaseBody: |
-            See [changelog](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})
-          args: --target all
+  # Release is handled by build-tauri.yml (push to release/**)
+  # which runs proper cross-platform builds (macOS + Windows).
