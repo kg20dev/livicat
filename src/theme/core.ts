@@ -145,6 +145,52 @@ export const CORE_SCHEME: SettingDef[] = [
     default: false,
   },
 
+  /* ── Typography ────────────────────────────────────────── */
+  {
+    key: 'usernameFontSize',
+    section: 'Typography',
+    type: 'range',
+    label: 'Username Size',
+    min: 10,
+    max: 40,
+    default: 14,
+    unit: 'px',
+    cssVar: 'usernameFontSize',
+  },
+  {
+    key: 'messageFontSize',
+    section: 'Typography',
+    type: 'range',
+    label: 'Message Size',
+    min: 10,
+    max: 48,
+    default: 14,
+    unit: 'px',
+    cssVar: 'messageFontSize',
+  },
+  {
+    key: 'avatarSize',
+    section: 'Typography',
+    type: 'range',
+    label: 'Avatar Size',
+    min: 16,
+    max: 80,
+    default: 28,
+    unit: 'px',
+    cssVar: 'avatarSize',
+  },
+  {
+    key: 'chat-avatar-vertical-offset',
+    section: 'Typography',
+    type: 'range',
+    label: 'Avatar Vertical Offset',
+    min: -20,
+    max: 60,
+    default: 0,
+    unit: 'px',
+    cssVar: 'chat-avatar-vertical-offset',
+  },
+
   /* ── Role Colors ────────────────────────────────────────── */
   {
     key: 'owner-bg',

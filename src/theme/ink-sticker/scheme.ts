@@ -16,6 +16,10 @@ export const coreCssVarMap: Record<string, string> = {
   'message-spacing': 'chat-message-spacing',
   'animation-speed': 'animationSpeed',
   'username-bold': 'chat-username-font-weight',
+  'username-font-size': 'usernameFontSize',
+  'message-font-size': 'messageFontSize',
+  'avatar-size': 'avatarSize',
+  'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
   'owner-bg': 'ownerBg',
   'owner-text': 'ownerText',
   'mod-bg': 'modBg',
@@ -29,48 +33,6 @@ export const coreCssVarMap: Record<string, string> = {
 }
 
 export const scheme: SettingDef[] = [
-  /* ── Typography ─────────────────────────────────────────── */
-  {
-    key: 'usernameFontSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Name Size',
-    min: 10,
-    max: 40,
-    default: 14,
-    unit: 'px',
-  },
-  {
-    key: 'messageFontSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Content Font Size',
-    min: 10,
-    max: 48,
-    default: 14,
-    unit: 'px',
-  },
-  {
-    key: 'avatarSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Avatar Size',
-    min: 16,
-    max: 80,
-    default: 28,
-    unit: 'px',
-  },
-  {
-    key: 'chat-avatar-vertical-offset',
-    section: 'Typography',
-    type: 'range',
-    label: 'Avatar Vertical Offset',
-    min: -20,
-    max: 60,
-    default: 0,
-    unit: 'px',
-  },
-
   /* ── Effects ────────────────────────────────────────────── */
   {
     key: 'skewAngle',
