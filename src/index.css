@@ -115,6 +115,15 @@
   background: #555;
 }
 
+/* Hide scrollbar for horizontal scrollable rows (theme cards, etc.) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ─── Glass panel ───────────────────────────────────────────────── */
 .glass-panel {
   background: rgba(30, 30, 30, 0.5);

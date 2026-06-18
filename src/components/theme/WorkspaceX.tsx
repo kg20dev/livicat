@@ -138,21 +138,23 @@ export function WorkspaceX() {
         <span className="text-title-md font-bold text-on-surface">Workspace X</span>
         <div className="w-px h-5 bg-outline-variant/30 mx-1" />
 
-        {/* Theme Cards */}
-        <div className="flex flex-wrap gap-3">
+        {/* Theme Cards — scrollable row, scales to 50+ themes */}
+        <div className="flex overflow-x-auto gap-2 flex-1 flex-nowrap py-1 no-scrollbar">
           {THEMES.map((t) => {
-            // Extract key colors for mini preview
+            // Extract key colors for palette swatches
             const byKey = (key: string, fallback: string) => {
               const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
               return def && typeof def.default === 'string' ? def.default : fallback
             }
-            const colors = {
-              accent: byKey('chat-scrollbar-thumb', byKey('strokeColor', '#888888')),
-              msgBg: byKey('chat-msg-bg', byKey('messageBg', '#1a1a1a')),
-              text: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')),
-              username: byKey('chat-username-color', byKey('usernameColor', '#bb86fc')),
-              bg: byKey('bg', '#0d0d0d'),
-            }
+            const palette = [
+              { label: 'BG', color: byKey('bg', '#0d0d0d') },
+              { label: 'Card', color: byKey('chat-msg-bg', byKey('messageBg', '#1a1a1a')) },
+              { label: 'Text', color: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')) },
+              {
+                label: 'Accent',
+                color: byKey('chat-scrollbar-thumb', byKey('strokeColor', '#888888')),
+              },
+            ]
             const isSelected = selectedThemeId === t.manifest.id
 
             return (
@@ -160,46 +162,36 @@ export function WorkspaceX() {
                 key={t.manifest.id}
                 onClick={() => setSelectedThemeId(t.manifest.id)}
                 className={`
-                  relative group bg-surface-container-high rounded-lg p-3
-                  border-2 transition-all duration-200 cursor-pointer
-                  min-w-[180px] w-[200px]
+                  flex-shrink-0 w-[160px] bg-surface-container-high rounded-lg p-2.5
+                  border-2 transition-all duration-200 cursor-pointer text-left
                   ${
                     isSelected
                       ? 'border-primary ring-2 ring-primary/30'
-                      : 'border-outline-variant hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md'
+                      : 'border-outline-variant hover:border-primary/40 hover:bg-surface-container-higher'
                   }
                 `}
               >
-                {/* Mini Chat Preview */}
-                <div
-                  className="mb-2 rounded-md overflow-hidden"
-                  style={{
-                    backgroundColor: colors.bg,
-                    borderLeft: `3px solid ${colors.accent}`,
-                    height: '50px',
-                    padding: '6px',
-                  }}
-                >
-                  <div className="text-[8px] font-bold mb-1" style={{ color: colors.username }}>
-                    Name
-                  </div>
-                  <div className="text-[8px]" style={{ color: colors.text }}>
-                    Message!
-                  </div>
+                {/* Color palette bar */}
+                <div className="flex rounded-md overflow-hidden h-5 mb-2 border border-black/5">
+                  {palette.map((c) => (
+                    <div
+                      key={c.label}
+                      className="flex-1"
+                      style={{ backgroundColor: c.color }}
+                      title={c.label}
+                    />
+                  ))}
                 </div>
 
                 {/* Theme Name */}
                 <div
-                  className={`
-                  text-label-md font-bold mb-0.5
-                  ${isSelected ? 'text-primary' : 'text-on-surface group-hover:text-on-surface'}
-                `}
+                  className={`text-label-sm font-bold mb-0.5 ${isSelected ? 'text-primary' : 'text-on-surface'}`}
                 >
                   {t.manifest.name}
                 </div>
 
                 {/* Description */}
-                <div className="text-label-sm text-on-surface-variant line-clamp-2 h-[2.5em] overflow-hidden">
+                <div className="text-[11px] text-on-surface-variant/80 leading-tight truncate">
                   {t.manifest.description}
                 </div>
               </button>
