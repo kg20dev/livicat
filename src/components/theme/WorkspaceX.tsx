@@ -137,18 +137,64 @@ export function WorkspaceX() {
         <span className="material-symbols-outlined text-primary">magic_button</span>
         <span className="text-title-md font-bold text-on-surface">Workspace X</span>
         <div className="w-px h-5 bg-outline-variant/30 mx-1" />
-        <select
-          value={selectedThemeId}
-          onChange={(e) => setSelectedThemeId(e.target.value)}
-          className="bg-surface-container-high text-on-surface text-label-md font-medium rounded-lg px-3 py-1.5 border border-outline-variant outline-none cursor-pointer hover:border-primary/40 focus:border-primary transition-colors"
-        >
-          {THEMES.map((t) => (
-            <option key={t.manifest.id} value={t.manifest.id}>
-              {t.manifest.name}
-            </option>
-          ))}
-        </select>
-        <span className="text-label-sm text-on-surface-variant">by {theme.manifest.creator}</span>
+
+        {/* Theme Cards */}
+        <div className="flex items-center gap-2">
+          {THEMES.map((t) => {
+            // Extract first 5 color settings for palette
+            const colorSettings = t.scheme.filter((s) => s.type === 'color').slice(0, 5)
+            const isSelected = selectedThemeId === t.manifest.id
+
+            return (
+              <button
+                key={t.manifest.id}
+                onClick={() => setSelectedThemeId(t.manifest.id)}
+                className={`
+                  relative group bg-surface-container-high rounded-lg p-2.5 
+                  border-2 transition-all duration-200 cursor-pointer
+                  ${
+                    isSelected
+                      ? 'border-primary ring-2 ring-primary/30'
+                      : 'border-outline-variant hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md'
+                  }
+                `}
+              >
+                {/* Color Palette */}
+                <div className="flex items-center gap-1 mb-2">
+                  {colorSettings.map((colorDef) => (
+                    <div
+                      key={colorDef.key}
+                      className="w-3 h-3 rounded-full border border-black/10"
+                      style={{
+                        backgroundColor:
+                          typeof colorDef.default === 'string' ? colorDef.default : '#888888',
+                      }}
+                      title={colorDef.label}
+                    />
+                  ))}
+                  {colorSettings.length === 0 && (
+                    <div className="w-3 h-3 rounded-full bg-outline-variant/30" />
+                  )}
+                </div>
+
+                {/* Theme Name */}
+                <div
+                  className={`
+                  text-label-md font-bold mb-0.5
+                  ${isSelected ? 'text-primary' : 'text-on-surface group-hover:text-on-surface'}
+                `}
+                >
+                  {t.manifest.name}
+                </div>
+
+                {/* Description */}
+                <div className="text-label-sm text-on-surface-variant truncate max-w-[120px]">
+                  {t.manifest.description}
+                </div>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
