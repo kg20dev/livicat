@@ -89,7 +89,7 @@ export const FONT_OPTIONS: FontOption[] = [
   {
     value: 'JUA, sans-serif',
     label: 'JUA',
-    url: 'https://fonts.googleapis.com/css2?family=JUA:wght@400;700&display=swap',
+    url: 'https://fonts.googleapis.com/css2?family=JUA&display=swap',
   },
   {
     value: '"Playfair Display", serif',

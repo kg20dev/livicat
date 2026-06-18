@@ -168,9 +168,11 @@ export const CORE_SCHEME: SettingDef[] = [
     unit: 'px',
     cssVar: 'messageFontSize',
   },
+
+  /* ── Common ──────────────────────────────────────────────── */
   {
     key: 'avatarSize',
-    section: 'Typography',
+    section: 'Common',
     type: 'range',
     label: 'Avatar Size',
     min: 16,
@@ -181,7 +183,7 @@ export const CORE_SCHEME: SettingDef[] = [
   },
   {
     key: 'chat-avatar-vertical-offset',
-    section: 'Typography',
+    section: 'Common',
     type: 'range',
     label: 'Avatar Vertical Offset',
     min: -20,
