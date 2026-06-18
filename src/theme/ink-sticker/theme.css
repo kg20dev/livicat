@@ -123,9 +123,7 @@
   transform: skew(var(--skewAngle, 0deg));
   max-width: var(--chat-max-width, 400px) !important;
   width: fit-content !important;
-  box-shadow:
-    var(--shadowOffset, 3px) var(--shadowOffset, 3px) 0 var(--shadowColor, #000000),
-    0 0 var(--glowSpread, 6px) var(--glowColor, transparent) !important;
+  box-shadow: var(--shadowOffset, 3px) var(--shadowOffset, 3px) 0 var(--shadowColor, #000000) !important;
   opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
   animation-name: theme-ink-sticker-message-in !important;
   animation-duration: var(--animation-duration, 0.25s) !important;
