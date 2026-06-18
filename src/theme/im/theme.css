@@ -475,3 +475,55 @@
   border-left-color: #00b140 !important;
   border-bottom-color: #00b140 !important;
 }
+
+/* ── Punctuation badge role colors ──────────────────────────── */
+
+/* Owner */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message[data-punct]::after {
+  background: var(--chat-owner-text, #ffb347) !important;
+  color: var(--chat-owner-bg, #2d1b00) !important;
+}
+
+/* Moderator */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message[data-punct]::after {
+  background: var(--chat-mod-text, #47b5ff) !important;
+  color: var(--chat-mod-bg, #001a2d) !important;
+}
+
+/* Member */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message[data-punct]::after {
+  background: var(--chat-member-text, #8bcc47) !important;
+  color: var(--chat-member-bg, #1a2d00) !important;
+}
+
+/* Super Chat */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message[data-punct]::after {
+  background: #ffd700 !important;
+  color: #1a1a1a !important;
+}
+
+/* Member Ship */
+:is(
+    .theme-im yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-im yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message[data-punct]::after {
+  background: #00b140 !important;
+  color: #0d2818 !important;
+}
