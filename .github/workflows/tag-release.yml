@@ -108,7 +108,7 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          BRANCH="release/v$VERSION"
+          BRANCH="rel/v$VERSION"
           git push origin "HEAD:refs/heads/$BRANCH"
 
           # Build PR body
