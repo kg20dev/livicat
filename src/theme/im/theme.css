@@ -375,7 +375,7 @@
   )
   #content
   #author-name {
-  background: var(--chat-owner-chip-bg, #0047b3) !important;
+  background: var(--chat-owner-chip-bg, #6c5f4d) !important;
   color: var(--chat-owner-username, #ffb347) !important;
   font-weight: 700 !important;
 }
@@ -405,7 +405,7 @@
   )
   #content
   #author-name {
-  background: var(--chat-mod-chip-bg, #b34b00) !important;
+  background: var(--chat-mod-chip-bg, #4d5f6c) !important;
   color: var(--chat-mod-username, #47b5ff) !important;
   font-weight: 700 !important;
 }
@@ -435,7 +435,7 @@
   )
   #content
   #author-name {
-  background: var(--chat-member-chip-bg, #4b00b3) !important;
+  background: var(--chat-member-chip-bg, #5f6c4d) !important;
   color: var(--chat-member-username, #ce93d8) !important;
   font-weight: 600 !important;
 }
@@ -465,7 +465,7 @@
   )
   #content
   #author-name {
-  background: var(--chat-superchat-chip-bg, #0028ff) !important;
+  background: var(--chat-superchat-chip-bg, #ffe34d) !important;
   color: var(--chat-superchat-text, #1a1a1a) !important;
   font-weight: 700 !important;
 }
@@ -495,7 +495,7 @@
   )
   #content
   #author-name {
-  background: var(--chat-membership-chip-bg, #872c62) !important;
+  background: var(--chat-membership-chip-bg, #56695d) !important;
   color: var(--chat-membership-text, #00b140) !important;
   font-weight: 700 !important;
 }

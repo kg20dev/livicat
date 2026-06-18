@@ -16,61 +16,17 @@ function getGoogleFontImport(fontFamily: string): string | null {
   return `@import url('${url}');`
 }
 
-/* ── Complementary color helper ─────────────────────────────── */
-
-export function complementaryHex(hex: string): string {
+/* ── Tint helper ──────────────────────────────────────────────── */
+/** Lighten a hex color by mixing with white at the given ratio (0–1). */
+export function tintHex(hex: string, amount: number): string {
   const h = hex.replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16) / 255
-  const g = parseInt(h.substring(2, 4), 16) / 255
-  const b = parseInt(h.substring(4, 6), 16) / 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let hue = 0
-  let sat = 0
-  const lit = (max + min) / 2
-
-  if (max !== min) {
-    const d = max - min
-    sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min)
-    switch (max) {
-      case r:
-        hue = ((g - b) / d + (g < b ? 6 : 0)) / 6
-        break
-      case g:
-        hue = ((b - r) / d + 2) / 6
-        break
-      case b:
-        hue = ((r - g) / d + 4) / 6
-        break
-    }
-  }
-
-  // Complementary: shift hue 180°
-  hue = (hue + 0.5) % 1
-
-  // Ensure readable lightness — clamp to 35–50% range
-  const targetL = Math.max(0.35, Math.min(lit * 2.5, 0.5))
-  const targetS = Math.max(sat, 0.5)
-
-  // HSL → RGB
-  const fn = (p: number, q: number, t: number) => {
-    if (t < 0) t += 1
-    if (t > 1) t -= 1
-    if (t < 1 / 6) return p + (q - p) * 6 * t
-    if (t < 1 / 2) return q
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-    return p
-  }
-
-  const q = targetL < 0.5 ? targetL * (1 + targetS) : targetL + targetS - targetL * targetS
-  const p = 2 * targetL - q
-
-  const cr = Math.round(fn(p, q, hue + 1 / 3) * 255)
-  const cg = Math.round(fn(p, q, hue) * 255)
-  const cb = Math.round(fn(p, q, hue - 1 / 3) * 255)
-
-  return `#${cr.toString(16).padStart(2, '0')}${cg.toString(16).padStart(2, '0')}${cb.toString(16).padStart(2, '0')}`
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  const tr = Math.round(r + (255 - r) * amount)
+  const tg = Math.round(g + (255 - g) * amount)
+  const tb = Math.round(b + (255 - b) * amount)
+  return `#${tr.toString(16).padStart(2, '0')}${tg.toString(16).padStart(2, '0')}${tb.toString(16).padStart(2, '0')}`
 }
 
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
@@ -93,13 +49,15 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     } else {
       lines.push(`  --${cssName}: ${value};`)
     }
-    // Derive complementary chip background for role bg colors
+    // Derive tinted chip background for role bg colors
+    // (lighter version so the chip stands out against the bubble,
+    //  not against the overall dark chat background)
     if (cssName.endsWith('-bg') && def.type === 'color') {
       const chipVar = cssName.replace(/-bg$/, '-chip-bg')
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
-      const comp = complementaryHex(hex)
-      lines.push(`  --${chipVar}: ${comp};`)
+      const tinted = tintHex(hex, 0.3)
+      lines.push(`  --${chipVar}: ${tinted};`)
     }
   }
 
