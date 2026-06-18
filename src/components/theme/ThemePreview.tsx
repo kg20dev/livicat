@@ -184,9 +184,25 @@ export function ThemePreview({
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
             overflow: visible;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 0.5rem;
             min-height: 80px;
+          }
+
+          /* ── Gallery Role Label ─────────────────────────────────────── */
+          .livicat-gallery-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 10px;
+            border-radius: 4px;
+            line-height: 1.4;
+            white-space: nowrap;
           }
 
           .livicat-gallery-card:hover {
@@ -232,6 +248,7 @@ export function ThemePreview({
           <div className="livicat-gallery-grid overflow-y-auto h-full">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
+                <span className="livicat-gallery-label">{ROLE_LABELS[msg.role ?? 'default'] ?? msg.role}</span>
                 <ChatMessage message={msg} showAvatar={showAvatars} />
               </div>
             ))}
@@ -247,6 +264,17 @@ export function ThemePreview({
       </div>
     </div>
   )
+}
+
+/* ─── Gallery role labels ────────────────────────────────────────── */
+
+const ROLE_LABELS: Record<string, string> = {
+  default: 'Default',
+  owner: 'Owner',
+  moderator: 'Moderator',
+  member: 'Member',
+  'super-chat': 'Super Chat',
+  'member-ship': 'Membership',
 }
 
 /* ─── Single YouTube-Style Message ─────────────────────────────────── */
