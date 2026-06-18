@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { isAnalyticsEnabled, setAnalyticsEnabled, trackEventAsync } from '../../utils/analytics'
+import { TauriService } from '../../services'
+import pkg from '../../../package.json'
 import './Settings.css'
 
 /**
@@ -8,11 +10,16 @@ import './Settings.css'
 export default function Settings() {
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
 
   useEffect(() => {
     // Load current analytics consent status from localStorage
     setAnalyticsEnabledState(isAnalyticsEnabled())
     setIsLoading(false)
+    // Fetch runtime version from Tauri
+    TauriService.getAppVersion().then((v) => {
+      if (v) setRuntimeVersion(v)
+    })
   }, [])
 
   const handleToggle = () => {
@@ -129,7 +136,7 @@ export default function Settings() {
                 <span className="settings-item-label">Version</span>
               </div>
               <p className="settings-item-description">
-                Livicat v0.6.1 — YouTube Live Chat editor for OBS
+                Livicat v{runtimeVersion ?? pkg.version} — YouTube Live Chat editor for OBS
               </p>
             </div>
           </div>
