@@ -29,7 +29,7 @@ import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
 /* ─── Core sections (shared across themes) ───────────────────── */
-const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Role Colors'])
+const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Typography', 'Role Colors'])
 
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
 
