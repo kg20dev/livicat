@@ -109,7 +109,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           BRANCH="release/v$VERSION"
-          git push origin "HEAD:$BRANCH"
+          git push origin "HEAD:refs/heads/$BRANCH"
 
           # Build PR body
           echo "## Release v$VERSION" > /tmp/pr-body.md
