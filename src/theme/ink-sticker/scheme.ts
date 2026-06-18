@@ -18,7 +18,10 @@ import type { SettingDef, DerivationEntry } from '../types'
  */
 export const strokeMap: Record<string, DerivationEntry> = {
   messageColor: 'strokeColor',
-  usernameColor: { target: 'glowColor', options: { darkTargetL: 0.65, lightTargetL: 0.65, satScale: 0.85 } },
+  usernameColor: {
+    target: 'glowColor',
+    options: { darkTargetL: 0.65, lightTargetL: 0.65, satScale: 0.85 },
+  },
   ownerText: 'ownerStroke',
   modText: 'modStroke',
   memberText: 'memberStroke',

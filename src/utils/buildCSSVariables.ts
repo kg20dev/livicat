@@ -6,7 +6,12 @@
  * Also injects @import for Google Fonts when a web font is selected.
  */
 
-import type { SettingDef, ThemeSettings, HarmonyInvertOptions, DerivationEntry } from '../theme/types'
+import type {
+  SettingDef,
+  ThemeSettings,
+  HarmonyInvertOptions,
+  DerivationEntry,
+} from '../theme/types'
 import { getFontUrl } from './fonts'
 
 /** Option value → Google Font @import rule, or null for system fonts. */
@@ -18,7 +23,11 @@ function getGoogleFontImport(fontFamily: string): string | null {
 
 /* ── HSL utilities ─────────────────────────────────────────────── */
 
-interface Hsl { h: number; s: number; l: number }
+interface Hsl {
+  h: number
+  s: number
+  l: number
+}
 
 /** Extract HSL from a 6-digit hex color string. */
 function hexToHsl(hex: string): Hsl {
@@ -35,9 +44,15 @@ function hexToHsl(hex: string): Hsl {
     const d = max - min
     sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min)
     switch (max) {
-      case r: hue = ((g - b) / d + (g < b ? 6 : 0)) / 6; break
-      case g: hue = ((b - r) / d + 2) / 6; break
-      case b: hue = ((r - g) / d + 4) / 6; break
+      case r:
+        hue = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        hue = ((b - r) / d + 2) / 6
+        break
+      case b:
+        hue = ((r - g) / d + 4) / 6
+        break
     }
   }
   return { h: hue, s: sat, l: lit }
@@ -117,7 +132,9 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
         : cssName.replace(/Bg$/, 'ChipBg')
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
-      lines.push(`  --${chipVar}: ${harmonyInvertColor(hex, { lightThreshold: 0.35, darkTargetL: 0.3, lightTargetL: 0.45, satScale: 1, boostDarkSat: true })};`)
+      lines.push(
+        `  --${chipVar}: ${harmonyInvertColor(hex, { lightThreshold: 0.35, darkTargetL: 0.3, lightTargetL: 0.45, satScale: 1, boostDarkSat: true })};`
+      )
     }
 
     // Derive contrast color via theme-specific derivationMap (e.g. strokeMap).
@@ -128,7 +145,8 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     if (derivationMap && cssName in derivationMap && def.type === 'color') {
       const entry = derivationMap[cssName]
       const target = typeof entry === 'string' ? entry : entry.target
-      const opts: HarmonyInvertOptions | undefined = typeof entry === 'string' ? undefined : entry.options
+      const opts: HarmonyInvertOptions | undefined =
+        typeof entry === 'string' ? undefined : entry.options
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
       lines.push(`  --${target}: ${harmonyInvertColor(hex, opts)};`)

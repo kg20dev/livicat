@@ -125,7 +125,15 @@ describe('buildCSSVariables', () => {
   const sampleScheme: SettingDef[] = [
     { key: 'messageColor', type: 'color', label: 'Text', default: '#e0e0e0' },
     { key: 'ownerText', type: 'color', label: 'Owner Text', default: '#ff8c42' },
-    { key: 'strokeWidth', type: 'range', label: 'Stroke Width', min: 0, max: 5, default: 1, unit: 'px' },
+    {
+      key: 'strokeWidth',
+      type: 'range',
+      label: 'Stroke Width',
+      min: 0,
+      max: 5,
+      default: 1,
+      unit: 'px',
+    },
     { key: 'shadowColor', type: 'color', label: 'Shadow', default: '#000000' },
     { key: 'someToggle', type: 'toggle', label: 'Toggle', default: false },
   ]
@@ -145,7 +153,13 @@ describe('buildCSSVariables', () => {
 
   it('uses cssVar override when present', () => {
     const scheme: SettingDef[] = [
-      { key: 'text-color', cssVar: 'messageColor', type: 'color', label: 'Text', default: '#e0e0e0' },
+      {
+        key: 'text-color',
+        cssVar: 'messageColor',
+        type: 'color',
+        label: 'Text',
+        default: '#e0e0e0',
+      },
     ]
     const css = buildCSSVariables({}, scheme)
     expect(css).toContain('--messageColor: #e0e0e0;')

@@ -13,7 +13,11 @@ import { CORE_SCHEME } from './core'
 import { manifest as imManifest, css as imCss, reset as imReset } from './im/manifest'
 import { scheme as imScheme, coreCssVarMap as imCssVarMap } from './im/scheme'
 import { manifest as inkManifest, css as inkCss, reset as inkReset } from './ink-sticker/manifest'
-import { scheme as inkScheme, coreCssVarMap as inkCssVarMap, strokeMap as inkStrokeMap } from './ink-sticker/scheme'
+import {
+  scheme as inkScheme,
+  coreCssVarMap as inkCssVarMap,
+  strokeMap as inkStrokeMap,
+} from './ink-sticker/scheme'
 
 /**
  * Merge core + theme-specific scheme into a single flat array.
@@ -23,7 +27,7 @@ import { scheme as inkScheme, coreCssVarMap as inkCssVarMap, strokeMap as inkStr
 function mergeScheme(
   themeScheme: ThemeBundle['scheme'],
   cssVarMap: Record<string, string>,
-  strokeMap?: Record<string, DerivationEntry>,
+  strokeMap?: Record<string, DerivationEntry>
 ): ThemeBundle['scheme'] {
   const mappedCore = CORE_SCHEME.map((def) => {
     const cssVar = cssVarMap[def.key]
