@@ -567,7 +567,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                     key={section}
                     icon={getSectionIcon(section)}
                     title={section}
-                    defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+                    defaultOpen={false}
                   >
                     {section === 'Role Colors' ? (
                       <div className="space-y-4">
@@ -612,7 +612,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                     key={section}
                     icon={getSectionIcon(section)}
                     title={section}
-                    defaultOpen={section !== 'Visibility'}
+                    defaultOpen={false}
                   >
                     <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
                   </CollapsibleSection>
@@ -667,7 +667,7 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
                       key={section}
                       icon={getSectionIcon(section)}
                       title={section}
-defaultOpen={section !== 'YouTube'}
+                      defaultOpen={false}
                     >
                       {section === 'Role Colors' ? (
                         <div className="space-y-4">
@@ -711,7 +711,7 @@ defaultOpen={section !== 'YouTube'}
                       key={section}
                       icon={getSectionIcon(section)}
                       title={section}
-                      defaultOpen={section !== 'Visibility'}
+                      defaultOpen={false}
                     >
                       <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
                     </CollapsibleSection>
