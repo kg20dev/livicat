@@ -12,7 +12,7 @@
 export type SettingType = 'color' | 'range' | 'toggle' | 'select'
 
 export interface SettingDef {
-  /** Unique key matching the CSS variable name (without `var(--`) */
+  /** Unique UI key — used for settings lookup, localStorage, and analytics */
   key: string
   /** Control type */
   type: SettingType
@@ -22,6 +22,13 @@ export interface SettingDef {
   default: string | number | boolean
   /** Section/group name for collapsible grouping (optional, flat if omitted) */
   section?: string
+  /**
+   * CSS variable name override.
+   * When set, buildCSSVariables emits `--{cssVar}` instead of `--{key}`.
+   * Allows themes to use different CSS variable names for the same UI setting.
+   * Falls back to `--{key}` when omitted.
+   */
+  cssVar?: string
   /** Minimum value (range only) */
   min?: number
   /** Maximum value (range only) */

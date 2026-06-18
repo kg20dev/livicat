@@ -28,6 +28,9 @@ import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
+/* ─── Core sections (shared across themes) ───────────────────── */
+const CORE_SECTION_NAMES = new Set(['OBS', 'Colors', 'Common', 'YouTube', 'Role Colors'])
+
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
 
 const SECTION_ICONS: Record<string, string> = {
@@ -147,149 +150,53 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
 
   /* ─── Live message streaming ─────────────────────────────────── */
 
+  type LiveRole = 'default' | 'owner' | 'moderator' | 'member' | 'super-chat' | 'member-ship'
+
+  const ROLE_WEIGHTS: { role: LiveRole; weight: number }[] = [
+    { role: 'default', weight: 60 },
+    { role: 'member', weight: 18 },
+    { role: 'moderator', weight: 10 },
+    { role: 'owner', weight: 5 },
+    { role: 'member-ship', weight: 4 },
+    { role: 'super-chat', weight: 3 },
+  ]
+
+  const weightedRoles = ROLE_WEIGHTS.flatMap(({ role, weight }) => Array(weight).fill(role))
+
+  function pickRole(): LiveRole {
+    return weightedRoles[Math.floor(Math.random() * weightedRoles.length)]
+  }
+
   const LIVE_MESSAGES = useMemo(
-    () => [
-      {
-        id: 'l1',
-        username: 'NeonNights',
-        message: 'Hey everyone! 🎉',
-        avatarSeed: 58,
+    () =>
+      (
+        [
+          { id: 'l1', username: 'NeonNights', message: 'Hey everyone! 🎉', avatarSeed: 58 },
+          { id: 'l2', username: 'StreamKing', message: 'Love the stream! 🔥', avatarSeed: 70 },
+          { id: 'l3', username: 'GamerPro_99', message: 'How do I save this theme?', avatarSeed: 5 },
+          { id: 'l4', username: 'PixelPanda', message: 'Can we get more animations?', avatarSeed: 33 },
+          { id: 'l5', username: 'VibeCheck', message: 'This editor is a lifesaver!', avatarSeed: 26 },
+          { id: 'l6', username: 'ChatMaster', message: 'Check out my new stream setup!', avatarSeed: 42 },
+          { id: 'l7', username: 'LiveWire', message: 'First time watching, hi! 👋', avatarSeed: 15 },
+          { id: 'l8', username: 'NeonNights', message: 'Loving the typography options.', avatarSeed: 58 },
+          { id: 'l9', username: 'ShadowFox', message: 'That play was insane! 😱', avatarSeed: 89 },
+          { id: 'l10', username: 'CyberBeam', message: 'What song is this? 🎵', avatarSeed: 44 },
+          { id: 'l11', username: 'VelvetVoice', message: 'Can someone explain the rules?', avatarSeed: 12 },
+          { id: 'l12', username: 'StreamKing', message: 'Hype! Hype! Hype! 🔥🔥🔥', avatarSeed: 70 },
+          { id: 'l13', username: 'GamerPro_99', message: 'GG everyone!', avatarSeed: 5 },
+          { id: 'l14', username: 'PixelPanda', message: 'New subscriber here! 🎊', avatarSeed: 33 },
+          { id: 'l15', username: 'VibeCheck', message: 'This is so relaxing to watch', avatarSeed: 26 },
+          { id: 'l16', username: 'ShadowFox', message: 'The quality is amazing', avatarSeed: 89 },
+          { id: 'l17', username: 'ChatMaster', message: 'How long have you been streaming?', avatarSeed: 42 },
+          { id: 'l18', username: 'VelvetVoice', message: "Keep it up, you're doing great!", avatarSeed: 12 },
+          { id: 'l19', username: 'LiveWire', message: 'LMAO 😂😂😂', avatarSeed: 15 },
+          { id: 'l20', username: 'CyberBeam', message: "What's your rank?", avatarSeed: 44 },
+        ] as const
+      ).map((msg) => ({
+        ...msg,
         timestamp: '10:23 AM',
-      },
-      {
-        id: 'l2',
-        username: 'StreamKing',
-        message: 'Love the stream! 🔥',
-        avatarSeed: 70,
-        timestamp: '10:23 AM',
-      },
-      {
-        id: 'l3',
-        username: 'GamerPro_99',
-        message: 'How do I save this theme?',
-        avatarSeed: 5,
-        timestamp: '10:24 AM',
-      },
-      {
-        id: 'l4',
-        username: 'PixelPanda',
-        message: 'Can we get more animations?',
-        avatarSeed: 33,
-        timestamp: '10:24 AM',
-      },
-      {
-        id: 'l5',
-        username: 'VibeCheck',
-        message: 'This editor is a lifesaver!',
-        avatarSeed: 26,
-        timestamp: '10:25 AM',
-      },
-      {
-        id: 'l6',
-        username: 'ChatMaster',
-        message: 'Check out my new stream setup!',
-        avatarSeed: 42,
-        timestamp: '10:25 AM',
-      },
-      {
-        id: 'l7',
-        username: 'LiveWire',
-        message: 'First time watching, hi! 👋',
-        avatarSeed: 15,
-        timestamp: '10:26 AM',
-      },
-      {
-        id: 'l8',
-        username: 'NeonNights',
-        message: 'Loving the typography options.',
-        avatarSeed: 58,
-        timestamp: '10:26 AM',
-      },
-      {
-        id: 'l9',
-        username: 'ShadowFox',
-        message: 'That play was insane! 😱',
-        avatarSeed: 89,
-        timestamp: '10:27 AM',
-      },
-      {
-        id: 'l10',
-        username: 'CyberBeam',
-        message: 'What song is this? 🎵',
-        avatarSeed: 44,
-        timestamp: '10:27 AM',
-      },
-      {
-        id: 'l11',
-        username: 'VelvetVoice',
-        message: 'Can someone explain the rules?',
-        avatarSeed: 12,
-        timestamp: '10:28 AM',
-      },
-      {
-        id: 'l12',
-        username: 'StreamKing',
-        message: 'Hype! Hype! Hype! 🔥🔥🔥',
-        avatarSeed: 70,
-        timestamp: '10:28 AM',
-      },
-      {
-        id: 'l13',
-        username: 'GamerPro_99',
-        message: 'GG everyone!',
-        avatarSeed: 5,
-        timestamp: '10:29 AM',
-      },
-      {
-        id: 'l14',
-        username: 'PixelPanda',
-        message: 'New subscriber here! 🎊',
-        avatarSeed: 33,
-        timestamp: '10:29 AM',
-      },
-      {
-        id: 'l15',
-        username: 'VibeCheck',
-        message: 'This is so relaxing to watch',
-        avatarSeed: 26,
-        timestamp: '10:30 AM',
-      },
-      {
-        id: 'l16',
-        username: 'ShadowFox',
-        message: 'The quality is amazing',
-        avatarSeed: 89,
-        timestamp: '10:30 AM',
-      },
-      {
-        id: 'l17',
-        username: 'ChatMaster',
-        message: 'How long have you been streaming?',
-        avatarSeed: 42,
-        timestamp: '10:31 AM',
-      },
-      {
-        id: 'l18',
-        username: 'VelvetVoice',
-        message: "Keep it up, you're doing great!",
-        avatarSeed: 12,
-        timestamp: '10:31 AM',
-      },
-      {
-        id: 'l19',
-        username: 'LiveWire',
-        message: 'LMAO 😂😂😂',
-        avatarSeed: 15,
-        timestamp: '10:32 AM',
-      },
-      {
-        id: 'l20',
-        username: 'CyberBeam',
-        message: "What's your rank?",
-        avatarSeed: 44,
-        timestamp: '10:32 AM',
-      },
-    ],
+        role: pickRole(),
+      })),
     []
   )
 
@@ -448,6 +355,18 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
   /* ─── Layout ─────────────────────────────────────────────────── */
 
   const sections = useMemo(() => groupBySection(scheme), [scheme])
+  const { coreGroups, themeGroups } = useMemo(() => {
+    const core: { section: string; items: ThemeBundle['scheme'] }[] = []
+    const theme: typeof core = []
+    for (const g of sections) {
+      if (CORE_SECTION_NAMES.has(g.section)) {
+        core.push(g)
+      } else {
+        theme.push(g)
+      }
+    }
+    return { coreGroups: core, themeGroups: theme }
+  }, [sections])
   const themeCss = theme.css
   const [showSettings, setShowSettings] = useState(false)
 
@@ -484,16 +403,48 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
           )}
           {/* Scrollable settings */}
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-            {sections.map(({ section, items }) => (
-              <CollapsibleSection
-                key={section}
-                icon={getSectionIcon(section)}
-                title={section}
-                defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
-              >
-                <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
-              </CollapsibleSection>
-            ))}
+            {/* ★ Core Settings — shared across all themes */}
+            {coreGroups.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-1 py-1">
+                  <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
+                    ★ Core Settings
+                  </span>
+                </div>
+                {coreGroups.map(({ section, items }) => (
+                  <CollapsibleSection
+                    key={section}
+                    icon={getSectionIcon(section)}
+                    title={section}
+                    defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+                  >
+                    <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                  </CollapsibleSection>
+                ))}
+              </div>
+            )}
+
+            {/* Theme-specific settings */}
+            {themeGroups.length > 0 && (
+              <div className="space-y-3">
+                <hr className="border-outline-variant/30 my-1" />
+                <div className="flex items-center gap-2 px-1 py-1">
+                  <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                    Theme: {manifest.name}
+                  </span>
+                </div>
+                {themeGroups.map(({ section, items }) => (
+                  <CollapsibleSection
+                    key={section}
+                    icon={getSectionIcon(section)}
+                    title={section}
+                    defaultOpen={section !== 'Visibility'}
+                  >
+                    <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                  </CollapsibleSection>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
       )}
@@ -529,16 +480,46 @@ function WorkspaceBody({ theme }: { theme: ThemeBundle }) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-              {sections.map(({ section, items }) => (
-                <CollapsibleSection
-                  key={section}
-                  icon={getSectionIcon(section)}
-                  title={section}
-                  defaultOpen={section !== 'Role Colors' && section !== 'Visibility'}
-                >
-                  <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
-                </CollapsibleSection>
-              ))}
+              {coreGroups.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1 py-1">
+                    <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
+                      ★ Core Settings
+                    </span>
+                  </div>
+                  {coreGroups.map(({ section, items }) => (
+                    <CollapsibleSection
+                      key={section}
+                      icon={getSectionIcon(section)}
+                      title={section}
+                      defaultOpen={section !== 'Role Colors' && section !== 'YouTube'}
+                    >
+                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    </CollapsibleSection>
+                  ))}
+                </div>
+              )}
+
+              {themeGroups.length > 0 && (
+                <div className="space-y-3">
+                  <hr className="border-outline-variant/30 my-1" />
+                  <div className="flex items-center gap-2 px-1 py-1">
+                    <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                      Theme: {manifest.name}
+                    </span>
+                  </div>
+                  {themeGroups.map(({ section, items }) => (
+                    <CollapsibleSection
+                      key={section}
+                      icon={getSectionIcon(section)}
+                      title={section}
+                      defaultOpen={section !== 'Visibility'}
+                    >
+                      <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                    </CollapsibleSection>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

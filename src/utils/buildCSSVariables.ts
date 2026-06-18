@@ -19,7 +19,7 @@ function getGoogleFontImport(fontFamily: string): string | null {
 export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[]): string {
   const imports: string[] = []
   // Check for Google Font import
-  const fontFamily = settings['chat-font-family'] as string | undefined
+  const fontFamily = settings['font-family'] as string | undefined
   if (fontFamily) {
     const fontImport = getGoogleFontImport(fontFamily)
     if (fontImport) imports.push(fontImport)
@@ -27,17 +27,19 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   const lines: string[] = imports.length > 0 ? [...imports, '', ':root {'] : [':root {']
   for (const def of scheme) {
     const value = settings[def.key] ?? def.default
+    // Use cssVar when set, otherwise fall back to the UI key
+    const cssName = def.cssVar || def.key
     // Append unit for numeric range settings (px, em etc.)
     // Skip '%' — used in calc(.../100) and needs to remain unitless
     if (def.type === 'range' && def.unit && def.unit !== '%') {
-      lines.push(`  --${def.key}: ${value}${def.unit};`)
+      lines.push(`  --${cssName}: ${value}${def.unit};`)
     } else {
-      lines.push(`  --${def.key}: ${value};`)
+      lines.push(`  --${cssName}: ${value};`)
     }
   }
 
-  // Animation-derived variables (for IM theme)
-  const animSpeed = (settings['chat-animation-speed'] as string) ?? 'normal'
+  // Animation-derived variables
+  const animSpeed = (settings['animation-speed'] as string) ?? 'normal'
   if (animSpeed === 'none') {
     lines.push('  --animation-duration: 0s;')
     lines.push('  --chip-duration: 0s;')
@@ -52,14 +54,14 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('  --chip-delay: 0.05s;')
   }
 
-  // Message spacing (for IM theme)
-  const spacing = (settings['chat-message-spacing'] as string) ?? 'normal'
+  // Message spacing (computed px values)
+  const spacing = (settings['message-spacing'] as string) ?? 'normal'
   if (spacing === 'compact') lines.push('  --chat-message-spacing: 4px;')
   else if (spacing === 'comfortable') lines.push('  --chat-message-spacing: 16px;')
   else lines.push('  --chat-message-spacing: 10px;')
 
-  // Username weight (for IM theme)
-  const bold = settings['chat-username-font-weight']
+  // Username weight (computed 400/700)
+  const bold = settings['username-bold']
   lines.push(`  --chat-username-font-weight: ${bold ? 700 : 400};`)
 
   // Close :root block

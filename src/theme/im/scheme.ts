@@ -1,31 +1,31 @@
 import type { SettingDef } from '../types'
-import { FONT_OPTIONS } from '../../utils/fonts'
+
+/**
+ * Colour Bubble (IM) — theme-specific settings only.
+ *
+ * Settings shared across all themes live in `src/theme/core.ts`.
+ * `coreCssVarMap` maps each core key → this theme's CSS variable name
+ * so buildCSSVariables emits the correct `--var-name`.
+ */
+export const coreCssVarMap: Record<string, string> = {
+  bg: 'chat-msg-bg',
+  'text-color': 'chat-msg-color',
+  'username-color': 'chat-username-color',
+  'container-opacity': 'chat-container-opacity',
+  'message-opacity': 'chat-message-opacity',
+  'message-spacing': 'chat-message-spacing',
+  'animation-speed': 'chat-animation-speed',
+  'username-bold': 'chat-username-font-weight',
+  'owner-bg': 'chat-owner-bg',
+  'owner-text': 'chat-owner-text',
+  'mod-bg': 'chat-mod-bg',
+  'mod-text': 'chat-mod-text',
+  'member-bg': 'chat-member-bg',
+  'member-text': 'chat-member-text',
+}
 
 export const scheme: SettingDef[] = [
-  /* ── OBS ───────────────────────────────────────────────── */
-  {
-    key: 'chroma-key',
-    section: 'OBS',
-    type: 'toggle',
-    label: 'Chroma Key Ready',
-    default: false,
-  },
-
   /* ── Bubble ────────────────────────────────────────────── */
-  {
-    key: 'chat-msg-bg',
-    section: 'Bubble',
-    type: 'color',
-    label: 'Background',
-    default: '#1a1a1a',
-  },
-  {
-    key: 'chat-msg-color',
-    section: 'Bubble',
-    type: 'color',
-    label: 'Text Color',
-    default: '#e5e2e1',
-  },
   {
     key: 'chat-scrollbar-thumb',
     section: 'Bubble',
@@ -96,13 +96,6 @@ export const scheme: SettingDef[] = [
 
   /* ── Username ──────────────────────────────────────────── */
   {
-    key: 'chat-username-color',
-    section: 'Username',
-    type: 'color',
-    label: 'Username Color',
-    default: '#d6baff',
-  },
-  {
     key: 'chat-username-font-size',
     section: 'Username',
     type: 'range',
@@ -111,13 +104,6 @@ export const scheme: SettingDef[] = [
     max: 40,
     default: 13,
     unit: 'px',
-  },
-  {
-    key: 'chat-username-font-weight',
-    section: 'Username',
-    type: 'toggle',
-    label: 'Bold',
-    default: true,
   },
   {
     key: 'chat-username-vertical-offset',
@@ -164,51 +150,7 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Common ────────────────────────────────────────────── */
-  {
-    key: 'chat-container-opacity',
-    section: 'Common',
-    type: 'range',
-    label: 'Container Opacity',
-    min: 0,
-    max: 100,
-    default: 100,
-    unit: '%',
-  },
-  {
-    key: 'chat-message-opacity',
-    section: 'Common',
-    type: 'range',
-    label: 'Message Opacity',
-    min: 0,
-    max: 100,
-    default: 100,
-    unit: '%',
-  },
-  {
-    key: 'chat-message-spacing',
-    section: 'Common',
-    type: 'select',
-    label: 'Message Spacing',
-    default: 'normal',
-    options: [
-      { value: 'compact', label: 'Compact' },
-      { value: 'normal', label: 'Normal' },
-      { value: 'comfortable', label: 'Comfortable' },
-    ],
-  },
-  {
-    key: 'chat-animation-speed',
-    section: 'Common',
-    type: 'select',
-    label: 'Animation Speed',
-    default: 'normal',
-    options: [
-      { value: 'none', label: 'None' },
-      { value: 'slow', label: 'Slow' },
-      { value: 'normal', label: 'Normal' },
-    ],
-  },
+  /* ── Animation (Colour Bubble specific) ───────────────── */
   {
     key: 'chat-username-animation',
     section: 'Animation',
@@ -235,50 +177,6 @@ export const scheme: SettingDef[] = [
       { value: 'fade', label: 'Fade' },
     ],
   },
-  {
-    key: 'chat-margin-left',
-    section: 'Common',
-    type: 'range',
-    label: 'Screen Margin Left',
-    min: 0,
-    max: 100,
-    default: 0,
-    unit: 'px',
-  },
-  {
-    key: 'chat-font-family',
-    section: 'Common',
-    type: 'select',
-    label: 'Font Family',
-    default: 'inherit',
-    options: [
-      { value: 'inherit', label: 'Default' },
-      ...FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label })),
-    ],
-  },
-
-  /* ── YouTube ──────────────────────────────────────────── */
-  {
-    key: 'hide-youtube-generic',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Generic Messages',
-    default: false,
-  },
-  {
-    key: 'hide-youtube-header',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Chat Header',
-    default: false,
-  },
-  {
-    key: 'hide-youtube-footer',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Chat Footer',
-    default: false,
-  },
 
   /* ── Visibility ────────────────────────────────────────── */
   {
@@ -291,40 +189,11 @@ export const scheme: SettingDef[] = [
 
   /* ── Role Colors ───────────────────────────────────────── */
   {
-    key: 'chat-owner-bg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Bubble Background',
-    default: '#2d1b00',
-  },
-  {
-    key: 'chat-owner-text',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Text',
-    default: '#ffb347',
-  },
-  {
     key: 'chat-owner-username',
     section: 'Role Colors',
     type: 'color',
     label: 'Owner Username',
     default: '#ffb347',
-  },
-
-  {
-    key: 'chat-mod-bg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Mod Bubble Background',
-    default: '#001a2d',
-  },
-  {
-    key: 'chat-mod-text',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Mod Text',
-    default: '#47b5ff',
   },
   {
     key: 'chat-mod-username',
@@ -332,21 +201,6 @@ export const scheme: SettingDef[] = [
     type: 'color',
     label: 'Mod Username',
     default: '#47b5ff',
-  },
-
-  {
-    key: 'chat-member-bg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Bubble Background',
-    default: '#1a2d00',
-  },
-  {
-    key: 'chat-member-text',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Text',
-    default: '#8bcc47',
   },
   {
     key: 'chat-member-username',
