@@ -33,13 +33,6 @@ export const coreCssVarMap: Record<string, string> = {
 export const scheme: SettingDef[] = [
   /* ── Bubble ────────────────────────────────────────────── */
   {
-    key: 'chat-scrollbar-thumb',
-    section: 'Bubble',
-    type: 'color',
-    label: 'Border Color',
-    default: '#888888',
-  },
-  {
     key: 'chat-border-width',
     section: 'Bubble',
     type: 'range',
