@@ -57,6 +57,13 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~ 2>/dev/null || echo "")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: ${PREV_TAG:-none}"
+
       - name: Generate changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
@@ -76,17 +83,28 @@ jobs:
               "itemTemplate": "- {{COMMIT_MESSAGE}} ([#{{ISSUE_NUMBER}}]({{ISSUE_URL}})) ({{AUTHOR}})",
               "maxIssues": 50
             }
-          fromTag: ${{ github.event.repository.releases[0].tag_name || 'v0.0.0' }}
+          fromTag: ${{ steps.prev_tag.outputs.tag }}
           toTag: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate PR creation permissions
+        id: perm_check
+        run: |
+          # The default GITHUB_TOKEN requires "Allow GitHub Actions to create
+          # pull requests" under Settings → Actions → General.
+          # If this step fails, create a classic PAT with "repo" scope, add it
+          # as RELEASE_PAT in Settings → Secrets and variables → Actions, and
+          # replace GITHUB_TOKEN below with secrets.RELEASE_PAT.
+          echo "Using GITHUB_TOKEN for PR creation..."
+          echo "If this fails, go to repo Settings → Actions → General and"
+          echo "enable 'Allow GitHub Actions to create and approve pull requests'."
 
       - name: Create Release PR
         id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
-          # token: ${{ secrets.GITHUB_TOKEN }}
-          token: ${{ secrets.RELEASE_PAT }}  # Use PAT instead of GITHUB_TOKEN
+          token: ${{ secrets.GITHUB_TOKEN }}
           base: release/app
           title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
           body: |
