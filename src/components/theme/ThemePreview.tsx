@@ -266,7 +266,9 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
           <div id="author-name">{message.username}</div>
         </yt-live-chat-author-chip>
         <div id="message-container">
-          <div id="message">{message.message}</div>
+          <div id="message" data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}>
+            {message.message}
+          </div>
         </div>
       </div>
     </yt-live-chat-text-message-renderer>
