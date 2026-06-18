@@ -143,7 +143,7 @@ PreviewArea.VideoInfo = function PreviewAreaVideoInfo() {
   if (!videoInfo || fetchStatus !== 'success') return null
 
   return (
-    <div className="absolute top-20 left-6 right-6 z-10 flex items-center gap-4 bg-surface-container-lowest/90 backdrop-blur-sm border border-outline-variant rounded-xl p-3">
+    <div className="absolute top-20 left-6 right-6 z-10 flex items-center gap-4 glass-medium border border-outline-variant rounded-xl p-3">
       <img
         src={videoInfo.thumbnailUrl}
         alt={videoInfo.title}
@@ -177,7 +177,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
   // Loading state (fetching video metadata from oEmbed API)
   if (mode === 'live' && fetchStatus === 'loading') {
     return (
-      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-[400px] h-[600px] glass-heavy rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-label-md text-on-surface-variant">Fetching video info...</p>
@@ -189,7 +189,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
   // Error state (oEmbed API failed)
   if (mode === 'live' && fetchStatus === 'error') {
     return (
-      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-[400px] h-[600px] glass-heavy rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
         <span className="material-symbols-outlined text-warning text-[48px] mb-4">link_off</span>
         <p className="text-body-md text-on-surface font-bold text-center mb-2">
           Could not load video info
@@ -204,7 +204,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
   // Live mode with successful fetch → show available preview options
   if (mode === 'live' && fetchStatus === 'success' && videoId) {
     return (
-      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-[400px] h-[600px] glass-heavy rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
         <span className="material-symbols-outlined text-primary text-[48px] mb-4">live_tv</span>
         <p className="text-body-md text-on-surface font-bold text-center mb-2">Live Chat Loaded</p>
         <p className="text-label-md text-on-surface-variant text-center max-w-[280px] mb-4">
@@ -222,7 +222,7 @@ PreviewArea.Chat = function PreviewAreaChat() {
   // Live mode with URL but invalid → show URL error
   if (mode === 'live' && urlError) {
     return (
-      <div className="w-full max-w-[400px] h-[600px] glass-panel rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-[400px] h-[600px] glass-heavy rounded-xl shadow-2xl flex flex-col items-center justify-center p-6">
         <span className="material-symbols-outlined text-warning text-[48px] mb-4">link_off</span>
         <p className="text-body-md text-on-surface font-bold text-center mb-2">
           Invalid YouTube URL
@@ -299,7 +299,7 @@ PreviewArea.Actions = function PreviewAreaActions() {
           {isTauri && (
             <button
               onClick={handleLivePreview}
-              className="flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-full text-label-sm font-medium hover:opacity-90 transition-opacity"
+              className="flex items-center gap-1.5 glass-accent-primary text-on-primary px-3 py-1.5 rounded-full text-label-sm font-medium"
             >
               <span className="material-symbols-outlined text-[18px]">
                 {previewOpen ? 'close' : 'visibility'}

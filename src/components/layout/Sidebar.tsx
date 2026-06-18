@@ -64,7 +64,7 @@ export default function Sidebar({
 
       {/* Floating sidebar */}
       <aside
-        className={`h-screen fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
+        className={`h-screen fixed left-0 top-0 glass-medium flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
           isVisible ? 'translate-x-0' : '-translate-x-full'
         } w-[280px] ${className}`}
       >
@@ -102,7 +102,7 @@ Sidebar.Header = function SidebarHeader({
       {/* Close button for floating sidebar */}
       <button
         onClick={toggle}
-        className="absolute right-2 top-2 p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 z-10"
+        className="absolute right-2 top-2 p-2 rounded-lg glass-light hover:glass-medium transition-all active:scale-95 z-10"
         title="Close menu"
         aria-label="Close menu"
       >
@@ -158,10 +158,10 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
+            className={`flex items-center gap-3 rounded-lg transition-all duration-200 px-4 py-3 ${
               isActive
-                ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
-                : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
+                ? 'glass-accent text-on-surface font-bold'
+                : 'text-on-surface-variant font-medium hover:glass-light active:scale-95 duration-100'
             }`}
             title={item.label}
           >
@@ -185,10 +185,10 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
+            className={`flex items-center gap-3 rounded-lg transition-all duration-200 px-4 py-3 ${
               isActive
-                ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
-                : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
+                ? 'glass-accent text-on-surface font-bold'
+                : 'text-on-surface-variant font-medium hover:glass-light active:scale-95 duration-100'
             }`}
             title={item.label}
           >

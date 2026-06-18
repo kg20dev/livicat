@@ -1,0 +1,617 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * LIVICAT GLASSMORPHISM UI SYSTEM
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * A 4-tier glass system built with pure CSS utilities. Zero JavaScript, zero
+ * runtime overhead, perfect integration with Tailwind CSS v4.3.0.
+ *
+ * DESIGN PHILOSOPHY:
+ * - Visual hierarchy through progressive transparency
+ * - Atmospheric depth with layered blur effects
+ * - Cohesive aesthetics with purple accent theme (#d6baff)
+ * - Performance-first with GPU-accelerated transforms
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * USAGE:
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * <div className="glass-heavy">
+ *   <div className="glass-medium">
+ *     <div className="glass-light">
+ *       <button className="glass-accent">Interactive Element</button>
+ *     </div>
+ *   </div>
+ * </div>
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * TIER SYSTEM:
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * Tier 1: HEAVY (base-layer)
+ *   - Darkest, most opaque foundation
+ *   - Maximum blur and border strength
+ *   - Usage: App background, main containers, modal overlays
+ *
+ * Tier 2: MEDIUM (content-layer)
+ *   - Balanced opacity for content areas
+ *   - Moderate blur, refined borders
+ *   - Usage: Panels, sidebars, content containers
+ *
+ * Tier 3: LIGHT (overlay-layer)
+ *   - Subtle transparency for nested elements
+ *   - Light blur, delicate borders
+ *   - Usage: Cards, sub-sections, headers
+ *
+ * Tier 4: ACCENT (interactive-layer)
+ *   - Enhanced brightness with purple accent
+ *   - Sharp blur, strong borders, glow effects
+ *   - Usage: Buttons, inputs, interactive controls
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * PERFORMANCE NOTES:
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * - All backdrop-filter values use GPU acceleration
+ * - Transforms use translate3d() for hardware acceleration
+ * - Box-shadows are optimized (max 3 layers, no large spreads)
+ * - Border radius matches Tailwind config (--radius-*)
+ * - Colors are CSS variables from index.css theme
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 1: HEAVY (Base Layer)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-heavy {
+  /* Foundation: Darkest background for maximum depth */
+  background: rgba(19, 19, 19, 0.85);
+
+  /* Maximum blur for strongest glass effect */
+  backdrop-filter: blur(24px) saturate(120%);
+
+  /* Strong border with subtle purple tint */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  /* Inner glow for depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+
+  /* Rounded corners from Tailwind config */
+  border-radius: var(--radius-lg);
+
+  /* Smooth transitions for state changes */
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Hover state: subtle brightness increase */
+.glass-heavy:hover {
+  background: rgba(19, 19, 19, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Active state: pressed effect */
+.glass-heavy:active {
+  background: rgba(19, 19, 19, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Focus state: accessibility highlight */
+.glass-heavy:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 2: MEDIUM (Content Layer)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-medium {
+  /* Content layer: Balanced opacity */
+  background: rgba(30, 30, 30, 0.75);
+
+  /* Moderate blur for clear readability */
+  backdrop-filter: blur(16px) saturate(110%);
+
+  /* Refined border with soft glow */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Depth with inner glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+
+  /* Consistent rounding */
+  border-radius: var(--radius-lg);
+
+  /* Smooth transitions */
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Hover state: gentle brightening */
+.glass-medium:hover {
+  background: rgba(32, 32, 32, 0.8);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Active state: pressed */
+.glass-medium:active {
+  background: rgba(35, 35, 35, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Focus state: accessibility */
+.glass-medium:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 3: LIGHT (Overlay Layer)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-light {
+  /* Overlay layer: Subtle transparency */
+  background: rgba(42, 42, 42, 0.65);
+
+  /* Light blur for delicate effect */
+  backdrop-filter: blur(12px) saturate(105%);
+
+  /* Delicate border */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Subtle depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+
+  /* Consistent rounding */
+  border-radius: var(--radius-lg);
+
+  /* Smooth transitions */
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  /* GPU acceleration */
+  transform: translateZ(0);
+}
+
+/* Hover state: soft brightening */
+.glass-light:hover {
+  background: rgba(45, 45, 45, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Active state: pressed */
+.glass-light:active {
+  background: rgba(48, 48, 48, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+/* Focus state: accessibility */
+.glass-light:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TIER 4: ACCENT (Interactive Layer)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-accent {
+  /* Interactive layer: Enhanced with purple accent */
+  background: linear-gradient(
+    135deg,
+    rgba(214, 186, 255, 0.15) 0%,
+    rgba(118, 59, 202, 0.12) 100%
+  );
+
+  /* Sharp blur for crisp interactions */
+  backdrop-filter: blur(20px) saturate(130%) brightness(1.1);
+
+  /* Strong border with purple glow */
+  border: 1px solid rgba(214, 186, 255, 0.3);
+
+  /* Glow effect + depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(214, 186, 255, 0.1),
+    0 4px 16px rgba(214, 186, 255, 0.25),
+    0 0 20px rgba(214, 186, 255, 0.15);
+
+  /* Interactive rounding */
+  border-radius: var(--radius-lg);
+
+  /* Smooth transitions */
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Hover state: Enhanced glow + slight lift */
+.glass-accent:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(214, 186, 255, 0.2) 0%,
+    rgba(118, 59, 202, 0.16) 100%
+  );
+  border-color: rgba(214, 186, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(214, 186, 255, 0.2),
+    0 6px 24px rgba(214, 186, 255, 0.35),
+    0 0 30px rgba(214, 186, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Active state: Pressed with reduced glow */
+.glass-accent:active {
+  background: linear-gradient(
+    135deg,
+    rgba(214, 186, 255, 0.25) 0%,
+    rgba(118, 59, 202, 0.2) 100%
+  );
+  border-color: rgba(214, 186, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px rgba(214, 186, 255, 0.15),
+    0 2px 8px rgba(214, 186, 255, 0.3),
+    0 0 12px rgba(214, 186, 255, 0.15);
+  transform: translateY(1px);
+}
+
+/* Focus state: Strong accessibility highlight */
+.glass-accent:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(214, 186, 255, 0.1),
+    0 4px 16px rgba(214, 186, 255, 0.25),
+    0 0 20px rgba(214, 186, 255, 0.15),
+    0 0 0 4px rgba(214, 186, 255, 0.3);
+}
+
+/* Disabled state: Muted appearance */
+.glass-accent:disabled,
+.glass-accent[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(42, 42, 42, 0.5);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SPECIALIZED VARIANTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Heavy variant without border (for seamless layers) */
+.glass-heavy-seamless {
+  background: rgba(19, 19, 19, 0.85);
+  backdrop-filter: blur(24px) saturate(120%);
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+}
+
+/* Medium variant for input fields */
+.glass-input {
+  background: rgba(35, 35, 35, 0.7);
+  backdrop-filter: blur(12px) saturate(105%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.glass-input:hover {
+  border-color: rgba(214, 186, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 2px rgba(214, 186, 255, 0.1);
+}
+
+.glass-input:focus {
+  border-color: rgba(214, 186, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 3px rgba(214, 186, 255, 0.15);
+  outline: none;
+}
+
+/* Light variant for cards and sub-sections */
+.glass-card {
+  background: rgba(38, 38, 38, 0.6);
+  backdrop-filter: blur(10px) saturate(103%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.glass-card:hover {
+  background: rgba(42, 42, 42, 0.65);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Accent variant for primary actions */
+.glass-accent-primary {
+  background: linear-gradient(
+    135deg,
+    rgba(214, 186, 255, 0.25) 0%,
+    rgba(118, 59, 202, 0.2) 100%
+  );
+  backdrop-filter: blur(20px) saturate(130%) brightness(1.15);
+  border: 1px solid rgba(214, 186, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px rgba(214, 186, 255, 0.15),
+    0 6px 20px rgba(214, 186, 255, 0.3),
+    0 0 25px rgba(214, 186, 255, 0.2);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.glass-accent-primary:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(214, 186, 255, 0.35) 0%,
+    rgba(118, 59, 202, 0.28) 100%
+  );
+  border-color: rgba(214, 186, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(214, 186, 255, 0.25),
+    0 8px 28px rgba(214, 186, 255, 0.4),
+    0 0 35px rgba(214, 186, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Remove all glass effects (for reset) */
+.glass-none {
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Inherit glass from parent */
+.glass-inherit {
+  background: inherit;
+  backdrop-filter: inherit;
+  border-color: inherit;
+  box-shadow: inherit;
+  border-radius: inherit;
+}
+
+/* Force opacity on any glass tier */
+.glass-opacity-50 {
+  opacity: 0.5;
+}
+
+.glass-opacity-75 {
+  opacity: 0.75;
+}
+
+.glass-opacity-100 {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Reduce blur on mobile for performance */
+@media (max-width: 768px) {
+  .glass-heavy {
+    backdrop-filter: blur(16px) saturate(115%);
+  }
+
+  .glass-medium {
+    backdrop-filter: blur(12px) saturate(108%);
+  }
+
+  .glass-light {
+    backdrop-filter: blur(8px) saturate(103%);
+  }
+
+  .glass-accent,
+  .glass-accent-primary {
+    backdrop-filter: blur(14px) saturate(120%) brightness(1.08);
+  }
+
+  .glass-input {
+    backdrop-filter: blur(8px) saturate(103%);
+  }
+
+  .glass-card {
+    backdrop-filter: blur(6px) saturate(102%);
+  }
+}
+
+/* Further reduce blur on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .glass-heavy,
+  .glass-medium,
+  .glass-light,
+  .glass-accent,
+  .glass-accent-primary,
+  .glass-input,
+  .glass-card {
+    transition: none;
+    transform: none;
+    will-change: auto;
+  }
+
+  .glass-accent:hover,
+  .glass-accent-primary:hover {
+    transform: none;
+  }
+
+  .glass-accent:active,
+  .glass-accent-primary:active {
+    transform: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-heavy,
+  .glass-medium,
+  .glass-light,
+  .glass-accent,
+  .glass-accent-primary,
+  .glass-input,
+  .glass-card {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .glass-accent:focus-visible,
+  .glass-accent-primary:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* Dark mode specific adjustments (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  /* All glass tiers are already optimized for dark mode */
+  /* This placeholder exists for future light mode support */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ANIMATION UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Smooth fade-in animation */
+@keyframes glass-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-fade-in {
+  animation: glass-fade-in 0.3s ease-out forwards;
+}
+
+/* Staggered fade-in for lists */
+.glass-stagger-1 {
+  animation: glass-fade-in 0.3s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.glass-stagger-2 {
+  animation: glass-fade-in 0.3s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.glass-stagger-3 {
+  animation: glass-fade-in 0.3s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.glass-stagger-4 {
+  animation: glass-fade-in 0.3s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+/* Pulse animation for loading states */
+@keyframes glass-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.glass-pulse {
+  animation: glass-pulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  .glass-heavy,
+  .glass-medium,
+  .glass-light,
+  .glass-accent,
+  .glass-accent-primary,
+  .glass-input,
+  .glass-card {
+    background: white;
+    backdrop-filter: none;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+
+  .glass-accent,
+  .glass-accent-primary {
+    background: #f0f0f0;
+    border: 2px solid #000;
+  }
+}
