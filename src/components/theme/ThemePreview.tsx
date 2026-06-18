@@ -177,32 +177,32 @@ export function ThemePreview({
           .livicat-gallery-card {
             background: transparent;
             border-radius: 12px;
-            padding: 0.75rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
                         0 1px 2px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
             overflow: visible;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: auto 1fr;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            min-height: 80px;
+            justify-items: center;
+            min-height: 100px;
+            padding: 0.75rem;
           }
 
           /* ── Gallery Role Label ─────────────────────────────────────── */
           .livicat-gallery-label {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.06);
-            padding: 2px 10px;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3px 12px;
             border-radius: 4px;
-            line-height: 1.4;
+            line-height: 1.5;
             white-space: nowrap;
+            margin-bottom: 4px;
           }
 
           .livicat-gallery-card:hover {
