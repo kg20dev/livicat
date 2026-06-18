@@ -583,9 +583,12 @@ function WorkspaceBody({
             {/* ★ Core Settings — shared across all themes */}
             {coreGroups.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1 py-1">
-                  <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
-                    ★ Core Settings
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-high/50 backdrop-blur-sm rounded-lg border border-outline-variant/30 shadow-sm">
+                  <span className="material-symbols-outlined text-[20px] text-primary">
+                    settings
+                  </span>
+                  <span className="text-label-md font-bold text-primary tracking-wide uppercase">
+                    Core Settings
                   </span>
                 </div>
                 {coreGroups.map(({ section, items }) => (
@@ -631,11 +634,11 @@ function WorkspaceBody({
                 <hr className="border-outline-variant/30 my-1" />
 
                 {/* Theme Settings Header - matching Core Settings aesthetic */}
-                <div className="flex items-center gap-2 px-1 py-1">
-                  <span className="material-symbols-outlined text-[18px] text-secondary/70">
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-high/50 backdrop-blur-sm rounded-lg border border-outline-variant/30 shadow-sm">
+                  <span className="material-symbols-outlined text-[20px] text-primary">
                     palette
                   </span>
-                  <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                  <span className="text-label-md font-bold text-primary tracking-wide uppercase">
                     Theme: {manifest.name}
                   </span>
                 </div>
@@ -690,9 +693,12 @@ function WorkspaceBody({
             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
               {coreGroups.length > 0 && (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 px-1 py-1">
-                    <span className="text-label-sm font-semibold text-primary tracking-wide uppercase">
-                      ★ Core Settings
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-high/50 backdrop-blur-sm rounded-lg border border-outline-variant/30 shadow-sm">
+                    <span className="material-symbols-outlined text-[20px] text-primary">
+                      settings
+                    </span>
+                    <span className="text-label-md font-bold text-primary tracking-wide uppercase">
+                      Core Settings
                     </span>
                   </div>
                   {coreGroups.map(({ section, items }) => (
@@ -737,11 +743,11 @@ function WorkspaceBody({
                   <hr className="border-outline-variant/30 my-1" />
 
                   {/* Theme Settings Header - matching Core Settings aesthetic */}
-                  <div className="flex items-center gap-2 px-1 py-1">
-                    <span className="material-symbols-outlined text-[18px] text-secondary/70">
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-high/50 backdrop-blur-sm rounded-lg border border-outline-variant/30 shadow-sm">
+                    <span className="material-symbols-outlined text-[20px] text-primary">
                       palette
                     </span>
-                    <span className="text-label-sm font-semibold text-secondary tracking-wide uppercase">
+                    <span className="text-label-md font-bold text-primary tracking-wide uppercase">
                       Theme: {manifest.name}
                     </span>
                   </div>
