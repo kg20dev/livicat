@@ -85,7 +85,8 @@ jobs:
         id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}  # Use PAT instead of GITHUB_TOKEN
           base: release/app
           title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
           body: |
