@@ -41,6 +41,28 @@ export interface SettingDef {
   options?: { value: string; label: string }[]
 }
 
+/* ─── Color Derivation ─────────────────────────────────────────── */
+
+export interface HarmonyInvertOptions {
+  /** Input lightness above this = "light" source (default: 0.5) */
+  lightThreshold?: number
+  /** Target lightness for light source (default: 0.2) */
+  darkTargetL?: number
+  /** Target lightness for dark source (default: 0.8) */
+  lightTargetL?: number
+  /** Fraction of original saturation to keep (default: 0.35) */
+  satScale?: number
+  /** When true, dark sources get at least 0.65 saturation (default: false) */
+  boostDarkSat?: boolean
+}
+
+/**
+ * An entry in a theme's derivation map (e.g. strokeMap).
+ * A plain string is shorthand for `{ target: string }` (uses default options).
+ * An object allows per-entry HarmonyInvertOptions tuning.
+ */
+export type DerivationEntry = string | { target: string; options?: HarmonyInvertOptions }
+
 /* ─── Theme Manifest ──────────────────────────────────────────── */
 
 export interface ThemeManifest {

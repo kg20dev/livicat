@@ -6,7 +6,7 @@
  * Also injects @import for Google Fonts when a web font is selected.
  */
 
-import type { SettingDef, ThemeSettings } from '../theme/types'
+import type { SettingDef, ThemeSettings, HarmonyInvertOptions, DerivationEntry } from '../theme/types'
 import { getFontUrl } from './fonts'
 
 /** Option value → Google Font @import rule, or null for system fonts. */
@@ -62,19 +62,6 @@ function hslToHex(h: number, s: number, l: number): string {
 }
 
 /* ── Harmony invert lightness ────────────────────────────────── */
-
-export interface HarmonyInvertOptions {
-  /** Input lightness above this = "light" source (default: 0.5) */
-  lightThreshold?: number
-  /** Target lightness for light source (default: 0.2) */
-  darkTargetL?: number
-  /** Target lightness for dark source (default: 0.8) */
-  lightTargetL?: number
-  /** Fraction of original saturation to keep (default: 0.35) */
-  satScale?: number
-  /** When true, dark sources get at least 0.65 saturation (default: false) */
-  boostDarkSat?: boolean
-}
 
 /**
  * Keep the same hue, shift lightness in the opposite direction,
@@ -133,14 +120,18 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
       lines.push(`  --${chipVar}: ${harmonyInvertColor(hex, { lightThreshold: 0.35, darkTargetL: 0.3, lightTargetL: 0.45, satScale: 1, boostDarkSat: true })};`)
     }
 
-    // Derive contrast color from text colors (theme-specific via strokeMap).
-    // Light text → dark result, dark text → light result.
-    // Only fires when the scheme array has strokeMap attached (Ink theme).
-    const schemeStrokeMap = (scheme as Record<string, any>).strokeMap as Record<string, string> | undefined
-    if (schemeStrokeMap && cssName in schemeStrokeMap && def.type === 'color') {
+    // Derive contrast color via theme-specific derivationMap (e.g. strokeMap).
+    // A plain string entry uses default harmonyInvertColor options (stroke style).
+    // An object entry can specify per-target options (e.g. glow stays light).
+    // Only fires when the scheme array has a derivationMap attached.
+    const derivationMap = (scheme as Record<string, any>).strokeMap as Record<string, DerivationEntry> | undefined
+    if (derivationMap && cssName in derivationMap && def.type === 'color') {
+      const entry = derivationMap[cssName]
+      const target = typeof entry === 'string' ? entry : entry.target
+      const opts: HarmonyInvertOptions | undefined = typeof entry === 'string' ? undefined : entry.options
       const hex =
         typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : (def.default as string)
-      lines.push(`  --${schemeStrokeMap[cssName]}: ${harmonyInvertColor(hex)};`)
+      lines.push(`  --${target}: ${harmonyInvertColor(hex, opts)};`)
     }
   }
 

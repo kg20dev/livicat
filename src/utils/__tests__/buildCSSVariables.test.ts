@@ -6,8 +6,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { buildCSSVariables, harmonyInvertColor } from '../buildCSSVariables'
-import type { HarmonyInvertOptions } from '../buildCSSVariables'
-import type { SettingDef, ThemeSettings } from '../../theme/types'
+import type { SettingDef, ThemeSettings, HarmonyInvertOptions } from '../../theme/types'
 
 /* ─── harmonyInvertColor ──────────────────────────────────── */
 
