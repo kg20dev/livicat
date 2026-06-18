@@ -146,6 +146,99 @@ export function WorkspaceX() {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }, [])
 
+  // ─── Theme Dropdown State ────────────────────────────────────────
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownSearch, setDropdownSearch] = useState('')
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  // ─── Recent Themes (localStorage persistence) ─────────────────────
+  const [recentThemes, setRecentThemes] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const stored = localStorage.getItem('livicat-recent-themes')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Update recent themes when selection changes
+  const updateRecentThemes = useCallback((themeId: string) => {
+    setRecentThemes((prev) => {
+      const filtered = prev.filter((id) => id !== themeId)
+      const updated = [themeId, ...filtered].slice(0, 5)
+      localStorage.setItem('livicat-recent-themes', JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+
+  // Filtered themes for dropdown
+  const filteredThemes = useMemo(() => {
+    if (!dropdownSearch.trim()) return THEMES
+    const query = dropdownSearch.toLowerCase()
+    return THEMES.filter((t) => {
+      const nameMatch = t.manifest.name.toLowerCase().includes(query)
+      const descMatch = t.manifest.description.toLowerCase().includes(query)
+      const creatorMatch = t.manifest.creator?.toLowerCase().includes(query) ?? false
+      return nameMatch || descMatch || creatorMatch
+    })
+  }, [dropdownSearch])
+
+  // ─── Keyboard Navigation ───────────────────────────────────────────
+  useEffect(() => {
+    if (!dropdownOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex((prev) => (prev < filteredThemes.length - 1 ? prev + 1 : prev))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0))
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (filteredThemes[selectedIndex]) {
+            const theme = filteredThemes[selectedIndex]
+            setSelectedThemeId(theme.manifest.id)
+            updateRecentThemes(theme.manifest.id)
+            setDropdownOpen(false)
+            setDropdownSearch('')
+            setSelectedIndex(0)
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          setDropdownOpen(false)
+          setDropdownSearch('')
+          setSelectedIndex(0)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!dropdownOpen) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.relative.z-20')) {
+        setDropdownOpen(false)
+        setDropdownSearch('')
+        setSelectedIndex(0)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [dropdownOpen])
+
   if (!theme) {
     return (
       <div className="flex items-center justify-center h-full w-full">
@@ -156,71 +249,208 @@ export function WorkspaceX() {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      {/* ─── Top bar: theme selector (outside key — stays mounted) ── */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-surface border-b border-outline-variant/50 flex-wrap">
-        <span className="material-symbols-outlined text-primary">magic_button</span>
-        <span className="text-title-md font-bold text-on-surface">Workspace X</span>
-        <div className="w-px h-5 bg-outline-variant/30 mx-1" />
-
-        {/* Theme Cards — scrollable row, scales to 50+ themes */}
-        <div className="flex overflow-x-auto gap-2 flex-1 flex-nowrap py-1 no-scrollbar">
-          {THEMES.map((t) => {
-            // Extract key colors for palette swatches
-            const byKey = (key: string, fallback: string) => {
-              const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
-              return def && typeof def.default === 'string' ? def.default : fallback
-            }
-            const palette = [
-              { label: 'BG', color: byKey('bg', '#0d0d0d') },
-              { label: 'Card', color: byKey('chat-msg-bg', byKey('messageBg', '#1a1a1a')) },
-              { label: 'Text', color: byKey('chat-msg-color', byKey('messageColor', '#e0e0e0')) },
-              {
-                label: 'Accent',
-                color: byKey('chat-scrollbar-thumb', byKey('chat-owner-username', '#888888')),
-              },
-            ]
-            const isSelected = selectedThemeId === t.manifest.id
-
-            return (
-              <button
-                key={t.manifest.id}
-                onClick={() => setSelectedThemeId(t.manifest.id)}
-                className={`
-                  flex-shrink-0 w-[160px] bg-surface-container-high rounded-lg p-2.5
-                  border-2 transition-all duration-200 cursor-pointer text-left
-                  ${
-                    isSelected
-                      ? 'border-primary ring-2 ring-primary/30'
-                      : 'border-outline-variant hover:border-primary/40 hover:bg-surface-container-higher'
-                  }
-                `}
+      {/* ─── Top bar: compact theme selector (outside key — stays mounted) ── */}
+      <div className="flex-shrink-0 bg-surface border-b border-outline-variant/50 px-5 py-3">
+        {/* Row 1: Theme dropdown + Recent themes */}
+        <div className="flex items-center gap-4">
+          {/* Dropdown */}
+          <div className="relative z-20">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="glass-liquid-input px-4 py-2.5 rounded-lg flex items-center gap-3 min-w-[280px] hover:border-primary/50 transition-all duration-200 group"
+            >
+              <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
+              <div className="flex-1 text-left">
+                <div className="text-label-lg font-bold text-on-surface">
+                  {theme?.manifest.name ?? 'Select Theme'}
+                </div>
+                <div className="text-label-sm text-on-surface-variant/70 truncate">
+                  {theme?.manifest.description ?? 'Choose a theme to customize'}
+                </div>
+              </div>
+              <span
+                className={`material-symbols-outlined text-on-surface-variant transition-transform duration-200 ${
+                  dropdownOpen ? 'rotate-180' : ''
+                }`}
               >
-                {/* Color palette bar */}
-                <div className="flex rounded-md overflow-hidden h-5 mb-2 border border-black/5">
-                  {palette.map((c) => (
-                    <div
-                      key={c.label}
-                      className="flex-1"
-                      style={{ backgroundColor: c.color }}
-                      title={c.label}
+                expand_more
+              </span>
+            </button>
+
+            {/* Dropdown Panel */}
+            {dropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-[400px] bg-surface-container rounded-xl shadow-2xl border border-outline-variant/50 overflow-hidden">
+                {/* Search input */}
+                <div className="p-3 border-b border-outline-variant/30">
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant/50">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      value={dropdownSearch}
+                      onChange={(e) => {
+                        setDropdownSearch(e.target.value)
+                        setSelectedIndex(0)
+                      }}
+                      placeholder="Search themes..."
+                      className="w-full pl-9 pr-8 py-2 bg-surface-container-high rounded-md text-label-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/30"
+                      autoFocus
                     />
-                  ))}
+                    {dropdownSearch && (
+                      <button
+                        onClick={() => {
+                          setDropdownSearch('')
+                          setSelectedIndex(0)
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-surface-container-highest transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">
+                          close
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Theme Name */}
-                <div
-                  className={`text-label-sm font-bold mb-0.5 ${isSelected ? 'text-primary' : 'text-on-surface'}`}
-                >
-                  {t.manifest.name}
+                {/* Theme list */}
+                <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                  {filteredThemes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <span className="material-symbols-outlined text-[40px] text-on-surface-variant/30 mb-2">
+                        search_off
+                      </span>
+                      <p className="text-body-sm text-on-surface-variant/70">No themes found</p>
+                    </div>
+                  ) : (
+                    filteredThemes.map((t, idx) => {
+                      const isSelected = selectedThemeId === t.manifest.id
+                      const isHovered = idx === selectedIndex
+
+                      return (
+                        <button
+                          key={t.manifest.id}
+                          onClick={() => {
+                            setSelectedThemeId(t.manifest.id)
+                            updateRecentThemes(t.manifest.id)
+                            setDropdownOpen(false)
+                            setDropdownSearch('')
+                            setSelectedIndex(0)
+                          }}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          className={`
+                            w-full px-4 py-3 text-left transition-all duration-150 border-l-3
+                            ${
+                              isSelected
+                                ? 'bg-primary/10 border-primary'
+                                : isHovered
+                                  ? 'bg-surface-container-high border-primary/60'
+                                  : 'bg-transparent border-transparent hover:bg-surface-container-high/50'
+                            }
+                          `}
+                          style={{ borderLeftWidth: '3px' }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Mini palette preview */}
+                            <div className="flex rounded overflow-hidden h-5 w-12 border border-outline-variant/30 flex-shrink-0">
+                              {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
+                                const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+                                const color =
+                                  def && typeof def.default === 'string' ? def.default : '#888'
+                                return (
+                                  <div
+                                    key={key}
+                                    className="flex-1"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                )
+                              })}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-label-md font-semibold truncate ${
+                                  isSelected ? 'text-primary' : 'text-on-surface'
+                                }`}
+                              >
+                                {t.manifest.name}
+                              </div>
+                              <div className="text-label-sm text-on-surface-variant/70 truncate">
+                                {t.manifest.description}
+                              </div>
+                            </div>
+
+                            {isSelected && (
+                              <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">
+                                check_circle
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
 
-                {/* Description */}
-                <div className="text-[11px] text-on-surface-variant/80 leading-tight truncate">
-                  {t.manifest.description}
+                {/* Footer */}
+                <div className="px-4 py-2 border-t border-outline-variant/30 bg-surface-container-highest/50 flex items-center justify-between">
+                  <span className="text-label-sm text-on-surface-variant/70">
+                    Showing{' '}
+                    <span className="font-semibold text-primary">{filteredThemes.length}</span> of{' '}
+                    {THEMES.length}
+                  </span>
+                  <span className="text-label-sm text-on-surface-variant/50">Use ↑↓ Enter</span>
                 </div>
-              </button>
-            )
-          })}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Themes */}
+          {recentThemes.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-label-sm text-on-surface-variant/60">Recent:</span>
+              <div className="flex items-center gap-1.5">
+                {recentThemes.map((id) => {
+                  const t = getThemeById(id)
+                  if (!t) return null
+
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        setSelectedThemeId(id)
+                        updateRecentThemes(id)
+                      }}
+                      className={`
+                        glass-liquid-card px-3 py-1.5 rounded-full flex items-center gap-2
+                        transition-all duration-200 hover:scale-105
+                        ${selectedThemeId === id ? 'ring-2 ring-primary/50' : ''}
+                      `}
+                      title={t.manifest.name}
+                    >
+                      {/* Mini color dot */}
+                      <div
+                        className="w-3 h-3 rounded-full border border-outline-variant/30 flex-shrink-0"
+                        style={{
+                          backgroundColor: (() => {
+                            const def = t.scheme.find((s) => s.key === 'bg' || s.cssVar === 'bg')
+                            return def && typeof def.default === 'string' ? def.default : '#888'
+                          })(),
+                        }}
+                      />
+                      <span
+                        className={`text-label-sm font-medium truncate max-w-[100px] ${
+                          selectedThemeId === id ? 'text-primary' : 'text-on-surface-variant'
+                        }`}
+                      >
+                        {t.manifest.name}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -580,17 +810,17 @@ function WorkspaceBody({
           )}
           {/* Scrollable settings */}
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-             {/* ★ Core Settings — shared across all themes */}
-             {coreGroups.length > 0 && (
-               <div className="space-y-3">
-                 <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
-                   <span className="material-symbols-outlined text-[20px] text-primary">
-                     settings
-                   </span>
-                   <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
-                     Core Settings
-                   </span>
-                 </div>
+            {/* ★ Core Settings — shared across all themes */}
+            {coreGroups.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
+                  <span className="material-symbols-outlined text-[20px] text-primary">
+                    settings
+                  </span>
+                  <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
+                    Core Settings
+                  </span>
+                </div>
                 {coreGroups.map(({ section, items }) => (
                   <CollapsibleSection
                     key={`core-${section}`}
@@ -631,17 +861,17 @@ function WorkspaceBody({
             {/* Theme-specific settings */}
             {themeGroups.length > 0 && (
               <div className="space-y-3">
-                 <hr className="border-outline-variant/30 my-3" />
+                <hr className="border-outline-variant/30 my-3" />
 
-                 {/* Theme Settings Header - matching Core Settings aesthetic */}
-                 <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
-                   <span className="material-symbols-outlined text-[20px] text-primary">
-                     palette
-                   </span>
-                   <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
-                     Theme: {manifest.name}
-                   </span>
-                 </div>
+                {/* Theme Settings Header - matching Core Settings aesthetic */}
+                <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
+                  <span className="material-symbols-outlined text-[20px] text-primary">
+                    palette
+                  </span>
+                  <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
+                    Theme: {manifest.name}
+                  </span>
+                </div>
                 {themeGroups.map(({ section, items }) => (
                   <CollapsibleSection
                     key={`theme-${section}`}
@@ -690,17 +920,17 @@ function WorkspaceBody({
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
-               {coreGroups.length > 0 && (
-                 <div className="space-y-3">
-                   <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
-                     <span className="material-symbols-outlined text-[20px] text-primary">
-                       settings
-                     </span>
-                     <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
-                       Core Settings
-                     </span>
-                   </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-3">
+              {coreGroups.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
+                    <span className="material-symbols-outlined text-[20px] text-primary">
+                      settings
+                    </span>
+                    <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
+                      Core Settings
+                    </span>
+                  </div>
                   {coreGroups.map(({ section, items }) => (
                     <CollapsibleSection
                       key={`core-${section}`}
@@ -738,19 +968,19 @@ function WorkspaceBody({
                 </div>
               )}
 
-               {themeGroups.length > 0 && (
-                 <div className="space-y-3">
-                   <hr className="border-outline-variant/30 my-3" />
+              {themeGroups.length > 0 && (
+                <div className="space-y-3">
+                  <hr className="border-outline-variant/30 my-3" />
 
-                   {/* Theme Settings Header - matching Core Settings aesthetic */}
-                   <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
-                     <span className="material-symbols-outlined text-[20px] text-primary">
-                       palette
-                     </span>
-                     <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
-                       Theme: {manifest.name}
-                     </span>
-                     </div>
+                  {/* Theme Settings Header - matching Core Settings aesthetic */}
+                  <div className="flex items-center gap-2 px-2 py-2 border-l-4 border-primary">
+                    <span className="material-symbols-outlined text-[20px] text-primary">
+                      palette
+                    </span>
+                    <span className="text-label-lg font-bold text-primary tracking-wide uppercase">
+                      Theme: {manifest.name}
+                    </span>
+                  </div>
                   {themeGroups.map(({ section, items }) => (
                     <CollapsibleSection
                       key={`theme-${section}`}
