@@ -307,8 +307,8 @@
 .theme-im yt-live-chat-text-message-renderer #message[data-punct]::after {
   content: attr(data-punct) !important;
   position: absolute !important;
-  top: -10px !important;
-  right: -10px !important;
+  top: var(--chat-punct-offset-y, -10px) !important;
+  right: var(--chat-punct-offset-x, -10px) !important;
   width: var(--chat-punct-size, 24px) !important;
   height: var(--chat-punct-size, 24px) !important;
   display: flex !important;

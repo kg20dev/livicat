@@ -107,6 +107,26 @@ export const scheme: SettingDef[] = [
     default: 24,
     unit: 'px',
   },
+  {
+    key: 'chat-punct-offset-x',
+    section: 'Bubble',
+    type: 'range',
+    label: 'Punct Badge Offset X',
+    min: -30,
+    max: 20,
+    default: -10,
+    unit: 'px',
+  },
+  {
+    key: 'chat-punct-offset-y',
+    section: 'Bubble',
+    type: 'range',
+    label: 'Punct Badge Offset Y',
+    min: -30,
+    max: 20,
+    default: -10,
+    unit: 'px',
+  },
 
   /* ── Username ──────────────────────────────────────────── */
   {
