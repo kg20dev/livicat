@@ -43,7 +43,7 @@ export const CORE_SCHEME: SettingDef[] = [
     section: 'Role Colors',
     type: 'color',
     label: 'Username Color',
-    default: '#d6baff',
+    default: '#ff4444',
   },
 
   /* ── Common ──────────────────────────────────────────────── */

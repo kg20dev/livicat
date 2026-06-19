@@ -36,12 +36,12 @@ export function CollapsibleSection({
   }
 
   return (
-    <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low/50 backdrop-blur-sm transition-colors duration-200 ring-1 ring-primary/[0.06]">
+    <div className="rounded-xl border border-outline-variant/40 glass-card transition-all duration-200 ring-1 ring-primary/[0.06]">
       <button
         type="button"
         onClick={handleToggle}
-        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-surface-container/50 ${
-          isOpen ? 'bg-primary/[0.04] rounded-t-xl' : 'rounded-xl'
+        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-all duration-200 ${
+          isOpen ? 'glass-light rounded-t-xl' : 'rounded-xl'
         }`}
       >
         <div className="flex items-center gap-2.5">
@@ -59,7 +59,7 @@ export function CollapsibleSection({
         </span>
       </button>
       {isOpen && (
-        <div className="border-t border-outline-variant/30 px-4 py-4 space-y-4 bg-surface-container-lowest/30 rounded-b-xl">
+        <div className="border-t border-outline-variant/30 px-4 py-4 space-y-4 glass-light rounded-b-xl">
           {children}
         </div>
       )}

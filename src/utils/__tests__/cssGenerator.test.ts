@@ -190,7 +190,7 @@ describe('generateChatCSS', () => {
           borderRadius: '8px',
           padding: '10px',
         },
-        username: { color: '#d6baff', fontSize: '13px', fontWeight: '600' },
+        username: { color: '#ff4444', fontSize: '13px', fontWeight: '600' },
         messageText: { color: '#fff', fontSize: '14px' },
         avatar: { width: '28px', height: '28px', borderRadius: '50%' },
         timestamp: { color: '#666', fontSize: '11px' },

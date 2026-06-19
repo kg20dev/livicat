@@ -24,10 +24,10 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   /* Colors */
   backgroundColor: '#0a0a0a',
   messageBackgroundColor: '#1a1a1a',
-  usernameColor: '#d6baff',
+  usernameColor: '#ff4444',
   messageColor: '#e5e2e1',
   timestampColor: '#888888',
-  accentColor: '#ab73ff',
+  accentColor: '#ff4444',
 
   /* Typography */
   fontFamily: 'Inter, sans-serif',
@@ -106,7 +106,7 @@ export const PRESETS: Preset[] = [
   {
     name: 'default',
     label: 'Default',
-    description: 'Balanced dark theme with purple accents',
+    description: 'Balanced dark theme with red accents',
     settings: {},
   },
   {

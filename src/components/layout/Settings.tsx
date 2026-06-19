@@ -34,14 +34,14 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
+    <div className="settings-container glass-medium">
+      <div className="settings-header glass-light">
         <h2 className="settings-title">Settings</h2>
       </div>
 
       <div className="settings-content">
-        <div className="settings-section">
-          <div className="settings-section-header">
+        <div className="settings-section glass-card">
+          <div className="settings-section-header glass-accent-primary">
             <div className="settings-section-icon">
               <svg
                 width="20"
@@ -101,8 +101,8 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="settings-section">
-          <div className="settings-section-header">
+        <div className="settings-section glass-card">
+          <div className="settings-section-header glass-accent-primary">
             <div className="settings-section-icon">
               <svg
                 width="20"
