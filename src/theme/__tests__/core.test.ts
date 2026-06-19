@@ -7,7 +7,6 @@
 
 import { describe, it, expect } from 'vitest'
 import { CORE_SCHEME } from '../base/core'
-import type { SettingDef } from '../types'
 
 describe('CORE_SCHEME', () => {
   describe('forced-auto-scroll', () => {
