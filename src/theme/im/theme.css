@@ -377,7 +377,7 @@
   #author-name {
   background: var(--chat-owner-chip-bg, #e68a00) !important;
   color: var(--chat-owner-username, #ffb347) !important;
-  font-weight: 700 !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
 }
 
 /* Moderator */
@@ -407,7 +407,7 @@
   #author-name {
   background: var(--chat-mod-chip-bg, #0085e6) !important;
   color: var(--chat-mod-username, #47b5ff) !important;
-  font-weight: 700 !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
 }
 
 /* Member */
@@ -437,7 +437,7 @@
   #author-name {
   background: var(--chat-member-chip-bg, #85e600) !important;
   color: var(--chat-member-username, #ce93d8) !important;
-  font-weight: 600 !important;
+  font-weight: var(--chat-username-font-weight, 600) !important;
 }
 
 /* Super Chat */
@@ -467,7 +467,7 @@
   #author-name {
   background: var(--chat-superchat-chip-bg, #998100) !important;
   color: var(--chat-superchat-username, #ffd700) !important;
-  font-weight: 700 !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
 }
 
 /* Member Ship */
@@ -497,7 +497,7 @@
   #author-name {
   background: var(--chat-membership-chip-bg, #28bd65) !important;
   color: var(--chat-membership-username, #ffffff) !important;
-  font-weight: 700 !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
 }
 
 /* ── Punctuation badge role colors ──────────────────────────── */
