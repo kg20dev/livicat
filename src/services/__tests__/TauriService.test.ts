@@ -64,6 +64,7 @@ describe('TauriService', () => {
       await expect(TauriService.injectCss('body {}')).resolves.toBe(true)
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', {
         css: 'body {}',
+        alwaysOnTop: false,
       })
     })
 

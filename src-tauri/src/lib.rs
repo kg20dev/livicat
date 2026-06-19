@@ -163,6 +163,7 @@ async fn open_preview_window(
 #[tauri::command]
 async fn inject_css(
     css: String,
+    always_on_top: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -173,6 +174,9 @@ async fn inject_css(
     if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
             println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
+
+            // Always on top — apply dynamically to already-open window
+            let _ = window.set_always_on_top(always_on_top);
 
             // Add breadcrumb for CSS injection
             sentry::add_breadcrumb(

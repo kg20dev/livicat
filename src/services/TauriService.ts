@@ -51,11 +51,11 @@ export const TauriService = {
   },
 
   /** Re-inject CSS into an existing preview window */
-  async injectCss(css: string): Promise<boolean> {
+  async injectCss(css: string, alwaysOnTop = false): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {
-      await invoke('inject_css', { css })
+      await invoke('inject_css', { css, alwaysOnTop })
       return true
     } catch (e) {
       console.error('[TauriService] injectCss failed:', e)

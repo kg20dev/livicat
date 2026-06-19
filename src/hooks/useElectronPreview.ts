@@ -62,11 +62,11 @@ export function useElectronPreview() {
   )
 
   const updateCSS = useCallback(
-    async (css: string) => {
+    async (css: string, alwaysOnTop = false) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.updateChatCSS(css)
       } else if (isTauriRuntime) {
-        await invoke('inject_css', { css })
+        await invoke('inject_css', { css, alwaysOnTop })
       }
     },
     [isElectron, isTauriRuntime]

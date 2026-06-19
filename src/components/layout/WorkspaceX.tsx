@@ -857,7 +857,7 @@ export default function WorkspaceX() {
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      updateCSS(generateChatCSSX(xCSSSettings))
+      updateCSS(generateChatCSSX(xCSSSettings), settings.alwaysOnTop)
     }, 300)
     return () => clearTimeout(timer)
   }, [previewOpen, xCSSSettings, updateCSS])
