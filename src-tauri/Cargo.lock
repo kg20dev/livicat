@@ -237,12 +237,14 @@ name = "app"
 version = "0.9.2"
 dependencies = [
  "dotenvy",
+ "hostname",
  "log",
  "sentry 0.48.2",
  "sentry-log",
  "sentry-rust-minidump",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-aptabase",

@@ -1,6 +1,7 @@
 use ::sentry::Level as SentryLevel;
 use sentry::integrations::panic::PanicIntegration;
 use sentry::types::Dsn;
+use sha2::{Digest, Sha256};
 use std::env;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -142,6 +143,16 @@ pub fn send_test_scenario() {
     println!("   • Complete user flow context");
 }
 
+/// Get a stable anonymous device hash for user tracking (no PII)
+fn get_device_hash() -> String {
+    let hostname = hostname::get()
+        .map(|h| h.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let mut hasher = Sha256::new();
+    hasher.update(hostname.as_bytes());
+    format!("{:.16x}", hasher.finalize())
+}
+
 /// Initialize Sentry for error reporting
 ///
 /// Loads configuration from environment variables:
@@ -195,11 +206,19 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
         &dsn[..dsn.len().min(20)]
     );
 
+    // Resolve hostname once for both server_name and device hash
+    let hostname_str = hostname::get()
+        .ok()
+        .map(|h| h.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let device_hash = get_device_hash();
+
     let client = sentry::init((
         Dsn::from_str(&dsn).expect("Invalid Sentry DSN format"),
         sentry::ClientOptions {
             release: Some(release.into()),
             environment: Some(environment.into()),
+            server_name: Some(hostname_str.into()),
             traces_sample_rate: 1.0, // 100% sampling for testing to ensure events are sent
             send_default_pii: false, // Don't send PII for privacy
             debug: true,             // Enable debug mode to see what Sentry is doing
@@ -216,8 +235,12 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
     );
     println!("[Livicat] Sentry debug mode enabled - check console for detailed logs");
 
-    // Configure global scope with app context
+    // Configure global scope with app context and anonymous device identity
     sentry::configure_scope(|scope| {
+        scope.set_user(Some(sentry::User {
+            id: Some(device_hash.clone()),
+            ..Default::default()
+        }));
         scope.set_extra("app_version", env!("CARGO_PKG_VERSION").into());
         scope.set_extra("tauri_version", env!("CARGO_PKG_VERSION").into());
         scope.set_extra("os", std::env::consts::OS.into());
