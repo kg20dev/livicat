@@ -1038,7 +1038,11 @@ function WorkspaceBody({
                         </div>
                       ) : section === 'Preview' ? (
                         <div className="space-y-3">
-                          <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                          <SettingsPanel
+                            scheme={items}
+                            values={settings}
+                            onChange={updateSetting}
+                          />
                           <p className="text-[11px] text-on-surface-variant/50 italic leading-relaxed px-0.5">
                             Changes require re-launching the LiveChat preview window.
                           </p>

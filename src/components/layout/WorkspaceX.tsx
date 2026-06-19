@@ -883,7 +883,12 @@ export default function WorkspaceX() {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      openPreview(videoId, generateChatCSSX(xCSSSettings), settings.alwaysOnTop, settings.forcedAutoScroll)
+      openPreview(
+        videoId,
+        generateChatCSSX(xCSSSettings),
+        settings.alwaysOnTop,
+        settings.forcedAutoScroll
+      )
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {
@@ -891,7 +896,15 @@ export default function WorkspaceX() {
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings, settings.alwaysOnTop, settings.forcedAutoScroll])
+  }, [
+    previewOpen,
+    videoId,
+    openPreview,
+    closePreview,
+    xCSSSettings,
+    settings.alwaysOnTop,
+    settings.forcedAutoScroll,
+  ])
 
   /* ─── setting helper wrappers ─────────────────────────────────── */
 
