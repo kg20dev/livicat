@@ -9,7 +9,7 @@ export const manifest: ThemeManifest = {
   id: 'ink-sticker',
   name: 'Neon Sticker',
   creator: 'Livicat',
-  description: 'Hand-drawn sticker-style chat with skew, stroke, and shadow effects',
+  description: 'Glowing neon cards with stroke outlines, drop shadows, and skew transforms',
   route: 'ink-sticker',
   storageKey: 'livicat_x_ink',
 }

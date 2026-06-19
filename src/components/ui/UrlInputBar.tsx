@@ -62,7 +62,7 @@ UrlInputBar.Tabs = function UrlInputBarTabs() {
   const tabs = ['Testing Mode', 'Live/Past Video']
 
   return (
-    <div className="flex bg-surface-container-highest rounded-lg p-1 gap-1">
+    <div className="flex glass-card rounded-lg p-1 gap-1">
       {tabs.map((tab) => {
         const isActive = activeTab === tab
         const isTestingMode = tab === 'Testing Mode'
@@ -72,7 +72,7 @@ UrlInputBar.Tabs = function UrlInputBarTabs() {
             onClick={() => onTabChange(tab)}
             className={`px-4 py-1.5 rounded-md text-label-md font-bold transition-all ${
               isActive
-                ? 'bg-primary text-on-primary'
+                ? 'glass-accent text-on-surface'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
@@ -110,12 +110,12 @@ UrlInputBar.InputSection = function UrlInputBarInputSection() {
           placeholder="Paste YouTube URL..."
           value={url}
           onChange={(e) => onUrlChange(e.target.value)}
-          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-3 py-1.5 text-body-md outline-none focus:border-primary transition-colors"
+          className="w-full glass-input rounded-lg pl-9 pr-3 py-1.5 text-body-md outline-none"
         />
       </div>
       <button
         onClick={onFetch}
-        className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-1.5 rounded-lg text-label-md font-bold transition-all border border-primary/20 whitespace-nowrap"
+        className="glass-accent text-on-surface px-4 py-1.5 rounded-lg text-label-md font-bold transition-all whitespace-nowrap"
       >
         Fetch Chat
       </button>

@@ -61,7 +61,9 @@ describe('TauriService', () => {
     it('returns true when CSS is injected successfully', async () => {
       mockInvoke.mockResolvedValue(undefined)
       await expect(TauriService.injectCss('body {}')).resolves.toBe(true)
-      expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', { css: 'body {}' })
+      expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', {
+        css: 'body {}',
+      })
     })
 
     it('returns false on failure', async () => {

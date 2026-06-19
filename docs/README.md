@@ -8,7 +8,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ![Release](https://img.shields.io/github/v/release/kg20dev/livicat)
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue)
-![Size](https://img.shields.io/badge/binary%20size-~8%20MB-brightgreen)
+![Size](https://img.shields.io/badge/binary%20size-~10%20MB-brightgreen)
 ![macOS](https://img.shields.io/badge/macOS-supported-brightgreen?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
@@ -20,20 +20,20 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📚 Documentation
 
-### 🎯 [For Streamers → docs/STREAMER.md](docs/STREAMER.md)
+### 🎯 [For Streamers → STREAMER.md](STREAMER.md)
 *Installation • Quick Start • OBS Setup • Customization • Troubleshooting*
 
-### 🛠️ [For Developers → docs/README_DEVELOPER.md](docs/README_DEVELOPER.md)
+### 🛠️ [For Developers → README_DEVELOPER.md](README_DEVELOPER.md)
 *Architecture • Setup • API Reference • Testing • Contributing*
 
 ---
 
 ## ✨ Features
 
-- 🎨 **Theme Packages** — Colour Bubble (IM-style) and Neon Sticker (vibrant sticker-style)
-- ✨ **Message Animations** — Entrance animations for usernames and messages
-- 🪟 **Live Preview** — Real-time chat popup for OBS Window Capture
-- ⚡ **Real-Time Preview** — Popup window with gallery mode
+- 🎨 **Theme Plugin System** — Portable self-contained theme packages (Colour Bubble, Neon Sticker)
+- ✨ **Message Animations** — Slide, Wiggle, Pop, Fade with customizable speed
+- 🪟 **Two OBS Methods** — CSS Export or Live Preview
+- ⚡ **Real-Time Preview** — Always-on-top popup window with gallery mode
 - 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels
 - 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
 
@@ -71,21 +71,21 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 🚀 Quick Start
 
-**Streamers:** 2 minutes to custom chat → [docs/STREAMER.md](docs/STREAMER.md)
+**Streamers:** 2 minutes to custom chat → [STREAMER.md](STREAMER.md)
 
-**Developers:** `git clone && npm install` → [docs/README_DEVELOPER.md](docs/README_DEVELOPER.md)
+**Developers:** `git clone && npm install` → [README_DEVELOPER.md](README_DEVELOPER.md)
 
 > **⚠️ Windows + OBS Live Preview (Window Capture):**  
 > In OBS, open the Window Capture source properties and set **Capture Method** to **"Windows 10 (1903 and up)"** — do not leave it on "Automatic". The preview window won't update without this setting.
 >
-> <img src="docs/yurisi-doc.png" alt="OBS Capture Method setting" width="300">
+> <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
 ---
 
 ## 📊 Stats
 
-- **Size:** ~8MB (93% smaller than Electron)
-- **Tests:** 239+ tests
+- **Size:** ~10MB (91% smaller than Electron)
+- **Tests:** 182+ tests
 - **Languages:** TypeScript, Rust, React
 - **Platforms:** macOS, Windows
 - **License:** GPL-3.0
@@ -96,7 +96,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 - [Report a Bug](https://github.com/kg20dev/livicat/issues/new?template=bug_report.yml)
 - [Feature Request](https://github.com/kg20dev/livicat/issues/new)
-- [Contributing Guide](docs/README_DEVELOPER.md#contributing)
+- [Contributing Guide](README_DEVELOPER.md#contributing)
 
 ---
 

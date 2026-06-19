@@ -140,25 +140,25 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
-//     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
-//     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
-//     #[cfg(target_os = "windows")]
-//     {
-//         let window_clone = window.clone();
-//         std::thread::spawn(move || {
-//             loop {
-//                 std::thread::sleep(std::time::Duration::from_millis(500));
-//                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
-//                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
-//                     Ok(_) => {}
-//                     Err(e) => {
-//                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
-//                         break;
-//                     }
-//                 }
-//             }
-//         });
-//     }
+    //     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
+    //     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
+    //     #[cfg(target_os = "windows")]
+    //     {
+    //         let window_clone = window.clone();
+    //         std::thread::spawn(move || {
+    //             loop {
+    //                 std::thread::sleep(std::time::Duration::from_millis(500));
+    //                 // Trigger a repaint without visual change - forces DWM to refresh the thumbnail
+    //                 match window_clone.eval("window.dispatchEvent(new Event('resize'))") {
+    //                     Ok(_) => {}
+    //                     Err(e) => {
+    //                         eprintln!("[Livicat] OBS repaint failed: {:?}", e);
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         });
+    //     }
 
     Ok(())
 }
@@ -254,7 +254,10 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
     }
 }
 
-fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String> {
+fn inject_css_to_window(
+    window: &WebviewWindow,
+    css: &str,
+) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
 
     let script = format!(
@@ -262,28 +265,120 @@ fn inject_css_to_window(window: &WebviewWindow, css: &str) -> Result<(), String>
             try {{
                 var existing = document.getElementById('livicat-css');
                 if (existing) {{
-                    console.log('[Livicat] Removing existing CSS');
                     existing.remove();
                 }}
                 var style = document.createElement('style');
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
-                console.log('[Livicat] CSS injected successfully');
-                return true;
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
-                return false;
+            }}
+
+            function __lc_wm_cycle(el) {{
+                setTimeout(function() {{
+                    el.style.animation = '__lc_exit 0.9s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards';
+                    setTimeout(function() {{
+                        el.style.display = 'none';
+                        window.__lc_wm_hidden = true;
+                        setTimeout(function() {{
+                            window.__lc_wm_hidden = false;
+                            el.style.display = 'flex';
+                            el.style.animation = '__lc_enter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, __lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite, __lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite';
+                            __lc_wm_cycle(el);
+                        }}, 1800000);
+                    }}, 900);
+                }}, 15000);
+            }}
+            
+            function __lc_make_wm() {{
+                if (!document.getElementById('livicat-wm-anim')) {{
+                    var s = document.createElement('style');
+                    s.id = 'livicat-wm-anim';
+                    s.textContent = 
+                        '@keyframes __lc_bounce {{0%,100%{{transform:translateY(0)rotate(0deg)}}20%{{transform:translateY(-8px)rotate(-5deg)}}40%{{transform:translateY(2px)rotate(2deg)}}60%{{transform:translateY(-4px)rotate(-2deg)}}80%{{transform:translateY(1px)rotate(1deg)}}}}' +
+                        '@keyframes __lc_fadein {{0%{{opacity:0;transform:translateX(12px)scale(0.9)}}60%{{opacity:1;transform:translateX(-2px)scale(1.02)}}100%{{opacity:0.7;transform:translateX(0)scale(1)}}}}' +
+                        '@keyframes __lc_curious {{0%,100%{{transform:rotate(0deg)}}25%{{transform:rotate(-4deg)}}50%{{transform:rotate(1deg)}}75%{{transform:rotate(3deg)}}}}' +
+                        '@keyframes __lc_enter {{0%{{opacity:0;transform:translateX(50px)scale(0.7)}}60%{{opacity:1;transform:translateX(-6px)scale(1.12)}}80%{{transform:translateX(2px)scale(0.98)}}100%{{transform:translateX(0)scale(1)}}}}' +
+                        '@keyframes __lc_exit {{0%{{opacity:1;transform:translateX(0)scale(1)}}30%{{opacity:1;transform:translateX(-5px)scale(1.15)}}100%{{opacity:0;transform:translateX(60px)scale(0.75)}}}}';
+                    document.head.appendChild(s);
+                }}
+                
+                var container = document.createElement('div');
+                container.id = 'livicat-watermark';
+                container.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;display:flex;align-items:center;gap:6px;animation:__lc_enter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,__lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,__lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;';
+                
+                var icon = document.createElement('div');
+                icon.style.cssText = 'width:28px;height:28px;animation:__lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,__lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;opacity:0.6;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=);background-size:contain;background-repeat:no-repeat;background-position:center;';
+                
+                var text = document.createElement('span');
+                text.textContent = 'LIVICAT';
+                text.style.cssText = 'font:600 9px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0.8px;color:rgba(255,255,255,0.7);animation:__lc_fadein 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;';
+                
+                container.appendChild(icon);
+                container.appendChild(text);
+                document.body.appendChild(container);
+                __lc_wm_cycle(container);
+                return container;
+            }}
+
+            if (!document.getElementById('livicat-watermark')) {{
+                __lc_make_wm();
+                console.log('[Livicat] Watermark created');
+            }}
+
+            if (!window.__livicat_wmobs) {{
+                window.__livicat_wmobs = new MutationObserver(function() {{
+                    if (!window.__lc_wm_hidden && !document.getElementById('livicat-watermark')) {{
+                        __lc_make_wm();
+                        console.log('[Livicat] Watermark re-created by observer');
+                    }}
+                }});
+                window.__livicat_wmobs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                console.log('[Livicat] Watermark observer ready');
+            }}
+
+            if (!window.__livicat_punct) {{
+                window.__livicat_punct = true;
+                function __livicat_set_punct(el) {{
+                    var text = el.textContent || '';
+                    if (/[?!]$/.test(text)) {{
+                        el.setAttribute('data-punct', text.slice(-1));
+                    }} else {{
+                        el.removeAttribute('data-punct');
+                    }}
+                }}
+                var __livicat_obs = new MutationObserver(function(muts) {{
+                    for (var i = 0; i < muts.length; i++) {{
+                        var nodes = muts[i].addedNodes;
+                        for (var j = 0; j < nodes.length; j++) {{
+                            var n = nodes[j];
+                            if (n.nodeType === 1) {{
+                                if (n.matches && n.matches('yt-live-chat-text-message-renderer')) {{
+                                    var m = n.querySelector('#message');
+                                    if (m) __livicat_set_punct(m);
+                                }}
+                                if (n.id === 'message' || n.querySelector && n.querySelector('#message')) {{
+                                    var m = n.id === 'message' ? n : n.querySelector('#message');
+                                    if (m) __livicat_set_punct(m);
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+                __livicat_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                document.querySelectorAll('yt-live-chat-text-message-renderer #message').forEach(__livicat_set_punct);
+                console.log('[Livicat] Punct observer ready');
             }}
         }})();"#,
-        serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?
+        serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?,
     );
 
     window
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection script executed");
+    println!("[Livicat] CSS injection + punct observer + watermark executed");
     Ok(())
 }
 
@@ -449,7 +544,7 @@ pub fn run() {
              --in-process-gpu \
              --disable-frame-rate-limit \
              --disable-backgrounding-occluded-windows \
-             --disable-background-timer-throttling"
+             --disable-background-timer-throttling",
         );
         println!("[Livicat] Set WebView2 browser flags: --disable-gpu --disable-software-rasterizer --in-process-gpu --disable-frame-rate-limit --disable-backgrounding-occluded-windows --disable-background-timer-throttling");
     }

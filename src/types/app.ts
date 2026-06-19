@@ -5,7 +5,7 @@
 /* ─── Settings Enums ────────────────────────────────────────────── */
 
 export type Theme = 'dark' | 'light'
-export type MessageSpacing = 'compact' | 'normal' | 'comfortable'
+export type MessageSpacing = number
 export type AnimationSpeed = 'none' | 'slow' | 'normal'
 export type AnimationStyle = 'default' | 'blink' | 'glowing' | 'fade' | 'slide' | 'bounce'
 
@@ -19,7 +19,7 @@ export type BackgroundStyle = 'full-block' | 'inline-text'
 /**
  * Comprehensive chat display settings that drive the CSS generator.
  *
- * All color values are hex strings (e.g. "#d6baff").
+ * All color values are hex strings (e.g. "#ff4444").
  * All size/dimension values are in pixels (raw number, no unit suffix).
  */
 export interface ChatSettings {

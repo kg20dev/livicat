@@ -27,6 +27,9 @@ interface SidebarRootProps {
   onNavigate?: (item: string) => void
   children: React.ReactNode
   className?: string
+  /** Shared collapsed state from parent — avoids duplicate hook instances */
+  isCollapsed?: boolean
+  toggle?: () => void
 }
 
 export default function Sidebar({
@@ -34,8 +37,12 @@ export default function Sidebar({
   onNavigate = () => {},
   children,
   className = '',
+  isCollapsed: externalCollapsed,
+  toggle: externalToggle,
 }: SidebarRootProps) {
-  const { isCollapsed, toggle } = useSidebarCollapsed()
+  const internal = useSidebarCollapsed()
+  const isCollapsed = externalCollapsed ?? internal.isCollapsed
+  const toggle = externalToggle ?? internal.toggle
   const isVisible = !isCollapsed
 
   const handleBackdropClick = () => {
@@ -57,7 +64,7 @@ export default function Sidebar({
 
       {/* Floating sidebar */}
       <aside
-        className={`h-screen fixed left-0 top-0 bg-surface-container-low backdrop-blur-3xl border-r border-outline-variant flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
+        className={`h-screen fixed left-0 top-0 glass-medium flex flex-col z-[60] transition-transform duration-300 ease-in-out ${
           isVisible ? 'translate-x-0' : '-translate-x-full'
         } w-[280px] ${className}`}
       >
@@ -95,23 +102,23 @@ Sidebar.Header = function SidebarHeader({
       {/* Close button for floating sidebar */}
       <button
         onClick={toggle}
-        className="absolute right-2 top-2 p-2 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 z-10"
+        className="absolute right-2 top-2 p-2 rounded-lg glass-light hover:glass-medium transition-all active:scale-95 z-10"
         title="Close menu"
         aria-label="Close menu"
       >
         <span className="material-symbols-outlined text-on-surface-variant">close</span>
       </button>
 
-      {/* Livicat icon */}
-      <div className="ml-2 mt-6">
+      {/* Livicat icon — clickable to toggle sidebar */}
+      <button onClick={toggle} className="ml-2 mt-6 text-left">
         <img src="/livicat-icon.png" alt="Livicat" className="w-12 h-12" />
-      </div>
+      </button>
 
-      {/* Title and subtitle */}
-      <div className="ml-2 mt-4">
+      {/* Title and subtitle — clickable to toggle sidebar */}
+      <button onClick={toggle} className="ml-2 mt-4 text-left">
         <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
         <p className="text-on-surface-variant font-label-md text-label-md">{subtitle}</p>
-      </div>
+      </button>
     </div>
   )
 }
@@ -151,10 +158,10 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
+            className={`flex items-center gap-3 rounded-lg transition-all duration-200 px-4 py-3 ${
               isActive
-                ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
-                : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
+                ? 'glass-accent text-on-surface font-bold'
+                : 'text-on-surface-variant font-medium hover:glass-light active:scale-95 duration-100'
             }`}
             title={item.label}
           >
@@ -178,10 +185,10 @@ function SidebarNavItems({
               e.preventDefault()
               onNavigate(item.id)
             }}
-            className={`flex items-center gap-3 rounded-lg transition-colors duration-200 px-4 py-3 ${
+            className={`flex items-center gap-3 rounded-lg transition-all duration-200 px-4 py-3 ${
               isActive
-                ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high'
-                : 'text-on-surface-variant font-medium hover:bg-surface-container-high active:scale-95 duration-100'
+                ? 'glass-accent text-on-surface font-bold'
+                : 'text-on-surface-variant font-medium hover:glass-light active:scale-95 duration-100'
             }`}
             title={item.label}
           >

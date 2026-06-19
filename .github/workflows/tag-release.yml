@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,7 +56,15 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname -l "v*" | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: ${PREV_TAG:-none}"
+
       - name: Generate changelog
+        if: steps.prev_tag.outputs.tag != ''
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
         with:
@@ -75,120 +83,63 @@ jobs:
               "itemTemplate": "- {{COMMIT_MESSAGE}} ([#{{ISSUE_NUMBER}}]({{ISSUE_URL}})) ({{AUTHOR}})",
               "maxIssues": 50
             }
-          fromTag: ${{ github.event.repository.releases[0].tag_name || 'v0.0.0' }}
+          fromTag: ${{ steps.prev_tag.outputs.tag }}
           toTag: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "Bump version to ${{ steps.version.outputs.version }}"
+
+      - name: Save changelog
+        if: steps.prev_tag.outputs.tag != ''
+        run: |
+          cat > /tmp/changelog.md << 'C4NG3L0G'
+          ${{ steps.changelog.outputs.changelog }}
+          C4NG3L0G
+
       - name: Create Release PR
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: release/app
-          head: main
-          title: "[${{ steps.version.outputs.version }}] Release ${{ github.ref_name }}"
-          body: |
-            ## Release ${{ github.ref_name }}
-            
-            Auto-generated release PR from tag push.
-            
-            ### 📋 Changes
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ---
-            
-            ### ✅ Pre-merge Checklist
-            - [ ] All CI checks pass
-            - [ ] Version matches tag: ${{ steps.version.outputs.version }}
-            - [ ] Changelog reviewed
-            - [ ] Manual approval given
-            
-            > **Note**: This PR requires manual approval before merge. No auto-merge.
-          labels: |
-            release
-            automated
-          draft: false
-          add-paths: |
-            package.json
-            src-tauri/Cargo.toml
-            src-tauri/tauri.conf.json
-
-  require-approval:
-    name: Require Manual Approval
-    needs: prepare-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for PR approval
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
-          echo "Waiting for approval on PR #$PR_NUMBER..."
-          echo "PR URL: ${{ needs.prepare-release.outputs.pr_url }}"
-          
-          # Wait for required reviews
-          while true; do
-            REVIEWS=$(gh pr view $PR_NUMBER --json reviews --jq '.reviews[] | select(.state=="APPROVED") | .author.login' 2>/dev/null | wc -l)
-            if [ "$REVIEWS" -ge 1 ]; then
-              echo "✅ PR approved"
-              break
-            fi
-            echo "⏳ Waiting for approval... (checking every 30s)"
-            sleep 30
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="rel/v$VERSION"
+          git push origin "HEAD:refs/heads/$BRANCH"
 
-  merge-release:
-    name: Merge to Release Branch
-    needs: [prepare-release, require-approval]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Build PR body
+          echo "## Release v$VERSION" > /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "Auto-generated release PR from tag push." >> /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "### 📋 Changes" >> /tmp/pr-body.md
+          if [ -s /tmp/changelog.md ]; then
+            cat /tmp/changelog.md >> /tmp/pr-body.md
+          else
+            echo "No changelog (first release or no previous tag)." >> /tmp/pr-body.md
+          fi
+          echo "" >> /tmp/pr-body.md
+          echo "---" >> /tmp/pr-body.md
+          echo "" >> /tmp/pr-body.md
+          echo "### ✅ Checklist" >> /tmp/pr-body.md
+          echo "- [ ] CI checks pass" >> /tmp/pr-body.md
+          echo "- [ ] Version matches tag: $VERSION" >> /tmp/pr-body.md
+          echo "- [ ] Changelog reviewed" >> /tmp/pr-body.md
+          echo "- [ ] Merge manually when ready" >> /tmp/pr-body.md
 
-      - name: Merge PR
-        run: |
-          PR_NUMBER=${{ needs.prepare-release.outputs.pr_number }}
-          gh pr merge $PR_NUMBER --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL=$(gh pr create \
+            --base release/app \
+            --head "$BRANCH" \
+            --title "[$VERSION] Release v$VERSION" \
+            --body-file /tmp/pr-body.md \
+            --label "release,automated")
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_URL##*/}" >> $GITHUB_OUTPUT
 
-  build-and-release:
-    name: Build & Create Release
-    needs: merge-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout release/app
-        uses: actions/checkout@v4
-        with:
-          ref: release/app
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Release ${{ github.ref_name }}"
-          releaseBody: |
-            See [changelog](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})
-          args: --target all
+  # After you merge this PR to release/app:
+  #   - build-tauri.yml builds macOS + Windows and creates the release
+  #   - auto-tag-and-release.yml creates the tag (skipped if already exists)

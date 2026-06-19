@@ -1,13 +1,44 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * LIQUID GLASS RED LOADING SCREEN
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * A stunning liquid glass loading experience with:
+ * - Black/white gradient base with transparency
+ * - Red accent glow effects
+ * - Smooth liquid animations
+ * - Multi-layer glass depth
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
+
 .loading-screen {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 50%, #1e1e2e 100%);
+  /* Deep black base with subtle gradient */
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(10, 10, 10, 0.92) 50%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  /* Red ambient glow from corners */
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 68, 68, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 68, 68, 0.06) 0%, transparent 50%),
+    linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(10, 10, 10, 0.92) 50%,
+      rgba(0, 0, 0, 0.95) 100%
+    );
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   opacity: 1;
-  transition: opacity 300ms ease-out;
+  transition: opacity 400ms ease-out;
+  backdrop-filter: blur(40px) saturate(110%);
 }
 
 .loading-screen.hidden {
@@ -19,57 +50,208 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  animation: fadeInUp 0.6s ease-out;
+  gap: 2.5rem;
+  animation: liquidFadeIn 0.8s ease-out;
 }
 
-@keyframes fadeInUp {
+@keyframes liquidFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ICON WRAPPER - LIQUID GLASS CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 .icon-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Liquid glass base */
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(28px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 24px;
+  /* Multi-layer depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 48px rgba(255, 68, 68, 0.12);
+  animation: iconFloat 3s ease-in-out infinite;
 }
+
+@keyframes iconFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Red glow rings around icon */
+.icon-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 68, 68, 0.15);
+  animation: glowRingPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowRingPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.icon-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 68, 68, 0.08);
+  animation: glowRingPulse 2s ease-in-out infinite 0.3s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   LIVICAT ICON - ANIMATED WITH RED GLOW
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 .livicat-icon {
   width: 120px;
   height: 120px;
   object-fit: contain;
-  animation: pulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.3));
+  /* Liquid breathing animation */
+  animation: liquidPulse 2.5s ease-in-out infinite;
+  /* Red glow shadow */
+  filter: drop-shadow(0 0 20px rgba(255, 68, 68, 0.4)) drop-shadow(0 0 40px rgba(255, 68, 68, 0.2))
+    drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+  transition: filter 0.3s ease;
 }
 
-@keyframes pulse {
+@keyframes liquidPulse {
   0%,
   100% {
     transform: scale(1);
-    filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.3));
+    filter: drop-shadow(0 0 20px rgba(255, 68, 68, 0.4))
+      drop-shadow(0 0 40px rgba(255, 68, 68, 0.2)) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
   }
   50% {
-    transform: scale(1.05);
-    filter: drop-shadow(0 6px 30px rgba(139, 92, 246, 0.5));
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 32px rgba(255, 68, 68, 0.6))
+      drop-shadow(0 0 64px rgba(255, 68, 68, 0.3)) drop-shadow(0 12px 36px rgba(0, 0, 0, 0.4));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TITLE - ELEGANT TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 .livicat-title {
   font-family:
     system-ui,
     -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Display',
     sans-serif;
-  font-size: 2rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: 2.5rem;
+  font-weight: 700;
+  /* White text with subtle shadow */
+  color: rgba(255, 255, 255, 0.95);
   margin: 0;
-  letter-spacing: 0.05em;
-  animation: fadeInUp 0.6s ease-out 0.2s both;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* Red glow on text */
+  text-shadow:
+    0 0 20px rgba(255, 68, 68, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: titleFadeIn 0.8s ease-out 0.15s both;
+}
+
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    letter-spacing: 0.2em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.12em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   LOADING INDICATOR (OPTIONAL - ADD IF NEEDED)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 68, 68, 0.2);
+  border-top-color: #ff4444;
+  border-radius: 50%;
+  animation: liquidSpin 0.8s linear infinite;
+}
+
+@keyframes liquidSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .icon-wrapper {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .livicat-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .livicat-title {
+    font-size: 2rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION SUPPORT
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-content,
+  .icon-wrapper,
+  .livicat-icon,
+  .livicat-title,
+  .icon-wrapper::before,
+  .icon-wrapper::after {
+    animation: none;
+  }
+
+  .loading-screen {
+    transition: opacity 200ms ease-out;
+  }
 }

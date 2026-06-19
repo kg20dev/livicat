@@ -325,8 +325,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
       ? `${avatarSize}px minmax(0, ${bubbleWidth}px)`
       : `0px minmax(0, ${bubbleWidth}px)`
   const gridAreas = avatarSize > 0 ? '"avatar name" "avatar bubble"' : '"name" "bubble"'
-  const marginBottom =
-    settings.messageSpacing === 'compact' ? 4 : settings.messageSpacing === 'comfortable' ? 16 : 10
+  const marginBottom = settings.messageSpacing
   const totalWidth = avatarSize + gap + bubbleWidth
 
   // Animation settings
@@ -536,7 +535,7 @@ function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low/50 backdrop-blur-sm transition-all duration-200 ring-1 ring-primary/[0.06]">
+    <div className="rounded-xl border border-outline-variant/40 glass-card transition-all duration-200 ring-1 ring-primary/[0.06]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -559,7 +558,7 @@ function CollapsibleSection({
         </span>
       </button>
       {open && (
-        <div className="border-t border-outline-variant/30 px-4 py-4 space-y-4 bg-surface-container-lowest/30 rounded-b-xl">
+        <div className="border-t border-outline-variant/30 px-4 py-4 space-y-4 glass-light rounded-b-xl">
           {children}
         </div>
       )}
@@ -583,7 +582,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
   const hex = value.replace('#', '')
   return (
     <div className="color-picker-container">
-      <div className="flex items-center gap-0 bg-surface-container-lowest border border-outline-variant rounded-md overflow-hidden">
+      <div className="flex items-center gap-0 glass-input border border-outline-variant rounded-md overflow-hidden">
         <div className="relative w-8 h-8 shrink-0">
           <input
             type="color"
@@ -658,7 +657,7 @@ function SliderRow({
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[12px] text-on-surface font-medium">{label}</span>
-        <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-0.5">
+        <div className="flex items-center gap-1 glass-input border border-outline-variant rounded-md px-2 py-0.5">
           <input
             type="number"
             value={value}
@@ -741,7 +740,7 @@ function SelectRow({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-surface-container-lowest border border-outline-variant rounded-md py-1.5 px-2.5 text-[12px] text-on-surface outline-none appearance-none cursor-pointer hover:border-primary/40 focus:border-primary"
+        className="w-full glass-input border border-outline-variant rounded-md py-1.5 px-2.5 text-[12px] text-on-surface outline-none appearance-none cursor-pointer"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23998ba2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
@@ -858,8 +857,7 @@ export default function WorkspaceX() {
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      const css = generateChatCSSX(xCSSSettings)
-      updateCSS(css)
+      updateCSS(generateChatCSSX(xCSSSettings))
     }, 300)
     return () => clearTimeout(timer)
   }, [previewOpen, xCSSSettings, updateCSS])
@@ -885,8 +883,7 @@ export default function WorkspaceX() {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      const css = generateChatCSSX(xCSSSettings)
-      openPreview(videoId, css)
+      openPreview(videoId, generateChatCSSX(xCSSSettings))
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {
@@ -922,7 +919,7 @@ export default function WorkspaceX() {
     <>
       <div className="flex h-full w-full overflow-hidden">
         {/* ─── Left Panel: Customizer ─────────────────────────── */}
-        <aside className="w-[360px] bg-surface border-r border-outline-variant flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0">
+        <aside className="w-[360px] glass-medium flex flex-col h-full overflow-hidden shadow-xl flex-shrink-0 border-r border-outline-variant/30">
           {/* Header */}
           <div className="px-5 py-4 border-b border-outline-variant/50 flex items-center gap-3">
             <div>
@@ -1151,15 +1148,13 @@ export default function WorkspaceX() {
                 unit="%"
                 onChange={(v) => update('messageOpacity', v)}
               />
-              <SelectRow
+              <SliderRow
                 label="Message Spacing"
                 value={s.messageSpacing}
-                options={[
-                  { value: 'compact', label: 'Compact' },
-                  { value: 'normal', label: 'Normal' },
-                  { value: 'comfortable', label: 'Comfortable' },
-                ]}
-                onChange={(v) => update('messageSpacing', v as ChatSettings['messageSpacing'])}
+                min={0}
+                max={40}
+                unit="px"
+                onChange={(v) => update('messageSpacing', v)}
               />
               <SelectRow
                 label="Font Family"
@@ -1252,7 +1247,7 @@ export default function WorkspaceX() {
             {/* ── Danger Zone ─────────────────────────────────── */}
             <CollapsibleSection icon="warning" title="Danger Zone" defaultOpen={false}>
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-surface-container border border-red-500/20">
+                <div className="flex items-start gap-3 p-3 rounded-lg glass-light border border-red-500/20">
                   <span className="material-symbols-outlined text-[18px] text-error shrink-0 mt-0.5">
                     delete_forever
                   </span>
@@ -1277,12 +1272,12 @@ export default function WorkspaceX() {
         </aside>
 
         {/* ─── Right Panel: Preview ──────────────────────────── */}
-        <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0">
+        <section className="flex-1 flex flex-col glass-heavy relative min-w-0">
           {/* Preview Toolbar */}
           <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between">
             {/* Left: Mode toggle */}
             <div className="flex items-center gap-3">
-              <div className="flex bg-surface-container-high rounded-lg p-0.5 border border-outline-variant/50">
+              <div className="flex glass-card rounded-lg p-0.5 border border-outline-variant/50">
                 <button
                   onClick={() => setPreviewMode('live')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-sm font-medium transition-colors ${
@@ -1352,7 +1347,7 @@ export default function WorkspaceX() {
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                     placeholder="YouTube URL or ID..."
-                    className={`w-48 bg-surface-container-high border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 hover:border-primary/40 focus:border-primary transition-colors ${
+                    className={`w-48 glass-input border rounded-md py-1.5 px-2.5 text-[11px] text-on-surface outline-none placeholder:text-on-surface-variant/40 transition-colors ${
                       urlError ? 'border-red-500/50' : 'border-outline-variant'
                     }`}
                   />
@@ -1419,7 +1414,7 @@ export default function WorkspaceX() {
 
           {/* Settings panel (overlay) */}
           {showSettings && (
-            <div className="absolute top-16 right-6 z-20 bg-surface-container border border-outline-variant rounded-xl p-4 shadow-2xl w-72">
+            <div className="absolute top-16 right-6 z-20 glass-medium border border-outline-variant rounded-xl p-4 shadow-2xl w-72">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-label-md font-semibold text-on-surface">Preview Settings</h3>
                 <button

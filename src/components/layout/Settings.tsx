@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { isAnalyticsEnabled, setAnalyticsEnabled, trackEventAsync } from '../../utils/analytics'
+import { TauriService } from '../../services'
+import pkg from '../../../package.json'
 import './Settings.css'
 
 /**
@@ -8,11 +10,16 @@ import './Settings.css'
 export default function Settings() {
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [runtimeVersion, setRuntimeVersion] = useState<string | null>(null)
 
   useEffect(() => {
     // Load current analytics consent status from localStorage
     setAnalyticsEnabledState(isAnalyticsEnabled())
     setIsLoading(false)
+    // Fetch runtime version from Tauri
+    TauriService.getAppVersion().then((v) => {
+      if (v) setRuntimeVersion(v)
+    })
   }, [])
 
   const handleToggle = () => {
@@ -27,14 +34,14 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
+    <div className="settings-container glass-medium">
+      <div className="settings-header glass-light">
         <h2 className="settings-title">Settings</h2>
       </div>
 
       <div className="settings-content">
-        <div className="settings-section">
-          <div className="settings-section-header">
+        <div className="settings-section glass-card">
+          <div className="settings-section-header glass-accent-primary">
             <div className="settings-section-icon">
               <svg
                 width="20"
@@ -94,8 +101,8 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="settings-section">
-          <div className="settings-section-header">
+        <div className="settings-section glass-card">
+          <div className="settings-section-header glass-accent-primary">
             <div className="settings-section-icon">
               <svg
                 width="20"
@@ -129,7 +136,7 @@ export default function Settings() {
                 <span className="settings-item-label">Version</span>
               </div>
               <p className="settings-item-description">
-                Livicat v0.6.1 — YouTube Live Chat editor for OBS
+                Livicat v{runtimeVersion ?? pkg.version} — YouTube Live Chat editor for OBS
               </p>
             </div>
           </div>

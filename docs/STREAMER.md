@@ -20,11 +20,10 @@
 - 🎉 Your stream looks more professional
 
 **Why streamers love it:**
-- 🎨 **7 preset themes** — Default, Minimal, Compact, Large, Stream, Neon, Light, Retro
+- 🎨 **2 theme packages** — Colour Bubble, Neon Sticker with unique visual styles
 - ⚡ **Real-time preview** — See changes instantly as you customize
-- 🪟 **Always-on-top window** — Stays visible while you work in OBS
 - 📤 **One-click OBS setup** — No complex configuration needed
-- 🪞 **Works in two ways** — Browser source OR window capture
+- 🪟 **Live Preview popup** — Simple OBS Window Capture setup
 
 ---
 
@@ -38,7 +37,7 @@
 ### **Solution:** Livicat makes it unique
 - 🎨 Match your brand colors and style
 - ✨ Add smooth animations to new messages
-- 🎯 Choose from professional presets
+- 🎯 Choose from theme packages
 - 🪟 Preview changes in real-time
 - 📺 Perfect for any stream size
 
@@ -88,55 +87,18 @@ https://youtu.be/dQw4w9WgXcQ
 ```
 
 ### **Step 3: Customize Your Chat**
-- **Pick a preset** — Click "Preset" and choose a theme
-- **Adjust colors** — Change background, username, message colors
-- **Choose fonts** — Pick from 12 Google Fonts
-- **Add animations** — Make new messages glow, slide, or bounce
-- **Toggle elements** — Show/hide avatars, timestamps, badges
+- **Pick a theme** — Choose between Colour Bubble or Neon Sticker
+- **Adjust colors** — Change background, username, message, border, and role colors
+- **Choose fonts** — Pick from 15+ Google Fonts
+- **Add animations** — Add entrance animations to usernames and messages
+- **Fine-tune spacing** — Adjust padding, border radius, avatar offset, and message spacing
 
 ### **Step 4: Preview Your Changes**
 - Changes appear instantly in the preview area
 - Use demo messages to test without waiting for real chat
 - Switch to "Live Chat" to see actual YouTube chat
 
-### **Step 5: Add to OBS**
-Choose **Method 1** or **Method 2** below (Method 2 is easier!)
-
----
-
-## 🪟 Two Methods to Use with OBS
-
-### **Method 1: CSS Export (Browser Source)**
-
-**Best for:** Testing, web-based workflows
-
-#### **Step-by-Step:**
-
-1. **Customize your chat** in Livicat
-2. Click **"Export CSS"** in the sidebar (or press `Ctrl+Shift+E`)
-3. CSS file downloads to your Downloads folder
-
-**In OBS:**
-
-4. In OBS, go to **Sources** → **+** → **Browser**
-5. Paste this URL:
-   ```
-   https://www.youtube.com/live_chat?v=YOUR_VIDEO_ID
-   ```
-6. Click the folder icon to upload the CSS file you downloaded
-7. Set **Width** to `400` and **Height** to `600`
-8. Click **OK**
-
-**✅ Pros:** Works in web mode, no Tauri needed
-**❌ Cons:** Manual setup, can't use always-on-top window
-
----
-
-### **Method 2: Live Preview (Window Capture)** ⭐
-
-**Best for:** Streamers, always-on-top overlay, easier setup
-
-#### **Step-by-Step:**
+### **Step 5: Add to OBS via Live Preview**
 
 1. **Customize your chat** in Livicat
 2. Enter your YouTube stream URL and click **"Fetch"**
@@ -156,60 +118,43 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 >
 > <img src="yurisi-doc.png" alt="OBS Capture Method setting" width="300">
 
-**✅ Pros:** One-click setup, always-on-top, easier workflow
-**❌ Cons:** Requires Livicat desktop app
-
----
-
-## 📊 Method Comparison
-
-| Feature | Method 1 (CSS Export) | Method 2 (Live Preview) |
-|---------|---------------------|------------------------|
-| **OBS Source Type** | Browser Source | Window Capture |
-| **Setup Complexity** | Medium (manual CSS) | Easy (one click) |
-| **Always-on-Top** | ❌ No | ✅ Yes |
-| **Requirements** | Web browser only | Livicat desktop app |
-| **CSS Updates** | Manual re-export | Instant (automatic) |
-| **Best For** | Testing, web users | **Streamers, production** |
-
-**💡 Recommendation:** Use **Method 2 (Live Preview)** for streaming — it's easier and faster!
-
 ---
 
 ## 🎨 Customization Options
 
-### **Preset Themes**
-- **Default** — Classic YouTube look
-- **Minimal** — Clean and simple
-- **Compact** — More messages on screen
-- **Large** — Big, readable text
-- **Stream** — Optimized for gaming streams
-- **Neon** — Dark mode with glowing accents
-- **Light** — Bright and clean
-- **Retro** — Nostalgic pixel-style look
+### **Theme Packages**
 
-### **Message Animations**
-- **Default** — No animation
-- **Blink** — Flash when new message arrives
-- **Glowing** — Subtle glow effect
-- **Fade** — Smooth fade-in
-- **Slide** — Slide in from side
-- **Bounce** — Bouncy arrival animation
+#### **Colour Bubble** — Classic IM-style chat
+| Section | Settings |
+|---------|----------|
+| **OBS** | Chroma Key toggle |
+| **Bubble** | Background, Text Color, Border Color/Width, Corner Radius, Padding, Tail Offset, Avatar Offset, Max Width |
+| **Username** | Color, Size, Bold, Vertical Offset |
+| **Message** | Content Font Size |
+| **Avatar** | Size, Vertical Offset |
+| **Common** | Container/Message Opacity, Spacing (Compact/Normal/Comfortable), Animation Speed |
+| **Animation** | Username Entrance (Slide/Wiggle/Pop/Fade), Message Entrance (Slide/Bounce/Pop/Fade) |
+| **YouTube** | Hide Generic Messages, Hide Header/Footer |
+| **Visibility** | Show Avatars |
+| **Role Colors** | Owner/Mod/Member background, text, username colors |
 
-### **Typography (12 Google Fonts)**
-- **Sans-serif:** Inter, Roboto, Open Sans, Lato
-- **Display:** Montserrat, Poppins, Bebas Neue
+#### **Neon Sticker** — Vibrant sticker-style chat
+| Section | Settings |
+|---------|----------|
+| **OBS** | Chroma Key toggle |
+| **Colors** | Background, Text Color, Username Color |
+| **Typography** | Name Size, Content Size, Avatar Size, Avatar Offset |
+| **Effects** | Skew Angle, Shadow Offset/Color, Stroke Width/Color, Glow Spread, Max Width, Corner Radius |
+| **Frame** | Include Frame toggle, Frame Margin |
+| **Common** | Container/Message Opacity, Animation Speed, Screen Margin, Font Family |
+| **YouTube** | Hide Generic Messages, Hide Header/Footer |
+| **Role Colors** | Owner/Mod/Member background, text colors |
+
+### **Typography (15+ Google Fonts)**
+- **Sans-serif:** Inter, Roboto, Open Sans, Lato, Source Sans 3, Ubuntu
+- **Display:** Montserrat, Poppins, Oswald, Raleway, Quicksand, Playfair Display
 - **Monospace:** Fira Code, JetBrains Mono
-- **More:** Nunito, Raleway, Oswald
-
-### **Visual Settings**
-| Setting | Options |
-|---------|---------|
-| **Colors** | Background, username, message, accent, scrollbar |
-| **Sizes** | Font size: 12-24px |
-| **Spacing** | Compact, Normal, Comfortable |
-| **Opacity** | Message and container: 0-100% |
-| **Toggles** | Avatars, timestamps, header, scroll button |
+- **More:** Nunito
 
 ---
 
@@ -221,14 +166,8 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 - Check that the URL is a valid YouTube video or stream
 - Try refreshing the page and entering the URL again
 
-### **❌ "CSS not applying in OBS"**
-**Solution (Method 1):**
-- Make sure you uploaded the CSS file to the Browser Source
-- Try refreshing the browser source in OBS (right-click → Refresh)
-- Clear OBS browser cache: File → Settings → Advanced → Clear Cache
-
 ### **❌ "Window not showing in OBS"**
-**Solution (Method 2):**
+**Solution:**
 - Make sure the Live Preview popup is open in Livicat
 - In OBS, make sure you selected "Livicat — Live Chat Preview"
 - Try re-adding the Window Capture source
@@ -262,8 +201,8 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 
 **Learn:**
 - How to customize colors and fonts
-- Using preset themes
-- Exporting CSS for OBS
+- Using theme packages
+- Using the theme system
 
 ---
 
@@ -271,19 +210,8 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 [![Watch the tutorial](https://img.youtube.com/vi/pmZq-mYhObc/0.jpg)](https://www.youtube.com/watch?v=pmZq-mYhObc)
 
 **Learn:**
-- Setting up Browser Source (Method 1)
-- Using Window Capture (Method 2)
+- Using Window Capture for the Livicat preview
 - Positioning and sizing your chat overlay
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+E` | Export CSS (Method 1) |
-| `Ctrl+Shift+P` | Open Live Preview (Method 2) |
-
 ---
 
 ## 💡 Pro Tips
@@ -293,7 +221,6 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 3. **Keep it readable** — Don't make font too small or text too transparent
 4. **Use animations sparingly** — Too much motion can distract viewers
 5. **Save your favorites** — Screenshots of settings you like for future streams
-6. **Always-on-top is your friend** — Keeps chat visible while you work
 
 ---
 
@@ -309,18 +236,15 @@ Choose **Method 1** or **Method 2** below (Method 2 is easier!)
 Check [existing discussions](https://github.com/kg20dev/livicat/discussions) or start a new one.
 
 ### **📖 Developer Docs**
-See [docs/README_DEVELOPER.md](docs/README_DEVELOPER.md) for technical details.
+See [README_DEVELOPER.md](README_DEVELOPER.md) for technical details.
 
 ---
 
 ## 📝 What's Next?
 
 **Coming soon:**
-- 🔔 Sound notifications for new messages
-- 🎯 More preset themes
+- 🎯 More theme packages
 - 🌊 More animation styles
-- 📊 Chat statistics dashboard
-- 🪟 Multi-window support for multiple chats
 
 ---
 

@@ -138,7 +138,7 @@ export function ThemePreview({
     ? [inlineCss, resetCss, themeCss].join('\n\n')
     : [inlineCss, themeCss].join('\n\n')
 
-  const showAvatars = (settings.showAvatars as boolean) ?? true
+  const showAvatars = (settings['show-avatars'] as boolean) ?? true
   const chatMessages = messages ?? DEMO_MESSAGES
 
   const isGallery = mode === 'gallery'
@@ -177,16 +177,32 @@ export function ThemePreview({
           .livicat-gallery-card {
             background: transparent;
             border-radius: 12px;
-            padding: 0.75rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
                         0 1px 2px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
             overflow: visible;
-            display: flex;
+            display: grid;
+            grid-template-rows: auto 1fr;
             align-items: center;
-            justify-content: center;
-            min-height: 80px;
+            justify-items: center;
+            min-height: 100px;
+            padding: 0.75rem;
+          }
+
+          /* ── Gallery Role Label ─────────────────────────────────────── */
+          .livicat-gallery-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3px 12px;
+            border-radius: 4px;
+            line-height: 1.5;
+            white-space: nowrap;
+            margin-bottom: 4px;
           }
 
           .livicat-gallery-card:hover {
@@ -232,6 +248,9 @@ export function ThemePreview({
           <div className="livicat-gallery-grid overflow-y-auto h-full">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
+                <span className="livicat-gallery-label">
+                  {ROLE_LABELS[msg.role ?? 'default'] ?? msg.role}
+                </span>
                 <ChatMessage message={msg} showAvatar={showAvatars} />
               </div>
             ))}
@@ -247,6 +266,17 @@ export function ThemePreview({
       </div>
     </div>
   )
+}
+
+/* ─── Gallery role labels ────────────────────────────────────────── */
+
+const ROLE_LABELS: Record<string, string> = {
+  default: 'Default',
+  owner: 'Owner',
+  moderator: 'Moderator',
+  member: 'Member',
+  'super-chat': 'Super Chat',
+  'member-ship': 'Membership',
 }
 
 /* ─── Single YouTube-Style Message ─────────────────────────────────── */
@@ -266,7 +296,12 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
           <div id="author-name">{message.username}</div>
         </yt-live-chat-author-chip>
         <div id="message-container">
-          <div id="message">{message.message}</div>
+          <div
+            id="message"
+            data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}
+          >
+            {message.message}
+          </div>
         </div>
       </div>
     </yt-live-chat-text-message-renderer>

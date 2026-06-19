@@ -1,75 +1,69 @@
-import type { SettingDef } from '../types'
-import { FONT_OPTIONS } from '../../utils/fonts'
+import type { SettingDef, DerivationEntry } from '../types'
+
+/**
+ * Neon Sticker (Ink Sticker) — theme-specific settings only.
+ *
+ * Settings shared across all themes live in `src/theme/core.ts`.
+ * `coreCssVarMap` maps each core key → this theme's CSS variable name
+ * so buildCSSVariables emits the correct `--var-name`.
+ */
+
+/**
+ * Maps source CSS variable names → derived CSS variable details.
+ * buildCSSVariables uses this to auto-derive harmonious colors
+ * via harmonyInvertColor(). Only themes that export this get auto-derivation.
+ *
+ * A plain string target uses default harmonyInvertColor options (stroke style).
+ * An object with `target` + `options` allows per-entry tuning.
+ */
+export const strokeMap: Record<string, DerivationEntry> = {
+  messageColor: 'strokeColor',
+  usernameColor: {
+    target: 'glowColor',
+    options: { darkTargetL: 0.65, lightTargetL: 0.65, satScale: 0.85 },
+  },
+  ownerText: 'ownerStroke',
+  modText: 'modStroke',
+  memberText: 'memberStroke',
+  superchatText: 'superchatStroke',
+  membershipText: 'membershipStroke',
+  'chat-owner-username': 'ownerUsernameStroke',
+  'chat-mod-username': 'modUsernameStroke',
+  'chat-member-username': 'memberUsernameStroke',
+  'chat-superchat-username': 'superchatUsernameStroke',
+  'chat-membership-username': 'membershipUsernameStroke',
+}
+
+export const coreCssVarMap: Record<string, string> = {
+  bg: 'messageBg',
+  'text-color': 'messageColor',
+  'username-color': 'usernameColor',
+  'container-opacity': 'containerOpacity',
+  'message-opacity': 'messageOpacity',
+  'message-spacing': 'chat-message-spacing',
+  'animation-speed': 'animationSpeed',
+  'username-bold': 'chat-username-font-weight',
+  'font-weight-message': 'messageFontWeight',
+  'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
+  'letter-spacing': 'chat-letter-spacing',
+  'owner-bg': 'ownerBg',
+  'owner-text': 'ownerText',
+  'mod-bg': 'modBg',
+  'mod-text': 'modText',
+  'member-bg': 'memberBg',
+  'member-text': 'memberText',
+  'superchat-bg': 'superchatBg',
+  'superchat-text': 'superchatText',
+  'membership-bg': 'membershipBg',
+  'membership-text': 'membershipText',
+  'chat-owner-username': 'ownerUsername',
+  'chat-mod-username': 'modUsername',
+  'chat-member-username': 'memberUsername',
+  'chat-superchat-username': 'superchatUsername',
+  'chat-membership-username': 'membershipUsername',
+}
 
 export const scheme: SettingDef[] = [
-  /* ── OBS ───────────────────────────────────────────────── */
-  {
-    key: 'chroma-key',
-    section: 'OBS',
-    type: 'toggle',
-    label: 'Chroma Key Ready',
-    default: false,
-  },
-
-  /* ── Colors ─────────────────────────────────────────────── */
-  { key: 'messageBg', section: 'Colors', type: 'color', label: 'Background', default: '#1a1a2e' },
-  {
-    key: 'messageColor',
-    section: 'Colors',
-    type: 'color',
-    label: 'Text Color',
-    default: '#e0e0e0',
-  },
-  {
-    key: 'usernameColor',
-    section: 'Colors',
-    type: 'color',
-    label: 'Username Color',
-    default: '#bb86fc',
-  },
-
-  /* ── Typography ─────────────────────────────────────────── */
-  {
-    key: 'usernameFontSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Name Size',
-    min: 10,
-    max: 40,
-    default: 14,
-    unit: 'px',
-  },
-  {
-    key: 'messageFontSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Content Font Size',
-    min: 10,
-    max: 48,
-    default: 14,
-    unit: 'px',
-  },
-  {
-    key: 'avatarSize',
-    section: 'Typography',
-    type: 'range',
-    label: 'Avatar Size',
-    min: 16,
-    max: 80,
-    default: 28,
-    unit: 'px',
-  },
-  {
-    key: 'chat-avatar-vertical-offset',
-    section: 'Typography',
-    type: 'range',
-    label: 'Avatar Vertical Offset',
-    min: -20,
-    max: 20,
-    default: 0,
-    unit: 'px',
-  },
-
   /* ── Effects ────────────────────────────────────────────── */
   {
     key: 'skewAngle',
@@ -110,13 +104,6 @@ export const scheme: SettingDef[] = [
     default: 1,
     step: 0.5,
     unit: 'px',
-  },
-  {
-    key: 'strokeColor',
-    section: 'Effects',
-    type: 'color',
-    label: 'Stroke Color',
-    default: '#333333',
   },
   {
     key: 'glowSpread',
@@ -161,123 +148,5 @@ export const scheme: SettingDef[] = [
     default: 40,
     step: 5,
     unit: 'px',
-  },
-
-  /* ── Common ─────────────────────────────────────────────── */
-  {
-    key: 'containerOpacity',
-    section: 'Common',
-    type: 'range',
-    label: 'Container Opacity',
-    min: 0,
-    max: 100,
-    default: 100,
-    unit: '%',
-  },
-  {
-    key: 'messageOpacity',
-    section: 'Common',
-    type: 'range',
-    label: 'Message Opacity',
-    min: 0,
-    max: 100,
-    default: 100,
-    unit: '%',
-  },
-  {
-    key: 'animationSpeed',
-    section: 'Common',
-    type: 'select',
-    label: 'Animation Speed',
-    default: 'normal',
-    options: [
-      { value: 'none', label: 'None' },
-      { value: 'slow', label: 'Slow' },
-      { value: 'normal', label: 'Normal' },
-    ],
-  },
-  {
-    key: 'chat-margin-left',
-    section: 'Common',
-    type: 'range',
-    label: 'Screen Margin Left',
-    min: 0,
-    max: 100,
-    default: 0,
-    unit: 'px',
-  },
-  {
-    key: 'chat-font-family',
-    section: 'Common',
-    type: 'select',
-    label: 'Font Family',
-    default: 'inherit',
-    options: [
-      { value: 'inherit', label: 'Default' },
-      ...FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label })),
-    ],
-  },
-
-  /* ── YouTube ──────────────────────────────────────────── */
-  {
-    key: 'hide-youtube-generic',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Generic Messages',
-    default: false,
-  },
-  {
-    key: 'hide-youtube-header',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Chat Header',
-    default: false,
-  },
-  {
-    key: 'hide-youtube-footer',
-    section: 'YouTube',
-    type: 'toggle',
-    label: 'Hide Chat Footer',
-    default: false,
-  },
-
-  /* ── Role Colors ────────────────────────────────────────── */
-  {
-    key: 'ownerBg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Background',
-    default: '#3d1a00',
-  },
-  {
-    key: 'ownerText',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Text',
-    default: '#ff8c42',
-  },
-
-  {
-    key: 'modBg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Mod Background',
-    default: '#001f3d',
-  },
-  { key: 'modText', section: 'Role Colors', type: 'color', label: 'Mod Text', default: '#4296ff' },
-
-  {
-    key: 'memberBg',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Background',
-    default: '#0d2818',
-  },
-  {
-    key: 'memberText',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Text',
-    default: '#42cc8b',
   },
 ]
