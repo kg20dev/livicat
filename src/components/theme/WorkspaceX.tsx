@@ -379,33 +379,33 @@ export function WorkspaceX() {
                         >
                           <div className="flex items-center gap-3">
                             {/* Mini palette preview */}
-                            <div className="flex rounded overflow-hidden h-6 w-14 border border-outline-variant/30 flex-shrink-0 shadow-sm">
-                              {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
-                                const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
-                                const color =
-                                  def && typeof def.default === 'string' ? def.default : '#888'
-                                return (
-                                  <div
-                                    key={key}
-                                    className="flex-1"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                )
-                              })}
-                            </div>
-
-                             <div className="flex-1 min-w-0">
-                               <div
-                                 className={`text-label-md font-semibold truncate ${
-                                   isSelected ? 'text-primary' : 'text-on-surface'
-                                 }`}
-                               >
-                                 {t.manifest.name}
-                               </div>
-                               <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5">
-                                 {t.manifest.description}
-                               </div>
+                             <div className="flex rounded overflow-hidden h-6 w-14 border border-outline-variant/30 flex-shrink-0 shadow-sm">
+                               {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
+                                 const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+                                 const color =
+                                   def && typeof def.default === 'string' ? def.default : '#888'
+                                 return (
+                                   <div
+                                     key={key}
+                                     className="flex-1"
+                                     style={{ backgroundColor: color }}
+                                   />
+                                 )
+                               })}
                              </div>
+
+                              <div className="flex-1 min-w-0 overflow-hidden">
+                                <div
+                                  className={`text-label-md font-semibold truncate ${
+                                    isSelected ? 'text-primary' : 'text-on-surface'
+                                  }`}
+                                >
+                                  {t.manifest.name}
+                                </div>
+                                <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5">
+                                  {t.manifest.description}
+                                </div>
+                              </div>
 
                             {isSelected && (
                               <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0 animate-in fade-in slide-in-from-right-1 duration-200">
