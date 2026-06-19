@@ -269,15 +269,15 @@ export function WorkspaceX() {
                  onClick={() => setDropdownOpen(!dropdownOpen)}
                  className="glass-liquid-input w-full px-4 py-3 rounded-xl flex items-center gap-3 hover:border-primary/60 transition-all duration-200 group"
                >
-                 <span className="material-symbols-outlined text-primary text-[22px]">palette</span>
-                 <div className="flex-1 text-left">
-                   <div className="text-label-lg font-bold text-on-surface">
-                     {theme?.manifest.name ?? 'Select Theme'}
-                   </div>
-                   <div className="text-label-sm text-on-surface-variant/70 truncate">
-                     {theme?.manifest.description ?? 'Choose a theme to customize'}
-                   </div>
-                 </div>
+                  <span className="material-symbols-outlined text-primary text-[22px]">palette</span>
+                  <div className="flex-1 min-w-0 overflow-hidden text-left">
+                    <div className="text-label-lg font-bold text-on-surface truncate">
+                      {theme?.manifest.name ?? 'Select Theme'}
+                    </div>
+                    <div className="text-label-sm text-on-surface-variant/70 truncate">
+                      {theme?.manifest.description ?? 'Choose a theme to customize'}
+                    </div>
+                  </div>
                  {/* Keyboard shortcut hint */}
                  <kbd className="hidden md:flex items-center gap-1 px-2 py-1 rounded bg-surface-container-high border border-outline-variant/30 text-[11px] font-mono text-on-surface-variant/50 group-hover:text-on-surface-variant/70 transition-colors">
                    <span className="material-symbols-outlined text-[10px]">keyboard_command_key</span>
@@ -394,18 +394,18 @@ export function WorkspaceX() {
                                })}
                              </div>
 
-                              <div className="flex-1 min-w-0 overflow-hidden">
-                                <div
-                                  className={`text-label-md font-semibold truncate ${
-                                    isSelected ? 'text-primary' : 'text-on-surface'
-                                  }`}
-                                >
-                                  {t.manifest.name}
-                                </div>
-                                <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5">
-                                  {t.manifest.description}
-                                </div>
-                              </div>
+                               <div className="flex-1 min-w-0 overflow-hidden">
+                                 <div
+                                   className={`text-label-md font-semibold truncate ${
+                                     isSelected ? 'text-primary' : 'text-on-surface'
+                                   }`}
+                                 >
+                                   {t.manifest.name}
+                                 </div>
+                                 <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5 overflow-hidden">
+                                   {t.manifest.description}
+                                 </div>
+                               </div>
 
                             {isSelected && (
                               <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0 animate-in fade-in slide-in-from-right-1 duration-200">
