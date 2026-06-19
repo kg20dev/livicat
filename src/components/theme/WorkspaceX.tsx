@@ -33,7 +33,7 @@ const isMac =
   typeof window !== 'undefined'
     ? window.navigator.platform.toUpperCase().indexOf('MAC') >= 0
     : false
-const platformShortcutIcon = isMac ? 'keyboard_command_key' : 'keyboard_ctrl_key'
+const platformShortcutIcon = isMac ? 'keyboard_command_key' : 'keyboard_control_key'
 
 /* ─── Core sections (shared across themes) ───────────────────── */
 const CORE_SECTION_NAMES = new Set([
