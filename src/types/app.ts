@@ -90,6 +90,9 @@ export interface ChatSettings {
   /* Chroma key mode — forces background to #00b140 for OBS */
   chromaKey: boolean
 
+  /* Preview window */
+  alwaysOnTop: boolean
+
   /* IM-style role colors */
   ownerBg: string
   ownerText: string

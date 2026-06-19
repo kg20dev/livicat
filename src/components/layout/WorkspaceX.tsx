@@ -883,7 +883,7 @@ export default function WorkspaceX() {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      openPreview(videoId, generateChatCSSX(xCSSSettings))
+      openPreview(videoId, generateChatCSSX(xCSSSettings), settings.alwaysOnTop)
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {

@@ -51,11 +51,11 @@ export function useElectronPreview() {
   }, [isElectron, isTauriRuntime])
 
   const openPreview = useCallback(
-    async (videoId: string, css: string) => {
+    async (videoId: string, css: string, alwaysOnTop = false) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.openChatPreview(videoId, css)
       } else if (isTauriRuntime) {
-        await invoke('open_preview_window', { videoId, css })
+        await invoke('open_preview_window', { videoId, css, alwaysOnTop })
       }
     },
     [isElectron, isTauriRuntime]

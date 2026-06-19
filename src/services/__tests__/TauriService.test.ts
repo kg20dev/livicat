@@ -41,6 +41,7 @@ describe('TauriService', () => {
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('open_preview_window', {
         videoId: 'video123',
         css: '.chat { color: red }',
+        alwaysOnTop: false,
       })
     })
 

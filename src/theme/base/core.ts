@@ -166,6 +166,15 @@ export const CORE_SCHEME: SettingDef[] = [
     default: false,
   },
 
+  /* ── Preview ──────────────────────────────────────────── */
+  {
+    key: 'always-on-top',
+    section: 'Preview',
+    type: 'toggle',
+    label: 'Always on Top',
+    default: false,
+  },
+
   /* ── Typography ────────────────────────────────────────── */
   {
     key: 'font-family',

@@ -25,6 +25,7 @@ type SharedPreviewState = Arc<Mutex<PreviewState>>;
 async fn open_preview_window(
     video_id: String,
     css: String,
+    always_on_top: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -73,11 +74,7 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    // always_on_top disabled everywhere — it causes window capture issues:
-    // - Windows: WebView2 crashes with YouTube chat + OBS capture
-    // - macOS: OBS window capture can't find the window in its dropdown
-    // (The preview window is captured by OBS and doesn't need to float.)
-    .always_on_top(false)
+    .always_on_top(always_on_top)
     .user_agent(PREVIEW_USER_AGENT)
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
@@ -274,6 +271,13 @@ fn inject_css_to_window(
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
             }}
+
+            function __lc_scroll() {{
+                var s = document.querySelector('#item-scroller') || document.querySelector('yt-live-chat-item-list-renderer #item-scroller');
+                if (s) {{ s.scrollTop = s.scrollHeight; }}
+            }}
+            [0, 300, 1000, 2500].forEach(function(t) {{ setTimeout(__lc_scroll, t); }});
+            console.log('[Livicat] Scroll-to-bottom scheduled');
 
             function __lc_wm_cycle(el) {{
                 setTimeout(function() {{
