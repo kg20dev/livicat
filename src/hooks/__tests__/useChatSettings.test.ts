@@ -120,7 +120,7 @@ describe('useChatSettings', () => {
       // Check a few key preset values
       expect(result.current.settings.showAvatars).toBe(false)
       expect(result.current.settings.showTimestamps).toBe(false)
-      expect(result.current.settings.messageSpacing).toBe('compact')
+      expect(result.current.settings.messageSpacing).toBe(4)
     })
 
     it('does nothing for unknown preset names', () => {
@@ -141,7 +141,7 @@ describe('useChatSettings', () => {
       })
 
       const stored = JSON.parse(localStorage.getItem('livicat_chat_settings')!)
-      expect(stored.messageSpacing).toBe('compact')
+      expect(stored.messageSpacing).toBe(4)
     })
   })
 

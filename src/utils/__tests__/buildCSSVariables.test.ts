@@ -237,13 +237,26 @@ describe('buildCSSVariables', () => {
   })
 
   describe('message spacing', () => {
-    it('emits 4px for compact', () => {
-      const css = buildCSSVariables({ 'message-spacing': 'compact' }, [])
+    const messageSpacingScheme = [
+      {
+        key: 'message-spacing',
+        type: 'range' as const,
+        label: 'Message Spacing',
+        min: 0,
+        max: 40,
+        default: 10,
+        unit: 'px',
+        cssVar: 'chat-message-spacing',
+      },
+    ]
+
+    it('emits the set pixel value', () => {
+      const css = buildCSSVariables({ 'message-spacing': 4 }, messageSpacingScheme)
       expect(css).toContain('--chat-message-spacing: 4px;')
     })
 
-    it('emits 10px for default', () => {
-      const css = buildCSSVariables({}, [])
+    it('emits default value when unset', () => {
+      const css = buildCSSVariables({}, messageSpacingScheme)
       expect(css).toContain('--chat-message-spacing: 10px;')
     })
   })

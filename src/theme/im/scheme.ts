@@ -28,6 +28,12 @@ export const coreCssVarMap: Record<string, string> = {
   'superchat-text': 'chat-superchat-text',
   'membership-bg': 'chat-membership-bg',
   'membership-text': 'chat-membership-text',
+  'letter-spacing': 'chat-letter-spacing',
+  'chat-owner-username': 'chat-owner-username',
+  'chat-mod-username': 'chat-mod-username',
+  'chat-member-username': 'chat-member-username',
+  'chat-superchat-username': 'chat-superchat-username',
+  'chat-membership-username': 'chat-membership-username',
 }
 
 export const scheme: SettingDef[] = [
@@ -70,16 +76,6 @@ export const scheme: SettingDef[] = [
     min: -20,
     max: 10,
     default: -8,
-    unit: 'px',
-  },
-  {
-    key: 'chat-avatar-vertical-offset',
-    section: 'Avatar',
-    type: 'range',
-    label: 'Vertical Offset',
-    min: -20,
-    max: 60,
-    default: 0,
     unit: 'px',
   },
   {
@@ -161,42 +157,5 @@ export const scheme: SettingDef[] = [
       { value: 'pop', label: 'Pop' },
       { value: 'fade', label: 'Fade' },
     ],
-  },
-
-  /* ── Role Colors ───────────────────────────────────────── */
-  {
-    key: 'chat-owner-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Username',
-    default: '#ffb347',
-  },
-  {
-    key: 'chat-mod-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Mod Username',
-    default: '#47b5ff',
-  },
-  {
-    key: 'chat-member-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Username',
-    default: '#ce93d8',
-  },
-  {
-    key: 'chat-superchat-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Super Chat Username',
-    default: '#ffd700',
-  },
-  {
-    key: 'chat-membership-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Membership Username',
-    default: '#ffffff',
   },
 ]

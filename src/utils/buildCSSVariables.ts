@@ -169,12 +169,6 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('  --chip-delay: 0.05s;')
   }
 
-  // Message spacing (computed px values)
-  const spacing = (settings['message-spacing'] as string) ?? 'normal'
-  if (spacing === 'compact') lines.push('  --chat-message-spacing: 4px;')
-  else if (spacing === 'comfortable') lines.push('  --chat-message-spacing: 16px;')
-  else lines.push('  --chat-message-spacing: 10px;')
-
   // Username weight (computed 400/700)
   const bold = settings['username-bold']
   lines.push(`  --chat-username-font-weight: ${bold ? 700 : 400};`)
@@ -233,6 +227,12 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   if (settings['hide-youtube-footer']) {
     lines.push('')
     lines.push('yt-live-chat-input-renderer {')
+    lines.push('  display: none !important;')
+    lines.push('}')
+  }
+  if (settings['hide-youtube-signin']) {
+    lines.push('')
+    lines.push('yt-live-chat-message-renderer[subtext-on-bottom] {')
     lines.push('  display: none !important;')
     lines.push('}')
   }

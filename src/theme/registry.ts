@@ -9,7 +9,7 @@
  */
 
 import type { DerivationEntry, SettingDef, ThemeBundle } from './types'
-import { CORE_SCHEME } from './core'
+import { CORE_SCHEME } from './base/core'
 import { manifest as imManifest, css as imCss, reset as imReset } from './im/manifest'
 import { scheme as imScheme, coreCssVarMap as imCssVarMap } from './im/scheme'
 import { manifest as inkManifest, css as inkCss, reset as inkReset } from './ink-sticker/manifest'
