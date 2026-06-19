@@ -120,7 +120,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <a href="https://github.com/Necromanchi"><img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; border: 2px solid #14b8a6; box-shadow: 0 0 8px rgba(20,184,166,0.3);"></a>
   <a href="https://github.com/yurisien"><img src="https://github.com/yurisien.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
   <a href="https://github.com/asahoy"><img src="https://github.com/asahoy.png" width="72" height="72" alt="asahoy" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
-  <a href="https://github.com/yamuyamcik"><img src="https://github.com/yamuyamcik.png" width="72" height="72" alt="yamuyamcik" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
+  <a href="https://github.com/yamuyamcik"><img src="https://github.com/yamuyamcik.png" width="72" height="72" alt="yamuyamcik" style="border-radius: 50%; border: 2px solid #14b8a6; box-shadow: 0 0 8px rgba(20,184,166,0.3);"></a>
   <a href="https://github.com/arale-afk"><img src="https://github.com/arale-afk.png" width="72" height="72" alt="arale-afk" style="border-radius: 50%; border: 2px solid #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.3);"></a>
 </p>
 
@@ -129,7 +129,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <span style="display: inline-block; background: #14b8a6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🎵 Necromanchi</span>
   <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ yurisien</span>
   <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ asahoy</span>
-  <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ yamuyamcik</span>
+  <span style="display: inline-block; background: #14b8a6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🎵 yamuyamcik</span>
   <span style="display: inline-block; background: #ef4444; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">⚔️ arale-afk</span>
 </p>
 
@@ -139,7 +139,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
       <strong>🧙 Sage</strong><br><span style="font-size:12px;color:#a855f7;">migorengx</span><br><small>Creator & Lead</small>
     </td>
     <td align="center" width="140">
-      <strong>🎵 Bard</strong><br><span style="font-size:12px;color:#14b8a6;">Necromanchi</span><br><small>Storyteller</small>
+      <strong>🎵 Bards</strong><br><span style="font-size:12px;color:#14b8a6;">Necromanchi · yamuyamcik</span><br><small>Storytellers</small>
     </td>
     <td align="center" width="140">
       <strong>⚔️ Warrior</strong><br><span style="font-size:12px;color:#ef4444;">arale-afk</span><br><small>Frontline</small>
@@ -148,7 +148,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <tr>
     <td align="center" colspan="3">
       <strong>🛡️ Defenders</strong><br>
-      <span style="font-size:12px;color:#3b82f6;">sutoberiii · yurisien · asahoy · yamuyamcik</span><br>
+      <span style="font-size:12px;color:#3b82f6;">sutoberiii · yurisien · asahoy</span><br>
       <small>Guardians of the stream</small>
     </td>
   </tr>
