@@ -275,6 +275,22 @@ fn inject_css_to_window(
                 console.error('[Livicat] CSS injection error:', e);
             }}
 
+            function __lc_wm_cycle(el) {{
+                setTimeout(function() {{
+                    el.style.animation = '__lc_exit 0.8s ease-in forwards';
+                    setTimeout(function() {{
+                        el.style.display = 'none';
+                        window.__lc_wm_hidden = true;
+                        setTimeout(function() {{
+                            window.__lc_wm_hidden = false;
+                            el.style.display = 'flex';
+                            el.style.animation = '__lc_enter 0.8s ease-out forwards, __lc_bounce 3s ease-in-out infinite, __lc_curious 4s ease-in-out infinite';
+                            __lc_wm_cycle(el);
+                        }}, 1800000);
+                    }}, 800);
+                }}, 15000);
+            }}
+            
             function __lc_make_wm() {{
                 if (!document.getElementById('livicat-wm-anim')) {{
                     var s = document.createElement('style');
@@ -282,13 +298,15 @@ fn inject_css_to_window(
                     s.textContent = 
                         '@keyframes __lc_bounce {{0%,100%{{transform:translateY(0)rotate(0deg)}}25%{{transform:translateY(-4px)rotate(-3deg)}}75%{{transform:translateY(-2px)rotate(3deg)}}}}' +
                         '@keyframes __lc_fadein {{0%{{opacity:0;transform:translateX(8px)}}100%{{opacity:0.7;transform:translateX(0)}}}}' +
-                        '@keyframes __lc_curious {{0%,100%{{transform:rotate(0deg)}}25%{{transform:rotate(-2deg)}}50%{{transform:rotate(0deg)}}75%{{transform:rotate(2deg)}}}}';
+                        '@keyframes __lc_curious {{0%,100%{{transform:rotate(0deg)}}25%{{transform:rotate(-2deg)}}50%{{transform:rotate(0deg)}}75%{{transform:rotate(2deg)}}}}' +
+                        '@keyframes __lc_enter {{0%{{opacity:0;transform:translateX(30px)scale(0.85)}}100%{{opacity:1;transform:translateX(0)scale(1)}}}}' +
+                        '@keyframes __lc_exit {{0%{{opacity:1;transform:translateX(0)scale(1)}}100%{{opacity:0;transform:translateX(30px)scale(0.85)}}}}';
                     document.head.appendChild(s);
                 }}
                 
                 var container = document.createElement('div');
                 container.id = 'livicat-watermark';
-                container.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;display:flex;align-items:center;gap:6px;';
+                container.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;display:flex;align-items:center;gap:6px;animation:__lc_enter 0.8s ease-out forwards,__lc_bounce 3s ease-in-out infinite,__lc_curious 4s ease-in-out infinite;';
                 
                 var icon = document.createElement('div');
                 icon.style.cssText = 'width:28px;height:28px;animation:__lc_bounce 3s ease-in-out infinite,__lc_curious 4s ease-in-out infinite;opacity:0.6;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=);background-size:contain;background-repeat:no-repeat;background-position:center;';
@@ -300,6 +318,7 @@ fn inject_css_to_window(
                 container.appendChild(icon);
                 container.appendChild(text);
                 document.body.appendChild(container);
+                __lc_wm_cycle(container);
                 return container;
             }}
 
@@ -310,7 +329,7 @@ fn inject_css_to_window(
 
             if (!window.__livicat_wmobs) {{
                 window.__livicat_wmobs = new MutationObserver(function() {{
-                    if (!document.getElementById('livicat-watermark')) {{
+                    if (!window.__lc_wm_hidden && !document.getElementById('livicat-watermark')) {{
                         __lc_make_wm();
                         console.log('[Livicat] Watermark re-created by observer');
                     }}
