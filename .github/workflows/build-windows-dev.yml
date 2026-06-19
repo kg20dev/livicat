@@ -23,6 +23,20 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+
+      - name: Cache tauri-cli binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-tauri*
+          key: ${{ runner.os }}-cargo-tauri-cli-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-cli-
+
       - name: Install cargo-tauri CLI
         # Pin to 2.10 with --locked to avoid conflicting trait impl between
         # tauri-utils 2.9.2 and time >=0.3.48. Remove pin when tauri ships a fix.
@@ -33,12 +47,6 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: cargo install tauri-cli --version "^2.10" --locked
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-          cache-on-failure: true
 
       - name: Install dependencies
         run: npm ci
