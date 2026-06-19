@@ -144,13 +144,25 @@ pub fn send_test_scenario() {
 }
 
 /// Get a stable anonymous device hash for user tracking (no PII)
-fn get_device_hash() -> String {
+pub fn get_device_hash() -> String {
     let hostname = hostname::get()
         .map(|h| h.to_string_lossy().to_string())
         .unwrap_or_default();
     let mut hasher = Sha256::new();
     hasher.update(hostname.as_bytes());
     format!("{:.16x}", hasher.finalize())
+}
+
+/// Track a feature usage event as a Sentry transaction span for adoption metrics
+pub fn track_feature(name: &str, version: &str, device_id: &str) {
+    let transaction = sentry::start_transaction(sentry::TransactionContext::new(
+        name,
+        "feature",
+    ));
+    transaction.set_tag("feature.name", name);
+    transaction.set_tag("feature.version", version);
+    transaction.set_data("device_id", device_id.into());
+    transaction.finish();
 }
 
 /// Initialize Sentry for error reporting
@@ -289,5 +301,27 @@ mod tests {
     fn test_breadcrumb_creation() {
         // Test breadcrumb creation doesn't panic
         add_breadcrumb("test_category", "test_message", SentryLevel::Info);
+    }
+
+    #[test]
+    fn test_device_hash_format() {
+        let hash = get_device_hash();
+        // Device hash should be 16 hex chars
+        assert_eq!(hash.len(), 16);
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_device_hash_stable() {
+        // Same call should produce same result (within same process)
+        let h1 = get_device_hash();
+        let h2 = get_device_hash();
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_track_feature_no_panic() {
+        // track_feature should never panic, even without DSN
+        track_feature("test.feature", "0.0.0", "deadbeef12345678");
     }
 }

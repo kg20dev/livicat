@@ -138,6 +138,11 @@ async fn open_preview_window(
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
+    // Track preview opened for adoption metrics
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature("feature.preview_opened", version, &device_id);
+
     //     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
     //     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
     //     #[cfg(target_os = "windows")]
@@ -211,6 +216,11 @@ async fn close_preview_window(
             sentry::add_breadcrumb("preview", "Closing preview window", SentryLevel::Info);
 
             let _ = window.close();
+
+            // Track preview closed for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("feature.preview_closed", version, &device_id);
         }
         state_guard.window_label = None;
         println!("[Livicat Tauri] Preview window closed");
@@ -225,6 +235,13 @@ async fn close_preview_window(
 fn get_app_version() -> String {
     // Read version from Cargo.toml at compile time — always matches the binary
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn track_feature_event(name: String) {
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature(&name, version, &device_id);
 }
 
 #[tauri::command]
@@ -622,6 +639,11 @@ pub fn run() {
             // Send test log to verify Sentry is working
             sentry::send_test_log();
 
+            // Track app launch for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("app.launched", version, &device_id);
+
             // Register a Sentry-compatible panic hook
             // We preserve any existing hook (Sentry's own) and add ours on top
             let previous_hook = std::panic::take_hook();
@@ -661,6 +683,7 @@ pub fn run() {
             close_preview_window,
             get_app_version,
             trigger_crash_test,
+            track_feature_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
