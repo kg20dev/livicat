@@ -857,10 +857,10 @@ export default function WorkspaceX() {
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      updateCSS(generateChatCSSX(xCSSSettings), settings.alwaysOnTop)
+      updateCSS(generateChatCSSX(xCSSSettings), settings.alwaysOnTop, settings.forcedAutoScroll)
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, xCSSSettings, updateCSS])
+  }, [previewOpen, xCSSSettings, updateCSS, settings.alwaysOnTop, settings.forcedAutoScroll])
 
   const visibleMessages = useMemo(() => {
     if (previewMode === 'gallery') return GALLERY_MESSAGES
@@ -883,7 +883,7 @@ export default function WorkspaceX() {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      openPreview(videoId, generateChatCSSX(xCSSSettings), settings.alwaysOnTop)
+      openPreview(videoId, generateChatCSSX(xCSSSettings), settings.alwaysOnTop, settings.forcedAutoScroll)
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {

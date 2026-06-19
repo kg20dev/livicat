@@ -174,6 +174,13 @@ export const CORE_SCHEME: SettingDef[] = [
     label: 'Always on Top',
     default: false,
   },
+  {
+    key: 'forced-auto-scroll',
+    section: 'Preview',
+    type: 'toggle',
+    label: 'Forced Auto Scroll',
+    default: true,
+  },
 
   /* ── Typography ────────────────────────────────────────── */
   {

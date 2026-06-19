@@ -92,6 +92,7 @@ export interface ChatSettings {
 
   /* Preview window */
   alwaysOnTop: boolean
+  forcedAutoScroll: boolean
 
   /* IM-style role colors */
   ownerBg: string

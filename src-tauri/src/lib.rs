@@ -26,6 +26,7 @@ async fn open_preview_window(
     video_id: String,
     css: String,
     always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -111,7 +112,7 @@ async fn open_preview_window(
                 // fires into an uninitialized JS context, causing crashes.
                 // On macOS (WKWebView) it's more forgiving but still unsafe.
                 // Waiting for Finished guarantees the JS environment is ready.
-                if let Err(e) = inject_css_to_window(&window, &css) {
+                if let Err(e) = inject_css_to_window(&window, &css, auto_scroll) {
                     eprintln!("[Livicat] CSS injection via page load failed: {}", e);
                     sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
                     sentry::add_breadcrumb(
@@ -164,6 +165,7 @@ async fn open_preview_window(
 async fn inject_css(
     css: String,
     always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -185,7 +187,7 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
-            inject_css_to_window(&window, &css)?;
+            inject_css_to_window(&window, &css, auto_scroll)?;
             return Ok(());
         }
     }
@@ -258,6 +260,7 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
 fn inject_css_to_window(
     window: &WebviewWindow,
     css: &str,
+    auto_scroll: bool,
 ) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
 
@@ -282,6 +285,24 @@ fn inject_css_to_window(
             }}
             [0, 300, 1000, 2500].forEach(function(t) {{ setTimeout(__lc_scroll, t); }});
             console.log('[Livicat] Scroll-to-bottom scheduled');
+
+            window.__lc_auto_scroll = {};
+            function __lc_click_show_more() {{
+                if (!window.__lc_auto_scroll) return;
+                var btn = document.querySelector('yt-icon-button#show-more button#button');
+                if (btn) {{
+                    btn.click();
+                    console.log('[Livicat] Auto-clicked show-more button');
+                }}
+            }}
+            if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
+                window.__livicat_show_more_obs = new MutationObserver(function() {{
+                    __lc_click_show_more();
+                }});
+                window.__livicat_show_more_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                console.log('[Livicat] Show-more auto-click observer active');
+            }}
+            __lc_click_show_more();
 
             function __lc_wm_cycle(el) {{
                 setTimeout(function() {{
@@ -380,13 +401,14 @@ fn inject_css_to_window(
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?,
+        auto_scroll,
     );
 
     window
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection + punct observer + watermark executed");
+    println!("[Livicat] CSS injection + show-more auto-click + watermark + punct observer executed");
     Ok(())
 }
 

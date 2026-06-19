@@ -805,7 +805,7 @@ function WorkspaceBody({
       // injects it when YouTube's DOM is ready — 300ms after setPreviewOpen
       // is too early for YouTube's page to have finished loading.
       const css = buildYoutubeCss()
-      openPreview(videoId, css)
+      openPreview(videoId, css, false, settings['forced-auto-scroll'] as boolean)
       setPreviewOpen(true)
       setDemoPreviewHidden(true) // Hide demo preview when YouTube preview opens
       previewStartRef.current = Date.now()
@@ -821,10 +821,10 @@ function WorkspaceBody({
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      updateCSS(buildYoutubeCss())
+      updateCSS(buildYoutubeCss(), false, settings['forced-auto-scroll'] as boolean)
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, buildYoutubeCss, updateCSS])
+  }, [previewOpen, buildYoutubeCss, updateCSS, settings])
 
   /* ─── Layout ─────────────────────────────────────────────────── */
 
@@ -918,6 +918,13 @@ function WorkspaceBody({
                             />
                           </div>
                         ))}
+                      </div>
+                    ) : section === 'Preview' ? (
+                      <div className="space-y-3">
+                        <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                        <p className="text-[11px] text-on-surface-variant/50 italic leading-relaxed px-0.5">
+                          Changes require re-launching the LiveChat preview window.
+                        </p>
                       </div>
                     ) : (
                       <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
@@ -1028,6 +1035,13 @@ function WorkspaceBody({
                               />
                             </div>
                           ))}
+                        </div>
+                      ) : section === 'Preview' ? (
+                        <div className="space-y-3">
+                          <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                          <p className="text-[11px] text-on-surface-variant/50 italic leading-relaxed px-0.5">
+                            Changes require re-launching the LiveChat preview window.
+                          </p>
                         </div>
                       ) : (
                         <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />

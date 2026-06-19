@@ -7,6 +7,16 @@ describe('useChatSettings', () => {
     localStorage.clear()
   })
 
+  describe('DEFAULT_SETTINGS', () => {
+    it('includes forcedAutoScroll enabled by default', () => {
+      expect(DEFAULT_SETTINGS.forcedAutoScroll).toBe(true)
+    })
+
+    it('includes alwaysOnTop disabled by default', () => {
+      expect(DEFAULT_SETTINGS.alwaysOnTop).toBe(false)
+    })
+  })
+
   describe('initialization', () => {
     it('loads default settings when nothing is stored', () => {
       const { result } = renderHook(() => useChatSettings())

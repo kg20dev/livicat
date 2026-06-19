@@ -74,6 +74,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
 
   /* Preview window */
   alwaysOnTop: false,
+  forcedAutoScroll: true,
 
   /* IM-style bubble settings */
   bubbleBorderWidth: 2,

@@ -51,22 +51,22 @@ export function useElectronPreview() {
   }, [isElectron, isTauriRuntime])
 
   const openPreview = useCallback(
-    async (videoId: string, css: string, alwaysOnTop = false) => {
+    async (videoId: string, css: string, alwaysOnTop = false, autoScroll = true) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.openChatPreview(videoId, css)
       } else if (isTauriRuntime) {
-        await invoke('open_preview_window', { videoId, css, alwaysOnTop })
+        await invoke('open_preview_window', { videoId, css, alwaysOnTop, autoScroll })
       }
     },
     [isElectron, isTauriRuntime]
   )
 
   const updateCSS = useCallback(
-    async (css: string, alwaysOnTop = false) => {
+    async (css: string, alwaysOnTop = false, autoScroll = true) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.updateChatCSS(css)
       } else if (isTauriRuntime) {
-        await invoke('inject_css', { css, alwaysOnTop })
+        await invoke('inject_css', { css, alwaysOnTop, autoScroll })
       }
     },
     [isElectron, isTauriRuntime]
