@@ -73,16 +73,6 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
   {
-    key: 'chat-avatar-vertical-offset',
-    section: 'Avatar',
-    type: 'range',
-    label: 'Vertical Offset',
-    min: -20,
-    max: 60,
-    default: 0,
-    unit: 'px',
-  },
-  {
     key: 'chat-max-width',
     section: 'Bubble',
     type: 'range',
