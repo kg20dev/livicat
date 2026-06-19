@@ -13,7 +13,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
 <p align="center">
-  <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
+  <img src="Screenshot 2026-06-20 at 00.09.25.png" alt="Livicat Demo" width="720">
 </p>
 
 ---
