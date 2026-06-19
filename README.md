@@ -57,7 +57,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📥 Download
 
-🎉 **[Latest Release: v0.9.1](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release: v0.9.2](https://github.com/kg20dev/livicat/releases)**
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
@@ -85,7 +85,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ## 📊 Stats
 
 - **Size:** ~8MB (93% smaller than Electron)
-- **Tests:** 239+ tests
+- **Tests:** 295+ tests
 - **Languages:** TypeScript, Rust, React
 - **Platforms:** macOS, Windows
 - **License:** GPL-3.0
@@ -117,7 +117,10 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
   <img src="https://github.com/yurisien.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
 <a href="https://github.com/asahoy" title="asahoy — Collaborator">
-  <img src="https://github.com/asahoy.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <img src="https://github.com/asahoy.png" width="72" height="72" alt="asahoy" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+</a>
+<a href="https://github.com/yamuyamcik" title="yamuyamcik — Collaborator">
+  <img src="https://github.com/yamuyamcik.png" width="72" height="72" alt="yamuyamcik" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
 
 
