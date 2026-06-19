@@ -47,6 +47,7 @@ coverage
 
 # AI agents
 .agents
+CLAUDE.md
 
 # Local planning / tracking files
 AGENTS.md
