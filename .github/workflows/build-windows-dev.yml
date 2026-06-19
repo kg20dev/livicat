@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/cargo-tauri*
-          key: ${{ runner.os }}-cargo-tauri-cli-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-tauri-cli-2.10
           restore-keys: |
             ${{ runner.os }}-cargo-tauri-cli-
 
