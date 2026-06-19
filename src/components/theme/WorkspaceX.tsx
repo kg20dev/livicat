@@ -43,6 +43,7 @@ const CORE_SECTION_NAMES = new Set([
   'Typography',
   'Avatar',
   'Role Colors',
+  'Preview',
 ])
 
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
