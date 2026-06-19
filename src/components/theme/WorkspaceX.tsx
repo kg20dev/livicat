@@ -394,18 +394,18 @@ export function WorkspaceX() {
                               })}
                             </div>
 
-                            <div className="flex-1 min-w-0">
-                              <div
-                                className={`text-label-md font-semibold truncate ${
-                                  isSelected ? 'text-primary' : 'text-on-surface'
-                                }`}
-                              >
-                                {t.manifest.name}
-                              </div>
-                              <div className="text-label-sm text-on-surface-variant/70 truncate">
-                                {t.manifest.description}
-                              </div>
-                            </div>
+                             <div className="flex-1 min-w-0">
+                               <div
+                                 className={`text-label-md font-semibold truncate ${
+                                   isSelected ? 'text-primary' : 'text-on-surface'
+                                 }`}
+                               >
+                                 {t.manifest.name}
+                               </div>
+                               <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5">
+                                 {t.manifest.description}
+                               </div>
+                             </div>
 
                             {isSelected && (
                               <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0 animate-in fade-in slide-in-from-right-1 duration-200">
