@@ -38,11 +38,16 @@ export const TauriService = {
   },
 
   /** Open the YouTube live chat preview window and inject CSS */
-  async openPreviewWindow(videoId: string, css: string, alwaysOnTop = false): Promise<boolean> {
+  async openPreviewWindow(
+    videoId: string,
+    css: string,
+    alwaysOnTop = false,
+    autoScroll = true
+  ): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {
-      await invoke('open_preview_window', { videoId, css, alwaysOnTop })
+      await invoke('open_preview_window', { videoId, css, alwaysOnTop, autoScroll })
       return true
     } catch (e) {
       console.error('[TauriService] openPreviewWindow failed:', e)
@@ -51,11 +56,11 @@ export const TauriService = {
   },
 
   /** Re-inject CSS into an existing preview window */
-  async injectCss(css: string, alwaysOnTop = false): Promise<boolean> {
+  async injectCss(css: string, alwaysOnTop = false, autoScroll = true): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {
-      await invoke('inject_css', { css, alwaysOnTop })
+      await invoke('inject_css', { css, alwaysOnTop, autoScroll })
       return true
     } catch (e) {
       console.error('[TauriService] injectCss failed:', e)

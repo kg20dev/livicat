@@ -42,6 +42,7 @@ describe('TauriService', () => {
         videoId: 'video123',
         css: '.chat { color: red }',
         alwaysOnTop: false,
+        autoScroll: true,
       })
     })
 
@@ -65,6 +66,7 @@ describe('TauriService', () => {
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', {
         css: 'body {}',
         alwaysOnTop: false,
+        autoScroll: true,
       })
     })
 

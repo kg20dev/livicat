@@ -26,6 +26,7 @@ async fn open_preview_window(
     video_id: String,
     css: String,
     always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -111,7 +112,7 @@ async fn open_preview_window(
                 // fires into an uninitialized JS context, causing crashes.
                 // On macOS (WKWebView) it's more forgiving but still unsafe.
                 // Waiting for Finished guarantees the JS environment is ready.
-                if let Err(e) = inject_css_to_window(&window, &css) {
+                if let Err(e) = inject_css_to_window(&window, &css, auto_scroll) {
                     eprintln!("[Livicat] CSS injection via page load failed: {}", e);
                     sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
                     sentry::add_breadcrumb(
@@ -136,6 +137,11 @@ async fn open_preview_window(
     window
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
+
+    // Track preview opened for adoption metrics
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature("feature.preview_opened", version, &device_id);
 
     //     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
     //     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
@@ -164,6 +170,7 @@ async fn open_preview_window(
 async fn inject_css(
     css: String,
     always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -185,7 +192,7 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
-            inject_css_to_window(&window, &css)?;
+            inject_css_to_window(&window, &css, auto_scroll)?;
             return Ok(());
         }
     }
@@ -209,6 +216,11 @@ async fn close_preview_window(
             sentry::add_breadcrumb("preview", "Closing preview window", SentryLevel::Info);
 
             let _ = window.close();
+
+            // Track preview closed for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("feature.preview_closed", version, &device_id);
         }
         state_guard.window_label = None;
         println!("[Livicat Tauri] Preview window closed");
@@ -223,6 +235,13 @@ async fn close_preview_window(
 fn get_app_version() -> String {
     // Read version from Cargo.toml at compile time — always matches the binary
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn track_feature_event(name: String) {
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature(&name, version, &device_id);
 }
 
 #[tauri::command]
@@ -258,6 +277,7 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
 fn inject_css_to_window(
     window: &WebviewWindow,
     css: &str,
+    auto_scroll: bool,
 ) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
 
@@ -282,6 +302,24 @@ fn inject_css_to_window(
             }}
             [0, 300, 1000, 2500].forEach(function(t) {{ setTimeout(__lc_scroll, t); }});
             console.log('[Livicat] Scroll-to-bottom scheduled');
+
+            window.__lc_auto_scroll = {};
+            function __lc_click_show_more() {{
+                if (!window.__lc_auto_scroll) return;
+                var btn = document.querySelector('yt-icon-button#show-more button#button');
+                if (btn) {{
+                    btn.click();
+                    console.log('[Livicat] Auto-clicked show-more button');
+                }}
+            }}
+            if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
+                window.__livicat_show_more_obs = new MutationObserver(function() {{
+                    __lc_click_show_more();
+                }});
+                window.__livicat_show_more_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                console.log('[Livicat] Show-more auto-click observer active');
+            }}
+            __lc_click_show_more();
 
             function __lc_wm_cycle(el) {{
                 setTimeout(function() {{
@@ -380,13 +418,14 @@ fn inject_css_to_window(
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?,
+        auto_scroll,
     );
 
     window
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection + punct observer + watermark executed");
+    println!("[Livicat] CSS injection + show-more auto-click + watermark + punct observer executed");
     Ok(())
 }
 
@@ -600,6 +639,11 @@ pub fn run() {
             // Send test log to verify Sentry is working
             sentry::send_test_log();
 
+            // Track app launch for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("app.launched", version, &device_id);
+
             // Register a Sentry-compatible panic hook
             // We preserve any existing hook (Sentry's own) and add ours on top
             let previous_hook = std::panic::take_hook();
@@ -639,6 +683,7 @@ pub fn run() {
             close_preview_window,
             get_app_version,
             trigger_crash_test,
+            track_feature_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

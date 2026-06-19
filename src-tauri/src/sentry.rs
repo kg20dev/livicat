@@ -1,6 +1,7 @@
 use ::sentry::Level as SentryLevel;
 use sentry::integrations::panic::PanicIntegration;
 use sentry::types::Dsn;
+use sha2::{Digest, Sha256};
 use std::env;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -142,6 +143,28 @@ pub fn send_test_scenario() {
     println!("   • Complete user flow context");
 }
 
+/// Get a stable anonymous device hash for user tracking (no PII)
+pub fn get_device_hash() -> String {
+    let hostname = hostname::get()
+        .map(|h| h.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let mut hasher = Sha256::new();
+    hasher.update(hostname.as_bytes());
+    format!("{:.16x}", hasher.finalize())
+}
+
+/// Track a feature usage event as a Sentry transaction span for adoption metrics
+pub fn track_feature(name: &str, version: &str, device_id: &str) {
+    let transaction = sentry::start_transaction(sentry::TransactionContext::new(
+        name,
+        "feature",
+    ));
+    transaction.set_tag("feature.name", name);
+    transaction.set_tag("feature.version", version);
+    transaction.set_data("device_id", device_id.into());
+    transaction.finish();
+}
+
 /// Initialize Sentry for error reporting
 ///
 /// Loads configuration from environment variables:
@@ -195,11 +218,14 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
         &dsn[..dsn.len().min(20)]
     );
 
+    let device_hash = get_device_hash();
+
     let client = sentry::init((
         Dsn::from_str(&dsn).expect("Invalid Sentry DSN format"),
         sentry::ClientOptions {
             release: Some(release.into()),
             environment: Some(environment.into()),
+            server_name: Some(device_hash.clone().into()),
             traces_sample_rate: 1.0, // 100% sampling for testing to ensure events are sent
             send_default_pii: false, // Don't send PII for privacy
             debug: true,             // Enable debug mode to see what Sentry is doing
@@ -216,8 +242,12 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
     );
     println!("[Livicat] Sentry debug mode enabled - check console for detailed logs");
 
-    // Configure global scope with app context
+    // Configure global scope with app context and anonymous device identity
     sentry::configure_scope(|scope| {
+        scope.set_user(Some(sentry::User {
+            id: Some(device_hash.clone()),
+            ..Default::default()
+        }));
         scope.set_extra("app_version", env!("CARGO_PKG_VERSION").into());
         scope.set_extra("tauri_version", env!("CARGO_PKG_VERSION").into());
         scope.set_extra("os", std::env::consts::OS.into());
@@ -271,5 +301,27 @@ mod tests {
     fn test_breadcrumb_creation() {
         // Test breadcrumb creation doesn't panic
         add_breadcrumb("test_category", "test_message", SentryLevel::Info);
+    }
+
+    #[test]
+    fn test_device_hash_format() {
+        let hash = get_device_hash();
+        // Device hash should be 16 hex chars
+        assert_eq!(hash.len(), 16);
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_device_hash_stable() {
+        // Same call should produce same result (within same process)
+        let h1 = get_device_hash();
+        let h2 = get_device_hash();
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_track_feature_no_panic() {
+        // track_feature should never panic, even without DSN
+        track_feature("test.feature", "0.0.0", "deadbeef12345678");
     }
 }

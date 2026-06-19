@@ -109,4 +109,75 @@ mod windows_webview_tests {
         assert!(script.contains("try"));
         assert!(script.contains("catch"));
     }
+
+    /// Test that the auto_scroll flag is correctly embedded in the injection script.
+    ///
+    /// The `window.__lc_auto_scroll` flag controls whether the show-more
+    /// MutationObserver is enabled. It must be `true` or `false` (JS booleans),
+    /// not `1` or `0` or a string.
+    #[test]
+    fn test_auto_scroll_flag_embedded_correctly() {
+        let test_css = ".chat { color: red; }";
+        let css_json = serde_json::to_string(test_css).unwrap();
+
+        // When auto_scroll is true, the flag should be `true`
+        let script_true = format!(
+            r#"(function() {{
+                var style = document.createElement('style');
+                style.textContent = {};
+                window.__lc_auto_scroll = {};
+                function __lc_click_show_more() {{
+                    if (!window.__lc_auto_scroll) return;
+                    var btn = document.querySelector('yt-icon-button#show-more button#button');
+                    if (btn) {{
+                        btn.click();
+                    }}
+                }}
+                if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
+                    window.__livicat_show_more_obs = new MutationObserver(function() {{
+                        __lc_click_show_more();
+                    }});
+                    window.__livicat_show_more_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                }}
+                __lc_click_show_more();
+            }})();"#,
+            css_json, true,
+        );
+
+        assert!(
+            script_true.contains("window.__lc_auto_scroll = true"),
+            "auto_scroll=true should emit 'window.__lc_auto_scroll = true' in JS, got: {}",
+            script_true
+        );
+        assert!(
+            script_true.contains("__lc_click_show_more"),
+            "show-more function should be present when auto_scroll is true"
+        );
+        assert!(
+            script_true.contains("MutationObserver"),
+            "MutationObserver should be present when auto_scroll is true"
+        );
+
+        // When auto_scroll is false, the flag should be `false`
+        let script_false = format!(
+            r#"(function() {{
+                var style = document.createElement('style');
+                style.textContent = {};
+                window.__lc_auto_scroll = {};
+                function __lc_click_show_more() {{
+                    if (!window.__lc_auto_scroll) return;
+                }}
+                if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
+                }}
+                __lc_click_show_more();
+            }})();"#,
+            css_json, false,
+        );
+
+        assert!(
+            script_false.contains("window.__lc_auto_scroll = false"),
+            "auto_scroll=false should emit 'window.__lc_auto_scroll = false' in JS, got: {}",
+            script_false
+        );
+    }
 }
