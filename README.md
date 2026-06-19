@@ -57,7 +57,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📥 Download
 
-🎉 **[Latest Release: v0.9.2](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release: v0.9.3](https://github.com/kg20dev/livicat/releases)**
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
