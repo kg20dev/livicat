@@ -276,10 +276,29 @@ fn inject_css_to_window(
             }}
 
             function __lc_make_wm() {{
+                // Create animation keyframes if not exists
+                if (!document.getElementById('livicat-wm-anim')) {{
+                    var animStyle = document.createElement('style');
+                    animStyle.id = 'livicat-wm-anim';
+                    animStyle.textContent = '@keyframes livicat-bounce {{0%, 100% {{ transform: translateY(0) scale(1); }} 50% {{ transform: translateY(-3px) scale(1.02); }} }}';
+                    document.head.appendChild(animStyle);
+                }}
+                
                 var el = document.createElement('div');
                 el.id = 'livicat-watermark';
-                el.textContent = 'LIVICAT';
-                el.style.cssText = 'position:fixed;bottom:8px;right:10px;z-index:99999;pointer-events:none;font:600 11px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:rgba(255,255,255,0.25);text-shadow:0 0 3px rgba(0,0,0,0.4);letter-spacing:0.5px;';
+                el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;opacity:0.5;animation:livicat-bounce 2s ease-in-out infinite;';
+                
+                // Build SVG with escaped hash characters
+                var red = '#ff4444';
+                var white = '#fff';
+                el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">' +
+                    '<circle cx="16" cy="18" r="11" fill="' + red + '" stroke="' + white + '" stroke-width="1.5"/>' +
+                    '<path d="M9 10 L7 6 L12 8 Z" fill="' + red + '" stroke="' + white + '" stroke-width="1.2"/>' +
+                    '<path d="M23 10 L25 6 L20 8 Z" fill="' + red + '" stroke="' + white + '" stroke-width="1.2"/>' +
+                    '<circle cx="12" cy="16" r="1.8" fill="' + white + '"/>' +
+                    '<circle cx="20" cy="16" r="1.8" fill="' + white + '"/>' +
+                    '<path d="M14 20 Q16 22 18 20" stroke="' + white + '" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+                    '</svg>';
                 document.body.appendChild(el);
                 return el;
             }}
