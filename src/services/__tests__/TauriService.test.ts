@@ -41,6 +41,7 @@ describe('TauriService', () => {
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('open_preview_window', {
         videoId: 'video123',
         css: '.chat { color: red }',
+        showBranding: false,
       })
     })
 
@@ -61,7 +62,10 @@ describe('TauriService', () => {
     it('returns true when CSS is injected successfully', async () => {
       mockInvoke.mockResolvedValue(undefined)
       await expect(TauriService.injectCss('body {}')).resolves.toBe(true)
-      expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', { css: 'body {}' })
+      expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', {
+        css: 'body {}',
+        showBranding: false,
+      })
     })
 
     it('returns false on failure', async () => {

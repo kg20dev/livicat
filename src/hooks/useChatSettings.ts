@@ -71,6 +71,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
 
   /* Chroma key */
   chromaKey: false,
+  showBranding: false,
 
   /* IM-style bubble settings */
   bubbleBorderWidth: 2,
@@ -293,7 +294,8 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       borderRadius: settings.messageBorderRadius ? `${settings.messageBorderRadius}px` : undefined,
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
       opacity: settings.messageOpacity ? settings.messageOpacity / 100 : undefined,
-      margin: typeof settings.messageSpacing === 'number' ? `${settings.messageSpacing}px` : undefined,
+      margin:
+        typeof settings.messageSpacing === 'number' ? `${settings.messageSpacing}px` : undefined,
       marginBottom: settings.messageMarginBottom ? `${settings.messageMarginBottom}px` : undefined,
     },
     username: {
