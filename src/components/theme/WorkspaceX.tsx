@@ -28,6 +28,13 @@ import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 
+/* ─── Platform Detection ──────────────────────────────────────── */
+const isMac =
+  typeof window !== 'undefined'
+    ? window.navigator.platform.toUpperCase().indexOf('MAC') >= 0
+    : false
+const platformShortcutIcon = isMac ? 'keyboard_command_key' : 'keyboard_ctrl_key'
+
 /* ─── Core sections (shared across themes) ───────────────────── */
 const CORE_SECTION_NAMES = new Set([
   'OBS',
@@ -187,7 +194,7 @@ export function WorkspaceX() {
   // ─── Keyboard Navigation ───────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K / Ctrl+K to open dropdown
+      // Cmd+K (Mac) or Ctrl+K (Windows/Linux) to open dropdown
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setDropdownOpen((prev) => !prev)
@@ -263,43 +270,46 @@ export function WorkspaceX() {
         <div className="px-5 py-4">
           {/* Main theme selector row */}
           <div className="flex items-start gap-6">
-             {/* Current Theme Display */}
-             <div className="relative z-20" style={{ width: '420px' }}>
-               <button
-                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                 className="glass-liquid-input w-full px-4 py-3 rounded-xl flex items-center gap-3 hover:border-primary/60 transition-all duration-200 group"
-               >
-                  <span className="material-symbols-outlined text-primary text-[22px]">palette</span>
-                  <div className="flex-1 min-w-0 overflow-hidden text-left">
-                    <div className="text-label-lg font-bold text-on-surface truncate">
-                      {theme?.manifest.name ?? 'Select Theme'}
-                    </div>
-                    <div className="text-label-sm text-on-surface-variant/70 truncate">
-                      {theme?.manifest.description ?? 'Choose a theme to customize'}
-                    </div>
+            {/* Current Theme Display */}
+            <div className="relative z-20" style={{ width: '420px' }}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="glass-liquid-input w-full px-4 py-3 rounded-xl flex items-center gap-3 hover:border-primary/60 transition-all duration-200 group"
+              >
+                <span className="material-symbols-outlined text-primary text-[22px]">palette</span>
+                <div className="flex-1 min-w-0 overflow-hidden text-left">
+                  <div className="text-label-lg font-bold text-on-surface truncate">
+                    {theme?.manifest.name ?? 'Select Theme'}
                   </div>
-                 {/* Keyboard shortcut hint */}
-                 <kbd className="hidden md:flex items-center gap-1 px-2 py-1 rounded bg-surface-container-high border border-outline-variant/30 text-[11px] font-mono text-on-surface-variant/50 group-hover:text-on-surface-variant/70 transition-colors">
-                   <span className="material-symbols-outlined text-[10px]">keyboard_command_key</span>
-                   K
-                 </kbd>
-                 <span
-                   className={`material-symbols-outlined text-on-surface-variant/80 transition-transform duration-200 ${
-                     dropdownOpen ? 'rotate-180' : ''
-                   }`}
-                 >
-                   expand_more
-                 </span>
-               </button>
+                  <div className="text-label-sm text-on-surface-variant/70 truncate">
+                    {theme?.manifest.description ?? 'Choose a theme to customize'}
+                  </div>
+                </div>
+                {/* Keyboard shortcut hint - platform-aware */}
+                <kbd className="hidden md:flex items-center gap-1 px-2 py-1 rounded bg-surface-container-high border border-outline-variant/30 text-[11px] font-mono text-on-surface-variant/50 group-hover:text-on-surface-variant/70 transition-colors">
+                  <span className="material-symbols-outlined text-[10px]">
+                    {platformShortcutIcon}
+                  </span>
+                  K
+                </kbd>
+                <span
+                  className={`material-symbols-outlined text-on-surface-variant/80 transition-transform duration-200 ${
+                    dropdownOpen ? 'rotate-180' : ''
+                  }`}
+                >
+                  expand_more
+                </span>
+              </button>
 
               {/* Dropdown Panel — Smooth animations */}
               <div
                 className={`
                   absolute top-full left-0 mt-3 w-[420px] bg-surface-container rounded-xl shadow-2xl border border-outline-variant/50 overflow-hidden glass-liquid-medium
                   transition-all duration-200 origin-top
-                  ${dropdownOpen
-                    ? 'opacity-100 scale-100 pointer-events-auto'
-                    : 'opacity-0 scale-95 pointer-events-none -translate-y-2'
+                  ${
+                    dropdownOpen
+                      ? 'opacity-100 scale-100 pointer-events-auto'
+                      : 'opacity-0 scale-95 pointer-events-none -translate-y-2'
                   }
                 `}
               >
@@ -379,33 +389,33 @@ export function WorkspaceX() {
                         >
                           <div className="flex items-center gap-3">
                             {/* Mini palette preview */}
-                             <div className="flex rounded overflow-hidden h-6 w-14 border border-outline-variant/30 flex-shrink-0 shadow-sm">
-                               {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
-                                 const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
-                                 const color =
-                                   def && typeof def.default === 'string' ? def.default : '#888'
-                                 return (
-                                   <div
-                                     key={key}
-                                     className="flex-1"
-                                     style={{ backgroundColor: color }}
-                                   />
-                                 )
-                               })}
-                             </div>
+                            <div className="flex rounded overflow-hidden h-6 w-14 border border-outline-variant/30 flex-shrink-0 shadow-sm">
+                              {['bg', 'chat-msg-bg', 'chat-msg-color'].map((key) => {
+                                const def = t.scheme.find((s) => s.key === key || s.cssVar === key)
+                                const color =
+                                  def && typeof def.default === 'string' ? def.default : '#888'
+                                return (
+                                  <div
+                                    key={key}
+                                    className="flex-1"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                )
+                              })}
+                            </div>
 
-                               <div className="flex-1 min-w-0 overflow-hidden">
-                                 <div
-                                   className={`text-label-md font-semibold truncate ${
-                                     isSelected ? 'text-primary' : 'text-on-surface'
-                                   }`}
-                                 >
-                                   {t.manifest.name}
-                                 </div>
-                                 <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5 overflow-hidden">
-                                   {t.manifest.description}
-                                 </div>
-                               </div>
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <div
+                                className={`text-label-md font-semibold truncate ${
+                                  isSelected ? 'text-primary' : 'text-on-surface'
+                                }`}
+                              >
+                                {t.manifest.name}
+                              </div>
+                              <div className="text-[11px] text-on-surface-variant/50 truncate leading-tight mt-0.5 overflow-hidden">
+                                {t.manifest.description}
+                              </div>
+                            </div>
 
                             {isSelected && (
                               <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0 animate-in fade-in slide-in-from-right-1 duration-200">
@@ -428,8 +438,8 @@ export function WorkspaceX() {
                       </>
                     ) : (
                       <>
-                        <span className="font-semibold text-primary">{filteredThemes.length}</span> of{' '}
-                        {THEMES.length}
+                        <span className="font-semibold text-primary">{filteredThemes.length}</span>{' '}
+                        of {THEMES.length}
                       </>
                     )}
                   </span>
