@@ -814,7 +814,7 @@ function WorkspaceBody({
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview, buildYoutubeCss])
+  }, [previewOpen, videoId, openPreview, closePreview, buildYoutubeCss, settings])
 
   /* ─── CSS re-injection on settings change ──────────────────── */
 

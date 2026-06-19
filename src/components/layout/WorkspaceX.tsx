@@ -891,7 +891,7 @@ export default function WorkspaceX() {
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings])
+  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings, settings.alwaysOnTop, settings.forcedAutoScroll])
 
   /* ─── setting helper wrappers ─────────────────────────────────── */
 
