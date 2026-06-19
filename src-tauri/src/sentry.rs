@@ -206,11 +206,6 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
         &dsn[..dsn.len().min(20)]
     );
 
-    // Resolve hostname once for both server_name and device hash
-    let hostname_str = hostname::get()
-        .ok()
-        .map(|h| h.to_string_lossy().to_string())
-        .unwrap_or_default();
     let device_hash = get_device_hash();
 
     let client = sentry::init((
@@ -218,7 +213,7 @@ pub fn init_sentry() -> sentry::ClientInitGuard {
         sentry::ClientOptions {
             release: Some(release.into()),
             environment: Some(environment.into()),
-            server_name: Some(hostname_str.into()),
+            server_name: Some(device_hash.clone().into()),
             traces_sample_rate: 1.0, // 100% sampling for testing to ensure events are sent
             send_default_pii: false, // Don't send PII for privacy
             debug: true,             // Enable debug mode to see what Sentry is doing
