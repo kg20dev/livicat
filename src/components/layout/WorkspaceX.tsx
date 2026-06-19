@@ -325,8 +325,7 @@ function ImChatList({ messages, settings }: { messages: Message[]; settings: Cha
       ? `${avatarSize}px minmax(0, ${bubbleWidth}px)`
       : `0px minmax(0, ${bubbleWidth}px)`
   const gridAreas = avatarSize > 0 ? '"avatar name" "avatar bubble"' : '"name" "bubble"'
-  const marginBottom =
-    settings.messageSpacing === 'compact' ? 4 : settings.messageSpacing === 'comfortable' ? 16 : 10
+  const marginBottom = settings.messageSpacing
   const totalWidth = avatarSize + gap + bubbleWidth
 
   // Animation settings
@@ -1151,15 +1150,13 @@ export default function WorkspaceX() {
                 unit="%"
                 onChange={(v) => update('messageOpacity', v)}
               />
-              <SelectRow
+              <SliderRow
                 label="Message Spacing"
                 value={s.messageSpacing}
-                options={[
-                  { value: 'compact', label: 'Compact' },
-                  { value: 'normal', label: 'Normal' },
-                  { value: 'comfortable', label: 'Comfortable' },
-                ]}
-                onChange={(v) => update('messageSpacing', v as ChatSettings['messageSpacing'])}
+                min={0}
+                max={40}
+                unit="px"
+                onChange={(v) => update('messageSpacing', v)}
               />
               <SelectRow
                 label="Font Family"

@@ -28,6 +28,7 @@ export const coreCssVarMap: Record<string, string> = {
   'superchat-text': 'chat-superchat-text',
   'membership-bg': 'chat-membership-bg',
   'membership-text': 'chat-membership-text',
+  'letter-spacing': 'chat-letter-spacing',
   'chat-owner-username': 'chat-owner-username',
   'chat-mod-username': 'chat-mod-username',
   'chat-member-username': 'chat-member-username',

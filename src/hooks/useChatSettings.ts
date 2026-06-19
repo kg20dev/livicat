@@ -64,7 +64,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   backgroundStyle: 'full-block',
 
   /* Other */
-  messageSpacing: 'normal',
+  messageSpacing: 10,
   theme: 'dark',
   animationSpeed: 'normal',
   newMessageAnimation: 'default',
@@ -118,7 +118,7 @@ export const PRESETS: Preset[] = [
       showTimestamps: false,
       messageFontSize: 13,
       usernameFontSize: 12,
-      messageSpacing: 'compact',
+      messageSpacing: 4,
       messageOpacity: 95,
       animationSpeed: 'none',
       newMessageAnimation: 'default',
@@ -137,7 +137,7 @@ export const PRESETS: Preset[] = [
       timestampFontSize: 10,
       messagePadding: 6,
       avatarSize: 20,
-      messageSpacing: 'compact',
+      messageSpacing: 4,
       messageMarginBottom: 2,
       scrollButtonBackground: '#2a2a2a',
       scrollButtonBorderRadius: 4,
@@ -155,7 +155,7 @@ export const PRESETS: Preset[] = [
       messagePadding: 12,
       avatarSize: 32,
       avatarMarginTop: 6,
-      messageSpacing: 'comfortable',
+      messageSpacing: 16,
       messageMarginBottom: 12,
       animationSpeed: 'slow',
       scrollButtonBackground: '#444444',
@@ -274,13 +274,6 @@ function saveSettings(settings: ChatSettings): void {
  * Convert user-friendly ChatSettings to the CSS generator format.
  */
 export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
-  // Map messageSpacing to margin value
-  const spacingMap: Record<string, string> = {
-    compact: '2px',
-    normal: '6px',
-    comfortable: '12px',
-  }
-
   return {
     fontUrl: getFontUrl(settings.fontFamily) || undefined,
     general: {
@@ -300,7 +293,7 @@ export function settingsToCSSSettings(settings: ChatSettings): ChatCSSSettings {
       borderRadius: settings.messageBorderRadius ? `${settings.messageBorderRadius}px` : undefined,
       padding: settings.messagePadding ? `${settings.messagePadding}px` : undefined,
       opacity: settings.messageOpacity ? settings.messageOpacity / 100 : undefined,
-      margin: spacingMap[settings.messageSpacing] || undefined,
+      margin: typeof settings.messageSpacing === 'number' ? `${settings.messageSpacing}px` : undefined,
       marginBottom: settings.messageMarginBottom ? `${settings.messageMarginBottom}px` : undefined,
     },
     username: {

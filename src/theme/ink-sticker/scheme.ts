@@ -45,6 +45,7 @@ export const coreCssVarMap: Record<string, string> = {
   'username-bold': 'chat-username-font-weight',
   'font-weight-message': 'messageFontWeight',
   'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
+  'letter-spacing': 'chat-letter-spacing',
   'owner-bg': 'ownerBg',
   'owner-text': 'ownerText',
   'mod-bg': 'modBg',

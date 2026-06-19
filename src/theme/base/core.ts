@@ -105,14 +105,12 @@ export const CORE_SCHEME: SettingDef[] = [
   {
     key: 'message-spacing',
     section: 'Common',
-    type: 'select',
+    type: 'range',
     label: 'Message Spacing',
-    default: 'normal',
-    options: [
-      { value: 'compact', label: 'Compact' },
-      { value: 'normal', label: 'Normal' },
-      { value: 'comfortable', label: 'Comfortable' },
-    ],
+    min: 0,
+    max: 40,
+    default: 10,
+    unit: 'px',
   },
   {
     key: 'animation-speed',
@@ -219,6 +217,16 @@ export const CORE_SCHEME: SettingDef[] = [
     type: 'toggle',
     label: 'Bold Username',
     default: true,
+  },
+  {
+    key: 'letter-spacing',
+    section: 'Typography',
+    type: 'range',
+    label: 'Character Spacing',
+    min: -3,
+    max: 12,
+    default: 0,
+    unit: 'px',
   },
 
   /* ── Avatar ────────────────────────────────────────────── */

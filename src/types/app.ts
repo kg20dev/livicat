@@ -5,7 +5,7 @@
 /* ─── Settings Enums ────────────────────────────────────────────── */
 
 export type Theme = 'dark' | 'light'
-export type MessageSpacing = 'compact' | 'normal' | 'comfortable'
+export type MessageSpacing = number
 export type AnimationSpeed = 'none' | 'slow' | 'normal'
 export type AnimationStyle = 'default' | 'blink' | 'glowing' | 'fade' | 'slide' | 'bounce'
 

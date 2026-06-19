@@ -279,6 +279,7 @@
   font-family: inherit !important;
   font-weight: var(--chat-message-font-weight, 400) !important;
   line-height: 1.4 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
   overflow: visible !important;
   overflow-wrap: anywhere !important;
   white-space: pre-wrap !important;
