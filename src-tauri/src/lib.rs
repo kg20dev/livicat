@@ -276,29 +276,26 @@ fn inject_css_to_window(
             }}
 
             function __lc_make_wm() {{
-                // Create animation keyframes if not exists
                 if (!document.getElementById('livicat-wm-anim')) {{
-                    var animStyle = document.createElement('style');
-                    animStyle.id = 'livicat-wm-anim';
-                    animStyle.textContent = '@keyframes livicat-bounce {{0%, 100% {{ transform: translateY(0) scale(1); }} 50% {{ transform: translateY(-3px) scale(1.02); }} }}';
-                    document.head.appendChild(animStyle);
+                    var s = document.createElement('style');
+                    s.id = 'livicat-wm-anim';
+                    s.textContent = '@keyframes __lc_b {{0%,100%{{transform:translateY(0)scale(1)}}50%{{transform:translateY(-3px)scale(1.02)}}}}';
+                    document.head.appendChild(s);
                 }}
-                
                 var el = document.createElement('div');
                 el.id = 'livicat-watermark';
-                el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;opacity:0.5;animation:livicat-bounce 2s ease-in-out infinite;';
-                
-                // Build SVG with escaped hash characters
-                var red = '#ff4444';
-                var white = '#fff';
-                el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">' +
-                    '<circle cx="16" cy="18" r="11" fill="' + red + '" stroke="' + white + '" stroke-width="1.5"/>' +
-                    '<path d="M9 10 L7 6 L12 8 Z" fill="' + red + '" stroke="' + white + '" stroke-width="1.2"/>' +
-                    '<path d="M23 10 L25 6 L20 8 Z" fill="' + red + '" stroke="' + white + '" stroke-width="1.2"/>' +
-                    '<circle cx="12" cy="16" r="1.8" fill="' + white + '"/>' +
-                    '<circle cx="20" cy="16" r="1.8" fill="' + white + '"/>' +
-                    '<path d="M14 20 Q16 22 18 20" stroke="' + white + '" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
-                    '</svg>';
+                el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;opacity:0.5;animation:__lc_b 2s ease-in-out infinite';
+                var ns = 'http://www.w3.org/2000/svg';
+                var svg = document.createElementNS(ns, 'svg');
+                svg.setAttribute('width', '28'); svg.setAttribute('height', '28'); svg.setAttribute('viewBox', '0 0 32 32');
+                var c = function(tag, attrs) {{ var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }};
+                svg.appendChild(c('circle', {{cx:'16',cy:'18',r:'11',fill:'#ff4444',stroke:'#fff','stroke-width':'1.5'}}));
+                svg.appendChild(c('path', {{d:'M9 10 L7 6 L12 8 Z',fill:'#ff4444',stroke:'#fff','stroke-width':'1.2'}}));
+                svg.appendChild(c('path', {{d:'M23 10 L25 6 L20 8 Z',fill:'#ff4444',stroke:'#fff','stroke-width':'1.2'}}));
+                svg.appendChild(c('circle', {{cx:'12',cy:'16',r:'1.8',fill:'#fff'}}));
+                svg.appendChild(c('circle', {{cx:'20',cy:'16',r:'1.8',fill:'#fff'}}));
+                svg.appendChild(c('path', {{d:'M14 20 Q16 22 18 20',stroke:'#fff','stroke-width':'1.5',fill:'none','stroke-linecap':'round'}}));
+                el.appendChild(svg);
                 document.body.appendChild(el);
                 return el;
             }}
