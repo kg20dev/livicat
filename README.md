@@ -122,6 +122,9 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 <a href="https://github.com/yamuyamcik" title="yamuyamcik — Collaborator">
   <img src="https://github.com/yamuyamcik.png" width="72" height="72" alt="yamuyamcik" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </a>
+<a href="https://github.com/arale-afk" title="arale-afk — Collaborator">
+  <img src="https://github.com/arale-afk.png" width="72" height="72" alt="arale-afk" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+</a>
 
 
 **Thank you to:**
