@@ -27,6 +27,11 @@ export const strokeMap: Record<string, DerivationEntry> = {
   memberText: 'memberStroke',
   superchatText: 'superchatStroke',
   membershipText: 'membershipStroke',
+  'chat-owner-username': 'ownerUsernameStroke',
+  'chat-mod-username': 'modUsernameStroke',
+  'chat-member-username': 'memberUsernameStroke',
+  'chat-superchat-username': 'superchatUsernameStroke',
+  'chat-membership-username': 'membershipUsernameStroke',
 }
 
 export const coreCssVarMap: Record<string, string> = {
@@ -50,6 +55,11 @@ export const coreCssVarMap: Record<string, string> = {
   'superchat-text': 'superchatText',
   'membership-bg': 'membershipBg',
   'membership-text': 'membershipText',
+  'chat-owner-username': 'ownerUsername',
+  'chat-mod-username': 'modUsername',
+  'chat-member-username': 'memberUsername',
+  'chat-superchat-username': 'superchatUsername',
+  'chat-membership-username': 'membershipUsername',
 }
 
 export const scheme: SettingDef[] = [
@@ -123,48 +133,6 @@ export const scheme: SettingDef[] = [
     max: 30,
     default: 6,
     unit: 'px',
-  },
-
-  /* ── Role Colors (username shades, matching Colour Bubble for consistency) ── */
-  {
-    key: 'chat-owner-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Owner Username',
-    default: '#ff8c42',
-    cssVar: 'ownerUsername',
-  },
-  {
-    key: 'chat-mod-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Mod Username',
-    default: '#4296ff',
-    cssVar: 'modUsername',
-  },
-  {
-    key: 'chat-member-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Member Username',
-    default: '#ce93d8',
-    cssVar: 'memberUsername',
-  },
-  {
-    key: 'chat-superchat-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Super Chat Username',
-    default: '#ffd700',
-    cssVar: 'superchatUsername',
-  },
-  {
-    key: 'chat-membership-username',
-    section: 'Role Colors',
-    type: 'color',
-    label: 'Membership Username',
-    default: '#ffffff',
-    cssVar: 'membershipUsername',
   },
 
   /* ── Frame ──────────────────────────────────────────────── */

@@ -45,6 +45,41 @@ export const CORE_SCHEME: SettingDef[] = [
     label: 'Username Color',
     default: '#ff4444',
   },
+  {
+    key: 'chat-owner-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Owner Username',
+    default: '#ffb347',
+  },
+  {
+    key: 'chat-mod-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Mod Username',
+    default: '#47b5ff',
+  },
+  {
+    key: 'chat-member-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Member Username',
+    default: '#ce93d8',
+  },
+  {
+    key: 'chat-superchat-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Super Chat Username',
+    default: '#ffd700',
+  },
+  {
+    key: 'chat-membership-username',
+    section: 'Role Colors',
+    type: 'color',
+    label: 'Membership Username',
+    default: '#ffffff',
+  },
 
   /* ── Common ──────────────────────────────────────────────── */
   {
