@@ -857,10 +857,10 @@ export default function WorkspaceX() {
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      updateCSS(generateChatCSSX(xCSSSettings), settings.showBranding)
+      updateCSS(generateChatCSSX(xCSSSettings))
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, xCSSSettings, updateCSS, settings.showBranding])
+  }, [previewOpen, xCSSSettings, updateCSS])
 
   const visibleMessages = useMemo(() => {
     if (previewMode === 'gallery') return GALLERY_MESSAGES
@@ -883,7 +883,7 @@ export default function WorkspaceX() {
         previewStartRef.current = null
       }
     } else if (videoId) {
-      openPreview(videoId, generateChatCSSX(xCSSSettings), settings.showBranding)
+      openPreview(videoId, generateChatCSSX(xCSSSettings))
       setPreviewOpen(true)
       previewStartRef.current = Date.now()
       trackEventAsync('preview_opened', {
@@ -891,7 +891,7 @@ export default function WorkspaceX() {
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings, settings.showBranding])
+  }, [previewOpen, videoId, openPreview, closePreview, xCSSSettings])
 
   /* ─── setting helper wrappers ─────────────────────────────────── */
 
@@ -1241,20 +1241,6 @@ export default function WorkspaceX() {
                     onChange={(v) => update('showHeader', v)}
                   />
                 </div>
-              </div>
-            </CollapsibleSection>
-
-            {/* ── Branding ──────────────────────────────────── */}
-            <CollapsibleSection icon="image" title="Branding" defaultOpen={false}>
-              <div className="space-y-3">
-                <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                  Show the LiviCat watermark in the top-right corner of your live chat preview.
-                </p>
-                <ToggleRow
-                  label="Show LiviCat Watermark"
-                  value={s.showBranding}
-                  onChange={(v) => update('showBranding', v)}
-                />
               </div>
             </CollapsibleSection>
 

@@ -51,22 +51,22 @@ export function useElectronPreview() {
   }, [isElectron, isTauriRuntime])
 
   const openPreview = useCallback(
-    async (videoId: string, css: string, showBranding = false) => {
+    async (videoId: string, css: string) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.openChatPreview(videoId, css)
       } else if (isTauriRuntime) {
-        await invoke('open_preview_window', { videoId, css, showBranding })
+        await invoke('open_preview_window', { videoId, css })
       }
     },
     [isElectron, isTauriRuntime]
   )
 
   const updateCSS = useCallback(
-    async (css: string, showBranding = false) => {
+    async (css: string) => {
       if (isElectron && electronApiRef.current) {
         electronApiRef.current.updateChatCSS(css)
       } else if (isTauriRuntime) {
-        await invoke('inject_css', { css, showBranding })
+        await invoke('inject_css', { css })
       }
     },
     [isElectron, isTauriRuntime]

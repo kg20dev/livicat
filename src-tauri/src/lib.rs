@@ -25,7 +25,6 @@ type SharedPreviewState = Arc<Mutex<PreviewState>>;
 async fn open_preview_window(
     video_id: String,
     css: String,
-    show_branding: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -115,7 +114,7 @@ async fn open_preview_window(
                 // fires into an uninitialized JS context, causing crashes.
                 // On macOS (WKWebView) it's more forgiving but still unsafe.
                 // Waiting for Finished guarantees the JS environment is ready.
-                if let Err(e) = inject_css_to_window(&window, &css, show_branding) {
+                if let Err(e) = inject_css_to_window(&window, &css) {
                     eprintln!("[Livicat] CSS injection via page load failed: {}", e);
                     sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
                     sentry::add_breadcrumb(
@@ -167,7 +166,6 @@ async fn open_preview_window(
 #[tauri::command]
 async fn inject_css(
     css: String,
-    show_branding: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -186,7 +184,7 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
-            inject_css_to_window(&window, &css, show_branding)?;
+            inject_css_to_window(&window, &css)?;
             return Ok(());
         }
     }
@@ -259,48 +257,49 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
 fn inject_css_to_window(
     window: &WebviewWindow,
     css: &str,
-    show_branding: bool,
 ) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
-
-    let show_branding_str = if show_branding { "true" } else { "false" };
 
     let script = format!(
         r#"(function() {{
             try {{
                 var existing = document.getElementById('livicat-css');
                 if (existing) {{
-                    console.log('[Livicat] Removing existing CSS');
                     existing.remove();
                 }}
                 var style = document.createElement('style');
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
-                console.log('[Livicat] CSS injected successfully');
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
             }}
 
-            /* ── LiviCat watermark (inline, no CSS dependency) ── */
-            var wm = document.getElementById('livicat-watermark');
-            if (!wm) {{
-                wm = document.createElement('div');
-                wm.id = 'livicat-watermark';
-                document.body.appendChild(wm);
-                console.log('[Livicat] Watermark element created');
-            }}
-            if ({}) {{
-                wm.style.cssText = 'display:block;position:fixed;top:8px;right:8px;width:28px;height:28px;z-index:99999;pointer-events:none;opacity:0.5;background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTEyIDhMOCAyOEwyMCAyMFogTTUyIDhMNTYgMjhMNDQgMjBaIiBmaWxsPSIjZmY0NDQ0IiBvcGFjaXR5PSIuOSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzQiIHI9IjIyIiBmaWxsPSIjZmY0NDQ0IiBvcGFjaXR5PSIuOSIvPjxjaXJjbGUgY3g9IjI0IiBjeT0iMzAiIHI9IjQiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii45NSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMzAiIHI9IjQiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii45NSIvPjxjaXJjbGUgY3g9IjI0LjUiIGN5PSIzMC41IiByPSIyIiBmaWxsPSIjMWExYTFhIi8+PGNpcmNsZSBjeD0iNDAuNSIgY3k9IjMwLjUiIHI9IjIiIGZpbGw9IiMxYTFhMWEiLz48cGF0aCBkPSJNMjkgMzhRMzIgNDEgMzUgMzgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjgiLz48bGluZSB4MT0iMTAiIHkxPSIzNiIgeDI9IjIyIiB5Mj0iMzgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxIiBvcGFjaXR5PSIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjEwIiB5MT0iNDIiIHgyPSIyMiIgeTI9IjQwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxsaW5lIHgxPSI1NCIgeTE9IjM2IiB4Mj0iNDIiIHkyPSIzOCIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9Ii41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iNTQiIHkxPSI0MiIgeDI9IjQyIiB5Mj0iNDAiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxIiBvcGFjaXR5PSIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+");background-size:contain;background-repeat:no-repeat;';
-                console.log('[Livicat] Watermark shown');
-            }} else {{
-                if (wm) {{
-                    wm.style.display = 'none';
-                }}
-                console.log('[Livicat] Watermark hidden');
+            function __lc_make_wm() {{
+                var el = document.createElement('div');
+                el.id = 'livicat-watermark';
+                el.textContent = 'LIVICAT';
+                el.style.cssText = 'position:fixed;bottom:8px;right:10px;z-index:99999;pointer-events:none;font:600 11px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:rgba(255,255,255,0.25);text-shadow:0 0 3px rgba(0,0,0,0.4);letter-spacing:0.5px;';
+                document.body.appendChild(el);
+                return el;
             }}
 
-            /* ── Punctuation badge observer (injected once) ── */
+            if (!document.getElementById('livicat-watermark')) {{
+                __lc_make_wm();
+                console.log('[Livicat] Watermark created');
+            }}
+
+            if (!window.__livicat_wmobs) {{
+                window.__livicat_wmobs = new MutationObserver(function() {{
+                    if (!document.getElementById('livicat-watermark')) {{
+                        __lc_make_wm();
+                        console.log('[Livicat] Watermark re-created by observer');
+                    }}
+                }});
+                window.__livicat_wmobs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                console.log('[Livicat] Watermark observer ready');
+            }}
+
             if (!window.__livicat_punct) {{
                 window.__livicat_punct = true;
                 function __livicat_set_punct(el) {{
@@ -335,7 +334,6 @@ fn inject_css_to_window(
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?,
-        show_branding_str
     );
 
     window

@@ -136,15 +136,6 @@ export const CORE_SCHEME: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Branding ────────────────────────────────────────── */
-  {
-    key: 'show-branding',
-    section: 'Branding',
-    type: 'toggle',
-    label: 'Show LiviCat Watermark',
-    default: false,
-  },
-
   /* ── YouTube ──────────────────────────────────────────── */
   {
     key: 'hide-youtube-generic',
@@ -165,6 +156,13 @@ export const CORE_SCHEME: SettingDef[] = [
     section: 'YouTube',
     type: 'toggle',
     label: 'Hide Chat Footer',
+    default: false,
+  },
+  {
+    key: 'hide-youtube-signin',
+    section: 'YouTube',
+    type: 'toggle',
+    label: 'Hide Sign-in Prompt',
     default: false,
   },
 

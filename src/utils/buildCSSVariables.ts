@@ -230,6 +230,12 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('  display: none !important;')
     lines.push('}')
   }
+  if (settings['hide-youtube-signin']) {
+    lines.push('')
+    lines.push('yt-live-chat-message-renderer[subtext-on-bottom] {')
+    lines.push('  display: none !important;')
+    lines.push('}')
+  }
 
   // ── Chroma key mode: green background for OBS keying ─────────
   if (settings['chroma-key']) {
