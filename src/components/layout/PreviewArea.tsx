@@ -3,6 +3,7 @@ import ChatPreview, { type Message } from '../chat/ChatPreview'
 import UrlInputBar, { type ChatMode } from '../ui/UrlInputBar'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { useElectronPreview } from '../../hooks/useElectronPreview'
+import { useCSSHotReload } from '../../hooks/useCSSHotReload'
 import type { YouTubeVideoInfo } from '../../utils/youtubeMetadata'
 import { trackEventAsync } from '../../utils/analytics'
 import { StreamSender } from '../ui/StreamSender'
@@ -82,7 +83,8 @@ export default function PreviewArea({
   // Use validated videoId when the submitted URL is valid
   const videoId = validation.isValid ? validation.videoId : null
 
-  // Retry fetch
+  // Phase 4: Auto-hot-reload CSS to OBS when theme changes
+  useCSSHotReload(videoId, injectedCSS)
   const onRetryFetch = useCallback(() => {
     onFetch()
   }, [onFetch])

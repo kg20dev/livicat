@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { TauriService } from '../../services/TauriService'
 import { useOBSSettings } from '../../hooks/useOBSSettings'
 import { trackEventAsync } from '../../utils/analytics'
@@ -70,26 +70,6 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
       showToast('Failed to connect to streaming app', true)
     }
   }
-
-  // Phase 4: CSS Hot-Reload Debouncer (when live via WebSocket)
-  useEffect(() => {
-    if (status === 'success' && isConfigured() && !toastMsg.includes('HTTP')) {
-      const timer = setTimeout(() => {
-        TauriService.sendBrowserSource({
-          obsUrl: settings.obsUrl!,
-          obsPassword: settings.obsPassword,
-          videoId: videoId || '',
-          css: injectedCSS,
-          sourceName: settings.sourceName || 'Livicat Chat'
-        }).then(res => {
-          if (res === 'updated') {
-            console.log('[StreamSender] Hot-reloaded CSS to OBS')
-          }
-        })
-      }, 400) // debounce 400ms
-      return () => clearTimeout(timer)
-    }
-  }, [injectedCSS, settings, isConfigured, status, toastMsg, videoId])
 
   if (showSetup) {
     return (
