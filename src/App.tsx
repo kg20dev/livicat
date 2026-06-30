@@ -9,7 +9,6 @@ import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
 import { WorkspaceX } from './components/theme/WorkspaceX'
 import type { ChatMode } from './components/layout/PreviewArea'
-import { StreamSender } from './components/ui/StreamSender'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
 import { fetchYouTubeMetadata, type YouTubeVideoInfo } from './utils/youtubeMetadata'
@@ -294,13 +293,6 @@ export default function App() {
       <TopBar>
         <TopBar.LogoButton onClick={toggle} title={isCollapsed ? 'Open menu' : 'Close menu'} />
         <TopBar.Right>
-          <StreamSender
-            videoId={(() => {
-              const v = validateYouTubeUrl(submittedUrl)
-              return v.isValid ? v.videoId : null
-            })()}
-            injectedCSS={generatedCSS}
-          />
           <TopBar.Version />
         </TopBar.Right>
       </TopBar>
