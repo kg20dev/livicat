@@ -87,49 +87,44 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <>
       <button
         onClick={() => {
           if (!settings.obsUrl || settings.obsUrl === '') setShowSetup(true)
           else handleSendToStream()
         }}
         disabled={!videoId || status === 'sending'}
-        className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-on-accent px-4 py-2 rounded-full text-label-md font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-on-accent px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        title={videoId ? (isConfigured() ? 'Send to Stream' : 'Configure Stream') : 'Load a video first'}
       >
         {status === 'sending' ? (
           <span className="w-4 h-4 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />
         ) : (
-          <span className="material-symbols-outlined text-[20px]">
+          <span className="material-symbols-outlined text-[18px]">
             {isConfigured() ? 'broadcast_on_personal' : 'cast'}
           </span>
         )}
-        Send to Stream
+        Stream
       </button>
 
-      {/* Connection Quick-Edit link */}
-      <button
-        onClick={() => setShowSetup(true)}
-        className="text-[10px] text-on-surface-variant hover:text-on-surface underline mr-2"
-      >
-        {isConfigured() ? 'Configure OBS' : 'Configure Stream'}
-      </button>
-
-      {/* Feedback Toast */}
+      {/* Feedback Toast - fixed top-right */}
       {status !== 'idle' && status !== 'sending' && (
-        <div
-          className={`absolute bottom-[100%] right-0 mb-3 px-3 py-2 rounded-lg shadow-xl border text-label-sm whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 ${
-            status === 'error'
-              ? 'bg-error/20 border-error/30 text-error-container'
-              : 'bg-success/20 border-success/30 text-success'
-          }`}
-        >
-          {toastMsg}
+        <div className="fixed top-20 right-6 z-[9998]">
+          <div
+            className={`px-4 py-3 rounded-xl shadow-2xl border text-label-sm font-medium animate-in fade-in slide-in-from-top-2 ${
+              status === 'error'
+                ? 'bg-error/20 border-error/30 text-error'
+                : 'bg-success/20 border-success/30 text-success'
+            }`}
+          >
+            {toastMsg}
+          </div>
         </div>
       )}
 
-      {/* HTTP Fallback UI */}
+      {/* HTTP Fallback Panel - fixed top-right */}
       {httpPort && status !== 'error' && !isConfigured() && (
-        <div className="absolute bottom-[100%] right-0 mb-12 w-[320px] p-4 glass-panel border border-outline rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed top-24 right-6 z-[9998] w-[320px] p-4 bg-surface/95 backdrop-blur-xl border border-outline rounded-xl shadow-2xl animate-in fade-in slide-in-from-top-4">
           <div className="flex justify-between items-start mb-2">
             <h4 className="text-label-md font-bold text-on-surface flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px] text-primary">dns</span>
@@ -161,6 +156,6 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

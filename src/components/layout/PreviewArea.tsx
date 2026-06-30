@@ -6,7 +6,6 @@ import { useElectronPreview } from '../../hooks/useElectronPreview'
 import { useCSSHotReload } from '../../hooks/useCSSHotReload'
 import type { YouTubeVideoInfo } from '../../utils/youtubeMetadata'
 import { trackEventAsync } from '../../utils/analytics'
-import { StreamSender } from '../ui/StreamSender'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -297,9 +296,6 @@ PreviewArea.Actions = function PreviewAreaActions() {
 
   return (
     <div className="absolute bottom-6 right-6 flex items-center gap-3">
-      {/* Send to Stream flow */}
-      <StreamSender videoId={videoId} injectedCSS={injectedCSS} />
-
       {mode === 'live' && fetchStatus === 'success' && (
         <>
           {isTauri && (
