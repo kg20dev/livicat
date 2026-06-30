@@ -237,6 +237,16 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('}')
   }
 
+  // ── Transparent background for OBS overlay ────────────────────
+  if (settings['obs-bg-transparent']) {
+    lines.push('')
+    lines.push('/* Transparent Background for OBS */')
+    lines.push('body, html, #content, yt-live-chat-app, yt-live-chat-renderer {')
+    lines.push('  background: transparent !important;')
+    lines.push('  background-color: transparent !important;')
+    lines.push('}')
+  }
+
   // ── Chroma key mode: green background for OBS keying ─────────
   if (settings['chroma-key']) {
     lines.push('')

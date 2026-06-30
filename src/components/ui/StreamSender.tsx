@@ -1,6 +1,6 @@
 import React from 'react'
 import { TauriService } from '../../services/TauriService'
-import { useOBSSettings } from '../../hooks/useOBSSettings'
+import { useOBSSettings, type OBSSettings } from '../../hooks/useOBSSettings'
 import { trackEventAsync } from '../../utils/analytics'
 import { OBSConnectionPanel } from '../layout/OBSConnectionPanel'
 
@@ -9,33 +9,34 @@ interface StreamSenderProps {
   injectedCSS: string
 }
 
+type StreamState = 'idle' | 'sending' | 'websocket' | 'http'
+
 export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   const { settings, isConfigured } = useOBSSettings()
   const [showSetup, setShowSetup] = React.useState(false)
-  const [status, setStatus] = React.useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [streamState, setStreamState] = React.useState<StreamState>('idle')
   const [toastMsg, setToastMsg] = React.useState('')
+  const [toastError, setToastError] = React.useState(false)
   const [httpPort, setHttpPort] = React.useState<number | null>(null)
+  const [httpDismissed, setHttpDismissed] = React.useState(false)
 
-  // Keep a ref to the latest settings so handleSendToStream doesn't use stale closure
+  // Keep a ref to the latest settings so handlers don't use stale closure
   const settingsRef = React.useRef(settings)
   settingsRef.current = settings
 
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
-    setStatus(isError ? 'error' : 'success')
+    setToastError(isError)
     setTimeout(() => {
-      setStatus('idle')
       setToastMsg('')
+      setToastError(false)
     }, 4000)
   }
 
-  const isFallback = settings.obsUrl === 'http-fallback'
-
-  const handleSendToStream = async () => {
+  const handleSendToStream = async (overrideSettings?: OBSSettings) => {
     if (!videoId) return
 
-    // Read from ref for latest settings (avoids stale closure)
-    const s = settingsRef.current
+    const s = overrideSettings ?? settingsRef.current
 
     // If not configured at all (no websocket URL saved), show setup
     if (!s.obsUrl || s.obsUrl === '') {
@@ -43,22 +44,25 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
       return
     }
 
-    setStatus('sending')
+    setStreamState('sending')
 
     // User explicitly chose HTTP fallback — skip WebSocket
     if (s.obsUrl === 'http-fallback') {
       const port = await TauriService.startChatServer(videoId, injectedCSS)
       if (port) {
         setHttpPort(port)
-        showToast(`Started HTTP fallback on port ${port}`)
+        setHttpDismissed(false)
+        setStreamState('http')
+        showToast(`HTTP server started on port ${port}`)
         trackEventAsync('stream_sent_http', { port })
       } else {
+        setStreamState('idle')
         showToast('Failed to start HTTP server', true)
       }
       return
     }
 
-    // 1. If user provided a URL, try WebSocket
+    // 1. Try WebSocket
     if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
       const result = await TauriService.sendBrowserSource({
         obsUrl: s.obsUrl,
@@ -70,16 +74,17 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
       })
 
       if (result === 'created') {
+        setStreamState('websocket')
         showToast('Source added to OBS/PRISM!')
         trackEventAsync('stream_sent_websocket', { mode: 'create' })
         return
       } else if (result === 'updated') {
+        setStreamState('websocket')
         showToast('Source CSS updated in OBS/PRISM!')
         trackEventAsync('stream_sent_websocket', { mode: 'update' })
         return
       }
 
-      // If WebSocket fails but was configured, we warn them but still try HTTP
       console.warn('[StreamSender] WebSocket failed, falling back to HTTP')
     }
 
@@ -87,20 +92,113 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     const port = await TauriService.startChatServer(videoId, injectedCSS)
     if (port) {
       setHttpPort(port)
-      showToast(`Started HTTP fallback on port ${port}`)
+      setHttpDismissed(false)
+      setStreamState('http')
+      showToast(`HTTP fallback started on port ${port}`)
       trackEventAsync('stream_sent_http', { port })
     } else {
+      setStreamState('idle')
       showToast('Failed to connect to streaming app', true)
     }
   }
+
+  const handleStopStream = async () => {
+    const s = settingsRef.current
+
+    if (streamState === 'websocket') {
+      // Remove OBS source
+      const ok = await TauriService.removeBrowserSource(
+        s.obsUrl || '',
+        s.obsPassword,
+        s.sourceName || 'Livicat Chat'
+      )
+      if (ok) {
+        setStreamState('idle')
+        showToast('Source removed from OBS/PRISM')
+        trackEventAsync('stream_stopped', { mode: 'websocket' })
+      } else {
+        // Even if removing fails (source already gone), reset state
+        setStreamState('idle')
+        showToast('Source removed (or already gone)')
+      }
+    } else if (streamState === 'http') {
+      const ok = await TauriService.stopChatServer()
+      if (ok) {
+        setHttpPort(null)
+        setHttpDismissed(false)
+        setStreamState('idle')
+        showToast('HTTP server stopped')
+        trackEventAsync('stream_stopped', { mode: 'http' })
+      } else {
+        setHttpPort(null)
+        setHttpDismissed(false)
+        setStreamState('idle')
+        showToast('HTTP server stopped (or already stopped)')
+      }
+    }
+  }
+
+  // ── Button rendering ─────────────────────────────────────────
+
+  const buttonDisabled =
+    !videoId ||
+    streamState === 'sending' ||
+    (streamState === 'idle' && !isConfigured())
+
+  const getButtonContent = () => {
+    if (streamState === 'sending') {
+      return (
+        <>
+          <span className="w-4 h-4 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />
+          Sending
+        </>
+      )
+    }
+    if (streamState === 'websocket' || streamState === 'http') {
+      return (
+        <>
+          <span className="material-symbols-outlined text-[18px]">close</span>
+          {streamState === 'websocket' ? 'Stop Stream' : 'Stop Server'}
+        </>
+      )
+    }
+    // idle
+    return (
+      <>
+        <span className="material-symbols-outlined text-[18px]">
+          {isConfigured() ? 'broadcast_on_personal' : 'add_circle'}
+        </span>
+        {isConfigured() ? 'Stream' : 'Configure OBS'}
+      </>
+    )
+  }
+
+  const handleButtonClick = () => {
+    if (!videoId) return
+    if (streamState === 'websocket' || streamState === 'http') {
+      handleStopStream()
+    } else if (streamState === 'idle') {
+      handleSendToStream()
+    }
+  }
+
+  const getTitle = () => {
+    if (!videoId) return 'Load a video first'
+    if (streamState === 'websocket') return 'Remove browser source from OBS/PRISM'
+    if (streamState === 'http') return 'Stop HTTP server'
+    if (isConfigured()) return 'Send chat to OBS/PRISM as a browser source'
+    return 'Configure OBS WebSocket connection'
+  }
+
+  // ── Setup modal ──────────────────────────────────────────────
 
   if (showSetup) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center backdrop-blur-sm">
         <OBSConnectionPanel
-          onConnected={() => {
+          onConnected={(newSettings) => {
             setShowSetup(false)
-            handleSendToStream()
+            handleSendToStream(newSettings)
           }}
           onCancel={() => setShowSetup(false)}
         />
@@ -108,53 +206,45 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     )
   }
 
+  // ── Render ───────────────────────────────────────────────────
+
+  const showGear = isConfigured() || streamState === 'http' || streamState === 'websocket'
+
   return (
     <>
-      <button
-        onClick={() => {
-          const s = settingsRef.current
-          if (!s.obsUrl || s.obsUrl === '' || s.obsUrl === 'http-fallback')
-            setShowSetup(true)
-          else handleSendToStream()
-        }}
-        disabled={!videoId || status === 'sending'}
-        className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-on-accent px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        title={
-          videoId
-            ? isConfigured()
-              ? 'Send to Stream'
-              : 'Configure OBS WebSocket'
-            : 'Load a video first'
-        }
-      >
-        {status === 'sending' ? (
-          <span className="w-4 h-4 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <span className="material-symbols-outlined text-[18px]">
-            {isConfigured() ? 'broadcast_on_personal' : 'cast'}
-          </span>
-        )}
-        Stream
-      </button>
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Single contextual button */}
+        <button
+          onClick={handleButtonClick}
+          disabled={buttonDisabled}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+            streamState === 'websocket' || streamState === 'http'
+              ? 'bg-error hover:bg-error/80 text-on-error'
+              : 'bg-accent hover:bg-accent-hover text-on-accent'
+          }`}
+          title={getTitle()}
+        >
+          {getButtonContent()}
+        </button>
 
-      {/* Connection Quick-Edit link */}
-      <button
-        onClick={() => setShowSetup(true)}
-        className="text-[10px] text-on-surface-variant hover:text-on-surface underline mr-2"
-      >
-        {isConfigured()
-          ? 'Configure OBS'
-          : isFallback
-            ? 'Configure OBS WebSocket'
-            : 'Configure Stream'}
-      </button>
+        {/* Gear icon for quick scene reconfiguration */}
+        {showGear && (
+          <button
+            onClick={() => setShowSetup(true)}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0"
+            title="Reconfigure OBS scene and connection"
+          >
+            <span className="material-symbols-outlined text-[16px]">settings</span>
+          </button>
+        )}
+      </div>
 
       {/* Feedback Toast - fixed top-right */}
-      {status !== 'idle' && status !== 'sending' && (
+      {toastMsg && (
         <div className="fixed top-20 right-6 z-[9998]">
           <div
             className={`px-4 py-3 rounded-xl shadow-2xl border text-label-sm font-medium animate-in fade-in slide-in-from-top-2 ${
-              status === 'error'
+              toastError
                 ? 'bg-error/20 border-error/30 text-error'
                 : 'bg-success/20 border-success/30 text-success'
             }`}
@@ -164,38 +254,31 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
         </div>
       )}
 
-      {/* HTTP Fallback Panel - fixed top-right */}
-      {httpPort && status !== 'error' && !isConfigured() && (
-        <div className="fixed top-24 right-6 z-[9998] w-[320px] p-4 bg-surface/95 backdrop-blur-xl border border-outline rounded-xl shadow-2xl animate-in fade-in slide-in-from-top-4">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px] text-primary">dns</span>
-              Manual OBS Source
-            </h4>
-            <button
-              onClick={() => setHttpPort(null)}
-              className="text-on-surface-variant hover:text-on-surface"
-            >
-              <span className="material-symbols-outlined text-[16px]">close</span>
-            </button>
-          </div>
-          <p className="text-body-sm text-on-surface-variant mb-3 leading-snug">
-            Add a new Browser Source in your streaming app and paste this exact URL:
-          </p>
-          <div className="flex items-center gap-2 bg-surface p-2 rounded-lg border border-outline">
-            <code className="text-[11px] font-mono text-primary flex-1 overflow-x-auto whitespace-nowrap">
-              http://localhost:{httpPort}
-            </code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`http://localhost:${httpPort}`)
-                showToast('URL Copied!')
-              }}
-              className="w-6 h-6 flex items-center justify-center bg-surface-variant rounded text-on-surface hover:text-primary transition-colors"
-            >
-              <span className="material-symbols-outlined text-[14px]">content_copy</span>
-            </button>
-          </div>
+      {/* HTTP Fallback badge — compact inline chip */}
+      {httpPort && streamState === 'http' && !httpDismissed && (
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-surface/90 border border-outline rounded-lg shadow animate-in fade-in slide-in-from-top-1 shrink-0">
+          <span className="material-symbols-outlined text-[12px] text-primary shrink-0">dns</span>
+          <code className="text-[10px] font-mono text-on-surface truncate max-w-[130px]">
+            http://localhost:{httpPort}
+          </code>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(`http://localhost:${httpPort}`)
+              showToast('URL Copied!')
+            }}
+            className="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-primary rounded shrink-0"
+            title="Copy URL"
+          >
+            <span className="material-symbols-outlined text-[12px]">content_copy</span>
+          </button>
+          <span className="w-px h-3 bg-outline-variant/50" />
+          <button
+            onClick={() => setHttpDismissed(true)}
+            className="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-on-surface rounded shrink-0"
+            title="Dismiss"
+          >
+            <span className="material-symbols-outlined text-[12px]">close</span>
+          </button>
         </div>
       )}
     </>

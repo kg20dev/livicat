@@ -3,7 +3,7 @@ use futures_util::SinkExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::net::TcpStream;
 use tokio::time::timeout;
 use tokio_tungstenite::connect_async;
@@ -23,6 +23,7 @@ pub struct StreamingAppInfo {
 
 // Global flag so the HTTP server only starts once
 static CHAT_SERVER_RUNNING: AtomicBool = AtomicBool::new(false);
+static CHAT_SERVER_HANDLE: Mutex<Option<tokio::task::JoinHandle<()>>> = Mutex::new(None);
 
 /* ─── Protocol Detection ───────────────────────────────────────── */
 
@@ -767,6 +768,72 @@ async fn handle_send_v4(
     }
 }
 
+/* ─── Remove Source ────────────────────────────────────────────── */
+
+/// Remove the Livicat browser source from OBS via WebSocket (v5).
+async fn remove_source_v5(
+    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    source_name: &str,
+) -> Result<(), String> {
+    send_v5_request(ws, "RemoveInput", serde_json::json!({
+        "inputName": source_name,
+    }), "remove-livicat").await?;
+    Ok(())
+}
+
+/// Remove the Livicat browser source from OBS via WebSocket (v4).
+async fn remove_source_v4(
+    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    source_name: &str,
+) -> Result<(), String> {
+    // Get current scene to find item ID
+    let scene_resp = send_v4_request(ws, "GetCurrentScene", serde_json::json!({})).await?;
+    let scene_name = scene_resp["name"].as_str().ok_or("No current scene")?;
+    let sources = scene_resp.get("sources").and_then(|v| v.as_array()).ok_or("No sources found")?;
+
+    let item = sources.iter().find(|s| s["name"] == source_name)
+        .ok_or_else(|| format!("Source '{}' not found in current scene", source_name))?;
+    let item_id = item["id"].as_i64().unwrap_or(0);
+
+    send_v4_request(ws, "RemoveSceneItem", serde_json::json!({
+        "scene": scene_name,
+        "item": { "name": source_name, "id": item_id },
+    })).await?;
+    Ok(())
+}
+
+/// Remove the Livicat browser source from OBS / PRISM via WebSocket.
+/// Auto-detects v4 vs v5 protocol.
+#[tauri::command]
+pub async fn obs_remove_browser_source(
+    obs_url: String,
+    obs_password: Option<String>,
+    source_name: Option<String>,
+) -> Result<(), String> {
+    let source_name = source_name.unwrap_or_else(|| LIVICAT_CHAT_SOURCE.to_string());
+
+    let (ws, proto) = detect_protocol(&obs_url).await?;
+
+    match proto {
+        ObsProtocol::V5 => {
+            let (mut ws, _) = connect_async(&obs_url)
+                .await
+                .map_err(|e| format!("Connect failed: {}", e))?;
+            let hello = read_v5_op(&mut ws, &[0, 5])
+                .await
+                .map_err(|e| format!("Greeting failed: {}", e))?;
+            let mut ws = connect_auth_v5(&obs_url, obs_password, ws, hello).await?;
+            remove_source_v5(&mut ws, &source_name).await?;
+        }
+        ObsProtocol::V4 => {
+            let mut ws = connect_auth_v4(&obs_url, obs_password, ws).await?;
+            remove_source_v4(&mut ws, &source_name).await?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Start a local HTTP server (`http://127.0.0.1:7842`) that serves the
 /// styled YouTube live chat as a plain HTML page with an `<iframe>`.
 #[tauri::command]
@@ -812,12 +879,29 @@ pub async fn start_chat_server(video_id: String, css: String) -> Result<u16, Str
 
     CHAT_SERVER_RUNNING.store(true, Ordering::SeqCst);
 
-    tokio::spawn(async move {
+    let handle = tokio::spawn(async move {
         axum::serve(listener, app).await.ok();
         CHAT_SERVER_RUNNING.store(false, Ordering::SeqCst);
     });
 
+    if let Ok(mut guard) = CHAT_SERVER_HANDLE.lock() {
+        *guard = Some(handle);
+    }
+
     Ok(port)
+}
+
+/// Stop the HTTP chat server gracefully.
+#[tauri::command]
+pub async fn stop_chat_server() -> Result<(), String> {
+    if let Ok(mut guard) = CHAT_SERVER_HANDLE.lock() {
+        if let Some(handle) = guard.take() {
+            handle.abort();
+            CHAT_SERVER_RUNNING.store(false, Ordering::SeqCst);
+            return Ok(());
+        }
+    }
+    Err("Chat server is not running".to_string())
 }
 
 /* ─── Misc ─────────────────────────────────────────────────────── */

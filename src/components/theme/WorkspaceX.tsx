@@ -1145,7 +1145,7 @@ function WorkspaceBody({
             >
               {previewMode === 'live' && (
                 <div
-                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full' : 'gap-2'}`}
+                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full flex-wrap' : 'gap-2'}`}
                 >
                   <input
                     type="text"

@@ -168,4 +168,34 @@ export const TauriService = {
       return null
     }
   },
+
+  /** Remove the Livicat browser source from OBS via WebSocket */
+  async removeBrowserSource(obsUrl: string, obsPassword?: string, sourceName?: string): Promise<boolean> {
+    const invoke = await getInvoke()
+    if (!invoke) return false
+    try {
+      await invoke('obs_remove_browser_source', {
+        obsUrl,
+        obsPassword: obsPassword ?? null,
+        sourceName: sourceName ?? null,
+      })
+      return true
+    } catch (e) {
+      console.error('[TauriService] removeBrowserSource failed:', e)
+      return false
+    }
+  },
+
+  /** Stop the HTTP fallback chat server */
+  async stopChatServer(): Promise<boolean> {
+    const invoke = await getInvoke()
+    if (!invoke) return false
+    try {
+      await invoke('stop_chat_server')
+      return true
+    } catch (e) {
+      console.error('[TauriService] stopChatServer failed:', e)
+      return false
+    }
+  },
 }
