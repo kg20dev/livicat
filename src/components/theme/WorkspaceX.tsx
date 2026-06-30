@@ -27,6 +27,7 @@ import { useResponsive } from '../../hooks/useResponsive'
 import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
+import { StreamSender } from '../ui/StreamSender'
 
 /* ─── Platform Detection ──────────────────────────────────────── */
 const isMac =
@@ -784,6 +785,9 @@ function WorkspaceBody({
       : [inlineCss, unscopedCss].join('\n\n')
   }, [settings, scheme, theme.css, theme.reset, manifest.id])
 
+  /* ─── Stable CSS for StreamSender ──────────────────────────────── */
+  const ytCss = useMemo(() => buildYoutubeCss(), [buildYoutubeCss])
+
   /* ─── YouTube preview ────────────────────────────────────────── */
 
   const validation = useMemo(() => validateYouTubeUrl(youtubeUrl), [youtubeUrl])
@@ -1169,6 +1173,9 @@ function WorkspaceBody({
                       <span className="material-symbols-outlined text-[12px]">close</span>
                     )}
                   </button>
+
+                  {/* Send to Stream */}
+                  <StreamSender videoId={videoId} injectedCSS={ytCss} />
                 </div>
               )}
 
