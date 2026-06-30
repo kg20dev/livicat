@@ -120,8 +120,10 @@ export const TauriService = {
         obsPassword: obsPassword ?? null,
       })
     } catch (e) {
-      console.error('[TauriService] getScenes failed:', e)
-      return null
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('[TauriService] getScenes failed:', msg)
+      // Throw with the full Rust error message so the UI can display it
+      throw new Error(msg)
     }
   },
 

@@ -30,23 +30,29 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
 
     // Connect directly with the user's URL — no hardcoded port probing
     setStatus('fetching_scenes')
-    const sceneList = await TauriService.getScenes(url, password || undefined)
+    try {
+      const sceneList = await TauriService.getScenes(url, password || undefined)
 
-    if (sceneList && sceneList.length > 0) {
-      setScenes(sceneList)
-      // Default to first scene
-      if (!selectedScene) {
-        setSelectedScene(sceneList[0])
+      if (sceneList && sceneList.length > 0) {
+        setScenes(sceneList)
+        // Default to first scene
+        if (!selectedScene) {
+          setSelectedScene(sceneList[0])
+        }
+        setStatus('success')
+      } else if (sceneList && sceneList.length === 0) {
+        // Connected but no scenes — still a success
+        setStatus('success')
+      } else {
+        setStatus('error')
+        setErrorMsg(
+          'Connected but no scene data returned. Check OBS WebSocket settings.'
+        )
+        return
       }
-      setStatus('success')
-    } else if (sceneList && sceneList.length === 0) {
-      // Connected but no scenes — still a success
-      setStatus('success')
-    } else {
+    } catch (err) {
       setStatus('error')
-      setErrorMsg(
-        'Could not connect to OBS WebSocket. Make sure OBS is running and "Enable WebSocket" is checked in Tools → WebSocket Server Settings.'
-      )
+      setErrorMsg(err instanceof Error ? err.message : String(err))
       return
     }
 
