@@ -95,7 +95,9 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
         }}
         disabled={!videoId || status === 'sending'}
         className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-on-accent px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        title={videoId ? (isConfigured() ? 'Send to Stream' : 'Configure Stream') : 'Load a video first'}
+        title={
+          videoId ? (isConfigured() ? 'Send to Stream' : 'Configure Stream') : 'Load a video first'
+        }
       >
         {status === 'sending' ? (
           <span className="w-4 h-4 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />

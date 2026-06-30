@@ -15,7 +15,9 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
   const [sourceName, setSourceName] = useState(settings.sourceName || 'Livicat Chat')
   const [selectedScene, setSelectedScene] = useState(settings.defaultScene || '')
 
-  const [status, setStatus] = useState<'idle' | 'probing' | 'fetching_scenes' | 'success' | 'error'>('idle')
+  const [status, setStatus] = useState<
+    'idle' | 'probing' | 'fetching_scenes' | 'success' | 'error'
+  >('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [scenes, setScenes] = useState<string[]>([])
 
@@ -154,7 +156,9 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
             <button
               type="button"
               onClick={onCancel}
-              disabled={status === 'probing' || status === 'fetching_scenes' || status === 'success'}
+              disabled={
+                status === 'probing' || status === 'fetching_scenes' || status === 'success'
+              }
               className="flex-1 h-10 rounded-lg text-label-md font-bold text-on-surface-variant hover:text-on-surface transition-colors disabled:opacity-50"
             >
               Cancel
@@ -172,7 +176,12 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
 
           <button
             type="submit"
-            disabled={status === 'probing' || status === 'fetching_scenes' || status === 'success' || !isFormValid}
+            disabled={
+              status === 'probing' ||
+              status === 'fetching_scenes' ||
+              status === 'success' ||
+              !isFormValid
+            }
             className="flex-[1.5] h-10 rounded-lg bg-primary text-on-primary text-label-md font-bold hover:bg-primary-hover active:bg-primary-active transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {status === 'probing' || status === 'fetching_scenes' ? (
