@@ -28,41 +28,47 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
     setStatus('probing')
     setErrorMsg('')
 
-    // Attempt detection via Tauri service
-    const res = await TauriService.detectStreamingApp()
+    // Connect directly with the user's URL — no hardcoded port probing
+    setStatus('fetching_scenes')
+    const sceneList = await TauriService.getScenes(url, password || undefined)
 
-    if (res && res.detected === 'obs_compatible') {
-      // Connection successful, now fetch scenes
-      setStatus('fetching_scenes')
-      const sceneList = await TauriService.getScenes(url, password || undefined)
-      if (sceneList && sceneList.length > 0) {
-        setScenes(sceneList)
-        // Default to current scene if not already selected
-        if (!selectedScene && sceneList.length > 0) {
-          setSelectedScene(sceneList[0])
-        }
-        setStatus('success')
-      } else {
-        setStatus('success') // Still success, just no scenes fetched
+    if (sceneList && sceneList.length > 0) {
+      setScenes(sceneList)
+      // Default to first scene
+      if (!selectedScene) {
+        setSelectedScene(sceneList[0])
       }
-      await saveSettings({
-        obsUrl: url,
-        obsPassword: password,
-        sourceName,
-        defaultScene: selectedScene,
-      })
-      setTimeout(() => {
-        onConnected?.()
-      }, 1000)
+      setStatus('success')
+    } else if (sceneList && sceneList.length === 0) {
+      // Connected but no scenes — still a success
+      setStatus('success')
     } else {
       setStatus('error')
-      setErrorMsg('Could not detect OBS WebSocket. Is OBS running and WebSocket enabled?')
+      setErrorMsg(
+        'Could not connect to OBS WebSocket. Make sure OBS is running and "Enable WebSocket" is checked in Tools → WebSocket Server Settings.'
+      )
+      return
     }
+
+    await saveSettings({
+      obsUrl: url,
+      obsPassword: password,
+      sourceName,
+      defaultScene: selectedScene,
+    })
+    setTimeout(() => {
+      onConnected?.()
+    }, 1000)
   }
 
   const handleSkip = async () => {
-    // Save empty connection to force fallback mode
-    await saveSettings({ obsUrl: '' })
+    // Use a non-empty marker so StreamSender knows we want HTTP fallback
+    await saveSettings({
+      obsUrl: 'http-fallback',
+      obsPassword: password,
+      sourceName,
+      defaultScene: selectedScene,
+    })
     onConnected?.()
   }
 

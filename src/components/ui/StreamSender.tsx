@@ -16,6 +16,10 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   const [toastMsg, setToastMsg] = React.useState('')
   const [httpPort, setHttpPort] = React.useState<number | null>(null)
 
+  // Keep a ref to the latest settings so handleSendToStream doesn't use stale closure
+  const settingsRef = React.useRef(settings)
+  settingsRef.current = settings
+
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
     setStatus(isError ? 'error' : 'success')
@@ -25,26 +29,44 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     }, 4000)
   }
 
+  const isFallback = settings.obsUrl === 'http-fallback'
+
   const handleSendToStream = async () => {
     if (!videoId) return
 
+    // Read from ref for latest settings (avoids stale closure)
+    const s = settingsRef.current
+
     // If not configured at all (no websocket URL saved), show setup
-    if (!settings.obsUrl || settings.obsUrl === '') {
+    if (!s.obsUrl || s.obsUrl === '') {
       setShowSetup(true)
       return
     }
 
     setStatus('sending')
 
+    // User explicitly chose HTTP fallback — skip WebSocket
+    if (s.obsUrl === 'http-fallback') {
+      const port = await TauriService.startChatServer(videoId, injectedCSS)
+      if (port) {
+        setHttpPort(port)
+        showToast(`Started HTTP fallback on port ${port}`)
+        trackEventAsync('stream_sent_http', { port })
+      } else {
+        showToast('Failed to start HTTP server', true)
+      }
+      return
+    }
+
     // 1. If user provided a URL, try WebSocket
-    if (isConfigured()) {
+    if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
       const result = await TauriService.sendBrowserSource({
-        obsUrl: settings.obsUrl!,
-        obsPassword: settings.obsPassword,
+        obsUrl: s.obsUrl,
+        obsPassword: s.obsPassword,
         videoId,
         css: injectedCSS,
-        sourceName: settings.sourceName || 'Livicat Chat',
-        sceneName: settings.defaultScene || undefined,
+        sourceName: s.sourceName || 'Livicat Chat',
+        sceneName: s.defaultScene || undefined,
       })
 
       if (result === 'created') {
@@ -90,13 +112,19 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     <>
       <button
         onClick={() => {
-          if (!settings.obsUrl || settings.obsUrl === '') setShowSetup(true)
+          const s = settingsRef.current
+          if (!s.obsUrl || s.obsUrl === '' || s.obsUrl === 'http-fallback')
+            setShowSetup(true)
           else handleSendToStream()
         }}
         disabled={!videoId || status === 'sending'}
         className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-on-accent px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         title={
-          videoId ? (isConfigured() ? 'Send to Stream' : 'Configure Stream') : 'Load a video first'
+          videoId
+            ? isConfigured()
+              ? 'Send to Stream'
+              : 'Configure OBS WebSocket'
+            : 'Load a video first'
         }
       >
         {status === 'sending' ? (
@@ -107,6 +135,18 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
           </span>
         )}
         Stream
+      </button>
+
+      {/* Connection Quick-Edit link */}
+      <button
+        onClick={() => setShowSetup(true)}
+        className="text-[10px] text-on-surface-variant hover:text-on-surface underline mr-2"
+      >
+        {isConfigured()
+          ? 'Configure OBS'
+          : isFallback
+            ? 'Configure OBS WebSocket'
+            : 'Configure Stream'}
       </button>
 
       {/* Feedback Toast - fixed top-right */}
