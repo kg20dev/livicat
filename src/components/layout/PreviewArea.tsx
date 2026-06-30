@@ -5,6 +5,7 @@ import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { useElectronPreview } from '../../hooks/useElectronPreview'
 import type { YouTubeVideoInfo } from '../../utils/youtubeMetadata'
 import { trackEventAsync } from '../../utils/analytics'
+import { StreamSender } from '../ui/StreamSender'
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -293,7 +294,10 @@ PreviewArea.Actions = function PreviewAreaActions() {
   }, [previewOpen, videoId, injectedCSS, openPreview, closePreview])
 
   return (
-    <div className="absolute bottom-6 right-6 flex items-center gap-2">
+    <div className="absolute bottom-6 right-6 flex items-center gap-3">
+      {/* Send to Stream flow */}
+      <StreamSender videoId={videoId} injectedCSS={injectedCSS} />
+
       {mode === 'live' && fetchStatus === 'success' && (
         <>
           {isTauri && (
@@ -304,7 +308,7 @@ PreviewArea.Actions = function PreviewAreaActions() {
               <span className="material-symbols-outlined text-[18px]">
                 {previewOpen ? 'close' : 'visibility'}
               </span>
-              {previewOpen ? 'Close' : 'Live Chat'}
+              {previewOpen ? 'Close Preview' : 'Live Preview'}
             </button>
           )}
         </>

@@ -38,6 +38,8 @@ tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
 futures-util = "0.3"
 axum = "0.7"
 tower = "0.4"
+tauri-plugin-store = "2"
+
 # Pin time to <0.3.48 to avoid conflicting trait impl with tauri-utils 2.9.2
 # time 0.3.48 added From<HourBase> that conflicts with blanket impls in tauri-utils
 time = ">=0.3.37, <0.3.48"
