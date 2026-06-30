@@ -18,33 +18,36 @@ export function useCSSHotReload(videoId: string | null, injectedCSS: string) {
   const lastSentRef = useRef<string>('')
   const unmountedRef = useRef(false)
 
-  const sendUpdate = useCallback(async (css: string) => {
-    if (!videoId || unmountedRef.current) return
-    if (!isConfigured()) return
-    if (!settings.obsUrl) return
+  const sendUpdate = useCallback(
+    async (css: string) => {
+      if (!videoId || unmountedRef.current) return
+      if (!isConfigured()) return
+      if (!settings.obsUrl) return
 
-    // Skip if CSS hasn't actually changed
-    if (css === lastSentRef.current) return
+      // Skip if CSS hasn't actually changed
+      if (css === lastSentRef.current) return
 
-    lastSentRef.current = css
+      lastSentRef.current = css
 
-    try {
-      const result = await TauriService.sendBrowserSource({
-        obsUrl: settings.obsUrl,
-        obsPassword: settings.obsPassword,
-        videoId,
-        css,
-        sourceName: settings.sourceName || 'Livicat Chat',
-      })
+      try {
+        const result = await TauriService.sendBrowserSource({
+          obsUrl: settings.obsUrl,
+          obsPassword: settings.obsPassword,
+          videoId,
+          css,
+          sourceName: settings.sourceName || 'Livicat Chat',
+        })
 
-      if (result === 'updated') {
-        trackEventAsync('stream_css_hot_reload', { mode: 'websocket' })
-        console.log('[CSSHotReload] Updated CSS in OBS')
+        if (result === 'updated') {
+          trackEventAsync('stream_css_hot_reload', { mode: 'websocket' })
+          console.log('[CSSHotReload] Updated CSS in OBS')
+        }
+      } catch (err) {
+        console.error('[CSSHotReload] Failed to update CSS:', err)
       }
-    } catch (err) {
-      console.error('[CSSHotReload] Failed to update CSS:', err)
-    }
-  }, [videoId, settings, isConfigured])
+    },
+    [videoId, settings, isConfigured]
+  )
 
   useEffect(() => {
     unmountedRef.current = false

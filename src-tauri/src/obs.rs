@@ -1,4 +1,4 @@
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 use futures_util::SinkExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -82,9 +82,7 @@ pub async fn obs_send_browser_source(
     if let Some(ref pw) = obs_password {
         if !pw.is_empty() {
             if let Some(auth) = hello_json["d"]["authentication"].as_object() {
-                let challenge = auth["challenge"]
-                    .as_str()
-                    .ok_or("Missing auth challenge")?;
+                let challenge = auth["challenge"].as_str().ok_or("Missing auth challenge")?;
                 let salt = auth["salt"].as_str().ok_or("Missing auth salt")?;
                 identify["d"]["authentication"] =
                     serde_json::json!(compute_obs_auth(pw, challenge, salt)?);
@@ -267,7 +265,7 @@ fn compute_obs_auth(password: &str, challenge: &str, salt: &str) -> Result<Strin
 /// allowed set.  Silently skips events (op: 5) and other noise.
 async fn read_message_skip(
     stream: &mut (impl futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>
-                  + Unpin),
+              + Unpin),
     allowed_ops: &[u64],
 ) -> Option<Result<String, String>> {
     while let Some(msg) = stream.next().await {
@@ -296,12 +294,15 @@ async fn read_message_skip(
 /// Send a request and wait for the matching response (op: 7) by `requestId`.
 async fn read_request_response(
     stream: &mut (impl futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>
-                  + Unpin),
+              + Unpin),
     request_id: &str,
 ) -> Result<serde_json::Value, String> {
     while let Some(msg) = stream.next().await {
         let text = msg.map_err(|e| format!("WS error: {}", e))?;
-        let text = text.to_text().map_err(|e| format!("Not text: {}", e))?.to_string();
+        let text = text
+            .to_text()
+            .map_err(|e| format!("Not text: {}", e))?
+            .to_string();
 
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
             let op = val["op"].as_i64().unwrap_or(-1);

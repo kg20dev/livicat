@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 
 export interface OBSSettings {
-  obsUrl?: string           // e.g. ws://localhost:4455
+  obsUrl?: string // e.g. ws://localhost:4455
   obsPassword?: string
-  sourceName?: string       // default "Livicat Chat"
+  sourceName?: string // default "Livicat Chat"
   defaultScene?: string
 }
 

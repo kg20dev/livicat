@@ -3,8 +3,8 @@ use tauri::{AppHandle, Manager};
 use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_aptabase::EventTracker;
 
-mod sentry;
 mod obs;
+mod sentry;
 use ::sentry::Level as SentryLevel;
 
 #[cfg(target_os = "windows")]
@@ -426,7 +426,9 @@ fn inject_css_to_window(
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection + show-more auto-click + watermark + punct observer executed");
+    println!(
+        "[Livicat] CSS injection + show-more auto-click + watermark + punct observer executed"
+    );
     Ok(())
 }
 

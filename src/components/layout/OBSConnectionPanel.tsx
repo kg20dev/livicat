@@ -9,11 +9,11 @@ interface OBSConnectionPanelProps {
 
 export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanelProps) {
   const { settings, saveSettings } = useOBSSettings()
-  
+
   const [url, setUrl] = useState(settings.obsUrl || 'ws://localhost:4455')
   const [password, setPassword] = useState(settings.obsPassword || '')
   const [sourceName, setSourceName] = useState(settings.sourceName || 'Livicat Chat')
-  
+
   const [status, setStatus] = useState<'idle' | 'probing' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -21,10 +21,10 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
     e.preventDefault()
     setStatus('probing')
     setErrorMsg('')
-    
+
     // Attempt detection via Tauri service
     const res = await TauriService.detectStreamingApp()
-    
+
     if (res && res.detected === 'obs_compatible') {
       setStatus('success')
       await saveSettings({
@@ -56,7 +56,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
           <p className="text-label-sm text-on-surface-variant">Connect OBS or PRISM</p>
         </div>
       </div>
-      
+
       <form onSubmit={handleConnect} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-label-sm font-bold text-on-surface">WebSocket URL</label>
@@ -68,10 +68,11 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
             className="w-full h-10 px-3 bg-surface border border-outline rounded-lg text-body-sm text-on-surface outline-none focus:border-primary transition-colors"
           />
         </div>
-        
+
         <div className="flex flex-col gap-1.5">
           <label className="text-label-sm font-bold text-on-surface">
-            Password <span className="font-normal text-on-surface-variant opacity-70">(Optional)</span>
+            Password{' '}
+            <span className="font-normal text-on-surface-variant opacity-70">(Optional)</span>
           </label>
           <input
             type="password"
@@ -81,7 +82,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
             className="w-full h-10 px-3 bg-surface border border-outline rounded-lg text-body-sm text-on-surface outline-none focus:border-primary transition-colors"
           />
         </div>
-        
+
         <div className="flex flex-col gap-1.5">
           <label className="text-label-sm font-bold text-on-surface">Browser Source Name</label>
           <input
@@ -95,21 +96,21 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
             Idempotent name. The source will be updated, not duplicated.
           </p>
         </div>
-        
+
         {status === 'error' && (
           <div className="flex items-start gap-2 p-3 bg-error/10 text-error rounded-lg border border-error/20 mt-2">
             <span className="material-symbols-outlined text-[16px]">error</span>
             <span className="text-label-sm leading-tight">{errorMsg}</span>
           </div>
         )}
-        
+
         {status === 'success' && (
           <div className="flex items-center gap-2 p-3 bg-success/10 text-success rounded-lg border border-success/20 mt-2">
             <span className="material-symbols-outlined text-[16px]">check_circle</span>
             <span className="text-label-sm font-bold">Connected successfully!</span>
           </div>
         )}
-        
+
         <div className="flex items-center gap-3 mt-4">
           {onCancel && (
             <button
@@ -121,7 +122,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
               Cancel
             </button>
           )}
-          
+
           <button
             type="button"
             onClick={handleSkip}
@@ -130,7 +131,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
           >
             Skip & use Fallback
           </button>
-          
+
           <button
             type="submit"
             disabled={status === 'probing' || status === 'success' || !url}

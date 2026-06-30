@@ -27,7 +27,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
 
   const handleSendToStream = async () => {
     if (!videoId) return
-    
+
     // If not configured at all (URL is totally empty), show setup
     if (!settings.obsUrl && settings.obsUrl !== '') {
       setShowSetup(true)
@@ -35,7 +35,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     }
 
     setStatus('sending')
-    
+
     // 1. If user provided a URL, try WebSocket
     if (isConfigured()) {
       const result = await TauriService.sendBrowserSource({
@@ -43,9 +43,9 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
         obsPassword: settings.obsPassword,
         videoId,
         css: injectedCSS,
-        sourceName: settings.sourceName || 'Livicat Chat'
+        sourceName: settings.sourceName || 'Livicat Chat',
       })
-      
+
       if (result === 'created') {
         showToast('Source added to OBS/PRISM!')
         trackEventAsync('stream_sent_websocket', { mode: 'create' })
@@ -55,7 +55,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
         trackEventAsync('stream_sent_websocket', { mode: 'update' })
         return
       }
-      
+
       // If WebSocket fails but was configured, we warn them but still try HTTP
       console.warn('[StreamSender] WebSocket failed, falling back to HTTP')
     }
@@ -74,12 +74,12 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   if (showSetup) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center backdrop-blur-sm">
-        <OBSConnectionPanel 
+        <OBSConnectionPanel
           onConnected={() => {
             setShowSetup(false)
             handleSendToStream()
-          }} 
-          onCancel={() => setShowSetup(false)} 
+          }}
+          onCancel={() => setShowSetup(false)}
         />
       </div>
     )
@@ -106,7 +106,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
       </button>
 
       {/* Connection Quick-Edit link */}
-      <button 
+      <button
         onClick={() => setShowSetup(true)}
         className="text-[10px] text-on-surface-variant hover:text-on-surface underline mr-2"
       >
@@ -115,11 +115,13 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
 
       {/* Feedback Toast */}
       {status !== 'idle' && status !== 'sending' && (
-        <div className={`absolute bottom-[100%] right-0 mb-3 px-3 py-2 rounded-lg shadow-xl border text-label-sm whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 ${
-          status === 'error' 
-            ? 'bg-error/20 border-error/30 text-error-container' 
-            : 'bg-success/20 border-success/30 text-success'
-        }`}>
+        <div
+          className={`absolute bottom-[100%] right-0 mb-3 px-3 py-2 rounded-lg shadow-xl border text-label-sm whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 ${
+            status === 'error'
+              ? 'bg-error/20 border-error/30 text-error-container'
+              : 'bg-success/20 border-success/30 text-success'
+          }`}
+        >
           {toastMsg}
         </div>
       )}
@@ -132,7 +134,10 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
               <span className="material-symbols-outlined text-[16px] text-primary">dns</span>
               Manual OBS Source
             </h4>
-            <button onClick={() => setHttpPort(null)} className="text-on-surface-variant hover:text-on-surface">
+            <button
+              onClick={() => setHttpPort(null)}
+              className="text-on-surface-variant hover:text-on-surface"
+            >
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
           </div>
@@ -143,7 +148,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
             <code className="text-[11px] font-mono text-primary flex-1 overflow-x-auto whitespace-nowrap">
               http://localhost:{httpPort}
             </code>
-            <button 
+            <button
               onClick={() => {
                 navigator.clipboard.writeText(`http://localhost:${httpPort}`)
                 showToast('URL Copied!')
