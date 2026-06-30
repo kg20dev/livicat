@@ -95,4 +95,58 @@ export const TauriService = {
       return false
     }
   },
+
+  /* ─── OBS / PRISM Integration ────────────────────────────────── */
+
+  /** Detect if OBS or PRISM is running with WebSocket enabled */
+  async detectStreamingApp(): Promise<{ detected: 'obs_compatible' | 'none' } | null> {
+    const invoke = await getInvoke()
+    if (!invoke) return null
+    try {
+      return await invoke<{ detected: 'obs_compatible' | 'none' }>('detect_streaming_app')
+    } catch (e) {
+      console.error('[TauriService] detectStreamingApp failed:', e)
+      return null
+    }
+  },
+
+  /** Send chat to OBS / PRISM as a Browser Source via WebSocket */
+  async sendBrowserSource(params: {
+    obsUrl: string
+    obsPassword?: string
+    videoId: string
+    css: string
+    sourceName?: string
+    width?: number
+    height?: number
+  }): Promise<'created' | 'updated' | null> {
+    const invoke = await getInvoke()
+    if (!invoke) return null
+    try {
+      return await invoke<'created' | 'updated'>('obs_send_browser_source', {
+        obsUrl: params.obsUrl,
+        obsPassword: params.obsPassword ?? null,
+        videoId: params.videoId,
+        css: params.css,
+        sourceName: params.sourceName ?? null,
+        width: params.width ?? 400,
+        height: params.height ?? 600,
+      })
+    } catch (e) {
+      console.error('[TauriService] sendBrowserSource failed:', e)
+      return null
+    }
+  },
+
+  /** Start local HTTP chat server (fallback for PRISM/Streamlabs) */
+  async startChatServer(videoId: string, css: string): Promise<number | null> {
+    const invoke = await getInvoke()
+    if (!invoke) return null
+    try {
+      return await invoke<number>('start_chat_server', { videoId, css })
+    } catch (e) {
+      console.error('[TauriService] startChatServer failed:', e)
+      return null
+    }
+  },
 }

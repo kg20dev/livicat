@@ -4,6 +4,7 @@ use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_aptabase::EventTracker;
 
 mod sentry;
+mod obs;
 use ::sentry::Level as SentryLevel;
 
 #[cfg(target_os = "windows")]
@@ -684,6 +685,9 @@ pub fn run() {
             get_app_version,
             trigger_crash_test,
             track_feature_event,
+            obs::detect_streaming_app,
+            obs::obs_send_browser_source,
+            obs::start_chat_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
