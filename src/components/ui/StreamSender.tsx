@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React from 'react'
 import { TauriService } from '../../services/TauriService'
 import { useOBSSettings } from '../../hooks/useOBSSettings'
 import { trackEventAsync } from '../../utils/analytics'
@@ -11,10 +11,10 @@ interface StreamSenderProps {
 
 export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   const { settings, isConfigured } = useOBSSettings()
-  const [showSetup, setShowSetup] = useState(false)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
-  const [toastMsg, setToastMsg] = useState('')
-  const [httpPort, setHttpPort] = useState<number | null>(null)
+  const [showSetup, setShowSetup] = React.useState(false)
+  const [status, setStatus] = React.useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [toastMsg, setToastMsg] = React.useState('')
+  const [httpPort, setHttpPort] = React.useState<number | null>(null)
 
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
@@ -28,8 +28,8 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   const handleSendToStream = async () => {
     if (!videoId) return
 
-    // If not configured at all (URL is totally empty), show setup
-    if (!settings.obsUrl && settings.obsUrl !== '') {
+    // If not configured at all (no websocket URL saved), show setup
+    if (!settings.obsUrl || settings.obsUrl === '') {
       setShowSetup(true)
       return
     }
@@ -44,6 +44,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
         videoId,
         css: injectedCSS,
         sourceName: settings.sourceName || 'Livicat Chat',
+        sceneName: settings.defaultScene || undefined,
       })
 
       if (result === 'created') {
@@ -89,7 +90,7 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
     <div className="flex flex-col items-end gap-2">
       <button
         onClick={() => {
-          if (!settings.obsUrl && settings.obsUrl !== '') setShowSetup(true)
+          if (!settings.obsUrl || settings.obsUrl === '') setShowSetup(true)
           else handleSendToStream()
         }}
         disabled={!videoId || status === 'sending'}

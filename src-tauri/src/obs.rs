@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use tokio::net::TcpStream;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 const OBS_WS_PORT: u16 = 4455;
 const HTTP_CHAT_PORT: u16 = 7842;
@@ -40,40 +42,21 @@ pub async fn detect_streaming_app() -> StreamingAppInfo {
     }
 }
 
-/// Create or update a Browser Source in OBS / PRISM via WebSocket.
-///
-/// Idempotent by `source_name`: if a source named "Livicat Chat" (or custom)
-/// already exists it will be **updated**; otherwise a new source is created.
-#[tauri::command]
-pub async fn obs_send_browser_source(
-    obs_url: String,
+/// Helper to connect and authenticate to OBS WebSocket
+async fn connect_and_auth_obs(
+    obs_url: &str,
     obs_password: Option<String>,
-    video_id: String,
-    css: String,
-    source_name: Option<String>,
-    width: u32,
-    height: u32,
-) -> Result<String, String> {
-    let source_name = source_name.unwrap_or_else(|| LIVICAT_CHAT_SOURCE.to_string());
-
-    let chat_url = format!(
-        "https://www.youtube.com/live_chat?is_popout=1&v={}",
-        video_id
-    );
-
-    // ---- Connect ----
-    let (mut ws, _) = connect_async(&obs_url)
+) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>, String> {
+    let (mut ws, _) = connect_async(obs_url)
         .await
         .map_err(|e| format!("WebSocket connection failed: {}", e))?;
 
-    // ---- Read Hello (op: 0) ----
     let hello = read_message_skip(&mut ws, &[0, 5])
         .await
         .ok_or("No hello message")??;
     let hello_json: serde_json::Value =
         serde_json::from_str(&hello).map_err(|e| format!("Hello JSON error: {}", e))?;
 
-    // ---- Identify (op: 1) ----
     let mut identify = serde_json::json!({
         "op": 1,
         "d": { "rpcVersion": 1 }
@@ -94,13 +77,103 @@ pub async fn obs_send_browser_source(
         .await
         .map_err(|e| format!("Identify send: {}", e))?;
 
-    // Wait for Identified (op: 2)
     read_message_skip(&mut ws, &[2])
         .await
         .ok_or("No identified response")?
         .map_err(|e| format!("Identified error: {}", e))?;
 
-    // ---- Check if source already exists ----
+    Ok(ws)
+}
+
+/// Fetch list of available scenes from OBS
+#[tauri::command]
+pub async fn obs_get_scenes(
+    obs_url: String,
+    obs_password: Option<String>,
+) -> Result<Vec<String>, String> {
+    let mut ws = connect_and_auth_obs(&obs_url, obs_password).await?;
+
+    let req_id = "get-scenes";
+    let get_scenes = serde_json::json!({
+        "op": 6,
+        "d": {
+            "requestId": req_id,
+            "requestType": "GetSceneList",
+            "requestData": {}
+        }
+    });
+
+    ws.send(Message::Text(get_scenes.to_string()))
+        .await
+        .map_err(|e| format!("GetSceneList send: {}", e))?;
+
+    let resp = read_request_response(&mut ws, req_id)
+        .await
+        .map_err(|e| format!("GetSceneList response: {}", e))?;
+
+    let mut scenes = Vec::new();
+    if let Some(scenes_arr) = resp["d"]["responseData"]["scenes"].as_array() {
+        for scene in scenes_arr {
+            if let Some(name) = scene["sceneName"].as_str() {
+                scenes.push(name.to_string());
+            }
+        }
+    }
+
+    // Sort scenes alphabetically
+    scenes.sort();
+    Ok(scenes)
+}
+
+/// Create or update a Browser Source in OBS / PRISM via WebSocket.
+#[tauri::command]
+pub async fn obs_send_browser_source(
+    obs_url: String,
+    obs_password: Option<String>,
+    video_id: String,
+    css: String,
+    source_name: Option<String>,
+    scene_name: Option<String>,
+    width: u32,
+    height: u32,
+) -> Result<String, String> {
+    let source_name = source_name.unwrap_or_else(|| LIVICAT_CHAT_SOURCE.to_string());
+
+    let chat_url = format!(
+        "https://www.youtube.com/live_chat?is_popout=1&v={}",
+        video_id
+    );
+
+    let mut ws = connect_and_auth_obs(&obs_url, obs_password).await?;
+
+    // ---- Determine target scene name ----
+    let target_scene = match scene_name {
+        Some(name) if !name.is_empty() => name,
+        _ => {
+            // Fetch current program scene
+            let req_id = "get-current-scene";
+            let get_scenes = serde_json::json!({
+                "op": 6,
+                "d": {
+                    "requestId": req_id,
+                    "requestType": "GetSceneList",
+                    "requestData": {}
+                }
+            });
+            ws.send(Message::Text(get_scenes.to_string()))
+                .await
+                .map_err(|e| format!("GetSceneList send: {}", e))?;
+            let resp = read_request_response(&mut ws, req_id)
+                .await
+                .map_err(|e| format!("GetSceneList response: {}", e))?;
+            resp["d"]["responseData"]["currentProgramSceneName"]
+                .as_str()
+                .ok_or("Failed to get current scene name")?
+                .to_string()
+        }
+    };
+
+    // ---- Check if source already exists globally ----
     let req_id_check = "check-livicat";
     let get_list = serde_json::json!({
         "op": 6,
@@ -135,7 +208,8 @@ pub async fn obs_send_browser_source(
     });
 
     if exists {
-        let req_id = "update-livicat";
+        // Update input settings
+        let req_id = "update-livicat-settings";
         let update = serde_json::json!({
             "op": 6,
             "d": {
@@ -156,8 +230,58 @@ pub async fn obs_send_browser_source(
             .await
             .map_err(|e| format!("Update response: {}", e))?;
 
+        // Check if scene item already exists in target scene
+        let req_id_items = "get-scene-items";
+        let get_items = serde_json::json!({
+            "op": 6,
+            "d": {
+                "requestId": req_id_items,
+                "requestType": "GetSceneItemList",
+                "requestData": { "sceneName": target_scene }
+            }
+        });
+
+        ws.send(Message::Text(get_items.to_string()))
+            .await
+            .map_err(|e| format!("GetSceneItemList send: {}", e))?;
+
+        let items_resp = read_request_response(&mut ws, req_id_items)
+            .await
+            .map_err(|e| format!("GetSceneItemList response: {}", e))?;
+
+        let in_scene = items_resp["d"]["responseData"]["sceneItems"]
+            .as_array()
+            .map(|items| items.iter().any(|item| item["sourceName"] == source_name))
+            .unwrap_or(false);
+
+        if !in_scene {
+            // Source exists but not in the target scene, add it
+            let req_id_add = "add-item-to-scene";
+            let add_item = serde_json::json!({
+                "op": 6,
+                "d": {
+                    "requestId": req_id_add,
+                    "requestType": "CreateSceneItem",
+                    "requestData": {
+                        "sceneName": target_scene,
+                        "sourceName": source_name,
+                        "sceneItemEnabled": true
+                    }
+                }
+            });
+
+            ws.send(Message::Text(add_item.to_string()))
+                .await
+                .map_err(|e| format!("CreateSceneItem send: {}", e))?;
+
+            read_request_response(&mut ws, req_id_add)
+                .await
+                .map_err(|e| format!("CreateSceneItem response: {}", e))?;
+        }
+
         Ok("updated".to_string())
     } else {
+        // Create new input in the target scene
         let req_id = "create-livicat";
         let create = serde_json::json!({
             "op": 6,
@@ -165,6 +289,7 @@ pub async fn obs_send_browser_source(
                 "requestId": req_id,
                 "requestType": "CreateInput",
                 "requestData": {
+                    "sceneName": target_scene,
                     "inputName": source_name,
                     "inputKind": "browser_source",
                     "inputSettings": settings,
@@ -187,9 +312,6 @@ pub async fn obs_send_browser_source(
 
 /// Start a local HTTP server (`http://127.0.0.1:7842`) that serves the
 /// styled YouTube live chat as a plain HTML page with an `<iframe>`.
-///
-/// This is the fallback for PRISM / Streamlabs users who can't use the
-/// WebSocket path.  The server runs until the app exits.
 #[tauri::command]
 pub async fn start_chat_server(video_id: String, css: String) -> Result<u16, String> {
     if CHAT_SERVER_RUNNING.load(Ordering::SeqCst) {

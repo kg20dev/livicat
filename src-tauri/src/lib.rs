@@ -688,6 +688,7 @@ pub fn run() {
             trigger_crash_test,
             track_feature_event,
             obs::detect_streaming_app,
+            obs::obs_get_scenes,
             obs::obs_send_browser_source,
             obs::start_chat_server,
         ])

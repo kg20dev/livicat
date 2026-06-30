@@ -110,6 +110,21 @@ export const TauriService = {
     }
   },
 
+  /** Fetch available scenes from OBS */
+  async getScenes(obsUrl: string, obsPassword?: string): Promise<string[] | null> {
+    const invoke = await getInvoke()
+    if (!invoke) return null
+    try {
+      return await invoke<string[]>('obs_get_scenes', {
+        obsUrl,
+        obsPassword: obsPassword ?? null,
+      })
+    } catch (e) {
+      console.error('[TauriService] getScenes failed:', e)
+      return null
+    }
+  },
+
   /** Send chat to OBS / PRISM as a Browser Source via WebSocket */
   async sendBrowserSource(params: {
     obsUrl: string
@@ -117,6 +132,7 @@ export const TauriService = {
     videoId: string
     css: string
     sourceName?: string
+    sceneName?: string
     width?: number
     height?: number
   }): Promise<'created' | 'updated' | null> {
@@ -129,6 +145,7 @@ export const TauriService = {
         videoId: params.videoId,
         css: params.css,
         sourceName: params.sourceName ?? null,
+        sceneName: params.sceneName ?? null,
         width: params.width ?? 400,
         height: params.height ?? 600,
       })

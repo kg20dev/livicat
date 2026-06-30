@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { TauriService } from '../../services/TauriService'
 import { useOBSSettings } from '../../hooks/useOBSSettings'
 
@@ -13,9 +13,13 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
   const [url, setUrl] = useState(settings.obsUrl || 'ws://localhost:4455')
   const [password, setPassword] = useState(settings.obsPassword || '')
   const [sourceName, setSourceName] = useState(settings.sourceName || 'Livicat Chat')
+  const [selectedScene, setSelectedScene] = useState(settings.defaultScene || '')
 
-  const [status, setStatus] = useState<'idle' | 'probing' | 'success' | 'error'>('idle')
+  const [status, setStatus] = useState<'idle' | 'probing' | 'fetching_scenes' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  const [scenes, setScenes] = useState<string[]>([])
+
+  const isFormValid = url.trim().startsWith('ws://') || url.trim().startsWith('wss://')
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,11 +30,24 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
     const res = await TauriService.detectStreamingApp()
 
     if (res && res.detected === 'obs_compatible') {
-      setStatus('success')
+      // Connection successful, now fetch scenes
+      setStatus('fetching_scenes')
+      const sceneList = await TauriService.getScenes(url, password || undefined)
+      if (sceneList && sceneList.length > 0) {
+        setScenes(sceneList)
+        // Default to current scene if not already selected
+        if (!selectedScene && sceneList.length > 0) {
+          setSelectedScene(sceneList[0])
+        }
+        setStatus('success')
+      } else {
+        setStatus('success') // Still success, just no scenes fetched
+      }
       await saveSettings({
         obsUrl: url,
         obsPassword: password,
         sourceName,
+        defaultScene: selectedScene,
       })
       setTimeout(() => {
         onConnected?.()
@@ -111,12 +128,33 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
           </div>
         )}
 
+        {scenes.length > 0 && (status === 'success' || status === 'fetching_scenes') && (
+          <div className="flex flex-col gap-1.5 mt-2">
+            <label className="text-label-sm font-bold text-on-surface">Target Scene</label>
+            <select
+              value={selectedScene}
+              onChange={(e) => setSelectedScene(e.target.value)}
+              disabled={status === 'fetching_scenes'}
+              className="w-full h-10 px-3 bg-surface border border-outline rounded-lg text-body-sm text-on-surface outline-none focus:border-primary transition-colors disabled:opacity-50"
+            >
+              {scenes.map((scene) => (
+                <option key={scene} value={scene}>
+                  {scene}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-on-surface-variant">
+              The browser source will be added to this scene.
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mt-4">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              disabled={status === 'probing' || status === 'success'}
+              disabled={status === 'probing' || status === 'fetching_scenes' || status === 'success'}
               className="flex-1 h-10 rounded-lg text-label-md font-bold text-on-surface-variant hover:text-on-surface transition-colors disabled:opacity-50"
             >
               Cancel
@@ -134,11 +172,13 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
 
           <button
             type="submit"
-            disabled={status === 'probing' || status === 'success' || !url}
+            disabled={status === 'probing' || status === 'fetching_scenes' || status === 'success' || !isFormValid}
             className="flex-[1.5] h-10 rounded-lg bg-primary text-on-primary text-label-md font-bold hover:bg-primary-hover active:bg-primary-active transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {status === 'probing' ? (
+            {status === 'probing' || status === 'fetching_scenes' ? (
               <span className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
+            ) : status === 'success' ? (
+              'Reconnect'
             ) : (
               'Connect'
             )}
