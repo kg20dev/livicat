@@ -13,6 +13,7 @@
 // OBS Browser Source points to http://localhost:{port}
 
 use std::convert::Infallible;
+use std::sync::{Arc, RwLock};
 
 use axum::{
     extract::State,
@@ -22,8 +23,9 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use futures_util::stream::{unfold, Stream};
+use futures_util::stream::{select, unfold, Stream};
 use tokio::net::TcpListener;
+use tokio::sync::broadcast;
 
 use tower_http::cors::{Any, CorsLayer};
 
@@ -77,11 +79,14 @@ pub async fn start_renderer(
         .map_err(|e| e.to_string())?
         .port();
 
-    let shared_css = std::sync::Arc::new(css);
+    let shared_css = Arc::new(RwLock::new(css));
+
+    let (css_updates_tx, _css_updates_rx) = broadcast::channel::<String>(16);
 
     let app_state = RendererState {
         store,
         css: shared_css,
+        css_updates: css_updates_tx,
     };
 
     let cors = CorsLayer::new()
@@ -93,6 +98,7 @@ pub async fn start_renderer(
         .route("/", get(handle_root))
         .route("/events", get(handle_events))
         .route("/ingest", post(handle_ingest))
+        .route("/update-css", post(handle_update_css))
         .route("/debug", post(handle_debug))
         .layer(cors)
         .with_state(app_state);
@@ -120,16 +126,17 @@ pub async fn start_renderer(
 #[derive(Clone)]
 struct RendererState {
     store: MessageStore,
-    css: std::sync::Arc<String>,
+    css: Arc<RwLock<String>>,
+    css_updates: broadcast::Sender<String>,
 }
 
 // ─── Route: GET / ─────────────────────────────────────────────────
 
 async fn handle_root(State(state): State<RendererState>) -> Html<String> {
     let initial = state.store.all();
-    let css = &*state.css;
+    let css = state.css.read().unwrap().clone();
 
-    Html(build_page(css, &initial))
+    Html(build_page(&css, &initial))
 }
 
 // ─── Route: GET /events (SSE) ────────────────────────────────────
@@ -137,9 +144,10 @@ async fn handle_root(State(state): State<RendererState>) -> Html<String> {
 async fn handle_events(
     State(state): State<RendererState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let rx = state.store.subscribe();
+    let msg_rx = state.store.subscribe();
+    let css_rx = state.css_updates.subscribe();
 
-    let stream = unfold(rx, |mut rx| async move {
+    let msg_stream = unfold(msg_rx, |mut rx| async move {
         loop {
             match rx.recv().await {
                 Ok(msg) => {
@@ -151,18 +159,31 @@ async fn handle_events(
                     return Some((Ok(event), rx));
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
-                    // Dropped some messages — keep going
                     continue;
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                    // Store dropped — stream ends
                     return None;
                 }
             }
         }
     });
 
-    Sse::new(stream).keep_alive(KeepAlive::default())
+    let css_stream = unfold(css_rx, |mut rx| async move {
+        loop {
+            match rx.recv().await {
+                Ok(css) => {
+                    let event = Event::default().event("css-update").data(css);
+                    return Some((Ok(event), rx));
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => return None,
+            }
+        }
+    });
+
+    let merged = select(msg_stream, css_stream);
+
+    Sse::new(merged).keep_alive(KeepAlive::default())
 }
 
 // ─── Route: POST /ingest ──────────────────────────────────────────
@@ -192,6 +213,24 @@ async fn handle_ingest(
     Ok("ok")
 }
 
+// ─── Route: POST /update-css ──────────────────────────────────────
+
+/// Receive updated theme CSS from the frontend and broadcast it to
+/// all SSE-connected OBS browser sources via a `css-update` event.
+async fn handle_update_css(
+    State(state): State<RendererState>,
+    body: String,
+) -> &'static str {
+    // Update the shared CSS so new SSE clients (new OBS source loads)
+    // get the latest CSS.
+    if let Ok(mut css) = state.css.write() {
+        *css = body.clone();
+    }
+    // Broadcast to all connected SSE clients so they live-update.
+    let _ = state.css_updates.send(body);
+    "ok"
+}
+
 // ─── Route: POST /debug ───────────────────────────────────────────
 
 /// Receives debug pings from the hidden WebView observer script.
@@ -219,10 +258,11 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Livicat Chat</title>
-  <style>
+  <style id="livicat-theme">
     /* ── Livicat theme ────────────────────────────────── */
     {css}
-
+  </style>
+  <style>
     /* ── Renderer base reset ──────────────────────────── */
     * {{ margin:0; padding:0; box-sizing:border-box; }}
     html, body {{
@@ -360,6 +400,12 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
     source.addEventListener('error', function() {{
       console.warn('[Livicat] SSE connection lost, retrying...');
+    }});
+
+    /* Live-update theme CSS when settings change */
+    source.addEventListener('css-update', function(e) {{
+      var style = document.getElementById('livicat-theme');
+      if (style) style.textContent = e.data;
     }});
 
     function detectRole(msg) {{

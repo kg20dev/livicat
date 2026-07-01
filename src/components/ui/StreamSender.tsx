@@ -25,6 +25,9 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   const settingsRef = React.useRef(settings)
   settingsRef.current = settings
 
+  // Track the renderer port so CSS changes can be live-updated via POST
+  const chatPortRef = React.useRef<number | null>(null)
+
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
     setToastError(isError)
@@ -73,6 +76,8 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
           showToast('Failed to start chat engine', true)
           return
         }
+
+        chatPortRef.current = chatPort
 
         const proxyUrl = `http://localhost:${chatPort}`
         const result = await TauriService.sendBrowserSource({
@@ -132,6 +137,8 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
         // Stop headless chat system (Chrome + processor + renderer)
         await TauriService.stopChat()
 
+        chatPortRef.current = null
+
         // Remove OBS source
         const ok = await TauriService.removeBrowserSource(
           s.obsUrl || '',
@@ -165,9 +172,25 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
     } catch (err) {
       console.error('[StreamSender] Stop stream failed with exception:', err)
       setStreamState('idle')
+      chatPortRef.current = null
       showToast('Failed to stop stream', true)
     }
   }
+
+  // ── Live CSS update: push theme changes to active stream ──────
+
+  const prevCssRef = React.useRef(injectedCSS)
+  React.useEffect(() => {
+    if (!chatPortRef.current || streamState !== 'websocket') {
+      prevCssRef.current = injectedCSS
+      return
+    }
+    // Avoid sending the same CSS twice (initial mount)
+    if (injectedCSS === prevCssRef.current) return
+    prevCssRef.current = injectedCSS
+
+    TauriService.updateRendererCss(injectedCSS)
+  }, [injectedCSS, streamState])
 
   // ── Button rendering ─────────────────────────────────────────
 

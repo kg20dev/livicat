@@ -336,6 +336,34 @@ async fn start_chat(
 }
 
 /// Stop the chat system and clean up all resources.
+/// Live-update the renderer's CSS without restarting the stream.
+///
+/// Proxies the CSS to the renderer's HTTP endpoint from Rust, bypassing
+/// the WebView's Content-Security-Policy which blocks fetch to localhost.
+#[tauri::command]
+async fn update_renderer_css(
+    css: String,
+    state: tauri::State<'_, SharedChatState>,
+) -> Result<(), String> {
+    let port = {
+        let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
+        s.renderer_handle.as_ref().map(|h| h.port)
+    };
+    match port {
+        Some(port) => {
+            let client = reqwest::Client::new();
+            client
+                .post(&format!("http://127.0.0.1:{port}/update-css"))
+                .body(css)
+                .send()
+                .await
+                .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
+            Ok(())
+        }
+        None => Err("No active renderer session".to_string()),
+    }
+}
+
 #[tauri::command]
 async fn stop_chat(
     app: AppHandle,
@@ -812,6 +840,7 @@ pub fn run() {
             close_preview_window,
             start_chat,
             stop_chat,
+            update_renderer_css,
             get_app_version,
             trigger_crash_test,
             track_feature_event,
