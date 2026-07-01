@@ -172,7 +172,11 @@ export const TauriService = {
   },
 
   /** Remove the Livicat browser source from OBS via WebSocket */
-  async removeBrowserSource(obsUrl: string, obsPassword?: string, sourceName?: string): Promise<boolean> {
+  async removeBrowserSource(
+    obsUrl: string,
+    obsPassword?: string,
+    sourceName?: string
+  ): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {

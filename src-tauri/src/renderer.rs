@@ -66,18 +66,12 @@ impl RendererHandle {
 
 /// Start the renderer HTTP server. Binds to port 0 (OS picks a free port).
 /// Returns the `RendererHandle` with the actual port and shutdown control.
-pub async fn start_renderer(
-    store: MessageStore,
-    css: String,
-) -> Result<RendererHandle, String> {
+pub async fn start_renderer(store: MessageStore, css: String) -> Result<RendererHandle, String> {
     let listener = TcpListener::bind("127.0.0.1:0")
         .await
         .map_err(|e| format!("[renderer] Failed to bind TCP: {e}"))?;
 
-    let port = listener
-        .local_addr()
-        .map_err(|e| e.to_string())?
-        .port();
+    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
 
     let shared_css = Arc::new(RwLock::new(css));
 
@@ -91,7 +85,11 @@ pub async fn start_renderer(
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
-        .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::OPTIONS])
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::OPTIONS,
+        ])
         .allow_headers([axum::http::header::CONTENT_TYPE]);
 
     let app = Router::new()
@@ -115,10 +113,7 @@ pub async fn start_renderer(
     });
 
     log::info!("[renderer] Started on port {port}");
-    Ok(RendererHandle {
-        port,
-        shutdown_tx,
-    })
+    Ok(RendererHandle { port, shutdown_tx })
 }
 
 // ─── Shared state ─────────────────────────────────────────────────
@@ -217,10 +212,7 @@ async fn handle_ingest(
 
 /// Receive updated theme CSS from the frontend and broadcast it to
 /// all SSE-connected OBS browser sources via a `css-update` event.
-async fn handle_update_css(
-    State(state): State<RendererState>,
-    body: String,
-) -> &'static str {
+async fn handle_update_css(State(state): State<RendererState>, body: String) -> &'static str {
     // Update the shared CSS so new SSE clients (new OBS source loads)
     // get the latest CSS.
     if let Ok(mut css) = state.css.write() {
@@ -235,9 +227,7 @@ async fn handle_update_css(
 
 /// Receives debug pings from the hidden WebView observer script.
 /// Logged server-side; NOT broadcast to SSE clients.
-async fn handle_debug(
-    body: String,
-) -> &'static str {
+async fn handle_debug(body: String) -> &'static str {
     log::info!("[webview-chat] Observer ping: {body}");
     "ok"
 }
@@ -470,7 +460,11 @@ fn render_message(msg: &ChatMessage) -> String {
         String::new()
     };
 
-    let photo_url = if msg.photo.is_empty() { "about:blank" } else { &msg.photo };
+    let photo_url = if msg.photo.is_empty() {
+        "about:blank"
+    } else {
+        &msg.photo
+    };
 
     format!(
         r#"<yt-live-chat-text-message-renderer data-role="{role}">
@@ -539,7 +533,10 @@ mod tests {
         assert_eq!(resp.status(), 200, "GET / should return 200");
 
         let html = resp.text().await.unwrap();
-        assert!(html.contains("<!DOCTYPE html>"), "should be a valid HTML doc");
+        assert!(
+            html.contains("<!DOCTYPE html>"),
+            "should be a valid HTML doc"
+        );
         assert!(html.contains("Livicat Chat"), "title should be present");
         assert!(html.contains(TEST_CSS), "theme CSS should be injected");
         assert!(html.contains("EventSource"), "SSE JS should be present");
@@ -656,7 +653,10 @@ mod tests {
             .await
             .unwrap();
         assert!(html.contains("Bob"), "author should appear in HTML");
-        assert!(html.contains("From test"), "message text should appear in HTML");
+        assert!(
+            html.contains("From test"),
+            "message text should appear in HTML"
+        );
         assert!(
             html.contains("data-role=\"moderator\""),
             "role should be set as attribute"
@@ -731,14 +731,11 @@ mod tests {
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
         // Read one chunk from the SSE stream (with timeout for safety)
-        let chunk = tokio::time::timeout(
-            std::time::Duration::from_secs(3),
-            sse_resp.chunk(),
-        )
-        .await
-        .expect("SSE chunk should arrive within 3s")
-        .expect("chunk Result should be Ok")
-        .expect("chunk should be Some (SSE stream still open)");
+        let chunk = tokio::time::timeout(std::time::Duration::from_secs(3), sse_resp.chunk())
+            .await
+            .expect("SSE chunk should arrive within 3s")
+            .expect("chunk Result should be Ok")
+            .expect("chunk should be Some (SSE stream still open)");
 
         let sse_text = String::from_utf8_lossy(&chunk);
         assert!(

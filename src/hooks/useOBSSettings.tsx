@@ -1,3 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
+// This file intentionally exports both a Provider component and a use* hook.
+// Splitting them would require a separate file for the hook's context type.
+// The react-refresh warning is a known cosmetic limitation — no runtime impact.
+
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 
 export interface OBSSettings {
@@ -70,9 +75,7 @@ export function OBSProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const isConfigured = useCallback((): boolean => {
-    return Boolean(
-      settings.obsUrl?.startsWith('ws://') || settings.obsUrl?.startsWith('wss://')
-    )
+    return Boolean(settings.obsUrl?.startsWith('ws://') || settings.obsUrl?.startsWith('wss://'))
   }, [settings.obsUrl])
 
   return (
@@ -98,28 +101,38 @@ export function OBSProvider({ children }: { children: ReactNode }) {
  */
 export function useOBSSettings(): OBSContextValue {
   const ctx = useContext(OBSContext)
-  if (ctx) return ctx
 
-  // Fallback for components not wrapped in OBSProvider
-  const [settings, setSettings] = useState<OBSSettings>(loadFromStorage)
+  // Hooks must be called unconditionally (rules-of-hooks).
+  // These are only used as fallback when no OBSProvider is present.
+  const [fallbackSettings, setFallbackSettings] = useState<OBSSettings>(loadFromStorage)
   const [isLoading] = useState(false)
   const [error] = useState<string | null>(null)
 
   const saveSettings = useCallback(async (newSettings: OBSSettings) => {
     localStorage.setItem(STORE_KEY, JSON.stringify(newSettings))
-    setSettings(newSettings)
+    setFallbackSettings(newSettings)
   }, [])
 
   const resetSettings = useCallback(() => {
     localStorage.removeItem(STORE_KEY)
-    setSettings(defaultSettings)
+    setFallbackSettings(defaultSettings)
   }, [])
 
   const isConfigured = useCallback((): boolean => {
     return Boolean(
-      settings.obsUrl?.startsWith('ws://') || settings.obsUrl?.startsWith('wss://')
+      fallbackSettings.obsUrl?.startsWith('ws://') || fallbackSettings.obsUrl?.startsWith('wss://')
     )
-  }, [settings.obsUrl])
+  }, [fallbackSettings.obsUrl])
 
-  return { settings, isLoading, error, saveSettings, resetSettings, isConfigured, setSettings }
+  if (ctx) return ctx
+
+  return {
+    settings: fallbackSettings,
+    isLoading,
+    error,
+    saveSettings,
+    resetSettings,
+    isConfigured,
+    setSettings: setFallbackSettings,
+  }
 }

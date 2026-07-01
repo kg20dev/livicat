@@ -34,29 +34,33 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const doConnect = useCallback(async (wsUrl: string, wsPassword?: string) => {
-    setState('connecting')
-    setErrorMsg('')
+  const doConnect = useCallback(
+    async (wsUrl: string, wsPassword?: string) => {
+      setState('connecting')
+      setErrorMsg('')
 
-    try {
-      const sceneList = await TauriService.getScenes(wsUrl, wsPassword)
+      try {
+        const sceneList = await TauriService.getScenes(wsUrl, wsPassword)
 
-      if (sceneList) {
-        // Pre-select saved scene if it exists in list, otherwise first scene
-        const savedScene = settings.defaultScene
-        const match = savedScene && sceneList.includes(savedScene) ? savedScene : sceneList[0] || ''
-        setScenes(sceneList)
-        setSelectedScene(match || selectedScene)
-        setState('connected')
-      } else {
+        if (sceneList) {
+          // Pre-select saved scene if it exists in list, otherwise first scene
+          const savedScene = settings.defaultScene
+          const match =
+            savedScene && sceneList.includes(savedScene) ? savedScene : sceneList[0] || ''
+          setScenes(sceneList)
+          setSelectedScene(match || selectedScene)
+          setState('connected')
+        } else {
+          setState('error')
+          setErrorMsg('Connected but no scene data returned.')
+        }
+      } catch (err) {
         setState('error')
-        setErrorMsg('Connected but no scene data returned.')
+        setErrorMsg(err instanceof Error ? err.message : String(err))
       }
-    } catch (err) {
-      setState('error')
-      setErrorMsg(err instanceof Error ? err.message : String(err))
-    }
-  }, [settings.defaultScene, selectedScene])
+    },
+    [settings.defaultScene, selectedScene]
+  )
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,8 +162,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
           <div>
             <h2 className="text-body-lg font-bold text-on-surface">Stream Integration</h2>
             <p className="text-label-sm text-on-surface-variant">
-              Connected to{' '}
-              <span className="font-mono text-primary">{url}</span>
+              Connected to <span className="font-mono text-primary">{url}</span>
             </p>
           </div>
         </div>
@@ -193,20 +196,18 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
       <div className="glass-panel w-[380px] p-5 rounded-xl flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-[28px] text-error shrink-0 mt-0.5">error_outline</span>
+          <span className="material-symbols-outlined text-[28px] text-error shrink-0 mt-0.5">
+            error_outline
+          </span>
           <div className="min-w-0">
             <h2 className="text-body-lg font-bold text-on-surface">Connection Failed</h2>
-            <p className="text-label-sm text-on-surface-variant truncate">
-              {url}
-            </p>
+            <p className="text-label-sm text-on-surface-variant truncate">{url}</p>
           </div>
         </div>
 
         {/* Backend error */}
         <div className="p-2.5 bg-error/10 border border-error/20 rounded-lg">
-          <p className="text-label-sm text-error font-mono leading-snug break-words">
-            {errorMsg}
-          </p>
+          <p className="text-label-sm text-error font-mono leading-snug break-words">{errorMsg}</p>
         </div>
 
         {/* Compact troubleshooting */}

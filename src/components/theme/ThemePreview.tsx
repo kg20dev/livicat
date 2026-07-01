@@ -140,9 +140,11 @@ export function ThemePreview({
 
   const showAvatars = (settings['show-avatars'] as boolean) ?? true
   const hideAtsign = !!(settings['hide-username-atsign'] as boolean)
-  const chatMessages = (messages ?? (hideAtsign
-    ? DEMO_MESSAGES.map((msg) => ({ ...msg, username: `@${msg.username}` }))
-    : DEMO_MESSAGES))
+  const chatMessages =
+    messages ??
+    (hideAtsign
+      ? DEMO_MESSAGES.map((msg) => ({ ...msg, username: `@${msg.username}` }))
+      : DEMO_MESSAGES)
 
   const isGallery = mode === 'gallery'
 

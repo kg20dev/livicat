@@ -315,14 +315,7 @@ async fn start_chat(
     // The WebView's observer writes captured messages to
     // `location.hash`. A Rust poll loop reads the hash, decodes
     // messages, and pushes to the MessageStore → SSE broadcast.
-    webview_chat::start_webview_chat(
-        &app,
-        &video_id,
-        &css,
-        hide_atsign,
-        store_for_webview,
-    )
-    .await?;
+    webview_chat::start_webview_chat(&app, &video_id, &css, hide_atsign, store_for_webview).await?;
 
     // ── 5. Store handles ───────────────────────────────────────
     {
@@ -353,7 +346,7 @@ async fn update_renderer_css(
         Some(port) => {
             let client = reqwest::Client::new();
             client
-                .post(&format!("http://127.0.0.1:{port}/update-css"))
+                .post(format!("http://127.0.0.1:{port}/update-css"))
                 .body(css)
                 .send()
                 .await
@@ -365,10 +358,7 @@ async fn update_renderer_css(
 }
 
 #[tauri::command]
-async fn stop_chat(
-    app: AppHandle,
-    state: tauri::State<'_, SharedChatState>,
-) -> Result<(), String> {
+async fn stop_chat(app: AppHandle, state: tauri::State<'_, SharedChatState>) -> Result<(), String> {
     // Close the WebView chat window first
     if let Some(window) = app.get_webview_window("livicat-chat") {
         let _ = window.close();

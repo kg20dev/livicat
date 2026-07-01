@@ -346,8 +346,7 @@ fn extract_runs_text(r: &serde_json::Value) -> String {
     for run in &runs {
         if let Some(text) = run["text"].as_str() {
             out.push_str(text);
-        } else if let Some(shortcuts) = run.pointer("/emoji/shortcuts").and_then(|v| v.as_array())
-        {
+        } else if let Some(shortcuts) = run.pointer("/emoji/shortcuts").and_then(|v| v.as_array()) {
             if let Some(first) = shortcuts.first().and_then(|v| v.as_str()) {
                 out.push_str(first);
             }

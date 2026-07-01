@@ -173,8 +173,8 @@ pub async fn start_webview_chat(
 /// YouTube pauses loading new messages. Show-more auto-click
 /// clicks "show more" buttons so we capture the full message text.
 fn inject_css_to_window(window: &tauri::WebviewWindow, css: &str) -> Result<(), String> {
-    let css_json = serde_json::to_string(css)
-        .map_err(|e| format!("CSS JSON serialize error: {e}"))?;
+    let css_json =
+        serde_json::to_string(css).map_err(|e| format!("CSS JSON serialize error: {e}"))?;
 
     let script = format!(
         r#"(function() {{

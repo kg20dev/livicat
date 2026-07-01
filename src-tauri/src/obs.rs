@@ -47,20 +47,17 @@ enum ObsProtocol {
 /// the client sends a request.
 async fn detect_protocol(
     url: &str,
-) -> Result<
-    (
-        WebSocketStream<MaybeTlsStream<TcpStream>>,
-        ObsProtocol,
-    ),
-    String,
-> {
+) -> Result<(WebSocketStream<MaybeTlsStream<TcpStream>>, ObsProtocol), String> {
     let (mut ws, _) = connect_async(url)
         .await
         .map_err(|e| format!("WebSocket connection failed: {}", e))?;
 
     // Wait a short while for the server to send Hello (v5) or nothing (v4)
-    let try_hello = timeout(std::time::Duration::from_millis(800), read_next_text(&mut ws))
-        .await;
+    let try_hello = timeout(
+        std::time::Duration::from_millis(800),
+        read_next_text(&mut ws),
+    )
+    .await;
 
     match try_hello {
         Ok(Ok(text)) => {
@@ -95,10 +92,15 @@ async fn read_next_text(
             Ok(Message::Text(text)) => return Ok(text),
             Ok(Message::Ping(_)) | Ok(Message::Pong(_)) => continue,
             Ok(Message::Close(frame)) => {
-                let reason = frame
-                    .map(|f| f.reason.to_string())
-                    .unwrap_or_default();
-                return Err(format!("Connection closed: {}", if reason.is_empty() { "no reason" } else { &reason }));
+                let reason = frame.map(|f| f.reason.to_string()).unwrap_or_default();
+                return Err(format!(
+                    "Connection closed: {}",
+                    if reason.is_empty() {
+                        "no reason"
+                    } else {
+                        &reason
+                    }
+                ));
             }
             Ok(Message::Binary(data)) => {
                 return Err(format!("Unexpected binary frame ({} bytes)", data.len()));
@@ -153,7 +155,10 @@ async fn connect_auth_v5(
             let err_msg = val["d"]["error"]
                 .as_str()
                 .unwrap_or("Unknown identification error");
-            return Err(format!("OBS WebSocket identification rejected: {}", err_msg));
+            return Err(format!(
+                "OBS WebSocket identification rejected: {}",
+                err_msg
+            ));
         }
     }
 
@@ -187,9 +192,7 @@ async fn read_v5_op(
             }
             Ok(Message::Ping(_)) | Ok(Message::Pong(_)) => continue,
             Ok(Message::Close(frame)) => {
-                let reason = frame
-                    .map(|f| f.reason.to_string())
-                    .unwrap_or_default();
+                let reason = frame.map(|f| f.reason.to_string()).unwrap_or_default();
                 let detail = if reason.is_empty() {
                     "no reason".to_string()
                 } else {
@@ -211,7 +214,9 @@ async fn read_v5_op(
 }
 
 async fn send_v5_request(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     request_type: &str,
     request_data: serde_json::Value,
     request_id: &str,
@@ -242,9 +247,7 @@ async fn read_v5_response(
             Ok(Message::Text(t)) => t,
             Ok(Message::Ping(_)) | Ok(Message::Pong(_)) => continue,
             Ok(Message::Close(frame)) => {
-                let reason = frame
-                    .map(|f| f.reason.to_string())
-                    .unwrap_or_default();
+                let reason = frame.map(|f| f.reason.to_string()).unwrap_or_default();
                 let detail = if reason.is_empty() {
                     "connection closed"
                 } else {
@@ -322,9 +325,7 @@ async fn connect_auth_v4(
         let challenge = auth_resp["challenge"]
             .as_str()
             .ok_or("Missing auth challenge")?;
-        let salt = auth_resp["salt"]
-            .as_str()
-            .ok_or("Missing auth salt")?;
+        let salt = auth_resp["salt"].as_str().ok_or("Missing auth salt")?;
         let pw = password.as_deref().unwrap_or("");
         let auth_secret = compute_obs_auth_v4(pw, challenge, salt)?;
 
@@ -381,9 +382,7 @@ async fn read_v4_response(
             }
             Ok(Message::Ping(_)) | Ok(Message::Pong(_)) => continue,
             Ok(Message::Close(frame)) => {
-                let reason = frame
-                    .map(|f| f.reason.to_string())
-                    .unwrap_or_default();
+                let reason = frame.map(|f| f.reason.to_string()).unwrap_or_default();
                 let detail = if reason.is_empty() {
                     "connection closed"
                 } else {
@@ -405,7 +404,9 @@ async fn read_v4_response(
 }
 
 async fn send_v4_request(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     request_type: &str,
     request_data: serde_json::Value,
 ) -> Result<serde_json::Value, String> {
@@ -435,7 +436,9 @@ async fn send_v4_request(
 /* ─── Generic helpers ──────────────────────────────────────────── */
 
 async fn get_scenes_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
 ) -> Result<Vec<String>, String> {
     let resp = send_v5_request(ws, "GetSceneList", serde_json::json!({}), "get-scenes").await?;
     let mut scenes = Vec::new();
@@ -451,9 +454,17 @@ async fn get_scenes_v5(
 }
 
 async fn get_current_scene_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
 ) -> Result<String, String> {
-    let resp = send_v5_request(ws, "GetSceneList", serde_json::json!({}), "get-current-scene").await?;
+    let resp = send_v5_request(
+        ws,
+        "GetSceneList",
+        serde_json::json!({}),
+        "get-current-scene",
+    )
+    .await?;
     resp["d"]["responseData"]["currentProgramSceneName"]
         .as_str()
         .ok_or("No current program scene found".to_string())
@@ -461,7 +472,9 @@ async fn get_current_scene_v5(
 }
 
 async fn get_scenes_v4(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
 ) -> Result<Vec<String>, String> {
     let resp = send_v4_request(ws, "GetSceneList", serde_json::json!({})).await?;
     let mut scenes = Vec::new();
@@ -477,7 +490,9 @@ async fn get_scenes_v4(
 }
 
 async fn get_current_scene_v4(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
 ) -> Result<String, String> {
     let resp = send_v4_request(ws, "GetCurrentScene", serde_json::json!({})).await?;
     resp.get("currentScene")
@@ -566,8 +581,34 @@ pub async fn obs_send_browser_source(
     let (ws, proto) = detect_protocol(&obs_url).await?;
 
     match proto {
-        ObsProtocol::V5 => handle_send_v5(ws, &obs_url, obs_password, &source_name, &chat_url, &css, scene_name.as_deref(), width, height).await,
-        ObsProtocol::V4 => handle_send_v4(ws, &obs_url, obs_password, &source_name, &chat_url, &css, scene_name.as_deref(), width, height).await,
+        ObsProtocol::V5 => {
+            handle_send_v5(
+                ws,
+                &obs_url,
+                obs_password,
+                &source_name,
+                &chat_url,
+                &css,
+                scene_name.as_deref(),
+                width,
+                height,
+            )
+            .await
+        }
+        ObsProtocol::V4 => {
+            handle_send_v4(
+                ws,
+                &obs_url,
+                obs_password,
+                &source_name,
+                &chat_url,
+                &css,
+                scene_name.as_deref(),
+                width,
+                height,
+            )
+            .await
+        }
     }
 }
 
@@ -621,10 +662,18 @@ async fn handle_send_v5(
 }
 
 async fn check_source_exists_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     source_name: &str,
 ) -> Result<bool, String> {
-    let list_resp = send_v5_request(ws, "GetInputList", serde_json::json!({"inputKind": "browser_source"}), "check-livicat").await?;
+    let list_resp = send_v5_request(
+        ws,
+        "GetInputList",
+        serde_json::json!({"inputKind": "browser_source"}),
+        "check-livicat",
+    )
+    .await?;
     Ok(list_resp["d"]["responseData"]["inputs"]
         .as_array()
         .map(|inputs| inputs.iter().any(|i| i["inputName"] == source_name))
@@ -632,7 +681,9 @@ async fn check_source_exists_v5(
 }
 
 async fn update_source_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     source_name: &str,
     settings: &serde_json::Value,
 ) -> Result<(), String> {
@@ -650,7 +701,9 @@ async fn update_source_v5(
 }
 
 async fn ensure_in_scene_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     source_name: &str,
     target_scene: &str,
 ) -> Result<(), String> {
@@ -684,7 +737,9 @@ async fn ensure_in_scene_v5(
 }
 
 async fn create_source_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     target_scene: &str,
     source_name: &str,
     settings: &serde_json::Value,
@@ -739,14 +794,10 @@ async fn handle_send_v4(
     });
 
     // v4: Check if source exists by listing sources
-    let sources_resp = send_v4_request(
-        &mut ws,
-        "GetSourcesList",
-        serde_json::json!({}),
-    )
-    .await?;
+    let sources_resp = send_v4_request(&mut ws, "GetSourcesList", serde_json::json!({})).await?;
 
-    let exists = sources_resp.get("sources")
+    let exists = sources_resp
+        .get("sources")
         .and_then(|v| v.as_array())
         .map(|sources| sources.iter().any(|s| s["name"] == source_name))
         .unwrap_or(false);
@@ -786,33 +837,53 @@ async fn handle_send_v4(
 
 /// Remove the Livicat browser source from OBS via WebSocket (v5).
 async fn remove_source_v5(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     source_name: &str,
 ) -> Result<(), String> {
-    send_v5_request(ws, "RemoveInput", serde_json::json!({
-        "inputName": source_name,
-    }), "remove-livicat").await?;
+    send_v5_request(
+        ws,
+        "RemoveInput",
+        serde_json::json!({
+            "inputName": source_name,
+        }),
+        "remove-livicat",
+    )
+    .await?;
     Ok(())
 }
 
 /// Remove the Livicat browser source from OBS via WebSocket (v4).
 async fn remove_source_v4(
-    ws: &mut (impl futures_util::SinkExt<Message> + Unpin + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
     source_name: &str,
 ) -> Result<(), String> {
     // Get current scene to find item ID
     let scene_resp = send_v4_request(ws, "GetCurrentScene", serde_json::json!({})).await?;
     let scene_name = scene_resp["name"].as_str().ok_or("No current scene")?;
-    let sources = scene_resp.get("sources").and_then(|v| v.as_array()).ok_or("No sources found")?;
+    let sources = scene_resp
+        .get("sources")
+        .and_then(|v| v.as_array())
+        .ok_or("No sources found")?;
 
-    let item = sources.iter().find(|s| s["name"] == source_name)
+    let item = sources
+        .iter()
+        .find(|s| s["name"] == source_name)
         .ok_or_else(|| format!("Source '{}' not found in current scene", source_name))?;
     let item_id = item["id"].as_i64().unwrap_or(0);
 
-    send_v4_request(ws, "RemoveSceneItem", serde_json::json!({
-        "scene": scene_name,
-        "item": { "name": source_name, "id": item_id },
-    })).await?;
+    send_v4_request(
+        ws,
+        "RemoveSceneItem",
+        serde_json::json!({
+            "scene": scene_name,
+            "item": { "name": source_name, "id": item_id },
+        }),
+    )
+    .await?;
     Ok(())
 }
 
@@ -856,7 +927,11 @@ pub async fn obs_remove_browser_source(
 /// video_id, only the served HTML is updated in-place — the TCP listener
 /// stays bound to the same port (no AddressInUse errors).
 #[tauri::command]
-pub async fn start_chat_server(video_id: String, css: String, hide_atsign: bool) -> Result<u16, String> {
+pub async fn start_chat_server(
+    video_id: String,
+    css: String,
+    hide_atsign: bool,
+) -> Result<u16, String> {
     let chat_url = format!(
         "https://www.youtube.com/live_chat?is_popout=1&v={}",
         video_id
@@ -1026,10 +1101,7 @@ pub async fn start_chat_server(video_id: String, css: String, hide_atsign: bool)
         .replace("STRIP_ATSIGN_PLACEHOLDER", if hide_atsign { "true" } else { "false" });
 
     // ── 3. Inject CSS + JS before </head> ──
-    let modified = yt_html.replace(
-        "</head>",
-        &format!("<style>{}</style>{}</head>", css, js),
-    );
+    let modified = yt_html.replace("</head>", &format!("<style>{}</style>{}</head>", css, js));
 
     if modified.len() == yt_html.len() && !yt_html.contains("</head>") {
         return Err("YouTube page has no </head> tag — structure may have changed".into());
@@ -1055,8 +1127,7 @@ pub async fn start_chat_server(video_id: String, css: String, hide_atsign: bool)
 
         // serve_chat_html reads from the global SHARED_HTML static,
         // so no State needed in the router.
-        let app = axum::Router::new()
-            .route("/", axum::routing::get(serve_chat_html));
+        let app = axum::Router::new().route("/", axum::routing::get(serve_chat_html));
 
         CHAT_SERVER_RUNNING.store(true, Ordering::SeqCst);
 
