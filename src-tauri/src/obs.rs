@@ -10,6 +10,11 @@ use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
+/// User-Agent matching the Tauri preview webview so YouTube treats
+/// the proxy fetch the same as a browser page load.
+const PROXY_USER_AGENT: &str =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
 const OBS_WS_PORT: u16 = 4455;
 const HTTP_CHAT_PORT: u16 = 7842;
 const LIVICAT_CHAT_SOURCE: &str = "Livicat Chat";
@@ -21,9 +26,13 @@ pub struct StreamingAppInfo {
     pub detected: String, // "obs_compatible" | "none"
 }
 
-// Global flag so the HTTP server only starts once
+// Global state for the HTTP proxy server
 static CHAT_SERVER_RUNNING: AtomicBool = AtomicBool::new(false);
 static CHAT_SERVER_HANDLE: Mutex<Option<tokio::task::JoinHandle<()>>> = Mutex::new(None);
+static CHAT_CURRENT_VIDEO_ID: Mutex<Option<String>> = Mutex::new(None);
+/// The HTML served by the proxy — updated atomically on video change
+/// so the server never needs to restart.
+static SHARED_HTML: Mutex<Option<Arc<String>>> = Mutex::new(None);
 
 /* ─── Protocol Detection ───────────────────────────────────────── */
 
@@ -541,13 +550,18 @@ pub async fn obs_send_browser_source(
     scene_name: Option<String>,
     width: u32,
     height: u32,
+    proxy_url: Option<String>, // if set, use proxy instead of YouTube URL
 ) -> Result<String, String> {
     let source_name = source_name.unwrap_or_else(|| LIVICAT_CHAT_SOURCE.to_string());
 
-    let chat_url = format!(
-        "https://www.youtube.com/live_chat?is_popout=1&v={}",
-        video_id
-    );
+    let chat_url = if let Some(url) = proxy_url.filter(|u| !u.is_empty()) {
+        url
+    } else {
+        format!(
+            "https://www.youtube.com/live_chat?is_popout=1&v={}",
+            video_id
+        )
+    };
 
     let (ws, proto) = detect_protocol(&obs_url).await?;
 
@@ -834,61 +848,232 @@ pub async fn obs_remove_browser_source(
     Ok(())
 }
 
-/// Start a local HTTP server (`http://127.0.0.1:7842`) that serves the
-/// styled YouTube live chat as a plain HTML page with an `<iframe>`.
+/// Start a local HTTP proxy server (`http://127.0.0.1:7842`) that fetches
+/// YouTube's live chat HTML, injects our CSS + JS, and serves the modified
+/// page to OBS Browser Source — giving us full control over the DOM.
+///
+/// The server runs until explicitly stopped. On repeat calls with a new
+/// video_id, only the served HTML is updated in-place — the TCP listener
+/// stays bound to the same port (no AddressInUse errors).
 #[tauri::command]
-pub async fn start_chat_server(video_id: String, css: String) -> Result<u16, String> {
-    if CHAT_SERVER_RUNNING.load(Ordering::SeqCst) {
-        return Ok(HTTP_CHAT_PORT);
-    }
-
+pub async fn start_chat_server(video_id: String, css: String, hide_atsign: bool) -> Result<u16, String> {
     let chat_url = format!(
         "https://www.youtube.com/live_chat?is_popout=1&v={}",
         video_id
     );
 
-    let html = format!(
-        r#"<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; }}
-    html,body {{ width:100%; height:100%; overflow:hidden; background:transparent; }}
-    iframe {{ width:100%; height:100%; border:none; }}
-  </style>
-  <style>{css}</style>
-</head>
-<body>
-  <iframe src="{chat_url}" frameborder="0"></iframe>
-</body>
-</html>"#
-    );
+    // ── 1. Fetch YouTube's live chat HTML ──
+    let client = reqwest::Client::builder()
+        .user_agent(PROXY_USER_AGENT)
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
 
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", HTTP_CHAT_PORT))
+    let yt_html = client
+        .get(&chat_url)
+        .send()
         .await
-        .map_err(|e| format!("Failed to bind HTTP server: {}", e))?;
+        .map_err(|e| format!("Failed to fetch YouTube chat page: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read YouTube response body: {}", e))?;
 
-    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
-    let shared_html = Arc::new(html);
+    // ── 2. Inject JS — consolidated MutationObserver features ──
+    let js = r#"<script>
+(function() {
+    'use strict';
+    console.log('[Livicat] Proxy script active');
 
-    let app = axum::Router::new()
-        .route("/", axum::routing::get(serve_chat_html))
-        .with_state(shared_html);
+    /* ===== Auto-scroll to latest message ===== */
+    function __lc_scroll() {
+        var s = document.querySelector('#item-scroller') ||
+                document.querySelector('yt-live-chat-item-list-renderer #item-scroller');
+        if (s) { s.scrollTop = s.scrollHeight; }
+    }
+    [0, 300, 1000, 2500].forEach(function(t) { setTimeout(__lc_scroll, t); });
 
-    CHAT_SERVER_RUNNING.store(true, Ordering::SeqCst);
+    /* ===== Show-more auto-click ===== */
+    function __lc_click_show_more() {
+        if (window.__lc_auto_scroll === false) return;
+        var btn = document.querySelector('yt-icon-button#show-more button#button');
+        if (btn) {
+            btn.click();
+            console.log('[Livicat] Auto-clicked show-more button');
+        }
+    }
+    window.__lc_auto_scroll = {};
+    if (!window.__livicat_show_more_obs) {
+        window.__livicat_show_more_obs = new MutationObserver(function() {
+            __lc_click_show_more();
+        });
+        window.__livicat_show_more_obs.observe(document.documentElement, { childList: true, subtree: true });
+    }
+    __lc_click_show_more();
 
-    let handle = tokio::spawn(async move {
-        axum::serve(listener, app).await.ok();
-        CHAT_SERVER_RUNNING.store(false, Ordering::SeqCst);
-    });
-
-    if let Ok(mut guard) = CHAT_SERVER_HANDLE.lock() {
-        *guard = Some(handle);
+    /* ===== Watermark with bounce/curious animation ===== */
+    function __lc_wm_cycle(el) {
+        setTimeout(function() {
+            el.style.animation = '__lc_exit 0.9s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards';
+            setTimeout(function() {
+                el.style.display = 'none';
+                window.__lc_wm_hidden = true;
+                setTimeout(function() {
+                    window.__lc_wm_hidden = false;
+                    el.style.display = 'flex';
+                    el.style.animation = '__lc_enter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, __lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite, __lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite';
+                    __lc_wm_cycle(el);
+                }, 1800000);
+            }, 900);
+        }, 15000);
     }
 
-    Ok(port)
+    function __lc_make_wm() {
+        if (!document.getElementById('livicat-wm-anim')) {
+            var s = document.createElement('style');
+            s.id = 'livicat-wm-anim';
+            s.textContent =
+                '@keyframes __lc_bounce {0%,100%{transform:translateY(0)rotate(0deg)}20%{transform:translateY(-8px)rotate(-5deg)}40%{transform:translateY(2px)rotate(2deg)}60%{transform:translateY(-4px)rotate(-2deg)}80%{transform:translateY(1px)rotate(1deg)}}' +
+                '@keyframes __lc_fadein {0%{opacity:0;transform:translateX(12px)scale(0.9)}60%{opacity:1;transform:translateX(-2px)scale(1.02)}100%{opacity:0.7;transform:translateX(0)scale(1)}}' +
+                '@keyframes __lc_curious {0%,100%{transform:rotate(0deg)}25%{transform:rotate(-4deg)}50%{transform:rotate(1deg)}75%{transform:rotate(3deg)}}' +
+                '@keyframes __lc_enter {0%{opacity:0;transform:translateX(50px)scale(0.7)}60%{opacity:1;transform:translateX(-6px)scale(1.12)}80%{transform:translateX(2px)scale(0.98)}100%{transform:translateX(0)scale(1)}}' +
+                '@keyframes __lc_exit {0%{opacity:1;transform:translateX(0)scale(1)}30%{opacity:1;transform:translateX(-5px)scale(1.15)}100%{opacity:0;transform:translateX(60px)scale(0.75)}}';
+            document.head.appendChild(s);
+        }
+
+        var container = document.createElement('div');
+        container.id = 'livicat-watermark';
+        container.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;pointer-events:none;display:flex;align-items:center;gap:6px;animation:__lc_enter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,__lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,__lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;';
+
+        var icon = document.createElement('div');
+        icon.style.cssText = 'width:28px;height:28px;animation:__lc_bounce 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,__lc_curious 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;opacity:0.6;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=);background-size:contain;background-repeat:no-repeat;background-position:center;';
+
+        var text = document.createElement('span');
+        text.textContent = 'LIVICAT';
+        text.style.cssText = 'font:600 9px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0.8px;color:rgba(255,255,255,0.7);animation:__lc_fadein 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;';
+
+        container.appendChild(icon);
+        container.appendChild(text);
+        document.body.appendChild(container);
+        __lc_wm_cycle(container);
+        return container;
+    }
+
+    if (!document.getElementById('livicat-watermark')) {
+        __lc_make_wm();
+        console.log('[Livicat] Watermark created');
+    }
+
+    if (!window.__livicat_wmobs) {
+        window.__livicat_wmobs = new MutationObserver(function() {
+            if (!window.__lc_wm_hidden && !document.getElementById('livicat-watermark')) {
+                __lc_make_wm();
+                console.log('[Livicat] Watermark re-created by observer');
+            }
+        });
+        window.__livicat_wmobs.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    /* ===== Data-punct attribute observer ===== */
+    if (!window.__livicat_punct) {
+        window.__livicat_punct = true;
+        function __livicat_set_punct(el) {
+            var text = el.textContent || '';
+            if (/[?!]$/.test(text)) {
+                el.setAttribute('data-punct', text.slice(-1));
+            } else {
+                el.removeAttribute('data-punct');
+            }
+        }
+        var __livicat_obs = new MutationObserver(function(muts) {
+            for (var i = 0; i < muts.length; i++) {
+                var nodes = muts[i].addedNodes;
+                for (var j = 0; j < nodes.length; j++) {
+                    var n = nodes[j];
+                    if (n.nodeType === 1) {
+                        if (n.matches && n.matches('yt-live-chat-text-message-renderer')) {
+                            var m = n.querySelector('#message');
+                            if (m) __livicat_set_punct(m);
+                        }
+                        if (n.id === 'message' || n.querySelector && n.querySelector('#message')) {
+                            var m = n.id === 'message' ? n : n.querySelector('#message');
+                            if (m) __livicat_set_punct(m);
+                        }
+                    }
+                }
+            }
+        });
+        __livicat_obs.observe(document.documentElement, { childList: true, subtree: true });
+        document.querySelectorAll('yt-live-chat-text-message-renderer #message').forEach(__livicat_set_punct);
+        console.log('[Livicat] Punct observer ready');
+    }
+
+    /* ===== @ stripping (controlled by Core Settings > Common) ===== */
+    window.__livicat_strip_atsign = STRIP_ATSIGN_PLACEHOLDER;
+    function __lc_strip_at() {
+        if (!window.__livicat_strip_atsign) return;
+        document.querySelectorAll('#author-name').forEach(function(el) {
+            if (el.textContent.indexOf('@') === 0) {
+                el.textContent = el.textContent.slice(1);
+            }
+        });
+    }
+    if (window.__livicat_strip_atsign) {
+        __lc_strip_at();
+        var __livicat_strip_obs = new MutationObserver(function() { __lc_strip_at(); });
+        __livicat_strip_obs.observe(document.documentElement, { childList: true, subtree: true });
+    }
+})();
+</script>"#
+        .replace("STRIP_ATSIGN_PLACEHOLDER", if hide_atsign { "true" } else { "false" });
+
+    // ── 3. Inject CSS + JS before </head> ──
+    let modified = yt_html.replace(
+        "</head>",
+        &format!("<style>{}</style>{}</head>", css, js),
+    );
+
+    if modified.len() == yt_html.len() && !yt_html.contains("</head>") {
+        return Err("YouTube page has no </head> tag — structure may have changed".into());
+    }
+
+    // ── 4. Update the shared HTML atomically ──
+    {
+        let mut guard = SHARED_HTML.lock().map_err(|e| e.to_string())?;
+        *guard = Some(Arc::new(modified));
+    }
+    {
+        let mut guard = CHAT_CURRENT_VIDEO_ID.lock().map_err(|e| e.to_string())?;
+        *guard = Some(video_id);
+    }
+
+    // ── 5. Start the server once (idempotent on repeat calls) ──
+    if !CHAT_SERVER_RUNNING.load(Ordering::SeqCst) {
+        let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", HTTP_CHAT_PORT))
+            .await
+            .map_err(|e| format!("Failed to bind HTTP server: {}", e))?;
+
+        let port = listener.local_addr().map_err(|e| e.to_string())?.port();
+
+        // serve_chat_html reads from the global SHARED_HTML static,
+        // so no State needed in the router.
+        let app = axum::Router::new()
+            .route("/", axum::routing::get(serve_chat_html));
+
+        CHAT_SERVER_RUNNING.store(true, Ordering::SeqCst);
+
+        let handle = tokio::spawn(async move {
+            axum::serve(listener, app).await.ok();
+            CHAT_SERVER_RUNNING.store(false, Ordering::SeqCst);
+        });
+
+        if let Ok(mut guard) = CHAT_SERVER_HANDLE.lock() {
+            *guard = Some(handle);
+        }
+
+        return Ok(port);
+    }
+
+    // Server already running — just return the port with the new HTML served
+    Ok(HTTP_CHAT_PORT)
 }
 
 /// Stop the HTTP chat server gracefully.
@@ -898,6 +1083,9 @@ pub async fn stop_chat_server() -> Result<(), String> {
         if let Some(handle) = guard.take() {
             handle.abort();
             CHAT_SERVER_RUNNING.store(false, Ordering::SeqCst);
+            if let Ok(mut id_guard) = CHAT_CURRENT_VIDEO_ID.lock() {
+                *id_guard = None;
+            }
             return Ok(());
         }
     }
@@ -906,10 +1094,13 @@ pub async fn stop_chat_server() -> Result<(), String> {
 
 /* ─── Misc ─────────────────────────────────────────────────────── */
 
-async fn serve_chat_html(
-    axum::extract::State(html): axum::extract::State<Arc<String>>,
-) -> axum::response::Html<String> {
-    axum::response::Html((*html).clone())
+async fn serve_chat_html() -> axum::response::Html<String> {
+    let html = SHARED_HTML
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().map(|s| (**s).clone()))
+        .unwrap_or_default();
+    axum::response::Html(html)
 }
 
 /// OBS WebSocket v5 auth – SHA256(password + salt) base64'd, then

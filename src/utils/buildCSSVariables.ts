@@ -247,6 +247,19 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
     lines.push('}')
   }
 
+  // ── Hide @ prefix on usernames ─────────────────────────────
+  // @ is stripped from data by Rust. The shorter text narrows the
+  // author chip, which can cause layout shifts (bubble tail closer
+  // to avatar). We compensate with a min-width + centered text.
+  if (settings['hide-username-atsign']) {
+    lines.push('')
+    lines.push('/* Hide @ prefix in usernames — chip balance */')
+    lines.push('#content #author-name {')
+    lines.push('  min-width: 2em !important;')
+    lines.push('  text-align: center !important;')
+    lines.push('}')
+  }
+
   // ── Chroma key mode: green background for OBS keying ─────────
   if (settings['chroma-key']) {
     lines.push('')

@@ -7,11 +7,12 @@ import { OBSConnectionPanel } from '../layout/OBSConnectionPanel'
 interface StreamSenderProps {
   videoId: string | null
   injectedCSS: string
+  hideAtsign: boolean
 }
 
-type StreamState = 'idle' | 'sending' | 'websocket' | 'http'
+type StreamState = 'idle' | 'sending' | 'stopping' | 'websocket' | 'http'
 
-export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
+export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderProps) {
   const { settings, isConfigured } = useOBSSettings()
   const [showSetup, setShowSetup] = React.useState(false)
   const [streamState, setStreamState] = React.useState<StreamState>('idle')
@@ -46,95 +47,125 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
 
     setStreamState('sending')
 
-    // User explicitly chose HTTP fallback — skip WebSocket
-    if (s.obsUrl === 'http-fallback') {
-      const port = await TauriService.startChatServer(videoId, injectedCSS)
-      if (port) {
-        setHttpPort(port)
+    try {
+      // User explicitly chose HTTP fallback — skip WebSocket
+      if (s.obsUrl === 'http-fallback') {
+        const port = await TauriService.startChatServer(videoId, injectedCSS, hideAtsign)
+        if (port) {
+          setHttpPort(port)
+          setHttpDismissed(false)
+          setStreamState('http')
+          showToast(`HTTP server started on port ${port}`)
+          trackEventAsync('stream_sent_http', { port })
+        } else {
+          setStreamState('idle')
+          showToast('Failed to start HTTP server', true)
+        }
+        return
+      }
+
+      // 1. Try WebSocket — using headless chat system
+      if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
+        const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
+
+        if (!chatPort) {
+          setStreamState('idle')
+          showToast('Failed to start chat engine', true)
+          return
+        }
+
+        const proxyUrl = `http://localhost:${chatPort}`
+        const result = await TauriService.sendBrowserSource({
+          obsUrl: s.obsUrl,
+          obsPassword: s.obsPassword,
+          videoId,
+          css: injectedCSS,
+          sourceName: s.sourceName || 'Livicat Chat',
+          sceneName: s.defaultScene || undefined,
+          proxyUrl,
+        })
+
+        if (result === 'created') {
+          setStreamState('websocket')
+          showToast('Livicat chat streaming to OBS!')
+          trackEventAsync('stream_sent_headless', { mode: 'create', port: chatPort })
+          return
+        } else if (result === 'updated') {
+          setStreamState('websocket')
+          showToast('Livicat chat updated in OBS!')
+          trackEventAsync('stream_sent_headless', { mode: 'update', port: chatPort })
+          return
+        }
+
+        // Headless + OBS failed — clean up headless
+        await TauriService.stopChat()
+        console.warn('[StreamSender] Headless+WebSocket failed, falling back to HTTP')
+      }
+
+      // 2. HTTP Fallback Path
+      const fallbackPort = await TauriService.startChatServer(videoId, injectedCSS, hideAtsign)
+      if (fallbackPort) {
+        setHttpPort(fallbackPort)
         setHttpDismissed(false)
         setStreamState('http')
-        showToast(`HTTP server started on port ${port}`)
-        trackEventAsync('stream_sent_http', { port })
+        showToast(`HTTP server started on port ${fallbackPort}`)
+        trackEventAsync('stream_sent_http', { port: fallbackPort })
       } else {
         setStreamState('idle')
         showToast('Failed to start HTTP server', true)
       }
-      return
-    }
-
-    // 1. Try WebSocket
-    if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
-      const result = await TauriService.sendBrowserSource({
-        obsUrl: s.obsUrl,
-        obsPassword: s.obsPassword,
-        videoId,
-        css: injectedCSS,
-        sourceName: s.sourceName || 'Livicat Chat',
-        sceneName: s.defaultScene || undefined,
-      })
-
-      if (result === 'created') {
-        setStreamState('websocket')
-        showToast('Source added to OBS/PRISM!')
-        trackEventAsync('stream_sent_websocket', { mode: 'create' })
-        return
-      } else if (result === 'updated') {
-        setStreamState('websocket')
-        showToast('Source CSS updated in OBS/PRISM!')
-        trackEventAsync('stream_sent_websocket', { mode: 'update' })
-        return
-      }
-
-      console.warn('[StreamSender] WebSocket failed, falling back to HTTP')
-    }
-
-    // 2. HTTP Fallback Path
-    const port = await TauriService.startChatServer(videoId, injectedCSS)
-    if (port) {
-      setHttpPort(port)
-      setHttpDismissed(false)
-      setStreamState('http')
-      showToast(`HTTP fallback started on port ${port}`)
-      trackEventAsync('stream_sent_http', { port })
-    } else {
+    } catch (err) {
+      console.error('[StreamSender] Stream failed with exception:', err)
       setStreamState('idle')
-      showToast('Failed to connect to streaming app', true)
+      showToast('Failed to start stream', true)
     }
   }
 
   const handleStopStream = async () => {
+    // Signal visual feedback immediately before any async work
+    setStreamState('stopping')
+
     const s = settingsRef.current
 
-    if (streamState === 'websocket') {
-      // Remove OBS source
-      const ok = await TauriService.removeBrowserSource(
-        s.obsUrl || '',
-        s.obsPassword,
-        s.sourceName || 'Livicat Chat'
-      )
-      if (ok) {
-        setStreamState('idle')
-        showToast('Source removed from OBS/PRISM')
-        trackEventAsync('stream_stopped', { mode: 'websocket' })
-      } else {
-        // Even if removing fails (source already gone), reset state
-        setStreamState('idle')
-        showToast('Source removed (or already gone)')
+    try {
+      if (streamState === 'websocket') {
+        // Stop headless chat system (Chrome + processor + renderer)
+        await TauriService.stopChat()
+
+        // Remove OBS source
+        const ok = await TauriService.removeBrowserSource(
+          s.obsUrl || '',
+          s.obsPassword,
+          s.sourceName || 'Livicat Chat'
+        )
+        if (ok) {
+          setStreamState('idle')
+          showToast('Livicat chat stopped')
+          trackEventAsync('stream_stopped', { mode: 'headless' })
+        } else {
+          // Even if removing fails (source already gone), reset state
+          setStreamState('idle')
+          showToast('Livicat chat stopped (source already gone)')
+        }
+      } else if (streamState === 'http') {
+        const ok = await TauriService.stopChatServer()
+        if (ok) {
+          setHttpPort(null)
+          setHttpDismissed(false)
+          setStreamState('idle')
+          showToast('HTTP server stopped')
+          trackEventAsync('stream_stopped', { mode: 'http' })
+        } else {
+          setHttpPort(null)
+          setHttpDismissed(false)
+          setStreamState('idle')
+          showToast('HTTP server stopped (or already stopped)')
+        }
       }
-    } else if (streamState === 'http') {
-      const ok = await TauriService.stopChatServer()
-      if (ok) {
-        setHttpPort(null)
-        setHttpDismissed(false)
-        setStreamState('idle')
-        showToast('HTTP server stopped')
-        trackEventAsync('stream_stopped', { mode: 'http' })
-      } else {
-        setHttpPort(null)
-        setHttpDismissed(false)
-        setStreamState('idle')
-        showToast('HTTP server stopped (or already stopped)')
-      }
+    } catch (err) {
+      console.error('[StreamSender] Stop stream failed with exception:', err)
+      setStreamState('idle')
+      showToast('Failed to stop stream', true)
     }
   }
 
@@ -143,14 +174,15 @@ export function StreamSender({ videoId, injectedCSS }: StreamSenderProps) {
   const buttonDisabled =
     !videoId ||
     streamState === 'sending' ||
+    streamState === 'stopping' ||
     (streamState === 'idle' && !isConfigured())
 
   const getButtonContent = () => {
-    if (streamState === 'sending') {
+    if (streamState === 'sending' || streamState === 'stopping') {
       return (
         <>
           <span className="w-4 h-4 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />
-          Sending
+          {streamState === 'stopping' ? 'Stopping' : 'Sending'}
         </>
       )
     }

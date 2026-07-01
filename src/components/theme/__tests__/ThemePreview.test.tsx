@@ -7,12 +7,14 @@ const mockScheme: SettingDef[] = [
   { key: 'messageBg', type: 'color', label: 'Background', default: '#1a1a1a' },
   { key: 'fontSize', type: 'range', label: 'Font Size', min: 10, max: 48, default: 14, unit: 'px' },
   { key: 'show-avatars', type: 'toggle', label: 'Show Avatars', default: true },
+  { key: 'hide-username-atsign', type: 'toggle', label: 'Hide @ in Usernames', default: false },
 ]
 
 const mockSettings = {
   messageBg: '#ff0000',
   fontSize: 20,
   'show-avatars': true,
+  'hide-username-atsign': false,
 }
 
 const mockCss = `
@@ -173,6 +175,65 @@ describe('ThemePreview', () => {
       (style) => style.textContent && style.textContent.includes('livicat-gallery-grid')
     )
     expect(hasGalleryStyles).toBe(true)
+  })
+
+  describe('hide-username-atsign', () => {
+    it('prefixes demo usernames with @ when toggle is on', () => {
+      const { container } = render(
+        <ThemePreview
+          themeId="test"
+          themeCss={mockCss}
+          settings={{ ...mockSettings, 'hide-username-atsign': true }}
+          scheme={mockScheme}
+        />
+      )
+
+      const names = container.querySelectorAll('#author-name')
+      expect(names.length).toBeGreaterThan(0)
+      // First demo username is 'StreamKing' → should be '@StreamKing'
+      expect(names[0].textContent).toMatch(/^@/)
+    })
+
+    it('does not prefix usernames when toggle is off', () => {
+      const { container } = render(
+        <ThemePreview
+          themeId="test"
+          themeCss={mockCss}
+          settings={{ ...mockSettings, 'hide-username-atsign': false }}
+          scheme={mockScheme}
+        />
+      )
+
+      const names = container.querySelectorAll('#author-name')
+      expect(names.length).toBeGreaterThan(0)
+      // First demo username is 'StreamKing' → should NOT have @
+      expect(names[0].textContent).toBe('StreamKing')
+    })
+
+    it('does not double-prefix when messages prop already has @', () => {
+      const { container } = render(
+        <ThemePreview
+          themeId="test"
+          themeCss={mockCss}
+          settings={{ ...mockSettings, 'hide-username-atsign': true }}
+          scheme={mockScheme}
+          messages={[
+            {
+              id: 'custom1',
+              username: '@alreadyPrefixed',
+              message: 'Hello',
+              avatarSeed: 1,
+              timestamp: '10:00 AM',
+            },
+          ]}
+        />
+      )
+
+      const names = container.querySelectorAll('#author-name')
+      expect(names.length).toBe(1)
+      // Should NOT double-prefix — messages prop is used as-is
+      expect(names[0].textContent).toBe('@alreadyPrefixed')
+    })
   })
 
   it('renders live mode with vertical stack layout', () => {

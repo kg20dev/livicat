@@ -1175,7 +1175,7 @@ function WorkspaceBody({
                   </button>
 
                   {/* Send to Stream */}
-                  <StreamSender videoId={videoId} injectedCSS={ytCss} />
+                  <StreamSender videoId={videoId} injectedCSS={ytCss} hideAtsign={settings['hide-username-atsign'] as boolean} />
                 </div>
               )}
 

@@ -258,6 +258,13 @@ export const CORE_SCHEME: SettingDef[] = [
     default: 0,
     unit: 'px',
   },
+  {
+    key: 'hide-username-atsign',
+    section: 'Common',
+    type: 'toggle',
+    label: 'Hide @ in Usernames',
+    default: false,
+  },
 
   /* ── Avatar ────────────────────────────────────────────── */
   {

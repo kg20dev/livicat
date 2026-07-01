@@ -137,6 +137,7 @@ export const TauriService = {
     sceneName?: string
     width?: number
     height?: number
+    proxyUrl?: string
   }): Promise<'created' | 'updated' | null> {
     const invoke = await getInvoke()
     if (!invoke) return null
@@ -150,6 +151,7 @@ export const TauriService = {
         sceneName: params.sceneName ?? null,
         width: params.width ?? 400,
         height: params.height ?? 600,
+        proxyUrl: params.proxyUrl ?? null,
       })
     } catch (e) {
       console.error('[TauriService] sendBrowserSource failed:', e)
@@ -158,11 +160,11 @@ export const TauriService = {
   },
 
   /** Start local HTTP chat server (fallback for PRISM/Streamlabs) */
-  async startChatServer(videoId: string, css: string): Promise<number | null> {
+  async startChatServer(videoId: string, css: string, hideAtsign: boolean): Promise<number | null> {
     const invoke = await getInvoke()
     if (!invoke) return null
     try {
-      return await invoke<number>('start_chat_server', { videoId, css })
+      return await invoke<number>('start_chat_server', { videoId, css, hideAtsign })
     } catch (e) {
       console.error('[TauriService] startChatServer failed:', e)
       return null
@@ -195,6 +197,37 @@ export const TauriService = {
       return true
     } catch (e) {
       console.error('[TauriService] stopChatServer failed:', e)
+      return false
+    }
+  },
+
+  /* ─── WebView Chat System ────────────────────────────────────── */
+
+  /** Start the chat capture system (renderer + hidden WebView).
+   *  The hidden WebView navigates to YouTube live chat, injects CSS,
+   *  and captures messages via a MutationObserver. Captured messages
+   *  are sent to the renderer, which serves them via HTTP for OBS.
+   *  Returns the renderer port for OBS to connect to. */
+  async startChat(videoId: string, css: string, hideAtsign: boolean): Promise<number | null> {
+    const invoke = await getInvoke()
+    if (!invoke) return null
+    try {
+      return await invoke<number>('start_chat', { videoId, css, hideAtsign })
+    } catch (e) {
+      console.error('[TauriService] startChat failed:', e)
+      return null
+    }
+  },
+
+  /** Stop the chat capture system and clean up all resources. */
+  async stopChat(): Promise<boolean> {
+    const invoke = await getInvoke()
+    if (!invoke) return false
+    try {
+      await invoke('stop_chat')
+      return true
+    } catch (e) {
+      console.error('[TauriService] stopChat failed:', e)
       return false
     }
   },
