@@ -9,6 +9,25 @@ import { describe, it, expect } from 'vitest'
 import { CORE_SCHEME } from '../base/core'
 
 describe('CORE_SCHEME', () => {
+  describe('hide-username-atsign', () => {
+    const def = CORE_SCHEME.find((d) => d.key === 'hide-username-atsign')
+
+    it('is defined in the CORE_SCHEME', () => {
+      expect(def).toBeDefined()
+    })
+
+    it('is a toggle', () => {
+      expect(def!.type).toBe('toggle')
+    })
+
+    it('is in the Common section', () => {
+      expect(def!.section).toBe('Common')
+    })
+
+    it('defaults to false', () => {
+      expect(def!.default).toBe(false)
+    })
+  })
   describe('forced-auto-scroll', () => {
     const def = CORE_SCHEME.find((d) => d.key === 'forced-auto-scroll')
 

@@ -27,6 +27,7 @@ import { useResponsive } from '../../hooks/useResponsive'
 import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
+import { StreamSender } from '../ui/StreamSender'
 
 /* ─── Platform Detection ──────────────────────────────────────── */
 const isMac =
@@ -784,6 +785,9 @@ function WorkspaceBody({
       : [inlineCss, unscopedCss].join('\n\n')
   }, [settings, scheme, theme.css, theme.reset, manifest.id])
 
+  /* ─── Stable CSS for StreamSender ──────────────────────────────── */
+  const ytCss = useMemo(() => buildYoutubeCss(), [buildYoutubeCss])
+
   /* ─── YouTube preview ────────────────────────────────────────── */
 
   const validation = useMemo(() => validateYouTubeUrl(youtubeUrl), [youtubeUrl])
@@ -1141,7 +1145,7 @@ function WorkspaceBody({
             >
               {previewMode === 'live' && (
                 <div
-                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full' : 'gap-2'}`}
+                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full flex-wrap' : 'gap-2'}`}
                 >
                   <input
                     type="text"
@@ -1169,6 +1173,13 @@ function WorkspaceBody({
                       <span className="material-symbols-outlined text-[12px]">close</span>
                     )}
                   </button>
+
+                  {/* Send to Stream */}
+                  <StreamSender
+                    videoId={videoId}
+                    injectedCSS={ytCss}
+                    hideAtsign={settings['hide-username-atsign'] as boolean}
+                  />
                 </div>
               )}
 

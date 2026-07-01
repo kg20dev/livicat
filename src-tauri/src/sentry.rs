@@ -155,10 +155,7 @@ pub fn get_device_hash() -> String {
 
 /// Track a feature usage event as a Sentry transaction span for adoption metrics
 pub fn track_feature(name: &str, version: &str, device_id: &str) {
-    let transaction = sentry::start_transaction(sentry::TransactionContext::new(
-        name,
-        "feature",
-    ));
+    let transaction = sentry::start_transaction(sentry::TransactionContext::new(name, "feature"));
     transaction.set_tag("feature.name", name);
     transaction.set_tag("feature.version", version);
     transaction.set_data("device_id", device_id.into());

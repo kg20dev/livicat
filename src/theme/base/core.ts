@@ -22,6 +22,13 @@ export const CORE_SCHEME: SettingDef[] = [
     label: 'Chroma Key Ready',
     default: false,
   },
+  {
+    key: 'obs-bg-transparent',
+    section: 'OBS',
+    type: 'toggle',
+    label: 'Transparent Background',
+    default: false,
+  },
 
   /* ── Role Colors (includes general defaults) ────────────── */
   {
@@ -250,6 +257,13 @@ export const CORE_SCHEME: SettingDef[] = [
     max: 12,
     default: 0,
     unit: 'px',
+  },
+  {
+    key: 'hide-username-atsign',
+    section: 'Common',
+    type: 'toggle',
+    label: 'Hide @ in Usernames',
+    default: false,
   },
 
   /* ── Avatar ────────────────────────────────────────────── */
