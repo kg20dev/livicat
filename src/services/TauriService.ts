@@ -149,24 +149,12 @@ export const TauriService = {
         css: params.css,
         sourceName: params.sourceName ?? null,
         sceneName: params.sceneName ?? null,
-        width: params.width ?? 400,
+        width: params.width ?? 600,
         height: params.height ?? 600,
         proxyUrl: params.proxyUrl ?? null,
       })
     } catch (e) {
       console.error('[TauriService] sendBrowserSource failed:', e)
-      return null
-    }
-  },
-
-  /** Start local HTTP chat server (fallback for PRISM/Streamlabs) */
-  async startChatServer(videoId: string, css: string, hideAtsign: boolean): Promise<number | null> {
-    const invoke = await getInvoke()
-    if (!invoke) return null
-    try {
-      return await invoke<number>('start_chat_server', { videoId, css, hideAtsign })
-    } catch (e) {
-      console.error('[TauriService] startChatServer failed:', e)
       return null
     }
   },
@@ -188,19 +176,6 @@ export const TauriService = {
       return true
     } catch (e) {
       console.error('[TauriService] removeBrowserSource failed:', e)
-      return false
-    }
-  },
-
-  /** Stop the HTTP fallback chat server */
-  async stopChatServer(): Promise<boolean> {
-    const invoke = await getInvoke()
-    if (!invoke) return false
-    try {
-      await invoke('stop_chat_server')
-      return true
-    } catch (e) {
-      console.error('[TauriService] stopChatServer failed:', e)
       return false
     }
   },

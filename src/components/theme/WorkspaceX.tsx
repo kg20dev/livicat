@@ -28,6 +28,7 @@ import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
 import { StreamSender } from '../ui/StreamSender'
+import { useStreamContext } from '../../hooks/useStreamState'
 
 /* ─── Platform Detection ──────────────────────────────────────── */
 const isMac =
@@ -148,6 +149,8 @@ function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
 export function WorkspaceX() {
   const [selectedThemeId, setSelectedThemeId] = useState(THEMES[0]?.manifest.id ?? '')
   const theme = useMemo(() => getThemeById(selectedThemeId), [selectedThemeId])
+  const { streamState, stopStream } = useStreamContext()
+  const [pendingTheme, setPendingTheme] = useState<string | null>(null)
 
   // Track which sections are open — persists across theme switches
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
@@ -179,6 +182,31 @@ export function WorkspaceX() {
       localStorage.setItem('livicat-recent-themes', JSON.stringify(updated))
       return updated
     })
+  }, [])
+
+  // When a stream is active, show a confirmation before switching themes
+  const handleThemeSwitch = useCallback(
+    (newId: string) => {
+      if (streamState === 'websocket' || streamState === 'sending') {
+        setPendingTheme(newId)
+      } else {
+        setSelectedThemeId(newId)
+        updateRecentThemes(newId)
+      }
+    },
+    [streamState, updateRecentThemes]
+  )
+
+  const confirmStopAndSwitch = useCallback(async () => {
+    if (!pendingTheme) return
+    await stopStream()
+    setSelectedThemeId(pendingTheme)
+    updateRecentThemes(pendingTheme)
+    setPendingTheme(null)
+  }, [pendingTheme, stopStream, updateRecentThemes])
+
+  const cancelSwitch = useCallback(() => {
+    setPendingTheme(null)
   }, [])
 
   // Filtered themes for dropdown
@@ -220,8 +248,7 @@ export function WorkspaceX() {
           e.preventDefault()
           if (filteredThemes[selectedIndex]) {
             const theme = filteredThemes[selectedIndex]
-            setSelectedThemeId(theme.manifest.id)
-            updateRecentThemes(theme.manifest.id)
+            handleThemeSwitch(theme.manifest.id)
             setDropdownOpen(false)
             setDropdownSearch('')
             setSelectedIndex(0)
@@ -238,7 +265,7 @@ export function WorkspaceX() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes])
+  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes, handleThemeSwitch])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -370,8 +397,7 @@ export function WorkspaceX() {
                         <button
                           key={t.manifest.id}
                           onClick={() => {
-                            setSelectedThemeId(t.manifest.id)
-                            updateRecentThemes(t.manifest.id)
+                            handleThemeSwitch(t.manifest.id)
                             setDropdownOpen(false)
                             setDropdownSearch('')
                             setSelectedIndex(0)
@@ -480,10 +506,7 @@ export function WorkspaceX() {
                     return (
                       <button
                         key={id}
-                        onClick={() => {
-                          setSelectedThemeId(id)
-                          updateRecentThemes(id)
-                        }}
+                        onClick={() => handleThemeSwitch(id)}
                         className={`
                           glass-liquid-card px-3 py-2 rounded-lg flex items-center gap-2
                           transition-all duration-200 hover:scale-[1.02] hover:border-primary/40
@@ -524,13 +547,41 @@ export function WorkspaceX() {
         </div>
       </div>
 
-      {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
-      <WorkspaceBody
-        key={selectedThemeId}
-        theme={theme}
-        openSections={openSections}
-        toggleSection={toggleSection}
-      />
+      {/* ─── Body: settings + preview (no key — preserves state across theme switch) ── */}
+      <WorkspaceBody theme={theme} openSections={openSections} toggleSection={toggleSection} />
+
+      {/* ─── Confirm: stop stream before switching theme ────────────────────── */}
+      {pendingTheme && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+        >
+          <div className="bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl max-w-sm w-full mx-4 p-5">
+            <h3 className="text-title-md text-on-surface font-semibold mb-1">
+              Stop stream before switching theme?
+            </h3>
+            <p className="text-body-sm text-on-surface-variant mb-5 leading-relaxed">
+              Your stream will end before switching to{' '}
+              <strong>{getThemeById(pendingTheme)?.manifest.name ?? pendingTheme}</strong>. You can
+              restart it afterward.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={cancelSwitch}
+                className="px-4 py-2 rounded-lg text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStopAndSwitch}
+                className="px-4 py-2 rounded-lg text-label-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
+              >
+                Stop &amp; Switch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1178,7 +1229,7 @@ function WorkspaceBody({
                   <StreamSender
                     videoId={videoId}
                     injectedCSS={ytCss}
-                    hideAtsign={settings['hide-username-atsign'] as boolean}
+                    hideAtsign={(settings['hide-username-atsign'] as boolean) ?? false}
                   />
                 </div>
               )}

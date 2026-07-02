@@ -22,20 +22,16 @@ async function getAppVersion(): Promise<string> {
   return import.meta.env.VITE_APP_VERSION || '0.0.0'
 }
 
-function loadSettings(storageKey: string, scheme: SettingDef[], appVersion: string): ThemeSettings {
+function loadSettings(storageKey: string, scheme: SettingDef[]): ThemeSettings {
   try {
     const raw = localStorage.getItem(storageKey)
     if (raw) {
       const parsed = JSON.parse(raw)
-      const storedVersion = localStorage.getItem(`${storageKey}${VERSION_KEY}`)
 
-      // If version mismatch or no version stored → migrate
-      if (storedVersion !== appVersion) {
-        return migrateSettings(parsed, scheme)
-      }
-
-      // Version matches → return as-is (no structure changes)
-      return parsed
+      // Merge stored values onto defaults to catch any keys added after settings were saved.
+      // Every scheme key is guaranteed to have a value; user overrides take priority.
+      const defaults = getDefaults(scheme)
+      return { ...defaults, ...migrateSettings(parsed, scheme) }
     }
   } catch {
     // Corrupted or unavailable storage — use defaults
@@ -87,11 +83,8 @@ function getDefaults(scheme: SettingDef[]): ThemeSettings {
 export function useThemeSettings(storageKey: string, scheme: SettingDef[]) {
   // Load fallback version immediately for synchronous initial load
   const fallbackVersion = import.meta.env.VITE_APP_VERSION || '0.0.0'
-  const [settings, setSettings] = useState<ThemeSettings>(() =>
-    loadSettings(storageKey, scheme, fallbackVersion)
-  )
+  const [settings, setSettings] = useState<ThemeSettings>(() => loadSettings(storageKey, scheme))
   const [appVersion, setAppVersion] = useState<string>(fallbackVersion)
-  const [versionLoaded, setVersionLoaded] = useState(false)
 
   // Load app version from Rust on mount
   useEffect(() => {
@@ -99,7 +92,6 @@ export function useThemeSettings(storageKey: string, scheme: SettingDef[]) {
     getAppVersion().then((version) => {
       if (mounted) {
         setAppVersion(version)
-        setVersionLoaded(true)
       }
     })
     return () => {
@@ -107,14 +99,11 @@ export function useThemeSettings(storageKey: string, scheme: SettingDef[]) {
     }
   }, [])
 
-  // Reload settings when real version loads (if different from fallback)
+  // Reload settings when storageKey changes (theme switch) or appVersion loads
   useEffect(() => {
-    if (!versionLoaded) return
-    if (appVersion !== fallbackVersion) {
-      const loaded = loadSettings(storageKey, scheme, appVersion)
-      setSettings(loaded)
-    }
-  }, [storageKey, scheme, appVersion, versionLoaded, fallbackVersion])
+    const loaded = loadSettings(storageKey, scheme)
+    setSettings(loaded)
+  }, [storageKey, scheme, appVersion])
 
   const updateSetting = useCallback(
     (key: string, value: string | number | boolean) => {

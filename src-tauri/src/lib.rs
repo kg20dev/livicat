@@ -344,7 +344,10 @@ async fn update_renderer_css(
     };
     match port {
         Some(port) => {
-            let client = reqwest::Client::new();
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(5))
+                .build()
+                .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
             client
                 .post(format!("http://127.0.0.1:{port}/update-css"))
                 .body(css)
@@ -838,8 +841,6 @@ pub fn run() {
             obs::obs_get_scenes,
             obs::obs_send_browser_source,
             obs::obs_remove_browser_source,
-            obs::start_chat_server,
-            obs::stop_chat_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,7 +1,6 @@
 import React from 'react'
-import { TauriService } from '../../services/TauriService'
-import { useOBSSettings, type OBSSettings } from '../../hooks/useOBSSettings'
-import { trackEventAsync } from '../../utils/analytics'
+import { useOBSSettings } from '../../hooks/useOBSSettings'
+import { useStreamContext } from '../../hooks/useStreamState'
 import { OBSConnectionPanel } from '../layout/OBSConnectionPanel'
 
 interface StreamSenderProps {
@@ -10,23 +9,12 @@ interface StreamSenderProps {
   hideAtsign: boolean
 }
 
-type StreamState = 'idle' | 'sending' | 'stopping' | 'websocket' | 'http'
-
 export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderProps) {
   const { settings, isConfigured } = useOBSSettings()
+  const { streamState, startStream, stopStream, pushCssUpdate } = useStreamContext()
   const [showSetup, setShowSetup] = React.useState(false)
-  const [streamState, setStreamState] = React.useState<StreamState>('idle')
   const [toastMsg, setToastMsg] = React.useState('')
   const [toastError, setToastError] = React.useState(false)
-  const [httpPort, setHttpPort] = React.useState<number | null>(null)
-  const [httpDismissed, setHttpDismissed] = React.useState(false)
-
-  // Keep a ref to the latest settings so handlers don't use stale closure
-  const settingsRef = React.useRef(settings)
-  settingsRef.current = settings
-
-  // Track the renderer port so CSS changes can be live-updated via POST
-  const chatPortRef = React.useRef<number | null>(null)
 
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
@@ -37,168 +25,49 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
     }, 4000)
   }
 
-  const handleSendToStream = async (overrideSettings?: OBSSettings) => {
-    if (!videoId) return
+  // ── Stream actions (delegated to shared context) ────────────────
 
-    const s = overrideSettings ?? settingsRef.current
+  const handleSendToStream = async (overrideSettings?: typeof settings) => {
+    if (!videoId) {
+      console.warn('[StreamSender] handleSendToStream: no videoId')
+      return
+    }
 
-    // If not configured at all (no websocket URL saved), show setup
-    if (!s.obsUrl || s.obsUrl === '') {
+    const s = overrideSettings ?? settings
+
+    // If OBS is not configured, show setup modal
+    if (!s.obsUrl || !(s.obsUrl.startsWith('ws://') || s.obsUrl.startsWith('wss://'))) {
+      console.log('[StreamSender] OBS not configured, showing setup modal')
       setShowSetup(true)
       return
     }
 
-    setStreamState('sending')
-
-    try {
-      // User explicitly chose HTTP fallback — skip WebSocket
-      if (s.obsUrl === 'http-fallback') {
-        const port = await TauriService.startChatServer(videoId, injectedCSS, hideAtsign)
-        if (port) {
-          setHttpPort(port)
-          setHttpDismissed(false)
-          setStreamState('http')
-          showToast(`HTTP server started on port ${port}`)
-          trackEventAsync('stream_sent_http', { port })
-        } else {
-          setStreamState('idle')
-          showToast('Failed to start HTTP server', true)
-        }
-        return
-      }
-
-      // 1. Try WebSocket — using headless chat system
-      if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
-        const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
-
-        if (!chatPort) {
-          setStreamState('idle')
-          showToast('Failed to start chat engine', true)
-          return
-        }
-
-        chatPortRef.current = chatPort
-
-        const proxyUrl = `http://localhost:${chatPort}`
-        const result = await TauriService.sendBrowserSource({
-          obsUrl: s.obsUrl,
-          obsPassword: s.obsPassword,
-          videoId,
-          css: injectedCSS,
-          sourceName: s.sourceName || 'Livicat Chat',
-          sceneName: s.defaultScene || undefined,
-          proxyUrl,
-        })
-
-        if (result === 'created') {
-          setStreamState('websocket')
-          showToast('Livicat chat streaming to OBS!')
-          trackEventAsync('stream_sent_headless', { mode: 'create', port: chatPort })
-          return
-        } else if (result === 'updated') {
-          setStreamState('websocket')
-          showToast('Livicat chat updated in OBS!')
-          trackEventAsync('stream_sent_headless', { mode: 'update', port: chatPort })
-          return
-        }
-
-        // Headless + OBS failed — clean up headless
-        await TauriService.stopChat()
-        console.warn('[StreamSender] Headless+WebSocket failed, falling back to HTTP')
-      }
-
-      // 2. HTTP Fallback Path
-      const fallbackPort = await TauriService.startChatServer(videoId, injectedCSS, hideAtsign)
-      if (fallbackPort) {
-        setHttpPort(fallbackPort)
-        setHttpDismissed(false)
-        setStreamState('http')
-        showToast(`HTTP server started on port ${fallbackPort}`)
-        trackEventAsync('stream_sent_http', { port: fallbackPort })
-      } else {
-        setStreamState('idle')
-        showToast('Failed to start HTTP server', true)
-      }
-    } catch (err) {
-      console.error('[StreamSender] Stream failed with exception:', err)
-      setStreamState('idle')
-      showToast('Failed to start stream', true)
-    }
+    console.log('[StreamSender] Calling startStream', {
+      videoId,
+      cssLen: injectedCSS.length,
+      hideAtsign,
+    })
+    const { ok, message } = await startStream(videoId, injectedCSS, hideAtsign, overrideSettings)
+    console.log('[StreamSender] startStream result:', { ok, message })
+    showToast(message, !ok)
   }
 
   const handleStopStream = async () => {
-    // Signal visual feedback immediately before any async work
-    setStreamState('stopping')
-
-    const s = settingsRef.current
-
-    try {
-      if (streamState === 'websocket') {
-        // Stop headless chat system (Chrome + processor + renderer)
-        await TauriService.stopChat()
-
-        chatPortRef.current = null
-
-        // Remove OBS source
-        const ok = await TauriService.removeBrowserSource(
-          s.obsUrl || '',
-          s.obsPassword,
-          s.sourceName || 'Livicat Chat'
-        )
-        if (ok) {
-          setStreamState('idle')
-          showToast('Livicat chat stopped')
-          trackEventAsync('stream_stopped', { mode: 'headless' })
-        } else {
-          // Even if removing fails (source already gone), reset state
-          setStreamState('idle')
-          showToast('Livicat chat stopped (source already gone)')
-        }
-      } else if (streamState === 'http') {
-        const ok = await TauriService.stopChatServer()
-        if (ok) {
-          setHttpPort(null)
-          setHttpDismissed(false)
-          setStreamState('idle')
-          showToast('HTTP server stopped')
-          trackEventAsync('stream_stopped', { mode: 'http' })
-        } else {
-          setHttpPort(null)
-          setHttpDismissed(false)
-          setStreamState('idle')
-          showToast('HTTP server stopped (or already stopped)')
-        }
-      }
-    } catch (err) {
-      console.error('[StreamSender] Stop stream failed with exception:', err)
-      setStreamState('idle')
-      chatPortRef.current = null
-      showToast('Failed to stop stream', true)
-    }
+    const { message } = await stopStream()
+    showToast(message)
   }
 
   // ── Live CSS update: push theme changes to active stream ──────
 
-  const prevCssRef = React.useRef(injectedCSS)
   React.useEffect(() => {
-    if (!chatPortRef.current || streamState !== 'websocket') {
-      prevCssRef.current = injectedCSS
-      return
-    }
-    // Avoid sending the same CSS twice (initial mount)
-    if (injectedCSS === prevCssRef.current) return
-    prevCssRef.current = injectedCSS
-
-    TauriService.updateRendererCss(injectedCSS)
-  }, [injectedCSS, streamState])
+    pushCssUpdate(injectedCSS)
+    // Only re-run when CSS content changes, not on every streamState transition
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [injectedCSS])
 
   // ── Button rendering ─────────────────────────────────────────
 
-  const buttonDisabled =
-    !videoId ||
-    streamState === 'sending' ||
-    streamState === 'stopping' ||
-    (streamState === 'idle' && !isConfigured())
+  const buttonDisabled = !videoId || streamState === 'sending' || streamState === 'stopping'
 
   const getButtonContent = () => {
     if (streamState === 'sending' || streamState === 'stopping') {
@@ -209,11 +78,11 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
         </>
       )
     }
-    if (streamState === 'websocket' || streamState === 'http') {
+    if (streamState === 'websocket') {
       return (
         <>
           <span className="material-symbols-outlined text-[18px]">close</span>
-          {streamState === 'websocket' ? 'Stop Stream' : 'Stop Server'}
+          Stop Stream
         </>
       )
     }
@@ -230,7 +99,7 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
 
   const handleButtonClick = () => {
     if (!videoId) return
-    if (streamState === 'websocket' || streamState === 'http') {
+    if (streamState === 'websocket') {
       handleStopStream()
     } else if (streamState === 'idle') {
       handleSendToStream()
@@ -240,7 +109,6 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   const getTitle = () => {
     if (!videoId) return 'Load a video first'
     if (streamState === 'websocket') return 'Remove browser source from OBS/PRISM'
-    if (streamState === 'http') return 'Stop HTTP server'
     if (isConfigured()) return 'Send chat to OBS/PRISM as a browser source'
     return 'Configure OBS WebSocket connection'
   }
@@ -263,7 +131,7 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
 
   // ── Render ───────────────────────────────────────────────────
 
-  const showGear = isConfigured() || streamState === 'http' || streamState === 'websocket'
+  const showGear = streamState === 'idle' && isConfigured()
 
   return (
     <>
@@ -273,7 +141,7 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
           onClick={handleButtonClick}
           disabled={buttonDisabled}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-sm font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
-            streamState === 'websocket' || streamState === 'http'
+            streamState === 'websocket'
               ? 'bg-error hover:bg-error/80 text-on-error'
               : 'bg-accent hover:bg-accent-hover text-on-accent'
           }`}
@@ -306,34 +174,6 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
           >
             {toastMsg}
           </div>
-        </div>
-      )}
-
-      {/* HTTP Fallback badge — compact inline chip */}
-      {httpPort && streamState === 'http' && !httpDismissed && (
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-surface/90 border border-outline rounded-lg shadow animate-in fade-in slide-in-from-top-1 shrink-0">
-          <span className="material-symbols-outlined text-[12px] text-primary shrink-0">dns</span>
-          <code className="text-[10px] font-mono text-on-surface truncate max-w-[130px]">
-            http://localhost:{httpPort}
-          </code>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(`http://localhost:${httpPort}`)
-              showToast('URL Copied!')
-            }}
-            className="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-primary rounded shrink-0"
-            title="Copy URL"
-          >
-            <span className="material-symbols-outlined text-[12px]">content_copy</span>
-          </button>
-          <span className="w-px h-3 bg-outline-variant/50" />
-          <button
-            onClick={() => setHttpDismissed(true)}
-            className="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-on-surface rounded shrink-0"
-            title="Dismiss"
-          >
-            <span className="material-symbols-outlined text-[12px]">close</span>
-          </button>
         </div>
       )}
     </>
