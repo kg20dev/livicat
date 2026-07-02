@@ -270,23 +270,21 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     #livicat-chat::-webkit-scrollbar {{ width:0 !important; background:transparent !important; }}
     /* Emoji images from YouTube — match text height */
     #message img {{ width:1.2em; height:1.2em; vertical-align:middle; display:inline; }}
-    /* Livicat brand splash — independent top-layer badge, auto-exits after 4s */
+    /* Livicat brand splash — badges float independently, no interference */
     #livicat-watermark {{
-      position:fixed; top:10px; right:10px; z-index:999999;
+      position:fixed; z-index:999999; inset:0;
       pointer-events:none; user-select:none;
-      opacity:0;
-      animation:__lc_enter 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards, __lc_exit 0.9s cubic-bezier(0.6,-0.28,0.735,0.045) 3.6s forwards;
-    }}
-    #livicat-watermark.wm-hidden {{
-      display:none;
     }}
     #livicat-watermark .wm-badge {{
+      position:absolute; top:10px; right:10px;
       display:flex; align-items:center; gap:7px;
       padding:6px 14px 6px 10px;
       border-radius:100px;
       background:linear-gradient(135deg,rgba(20,20,30,0.7) 0%,rgba(10,10,18,0.85) 100%);
       border:1px solid rgba(255,255,255,0.18);
       box-shadow:0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+      opacity:0;
+      animation:__lc_enter 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards, __lc_exit 0.9s cubic-bezier(0.6,-0.28,0.735,0.045) 3.6s forwards;
     }}
     #livicat-watermark .wm-icon {{
       display:inline-block; width:24px; height:24px;
@@ -297,6 +295,14 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       font-size:11px; letter-spacing:1.8px; font-weight:700;
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
+    }}
+    /* Paw print — appears every 30s after initial splash, floating at bottom-left */
+    #livicat-watermark .wm-paw {{
+      position:absolute; bottom:24px; left:20px;
+      width:28px; height:28px;
+      opacity:0;
+      animation:__lc_paw_step 30s 5s infinite;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath fill='%23FFFFFF' opacity='0.45' d='M14 18c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zM6 11.5c0 1.4-1.1 2.5-2.5 2.5S1 12.9 1 11.5 2.1 9 3.5 9 6 10.1 6 11.5zM22 11.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5S25.9 9 24.5 9 22 10.1 22 11.5zM10 6.5C10 7.9 8.9 9 7.5 9S5 7.9 5 6.5 6.1 4 7.5 4 10 5.1 10 6.5zM18 6.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5S21.9 4 20.5 4 18 5.1 18 6.5z'/%3E%3C/svg%3E") center/contain no-repeat;
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
@@ -315,6 +321,15 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       30%{{opacity:1;transform:scale(1.15) translateX(-5px)}}
       100%{{opacity:0;transform:scale(0.75) translateX(60px)}}
     }}
+    /* Paw step cycle: slowly press in, hold briefly, lift off. 30s full cycle. */
+    @keyframes __lc_paw_step {{
+      0%,1%{{opacity:0;transform:scale(0.4) translateY(12px) rotate(-8deg)}}
+      3%{{opacity:0.5;transform:scale(1.08) translateY(-2px) rotate(2deg)}}
+      5%{{opacity:0.6;transform:scale(0.98) translateY(0) rotate(0deg)}}
+      10%{{opacity:0.6;transform:scale(1) translateY(0) rotate(0deg)}}
+      13%{{opacity:0;transform:scale(0.6) translateY(-8px) rotate(5deg)}}
+      100%{{opacity:0;transform:scale(0.4) translateY(12px) rotate(-8deg)}}
+    }}
   </style>
 </head>
 <body>
@@ -328,6 +343,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       <span class="wm-icon"></span>
       <span class="wm-text">LIVICAT</span>
     </span>
+    <span class="wm-paw"></span>
   </div>
 
   <script>
