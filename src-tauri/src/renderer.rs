@@ -296,12 +296,18 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
     }}
-    /* Lottie animation — centered in brand layer */
+    /* Lottie animation — bottom-center, appears every 30s */
     #livicat-watermark dotlottie-wc {{
-      position:absolute; left:50%; top:50%;
-      transform:translate(-50%,-50%);
+      position:absolute; left:50%; bottom:80px;
+      transform:translateX(-50%);
       width:420px; height:420px;
-      opacity:1;
+      opacity:0;
+      animation:__lc_lottie 30s 4s infinite;
+    }}
+    @keyframes __lc_lottie {{
+      0%,80%{{opacity:0}}
+      84%{{opacity:1}}
+      100%{{opacity:1}}
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
