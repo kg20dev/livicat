@@ -270,25 +270,38 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     #livicat-chat::-webkit-scrollbar {{ width:0 !important; background:transparent !important; }}
     /* Emoji images from YouTube — match text height */
     #message img {{ width:1.2em; height:1.2em; vertical-align:middle; display:inline; }}
-    /* Livicat watermark — shown when no messages yet */
+    /* Livicat brand splash — fullscreen overlay, auto-exits after 4s */
     #livicat-watermark {{
-      position:absolute; bottom:12px; left:0; right:0;
-      text-align:center; opacity:0.65; pointer-events:none;
-      transition:opacity 0.6s;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      user-select:none;
+      position:fixed; inset:0; z-index:999999;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none; user-select:none;
+      opacity:0;
+      animation:__lc_splash_in 0.5s ease-out 0.2s forwards, __lc_splash_out 0.7s ease-in 3.8s forwards;
+    }}
+    #livicat-watermark.wm-hidden {{
+      display:none;
     }}
     #livicat-watermark .wm-badge {{
-      display:inline-flex; align-items:center; gap:5px;
-      padding:4px 10px; border-radius:20px;
-      background:rgba(0,0,0,0.4); color:rgba(255,255,255,0.7);
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 18px; border-radius:24px;
+      background:rgba(0,0,0,0.5); color:rgba(255,255,255,0.85);
+      backdrop-filter:blur(4px);
+      -webkit-backdrop-filter:blur(4px);
     }}
     #livicat-watermark .wm-icon {{
-      display:inline-block; width:18px; height:18px;
+      display:inline-block; width:22px; height:22px;
       background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23FFFFFF' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
     }}
     #livicat-watermark .wm-text {{
-      font-size:9px; letter-spacing:1.4px; font-weight:700;
+      font-size:12px; letter-spacing:1.6px; font-weight:700;
+    }}
+    @keyframes __lc_splash_in {{
+      0% {{ opacity:0; transform:scale(0.8) translateY(10px); }}
+      100% {{ opacity:1; transform:scale(1) translateY(0); }}
+    }}
+    @keyframes __lc_splash_out {{
+      0% {{ opacity:1; transform:scale(1) translateY(0); }}
+      100% {{ opacity:0; transform:scale(0.9) translateY(-8px); }}
     }}
   </style>
 </head>
@@ -309,17 +322,15 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     var chat = document.getElementById('livicat-chat');
     if (!chat) return;
 
-    /* Hide watermark on first incoming message */
+    /* Brand splash auto-exits after 4s via CSS animation.
+       But if a chat message arrives during the splash, hide it early. */
     var wm = document.getElementById('livicat-watermark');
-    var firstMsg = true;
 
     var source = new EventSource('/events');
     source.addEventListener('message', function(e) {{
-      /* Hide watermark once */
-      if (firstMsg && wm) {{
-        firstMsg = false;
-        wm.style.opacity = '0';
-        setTimeout(function() {{ wm.style.display = 'none'; }}, 600);
+      /* Dismiss splash early on first message */
+      if (wm && !wm.classList.contains('wm-hidden')) {{
+        wm.classList.add('wm-hidden');
       }}
       try {{
         var msg = JSON.parse(e.data);
