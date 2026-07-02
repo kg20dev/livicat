@@ -159,18 +159,6 @@ export const TauriService = {
     }
   },
 
-  /** Start local HTTP chat server (fallback for PRISM/Streamlabs) */
-  async startChatServer(videoId: string, css: string, hideAtsign: boolean): Promise<number | null> {
-    const invoke = await getInvoke()
-    if (!invoke) return null
-    try {
-      return await invoke<number>('start_chat_server', { videoId, css, hideAtsign })
-    } catch (e) {
-      console.error('[TauriService] startChatServer failed:', e)
-      return null
-    }
-  },
-
   /** Remove the Livicat browser source from OBS via WebSocket */
   async removeBrowserSource(
     obsUrl: string,
@@ -188,19 +176,6 @@ export const TauriService = {
       return true
     } catch (e) {
       console.error('[TauriService] removeBrowserSource failed:', e)
-      return false
-    }
-  },
-
-  /** Stop the HTTP fallback chat server */
-  async stopChatServer(): Promise<boolean> {
-    const invoke = await getInvoke()
-    if (!invoke) return false
-    try {
-      await invoke('stop_chat_server')
-      return true
-    } catch (e) {
-      console.error('[TauriService] stopChatServer failed:', e)
       return false
     }
   },
