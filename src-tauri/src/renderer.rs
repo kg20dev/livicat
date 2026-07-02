@@ -419,10 +419,17 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       console.warn('[Livicat] SSE connection lost, retrying...');
     }});
 
-    /* Live-update theme CSS when settings change */
+    /* Live-update theme CSS when settings change.
+       REPLACES the entire <style> element to force CEF/OBS to fully
+       re-parse the stylesheet. Setting textContent alone can leave
+       stale rules active in some embedded browser engines. */
     source.addEventListener('css-update', function(e) {{
-      var style = document.getElementById('livicat-theme');
-      if (style) style.textContent = e.data;
+      var old = document.getElementById('livicat-theme');
+      if (!old) return;
+      var s = document.createElement('style');
+      s.id = 'livicat-theme';
+      s.textContent = e.data;
+      old.replaceWith(s);
     }});
 
     function detectRole(msg) {{
