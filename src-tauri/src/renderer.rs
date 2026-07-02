@@ -296,13 +296,12 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
     }}
-    /* Paw print — appears every 30s after initial splash, floating at bottom-left */
+    /* Recurring cat icon — fades in every 30s at bottom-left, same icon as badge */
     #livicat-watermark .wm-paw {{
-      position:absolute; bottom:24px; left:20px;
-      width:28px; height:28px;
-      opacity:0;
-      animation:__lc_paw_step 30s 5s infinite;
-      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath fill='%23FFFFFF' opacity='0.45' d='M14 18c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zM6 11.5c0 1.4-1.1 2.5-2.5 2.5S1 12.9 1 11.5 2.1 9 3.5 9 6 10.1 6 11.5zM22 11.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5S25.9 9 24.5 9 22 10.1 22 11.5zM10 6.5C10 7.9 8.9 9 7.5 9S5 7.9 5 6.5 6.1 4 7.5 4 10 5.1 10 6.5zM18 6.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5S21.9 4 20.5 4 18 5.1 18 6.5z'/%3E%3C/svg%3E") center/contain no-repeat;
+      position:absolute; bottom:20px; left:16px;
+      width:32px; height:32px; opacity:0;
+      background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=") center/contain no-repeat;
+      animation:__lc_paw_breathe 30s 5s infinite;
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
@@ -321,14 +320,13 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       30%{{opacity:1;transform:scale(1.15) translateX(-5px)}}
       100%{{opacity:0;transform:scale(0.75) translateX(60px)}}
     }}
-    /* Paw step cycle: slowly press in, hold briefly, lift off. 30s full cycle. */
-    @keyframes __lc_paw_step {{
-      0%,1%{{opacity:0;transform:scale(0.4) translateY(12px) rotate(-8deg)}}
-      3%{{opacity:0.5;transform:scale(1.08) translateY(-2px) rotate(2deg)}}
-      5%{{opacity:0.6;transform:scale(0.98) translateY(0) rotate(0deg)}}
-      10%{{opacity:0.6;transform:scale(1) translateY(0) rotate(0deg)}}
-      13%{{opacity:0;transform:scale(0.6) translateY(-8px) rotate(5deg)}}
-      100%{{opacity:0;transform:scale(0.4) translateY(12px) rotate(-8deg)}}
+    /* Cat icon breath cycle: gently pulses in and out every 30s */
+    @keyframes __lc_paw_breathe {{
+      0%,2%{{opacity:0;transform:scale(0.3) translateY(12px)}}
+      5%{{opacity:0.5;transform:scale(1.05)}}
+      25%{{opacity:0.55;transform:scale(1)}}
+      30%{{opacity:0;transform:scale(0.6) translateY(-6px)}}
+      100%{{opacity:0;transform:scale(0.3) translateY(12px)}}
     }}
   </style>
 </head>
