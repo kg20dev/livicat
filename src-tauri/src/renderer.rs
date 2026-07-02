@@ -273,20 +273,21 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     /* Livicat watermark — shown when no messages yet */
     #livicat-watermark {{
       position:absolute; bottom:16px; left:0; right:0;
-      text-align:center; opacity:0.35; pointer-events:none;
+      text-align:center; opacity:0.5; pointer-events:none;
       transition:opacity 0.6s;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       user-select:none;
+      color:rgba(255,255,255,0.6);
     }}
     #livicat-watermark .wm-icon {{
-      display:inline-block; width:24px; height:24px;
-      vertical-align:middle; margin-right:6px;
+      display:inline-block; width:22px; height:22px;
+      vertical-align:middle; margin-right:5px;
       background:currentColor;
       mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
       -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
     }}
     #livicat-watermark .wm-text {{
-      font-size:10px; letter-spacing:1px; font-weight:600;
+      font-size:10px; letter-spacing:1.2px; font-weight:700;
       vertical-align:middle;
     }}
   </style>
