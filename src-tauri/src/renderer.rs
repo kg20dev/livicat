@@ -273,35 +273,38 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     /* Livicat brand splash — fullscreen overlay, auto-exits after 4s */
     #livicat-watermark {{
       position:fixed; inset:0; z-index:999999;
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:center; gap:6px;
       pointer-events:none; user-select:none;
       opacity:0;
-      animation:__lc_splash_in 0.5s ease-out 0.2s forwards, __lc_splash_out 0.7s ease-in 3.8s forwards;
+      animation:__lc_enter 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards, __lc_exit 0.9s cubic-bezier(0.6,-0.28,0.735,0.045) 3.6s forwards;
     }}
     #livicat-watermark.wm-hidden {{
       display:none;
     }}
-    #livicat-watermark .wm-badge {{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:8px 18px; border-radius:24px;
-      background:rgba(0,0,0,0.5); color:rgba(255,255,255,0.85);
-      backdrop-filter:blur(4px);
-      -webkit-backdrop-filter:blur(4px);
-    }}
     #livicat-watermark .wm-icon {{
-      display:inline-block; width:22px; height:22px;
-      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23FFFFFF' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
+      display:inline-block; width:28px; height:28px; opacity:0.6;
+      background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=") center/contain no-repeat;
+      animation:__lc_curious 4s cubic-bezier(0.45,0.05,0.55,0.95) infinite;
     }}
     #livicat-watermark .wm-text {{
       font-size:12px; letter-spacing:1.6px; font-weight:700;
     }}
-    @keyframes __lc_splash_in {{
-      0% {{ opacity:0; transform:scale(0.8) translateY(10px); }}
-      100% {{ opacity:1; transform:scale(1) translateY(0); }}
+    @keyframes __lc_curious {{
+      0%,100%{{transform:rotate(0deg)}}
+      25%{{transform:rotate(-4deg)}}
+      50%{{transform:rotate(1deg)}}
+      75%{{transform:rotate(3deg)}}
     }}
-    @keyframes __lc_splash_out {{
-      0% {{ opacity:1; transform:scale(1) translateY(0); }}
-      100% {{ opacity:0; transform:scale(0.9) translateY(-8px); }}
+    @keyframes __lc_enter {{
+      0%{{opacity:0;transform:scale(0.7) translateX(50px)}}
+      60%{{opacity:1;transform:scale(1.12) translateX(-6px)}}
+      80%{{transform:scale(0.98) translateX(2px)}}
+      100%{{opacity:1;transform:scale(1) translateX(0)}}
+    }}
+    @keyframes __lc_exit {{
+      0%{{opacity:1;transform:scale(1) translateX(0)}}
+      30%{{opacity:1;transform:scale(1.15) translateX(-5px)}}
+      100%{{opacity:0;transform:scale(0.75) translateX(60px)}}
     }}
   </style>
 </head>
@@ -309,10 +312,8 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
   <div id="livicat-chat">
     {messages_html}
     <div id="livicat-watermark">
-      <span class="wm-badge">
-        <span class="wm-icon"></span>
-        <span class="wm-text">LIVICAT</span>
-      </span>
+      <span class="wm-icon"></span>
+      <span class="wm-text">LIVICAT</span>
     </div>
   </div>
 
@@ -555,6 +556,14 @@ mod tests {
         assert!(html.contains(TEST_CSS), "theme CSS should be injected");
         assert!(html.contains("EventSource"), "SSE JS should be present");
         assert!(html.contains("livicat-chat"), "chat container should exist");
+        assert!(
+            html.contains("livicat-watermark"),
+            "watermark should be in the HTML"
+        );
+        assert!(
+            html.contains("LIVICAT"),
+            "brand text should be in the HTML"
+        );
 
         handle.shutdown().await;
     }
