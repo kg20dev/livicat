@@ -296,7 +296,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
     }}
-    /* Lottie animation — bottom-center, appears every 30s */
+    /* Lottie animation — bottom-center, appears every 30s, plays once each time */
     #livicat-watermark dotlottie-wc {{
       position:absolute; left:50%; bottom:80px;
       transform:translateX(-50%);
@@ -340,7 +340,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       <span class="wm-icon"></span>
       <span class="wm-text">LIVICAT</span>
     </span>
-    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie" autoplay loop></dotlottie-wc>
+    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie" autoplay></dotlottie-wc>
   </div>
 
   <script>
