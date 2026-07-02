@@ -40,8 +40,8 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
 
     const s = overrideSettings ?? settingsRef.current
 
-    // If not configured at all (no websocket URL saved), show setup
-    if (!s.obsUrl || s.obsUrl === '') {
+    // If not properly configured (no valid WebSocket URL), show setup
+    if (!s.obsUrl || !(s.obsUrl.startsWith('ws://') || s.obsUrl.startsWith('wss://'))) {
       setShowSetup(true)
       return
     }
@@ -49,46 +49,43 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
     setStreamState('sending')
 
     try {
-      // Try WebSocket — using headless chat system
-      if (s.obsUrl?.startsWith('ws://') || s.obsUrl?.startsWith('wss://')) {
-        const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
+      const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
 
-        if (!chatPort) {
-          setStreamState('idle')
-          showToast('Failed to start chat engine', true)
-          return
-        }
-
-        chatPortRef.current = chatPort
-
-        const proxyUrl = `http://localhost:${chatPort}`
-        const result = await TauriService.sendBrowserSource({
-          obsUrl: s.obsUrl,
-          obsPassword: s.obsPassword,
-          videoId,
-          css: injectedCSS,
-          sourceName: s.sourceName || 'Livicat Chat',
-          sceneName: s.defaultScene || undefined,
-          proxyUrl,
-        })
-
-        if (result === 'created') {
-          setStreamState('websocket')
-          showToast('Livicat chat streaming to OBS!')
-          trackEventAsync('stream_sent_headless', { mode: 'create', port: chatPort })
-          return
-        } else if (result === 'updated') {
-          setStreamState('websocket')
-          showToast('Livicat chat updated in OBS!')
-          trackEventAsync('stream_sent_headless', { mode: 'update', port: chatPort })
-          return
-        }
-
-        // Headless + OBS failed — clean up headless
-        await TauriService.stopChat()
-        chatPortRef.current = null
-        console.warn('[StreamSender] Headless+WebSocket failed')
+      if (!chatPort) {
+        setStreamState('idle')
+        showToast('Failed to start chat engine', true)
+        return
       }
+
+      chatPortRef.current = chatPort
+
+      const proxyUrl = `http://localhost:${chatPort}`
+      const result = await TauriService.sendBrowserSource({
+        obsUrl: s.obsUrl,
+        obsPassword: s.obsPassword,
+        videoId,
+        css: injectedCSS,
+        sourceName: s.sourceName || 'Livicat Chat',
+        sceneName: s.defaultScene || undefined,
+        proxyUrl,
+      })
+
+      if (result === 'created') {
+        setStreamState('websocket')
+        showToast('Livicat chat streaming to OBS!')
+        trackEventAsync('stream_sent_headless', { mode: 'create', port: chatPort })
+        return
+      } else if (result === 'updated') {
+        setStreamState('websocket')
+        showToast('Livicat chat updated in OBS!')
+        trackEventAsync('stream_sent_headless', { mode: 'update', port: chatPort })
+        return
+      }
+
+      // Headless + OBS failed — clean up headless
+      await TauriService.stopChat()
+      chatPortRef.current = null
+      console.warn('[StreamSender] Headless+WebSocket failed')
 
       // No fallback — show error
       setStreamState('idle')
