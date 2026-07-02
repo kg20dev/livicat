@@ -199,6 +199,10 @@ export function WorkspaceX() {
 
   const confirmStopAndSwitch = useCallback(async () => {
     if (!pendingTheme) return
+    trackEventAsync('stream_theme_switch', {
+      action: 'confirmed',
+      target_theme: pendingTheme,
+    })
     await stopStream()
     setSelectedThemeId(pendingTheme)
     updateRecentThemes(pendingTheme)
@@ -206,8 +210,14 @@ export function WorkspaceX() {
   }, [pendingTheme, stopStream, updateRecentThemes])
 
   const cancelSwitch = useCallback(() => {
+    if (pendingTheme) {
+      trackEventAsync('stream_theme_switch', {
+        action: 'cancelled',
+        target_theme: pendingTheme,
+      })
+    }
     setPendingTheme(null)
-  }, [])
+  }, [pendingTheme])
 
   // Filtered themes for dropdown
   const filteredThemes = useMemo(() => {

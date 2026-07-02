@@ -101,6 +101,7 @@ export function StreamProvider({ children }: { children: ReactNode }) {
           prevCssRef.current = injectedCSS
           trackEventAsync('stream_sent_headless', {
             mode: result,
+            scale_filter: 'lanczos',
             port: chatPort,
           })
           const label = result === 'created' ? 'streaming' : 'updated'
@@ -159,6 +160,7 @@ export function StreamProvider({ children }: { children: ReactNode }) {
     }
     if (css === prevCssRef.current) return
     prevCssRef.current = css
+    trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
     TauriService.updateRendererCss(css)
   }, [])
 
