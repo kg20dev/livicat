@@ -265,7 +265,7 @@ export function WorkspaceX() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes])
+  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes, handleThemeSwitch])
 
   // Close dropdown when clicking outside
   useEffect(() => {
