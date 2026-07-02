@@ -300,8 +300,8 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     #livicat-watermark dotlottie-wc {{
       position:absolute; left:50%; top:50%;
       transform:translate(-50%,-50%);
-      width:300px; height:300px;
-      opacity:0.7;
+      width:420px; height:420px;
+      opacity:1;
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
