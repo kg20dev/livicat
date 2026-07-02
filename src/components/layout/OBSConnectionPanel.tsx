@@ -78,17 +78,6 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
     onConnected?.(newSettings)
   }
 
-  const handleSkip = async () => {
-    const newSettings = {
-      obsUrl: 'http-fallback',
-      obsPassword: password,
-      sourceName,
-      defaultScene: selectedScene,
-    }
-    await saveSettings(newSettings)
-    onConnected?.(newSettings)
-  }
-
   const handleBackToForm = () => {
     setState('form')
   }
@@ -239,13 +228,6 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
           )}
           <button
             type="button"
-            onClick={handleSkip}
-            className="flex-1 h-9 rounded-lg text-label-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
-          >
-            Use HTTP
-          </button>
-          <button
-            type="button"
             onClick={handleBackToForm}
             className="flex-[1.5] h-9 rounded-lg bg-primary text-on-primary text-label-sm font-bold hover:bg-primary-hover active:bg-primary-active transition-colors"
           >
@@ -306,15 +288,6 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
               Cancel
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="flex-1 h-10 rounded-lg text-label-md font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
-            title="Use the local HTTP server fallback instead of WebSocket"
-          >
-            Skip & use Fallback
-          </button>
 
           <button
             type="submit"

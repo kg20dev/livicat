@@ -270,34 +270,77 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     #livicat-chat::-webkit-scrollbar {{ width:0 !important; background:transparent !important; }}
     /* Emoji images from YouTube — match text height */
     #message img {{ width:1.2em; height:1.2em; vertical-align:middle; display:inline; }}
-    /* Livicat watermark — shown when no messages yet */
+    /* Livicat brand splash — badges float independently, no interference */
     #livicat-watermark {{
-      position:absolute; bottom:16px; left:0; right:0;
-      text-align:center; opacity:0.35; pointer-events:none;
-      transition:opacity 0.6s;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      user-select:none;
+      position:fixed; z-index:999999; inset:0;
+      pointer-events:none; user-select:none;
+    }}
+    #livicat-watermark .wm-badge {{
+      position:absolute; top:10px; right:10px;
+      display:flex; align-items:center; gap:7px;
+      padding:6px 14px 6px 10px;
+      border-radius:100px;
+      background:linear-gradient(135deg,rgba(20,20,30,0.7) 0%,rgba(10,10,18,0.85) 100%);
+      border:1px solid rgba(255,255,255,0.18);
+      box-shadow:0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+      opacity:0;
+      animation:__lc_enter 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards, __lc_exit 0.9s cubic-bezier(0.6,-0.28,0.735,0.045) 3.6s forwards;
     }}
     #livicat-watermark .wm-icon {{
       display:inline-block; width:24px; height:24px;
-      vertical-align:middle; margin-right:6px;
-      background:currentColor;
-      mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
-      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E") center/contain no-repeat;
+      background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=") center/contain no-repeat;
+      animation:__lc_curious 4s cubic-bezier(0.45,0.05,0.55,0.95) infinite;
     }}
     #livicat-watermark .wm-text {{
-      font-size:10px; letter-spacing:1px; font-weight:600;
-      vertical-align:middle;
+      font-size:11px; letter-spacing:1.8px; font-weight:700;
+      color:rgba(255,255,255,0.88);
+      text-shadow:0 1px 3px rgba(0,0,0,0.3);
+    }}
+    /* Lottie animation — bottom-center, appears every 30s, plays once each time */
+    #livicat-watermark dotlottie-wc {{
+      position:absolute; left:50%; bottom:80px;
+      transform:translateX(-50%);
+      width:420px; height:420px;
+      opacity:0;
+      animation:__lc_lottie 30s 4s infinite;
+    }}
+    @keyframes __lc_lottie {{
+      0%,80%{{opacity:0}}
+      84%{{opacity:1}}
+      100%{{opacity:1}}
+    }}
+    @keyframes __lc_curious {{
+      0%,100%{{transform:rotate(0deg)}}
+      25%{{transform:rotate(-4deg)}}
+      50%{{transform:rotate(1deg)}}
+      75%{{transform:rotate(3deg)}}
+    }}
+    @keyframes __lc_enter {{
+      0%{{opacity:0;transform:scale(0.7) translateX(50px)}}
+      60%{{opacity:1;transform:scale(1.12) translateX(-6px)}}
+      80%{{transform:scale(0.98) translateX(2px)}}
+      100%{{opacity:1;transform:scale(1) translateX(0)}}
+    }}
+    @keyframes __lc_exit {{
+      0%{{opacity:1;transform:scale(1) translateX(0)}}
+      30%{{opacity:1;transform:scale(1.15) translateX(-5px)}}
+      100%{{opacity:0;transform:scale(0.75) translateX(60px)}}
     }}
   </style>
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 </head>
 <body>
+  <!-- Chat layer — always visible, independent from brand -->
   <div id="livicat-chat">
     {messages_html}
-    <div id="livicat-watermark">
+  </div>
+  <!-- Brand layer — floats on top, auto-exits after 4s, no interference -->
+  <div id="livicat-watermark">
+    <span class="wm-badge">
       <span class="wm-icon"></span>
       <span class="wm-text">LIVICAT</span>
-    </div>
+    </span>
+    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie" autoplay></dotlottie-wc>
   </div>
 
   <script>
@@ -306,18 +349,8 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     var chat = document.getElementById('livicat-chat');
     if (!chat) return;
 
-    /* Hide watermark on first incoming message */
-    var wm = document.getElementById('livicat-watermark');
-    var firstMsg = true;
-
     var source = new EventSource('/events');
     source.addEventListener('message', function(e) {{
-      /* Hide watermark once */
-      if (firstMsg && wm) {{
-        firstMsg = false;
-        wm.style.opacity = '0';
-        setTimeout(function() {{ wm.style.display = 'none'; }}, 600);
-      }}
       try {{
         var msg = JSON.parse(e.data);
         var el = document.createElement('yt-live-chat-text-message-renderer');
@@ -541,6 +574,14 @@ mod tests {
         assert!(html.contains(TEST_CSS), "theme CSS should be injected");
         assert!(html.contains("EventSource"), "SSE JS should be present");
         assert!(html.contains("livicat-chat"), "chat container should exist");
+        assert!(
+            html.contains("livicat-watermark"),
+            "watermark should be in the HTML"
+        );
+        assert!(
+            html.contains("LIVICAT"),
+            "brand text should be in the HTML"
+        );
 
         handle.shutdown().await;
     }
