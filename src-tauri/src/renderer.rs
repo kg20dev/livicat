@@ -270,10 +270,10 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     #livicat-chat::-webkit-scrollbar {{ width:0 !important; background:transparent !important; }}
     /* Emoji images from YouTube — match text height */
     #message img {{ width:1.2em; height:1.2em; vertical-align:middle; display:inline; }}
-    /* Livicat brand splash — fullscreen overlay, auto-exits after 4s */
+    /* Livicat brand splash — independent top-layer badge, auto-exits after 4s */
     #livicat-watermark {{
-      position:fixed; inset:0; z-index:999999;
-      display:flex; align-items:center; justify-content:center; gap:6px;
+      position:fixed; top:10px; right:10px; z-index:999999;
+      display:flex; align-items:center; gap:6px;
       pointer-events:none; user-select:none;
       opacity:0;
       animation:__lc_enter 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards, __lc_exit 0.9s cubic-bezier(0.6,-0.28,0.735,0.045) 3.6s forwards;
@@ -309,12 +309,14 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
   </style>
 </head>
 <body>
+  <!-- Chat layer — always visible, independent from brand -->
   <div id="livicat-chat">
     {messages_html}
-    <div id="livicat-watermark">
-      <span class="wm-icon"></span>
-      <span class="wm-text">LIVICAT</span>
-    </div>
+  </div>
+  <!-- Brand layer — floats on top, auto-exits after 4s, no interference -->
+  <div id="livicat-watermark">
+    <span class="wm-icon"></span>
+    <span class="wm-text">LIVICAT</span>
   </div>
 
   <script>
@@ -323,16 +325,8 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     var chat = document.getElementById('livicat-chat');
     if (!chat) return;
 
-    /* Brand splash auto-exits after 4s via CSS animation.
-       But if a chat message arrives during the splash, hide it early. */
-    var wm = document.getElementById('livicat-watermark');
-
     var source = new EventSource('/events');
     source.addEventListener('message', function(e) {{
-      /* Dismiss splash early on first message */
-      if (wm && !wm.classList.contains('wm-hidden')) {{
-        wm.classList.add('wm-hidden');
-      }}
       try {{
         var msg = JSON.parse(e.data);
         var el = document.createElement('yt-live-chat-text-message-renderer');
