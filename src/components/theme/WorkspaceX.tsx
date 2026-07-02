@@ -194,7 +194,7 @@ export function WorkspaceX() {
         updateRecentThemes(newId)
       }
     },
-    [streamState, updateRecentThemes],
+    [streamState, updateRecentThemes]
   )
 
   const confirmStopAndSwitch = useCallback(async () => {
@@ -548,11 +548,7 @@ export function WorkspaceX() {
       </div>
 
       {/* ─── Body: settings + preview (no key — preserves state across theme switch) ── */}
-      <WorkspaceBody
-        theme={theme}
-        openSections={openSections}
-        toggleSection={toggleSection}
-      />
+      <WorkspaceBody theme={theme} openSections={openSections} toggleSection={toggleSection} />
 
       {/* ─── Confirm: stop stream before switching theme ────────────────────── */}
       {pendingTheme && (
@@ -566,8 +562,8 @@ export function WorkspaceX() {
             </h3>
             <p className="text-body-sm text-on-surface-variant mb-5 leading-relaxed">
               Your stream will end before switching to{' '}
-              <strong>{getThemeById(pendingTheme)?.manifest.name ?? pendingTheme}</strong>.
-              You can restart it afterward.
+              <strong>{getThemeById(pendingTheme)?.manifest.name ?? pendingTheme}</strong>. You can
+              restart it afterward.
             </p>
             <div className="flex gap-2 justify-end">
               <button

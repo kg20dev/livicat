@@ -66,7 +66,11 @@ export function StreamProvider({ children }: { children: ReactNode }) {
       setStreamState('sending')
 
       try {
-        console.log('[StreamProvider] Calling startChat', { videoId, cssLen: injectedCSS.length, hideAtsign })
+        console.log('[StreamProvider] Calling startChat', {
+          videoId,
+          cssLen: injectedCSS.length,
+          hideAtsign,
+        })
         const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
         console.log('[StreamProvider] startChat returned', chatPort)
 
@@ -159,9 +163,7 @@ export function StreamProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <StreamContext.Provider
-      value={{ streamState, startStream, stopStream, pushCssUpdate }}
-    >
+    <StreamContext.Provider value={{ streamState, startStream, stopStream, pushCssUpdate }}>
       {children}
     </StreamContext.Provider>
   )

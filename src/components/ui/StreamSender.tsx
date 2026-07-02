@@ -42,7 +42,11 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
       return
     }
 
-    console.log('[StreamSender] Calling startStream', { videoId, cssLen: injectedCSS.length, hideAtsign })
+    console.log('[StreamSender] Calling startStream', {
+      videoId,
+      cssLen: injectedCSS.length,
+      hideAtsign,
+    })
     const { ok, message } = await startStream(videoId, injectedCSS, hideAtsign, overrideSettings)
     console.log('[StreamSender] startStream result:', { ok, message })
     showToast(message, !ok)
@@ -63,10 +67,7 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
 
   // ── Button rendering ─────────────────────────────────────────
 
-  const buttonDisabled =
-    !videoId ||
-    streamState === 'sending' ||
-    streamState === 'stopping'
+  const buttonDisabled = !videoId || streamState === 'sending' || streamState === 'stopping'
 
   const getButtonContent = () => {
     if (streamState === 'sending' || streamState === 'stopping') {

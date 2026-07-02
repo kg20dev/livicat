@@ -83,9 +83,7 @@ function getDefaults(scheme: SettingDef[]): ThemeSettings {
 export function useThemeSettings(storageKey: string, scheme: SettingDef[]) {
   // Load fallback version immediately for synchronous initial load
   const fallbackVersion = import.meta.env.VITE_APP_VERSION || '0.0.0'
-  const [settings, setSettings] = useState<ThemeSettings>(() =>
-    loadSettings(storageKey, scheme)
-  )
+  const [settings, setSettings] = useState<ThemeSettings>(() => loadSettings(storageKey, scheme))
   const [appVersion, setAppVersion] = useState<string>(fallbackVersion)
 
   // Load app version from Rust on mount
