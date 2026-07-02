@@ -262,7 +262,7 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
 
   // ── Render ───────────────────────────────────────────────────
 
-  const showGear = isConfigured() || streamState === 'http' || streamState === 'websocket'
+  const showGear = streamState === 'idle' && isConfigured()
 
   return (
     <>
