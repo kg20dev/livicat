@@ -344,7 +344,10 @@ async fn update_renderer_css(
     };
     match port {
         Some(port) => {
-            let client = reqwest::Client::new();
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(5))
+                .build()
+                .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
             client
                 .post(format!("http://127.0.0.1:{port}/update-css"))
                 .body(css)

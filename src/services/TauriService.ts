@@ -149,7 +149,7 @@ export const TauriService = {
         css: params.css,
         sourceName: params.sourceName ?? null,
         sceneName: params.sceneName ?? null,
-        width: params.width ?? 400,
+        width: params.width ?? 600,
         height: params.height ?? 600,
         proxyUrl: params.proxyUrl ?? null,
       })

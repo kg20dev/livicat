@@ -524,9 +524,8 @@ export function WorkspaceX() {
         </div>
       </div>
 
-      {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
+      {/* ─── Body: settings + preview (no key — preserves state across theme switch) ── */}
       <WorkspaceBody
-        key={selectedThemeId}
         theme={theme}
         openSections={openSections}
         toggleSection={toggleSection}
@@ -1178,7 +1177,7 @@ function WorkspaceBody({
                   <StreamSender
                     videoId={videoId}
                     injectedCSS={ytCss}
-                    hideAtsign={settings['hide-username-atsign'] as boolean}
+                    hideAtsign={(settings['hide-username-atsign'] as boolean) ?? false}
                   />
                 </div>
               )}

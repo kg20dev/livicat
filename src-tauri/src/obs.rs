@@ -596,6 +596,73 @@ pub async fn obs_send_browser_source(
     }
 }
 
+/// Set a high-quality scale filter on the browser source scene item (v5).
+/// Non-fatal — errors are logged and ignored to gracefully handle
+/// OBS versions or forks (e.g. older Prism builds) that don't support this property.
+/// Falls back to OBS's default (bilinear) when unsupported.
+async fn set_scale_filter_v5(
+    ws: &mut (impl futures_util::SinkExt<Message>
+              + Unpin
+              + futures_util::StreamExt<Item = Result<Message, tokio_tungstenite::tungstenite::Error>>),
+    target_scene: &str,
+    source_name: &str,
+    scale_filter: &str,
+) {
+    // Find the scene item ID for this source
+    let list_resp = match send_v5_request(
+        ws,
+        "GetSceneItemList",
+        serde_json::json!({"sceneName": target_scene}),
+        "get-item-id",
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("[livicat] Failed to get scene item list for scale filter: {e}");
+            return;
+        }
+    };
+
+    let scene_item_id = match list_resp["d"]["responseData"]["sceneItems"]
+        .as_array()
+        .and_then(|items| {
+            items
+                .iter()
+                .find(|item| item["sourceName"] == source_name)
+                .and_then(|item| item["sceneItemId"].as_i64())
+        })
+    {
+        Some(id) => id,
+        None => {
+            eprintln!(
+                "[livicat] Could not find scene item ID for '{source_name}' — cannot set scale filter"
+            );
+            return;
+        }
+    };
+
+    // Set the transform with the desired scale filter
+    if let Err(e) = send_v5_request(
+        ws,
+        "SetSceneItemTransform",
+        serde_json::json!({
+            "sceneName": target_scene,
+            "sceneItemId": scene_item_id,
+            "sceneItemTransform": {
+                "scaleFilter": scale_filter,
+            },
+        }),
+        "set-scale-filter",
+    )
+    .await
+    {
+        eprintln!(
+            "[livicat] Failed to set scale filter '{scale_filter}' — not supported?: {e}"
+        );
+    }
+}
+
 async fn handle_send_v5(
     _initial_ws: WebSocketStream<MaybeTlsStream<TcpStream>>,
     obs_url: &str,
@@ -638,11 +705,20 @@ async fn handle_send_v5(
     if exists {
         update_source_v5(&mut ws, source_name, &settings).await?;
         ensure_in_scene_v5(&mut ws, source_name, &target_scene).await?;
-        Ok("updated".to_string())
     } else {
         create_source_v5(&mut ws, &target_scene, source_name, &settings).await?;
-        Ok("created".to_string())
     }
+
+    // Set high-quality scale filtering on the scene item (non-fatal if unsupported)
+    set_scale_filter_v5(
+        &mut ws,
+        &target_scene,
+        source_name,
+        "OBS_SCALE_LANCZOS",
+    )
+    .await;
+
+    Ok(if exists { "updated" } else { "created" }.to_string())
 }
 
 async fn check_source_exists_v5(

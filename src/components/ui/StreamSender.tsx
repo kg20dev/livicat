@@ -1,7 +1,6 @@
 import React from 'react'
-import { TauriService } from '../../services/TauriService'
-import { useOBSSettings, type OBSSettings } from '../../hooks/useOBSSettings'
-import { trackEventAsync } from '../../utils/analytics'
+import { useOBSSettings } from '../../hooks/useOBSSettings'
+import { useStreamContext } from '../../hooks/useStreamState'
 import { OBSConnectionPanel } from '../layout/OBSConnectionPanel'
 
 interface StreamSenderProps {
@@ -10,21 +9,12 @@ interface StreamSenderProps {
   hideAtsign: boolean
 }
 
-type StreamState = 'idle' | 'sending' | 'stopping' | 'websocket'
-
 export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderProps) {
   const { settings, isConfigured } = useOBSSettings()
+  const { streamState, startStream, stopStream, pushCssUpdate } = useStreamContext()
   const [showSetup, setShowSetup] = React.useState(false)
-  const [streamState, setStreamState] = React.useState<StreamState>('idle')
   const [toastMsg, setToastMsg] = React.useState('')
   const [toastError, setToastError] = React.useState(false)
-
-  // Keep a ref to the latest settings so handlers don't use stale closure
-  const settingsRef = React.useRef(settings)
-  settingsRef.current = settings
-
-  // Track the renderer port so CSS changes can be live-updated via POST
-  const chatPortRef = React.useRef<number | null>(null)
 
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
@@ -35,117 +25,41 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
     }, 4000)
   }
 
-  const handleSendToStream = async (overrideSettings?: OBSSettings) => {
-    if (!videoId) return
+  // ── Stream actions (delegated to shared context) ────────────────
 
-    const s = overrideSettings ?? settingsRef.current
+  const handleSendToStream = async (overrideSettings?: typeof settings) => {
+    if (!videoId) {
+      console.warn('[StreamSender] handleSendToStream: no videoId')
+      return
+    }
 
-    // If not properly configured (no valid WebSocket URL), show setup
+    const s = overrideSettings ?? settings
+
+    // If OBS is not configured, show setup modal
     if (!s.obsUrl || !(s.obsUrl.startsWith('ws://') || s.obsUrl.startsWith('wss://'))) {
+      console.log('[StreamSender] OBS not configured, showing setup modal')
       setShowSetup(true)
       return
     }
 
-    setStreamState('sending')
-
-    try {
-      const chatPort = await TauriService.startChat(videoId, injectedCSS, hideAtsign)
-
-      if (!chatPort) {
-        setStreamState('idle')
-        showToast('Failed to start chat engine', true)
-        return
-      }
-
-      chatPortRef.current = chatPort
-
-      const proxyUrl = `http://localhost:${chatPort}`
-      const result = await TauriService.sendBrowserSource({
-        obsUrl: s.obsUrl,
-        obsPassword: s.obsPassword,
-        videoId,
-        css: injectedCSS,
-        sourceName: s.sourceName || 'Livicat Chat',
-        sceneName: s.defaultScene || undefined,
-        proxyUrl,
-      })
-
-      if (result === 'created') {
-        setStreamState('websocket')
-        showToast('Livicat chat streaming to OBS!')
-        trackEventAsync('stream_sent_headless', { mode: 'create', port: chatPort })
-        return
-      } else if (result === 'updated') {
-        setStreamState('websocket')
-        showToast('Livicat chat updated in OBS!')
-        trackEventAsync('stream_sent_headless', { mode: 'update', port: chatPort })
-        return
-      }
-
-      // Headless + OBS failed — clean up headless
-      await TauriService.stopChat()
-      chatPortRef.current = null
-      console.warn('[StreamSender] Headless+WebSocket failed')
-
-      // No fallback — show error
-      setStreamState('idle')
-      showToast('Failed to create browser source in OBS', true)
-    } catch (err) {
-      console.error('[StreamSender] Stream failed with exception:', err)
-      setStreamState('idle')
-      showToast('Failed to start stream', true)
-    }
+    console.log('[StreamSender] Calling startStream', { videoId, cssLen: injectedCSS.length, hideAtsign })
+    const { ok, message } = await startStream(videoId, injectedCSS, hideAtsign, overrideSettings)
+    console.log('[StreamSender] startStream result:', { ok, message })
+    showToast(message, !ok)
   }
 
   const handleStopStream = async () => {
-    // Signal visual feedback immediately before any async work
-    setStreamState('stopping')
-
-    const s = settingsRef.current
-
-    try {
-      // Stop headless chat system (Chrome + processor + renderer)
-      await TauriService.stopChat()
-
-      chatPortRef.current = null
-
-      // Remove OBS source
-      const ok = await TauriService.removeBrowserSource(
-        s.obsUrl || '',
-        s.obsPassword,
-        s.sourceName || 'Livicat Chat'
-      )
-      if (ok) {
-        setStreamState('idle')
-        showToast('Livicat chat stopped')
-        trackEventAsync('stream_stopped', { mode: 'headless' })
-      } else {
-        // Even if removing fails (source already gone), reset state
-        setStreamState('idle')
-        showToast('Livicat chat stopped (source already gone)')
-      }
-    } catch (err) {
-      console.error('[StreamSender] Stop stream failed with exception:', err)
-      setStreamState('idle')
-      chatPortRef.current = null
-      showToast('Failed to stop stream', true)
-    }
+    const { message } = await stopStream()
+    showToast(message)
   }
 
   // ── Live CSS update: push theme changes to active stream ──────
 
-  const prevCssRef = React.useRef(injectedCSS)
   React.useEffect(() => {
-    if (!chatPortRef.current || streamState !== 'websocket') {
-      prevCssRef.current = injectedCSS
-      return
-    }
-    // Avoid sending the same CSS twice (initial mount)
-    if (injectedCSS === prevCssRef.current) return
-    prevCssRef.current = injectedCSS
-
-    TauriService.updateRendererCss(injectedCSS)
-  }, [injectedCSS, streamState])
+    pushCssUpdate(injectedCSS)
+    // Only re-run when CSS content changes, not on every streamState transition
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [injectedCSS])
 
   // ── Button rendering ─────────────────────────────────────────
 

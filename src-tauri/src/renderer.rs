@@ -296,18 +296,12 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
     }}
-    /* Lottie animation — bottom-center, appears every 30s, plays once each time */
+    /* Lottie paw — bottom-center, plays once every 30 min */
     #livicat-watermark dotlottie-wc {{
       position:absolute; left:50%; bottom:80px;
       transform:translateX(-50%);
       width:420px; height:420px;
-      opacity:0;
-      animation:__lc_lottie 30s 4s infinite;
-    }}
-    @keyframes __lc_lottie {{
-      0%,80%{{opacity:0}}
-      84%{{opacity:1}}
-      100%{{opacity:1}}
+      opacity:0; /* JS shows/hides on each cycle */
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
@@ -340,7 +334,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       <span class="wm-icon"></span>
       <span class="wm-text">LIVICAT</span>
     </span>
-    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie" autoplay></dotlottie-wc>
+    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie"></dotlottie-wc>
   </div>
 
   <script>
@@ -445,6 +439,48 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
         el.setAttribute('data-punct', last);
       }}
     }}
+  }})();
+  </script>
+
+  <script>
+  (function(){{
+    'use strict';
+    var el = document.querySelector('#livicat-watermark dotlottie-wc');
+    if (!el) return;
+
+    var THIRTY_MIN = 30 * 60 * 1000;
+
+    function showAndPlay(dl) {{
+      el.style.opacity = 1;
+      dl.stop();
+      dl.play();
+    }}
+
+    function hide() {{
+      el.style.opacity = 0;
+    }}
+
+    (function poll() {{
+      if (el.dotLottie) {{
+        var dl = el.dotLottie;
+        dl.addEventListener('load', function() {{
+          // Hide on animation completion (fires once per playthrough)
+          dl.addEventListener('complete', hide);
+
+          // First play right after badge splash
+          setTimeout(function() {{
+            showAndPlay(dl);
+          }}, 5000);
+
+          // Then every 30 minutes
+          setInterval(function() {{
+            showAndPlay(dl);
+          }}, THIRTY_MIN);
+        }});
+      }} else {{
+        requestAnimationFrame(poll);
+      }}
+    }})();
   }})();
   </script>
 </body>
