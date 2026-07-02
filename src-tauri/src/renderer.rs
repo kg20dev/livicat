@@ -296,12 +296,12 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       color:rgba(255,255,255,0.88);
       text-shadow:0 1px 3px rgba(0,0,0,0.3);
     }}
-    /* Recurring cat icon — fades in every 30s at bottom-left, same icon as badge */
-    #livicat-watermark .wm-paw {{
-      position:absolute; bottom:20px; left:16px;
-      width:32px; height:32px; opacity:0;
-      background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD7ElEQVR42u1WS2xbRRS9d2aeP8lz2hjbcahDShMa1EJi0rKgIOKofCSkIrFoRAWs2CBYIFV8BBFysmWTBSuEWjaoi7gVbEqVCGQMFJCqtJSGFtFPElKaJk7rpMH2e/Z7c5lnO2qFIHUSQiUUS9b7zcw599xzZ66AO/wT6wTWCdxpAmylEyUAJlUAtEoCuEJwxkqXm2TUM/0nCgwC8EXwiUDz/sng5nNjocgDi8TW1AOVyO3RYHPYR3gsLETUIoKrZN0akFwTBSoyy7girUv4IsR4NGPbRpYk1KL26eVgc1R9t5arQtWDU0p65/qSv+m1EOfbM9IylYE8KvHFBi5aBGKv8/0k7OBrQiAG21hlwpPFkt2QU9nCIm3bkgHGphqatu+EkeJyVGDVSC+hSyCcLXwO4FZe78yTLM+lUhmhT2UnyHkAid1XKS38VwhUTEcMUtZI/d2PtNRHvvUgaywQSQfbQSEiYx7to7NcvhCenvhMxuNMvbdXTWCx1lXZuU5v3HTQD+K7WuQ7DaCKH8uFr9A8LNr+XnDy4iFKDOoQizEpZUkBh8zt0iGWcvwQNNQG6vjxIPKOOSK7qCA1RF6CRoakyLgJWAGwU72ZzrW1qXvIbhgYMGQyWWTd3dbtNqq/JXC4zNqu8/GPAox3zErb4IgeUq4jJbyzkiwWgQnBsuqxvvetHUpz9EYiV7x+/3lsb7+EiPbcqy+35lInOtjPPx356+75jylQdc56FHiyLtiqSO9Lq3RLQLeTdAdcmibwtlbgW1vAmp0B1zNPkfuxXS8qWfrQ7+9b+OTQ21f9TQeu7X5iiHHtVygU7y0t3NXFqlIgpgj0K6bSpk6vYGAapq0iFdztLkeuSBQujIP+/HNgnTkL+jtvOAv7Rg587Mtnrm966MjRh/WsAa4bedAmrsC1xuBxOH8ODodCtKyt2CL02ipsfc/TZH7zAxTSsyCFAJeugxZpBE/34+Te1kbZgQ+kYRZwiiyev3ARoo/ugj9OjUJh/He1T+Z6t5w59b2EOGOJfrsqAl2VPFm6+2QukwWaTovA668U8cYCck0D5lJ/w4SFDw9y9uMoE9Npltdr4f539499mfz62KVn/UP1jeG5zNRvk9H0+JgjG8N+uazjeNEww3Xh9/05401eUwOecBiEbQFenwOYnwdDpcL2eseY1zMsc9nEg9mZFCN1KuHNJWnvXo6JhL2qfmD4rnt2a3lzD5lGA0Nmay7XDNR4f5EaH7G2Rk53p1Llo1CdinFE0Tc4SNDT4wROrIqTcUkC8YohlxrjdEWxEjzIlTQlWE0DElTjHJCvbhlf8QqttBNaVUu23pavE/hfEfgTIu+Rt8XJr2kAAAAASUVORK5CYII=") center/contain no-repeat;
-      animation:__lc_paw_breathe 30s 5s infinite;
+    /* Lottie animation — centered in brand layer */
+    #livicat-watermark dotlottie-wc {{
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:300px; height:300px;
+      opacity:0.7;
     }}
     @keyframes __lc_curious {{
       0%,100%{{transform:rotate(0deg)}}
@@ -320,15 +320,8 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       30%{{opacity:1;transform:scale(1.15) translateX(-5px)}}
       100%{{opacity:0;transform:scale(0.75) translateX(60px)}}
     }}
-    /* Cat icon breath cycle: gently pulses in and out every 30s */
-    @keyframes __lc_paw_breathe {{
-      0%,2%{{opacity:0;transform:scale(0.3) translateY(12px)}}
-      5%{{opacity:0.5;transform:scale(1.05)}}
-      25%{{opacity:0.55;transform:scale(1)}}
-      30%{{opacity:0;transform:scale(0.6) translateY(-6px)}}
-      100%{{opacity:0;transform:scale(0.3) translateY(12px)}}
-    }}
   </style>
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 </head>
 <body>
   <!-- Chat layer — always visible, independent from brand -->
@@ -341,7 +334,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       <span class="wm-icon"></span>
       <span class="wm-text">LIVICAT</span>
     </span>
-    <span class="wm-paw"></span>
+    <dotlottie-wc src="https://lottie.host/88c56c21-6cc6-474b-987a-76c1df64f4be/r0EX1vSyMW.lottie" autoplay loop></dotlottie-wc>
   </div>
 
   <script>
