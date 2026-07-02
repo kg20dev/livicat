@@ -197,7 +197,8 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   const buttonDisabled =
     !videoId ||
     streamState === 'sending' ||
-    streamState === 'stopping'
+    streamState === 'stopping' ||
+    (streamState === 'idle' && !isConfigured())
 
   const getButtonContent = () => {
     if (streamState === 'sending' || streamState === 'stopping') {
