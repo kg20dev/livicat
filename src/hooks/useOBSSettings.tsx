@@ -75,7 +75,11 @@ export function OBSProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const isConfigured = useCallback((): boolean => {
-    return Boolean(settings.obsUrl?.startsWith('ws://') || settings.obsUrl?.startsWith('wss://'))
+    return Boolean(
+      settings.obsUrl?.startsWith('ws://') ||
+        settings.obsUrl?.startsWith('wss://') ||
+        settings.obsUrl === 'http-fallback'
+    )
   }, [settings.obsUrl])
 
   return (
@@ -120,7 +124,9 @@ export function useOBSSettings(): OBSContextValue {
 
   const isConfigured = useCallback((): boolean => {
     return Boolean(
-      fallbackSettings.obsUrl?.startsWith('ws://') || fallbackSettings.obsUrl?.startsWith('wss://')
+      fallbackSettings.obsUrl?.startsWith('ws://') ||
+        fallbackSettings.obsUrl?.startsWith('wss://') ||
+        fallbackSettings.obsUrl === 'http-fallback'
     )
   }, [fallbackSettings.obsUrl])
 

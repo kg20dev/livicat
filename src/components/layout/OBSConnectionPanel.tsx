@@ -13,7 +13,11 @@ type PanelState = 'form' | 'connecting' | 'connected' | 'error'
 export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanelProps) {
   const { settings, saveSettings } = useOBSSettings()
 
-  const [url, setUrl] = useState(settings.obsUrl || 'ws://localhost:4455')
+  const defaultUrl =
+    settings.obsUrl && settings.obsUrl !== 'http-fallback'
+      ? settings.obsUrl
+      : 'ws://localhost:4455'
+  const [url, setUrl] = useState(defaultUrl)
   const [password, setPassword] = useState(settings.obsPassword || '')
   const [sourceName, setSourceName] = useState(settings.sourceName || 'Livicat Chat')
   const [selectedScene, setSelectedScene] = useState(settings.defaultScene || '')
