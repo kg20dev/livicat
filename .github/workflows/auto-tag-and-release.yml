@@ -50,6 +50,21 @@ jobs:
           git push origin "v$VERSION"
           echo "✅ Created and pushed tag v$VERSION"
 
+      - name: Sync main to released version
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          node scripts/sync-version.cjs
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "chore: sync main to v$VERSION [skip ci]"
+          git push origin main
+          echo "✅ main synced to v$VERSION"
+
       - name: Trigger release workflow
         if: steps.check_tag.outputs.exists == 'false'
         run: |
