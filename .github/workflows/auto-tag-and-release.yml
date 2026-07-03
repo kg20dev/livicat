@@ -50,21 +50,6 @@ jobs:
           git push origin "v$VERSION"
           echo "✅ Created and pushed tag v$VERSION"
 
-      - name: Bump main to next dev version
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          npm version patch --no-git-tag-version
-          node scripts/sync-version.cjs
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
-          git commit -m "chore: bump to v$NEW_VERSION [skip ci]"
-          git push origin main
-          echo "✅ main bumped to v$NEW_VERSION"
-
       - name: Trigger release workflow
         if: steps.check_tag.outputs.exists == 'false'
         run: |
