@@ -1,19 +1,24 @@
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tauri::{AppHandle, Manager};
 use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_aptabase::EventTracker;
 
+mod obs;
+mod processor;
+mod renderer;
 mod sentry;
+mod webview_chat;
 use ::sentry::Level as SentryLevel;
 
 #[cfg(target_os = "windows")]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+pub(crate) const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 #[cfg(target_os = "macos")]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+pub(crate) const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+pub(crate) const PREVIEW_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 struct PreviewState {
     window_label: Option<String>,
@@ -21,10 +26,29 @@ struct PreviewState {
 
 type SharedPreviewState = Arc<Mutex<PreviewState>>;
 
+/// Holds handles for the active chat session.
+struct ChatState {
+    renderer_handle: Option<renderer::RendererHandle>,
+    video_id: Option<String>,
+}
+
+impl ChatState {
+    fn new() -> Self {
+        Self {
+            renderer_handle: None,
+            video_id: None,
+        }
+    }
+}
+
+type SharedChatState = Arc<Mutex<ChatState>>;
+
 #[tauri::command]
 async fn open_preview_window(
     video_id: String,
     css: String,
+    always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -73,11 +97,7 @@ async fn open_preview_window(
     .title("Livicat — Live Chat Preview")
     .inner_size(420.0, 700.0)
     .min_inner_size(320.0, 480.0)
-    // always_on_top disabled everywhere — it causes window capture issues:
-    // - Windows: WebView2 crashes with YouTube chat + OBS capture
-    // - macOS: OBS window capture can't find the window in its dropdown
-    // (The preview window is captured by OBS and doesn't need to float.)
-    .always_on_top(false)
+    .always_on_top(always_on_top)
     .user_agent(PREVIEW_USER_AGENT)
     .on_page_load(move |window, payload| {
         let url = window.url().ok();
@@ -114,7 +134,7 @@ async fn open_preview_window(
                 // fires into an uninitialized JS context, causing crashes.
                 // On macOS (WKWebView) it's more forgiving but still unsafe.
                 // Waiting for Finished guarantees the JS environment is ready.
-                if let Err(e) = inject_css_to_window(&window, &css) {
+                if let Err(e) = inject_css_to_window(&window, &css, auto_scroll) {
                     eprintln!("[Livicat] CSS injection via page load failed: {}", e);
                     sentry::capture_error(&format!("CSS injection via page load failed: {}", e));
                     sentry::add_breadcrumb(
@@ -139,6 +159,11 @@ async fn open_preview_window(
     window
         .show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
+
+    // Track preview opened for adoption metrics
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature("feature.preview_opened", version, &device_id);
 
     //     // OBS Window Capture workaround: force periodic repaints to refresh DWM thumbnail
     //     // Without this, OBS Window Capture can't see the window (Display Capture works fine)
@@ -166,6 +191,8 @@ async fn open_preview_window(
 #[tauri::command]
 async fn inject_css(
     css: String,
+    always_on_top: bool,
+    auto_scroll: bool,
     app: AppHandle,
     state: tauri::State<'_, SharedPreviewState>,
 ) -> Result<(), String> {
@@ -177,6 +204,9 @@ async fn inject_css(
         if let Some(window) = app.get_webview_window(label) {
             println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
 
+            // Always on top — apply dynamically to already-open window
+            let _ = window.set_always_on_top(always_on_top);
+
             // Add breadcrumb for CSS injection
             sentry::add_breadcrumb(
                 "css_injection",
@@ -184,7 +214,7 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
-            inject_css_to_window(&window, &css)?;
+            inject_css_to_window(&window, &css, auto_scroll)?;
             return Ok(());
         }
     }
@@ -208,6 +238,11 @@ async fn close_preview_window(
             sentry::add_breadcrumb("preview", "Closing preview window", SentryLevel::Info);
 
             let _ = window.close();
+
+            // Track preview closed for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("feature.preview_closed", version, &device_id);
         }
         state_guard.window_label = None;
         println!("[Livicat Tauri] Preview window closed");
@@ -218,10 +253,142 @@ async fn close_preview_window(
     Ok(())
 }
 
+/// Start the chat system for a given video.
+///
+/// Launches:
+///   1. Renderer (HTTP server on random port)
+///   2. Hidden Tauri WebView (navigates to YouTube live chat, captures DOM)
+///
+/// The WebView injects CSS + a MutationObserver that sends captured
+/// messages to the renderer via `fetch POST /ingest`. The renderer
+/// serves the styled chat page to OBS via browser source.
+///
+/// Returns `renderer_port` — the port the renderer is listening on.
+#[tauri::command]
+async fn start_chat(
+    app: AppHandle,
+    video_id: String,
+    css: String,
+    hide_atsign: bool,
+    state: tauri::State<'_, SharedChatState>,
+    preview_state: tauri::State<'_, SharedPreviewState>,
+) -> Result<u16, String> {
+    // ── 0. Tear down any existing session ──────────────────────
+    let old_renderer = {
+        let mut s = state.lock().map_err(|e| e.to_string())?;
+        s.renderer_handle.take()
+    };
+    if let Some(handle) = old_renderer {
+        handle.shutdown().await;
+    }
+    // Close any lingering chat WebView
+    if let Some(window) = app.get_webview_window("livicat-chat") {
+        let _ = window.close();
+        // Brief pause to let Tauri release the window label before
+        // we create a new one with the same label below.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+
+    // Close the preview window (if open) — streaming replaces the preview
+    if let Ok(mut ps) = preview_state.lock() {
+        if let Some(label) = ps.window_label.as_deref() {
+            if let Some(win) = app.get_webview_window(label) {
+                let _ = win.close();
+            }
+            ps.window_label = None;
+        }
+    }
+
+    // ── 1. Create shared store ─────────────────────────────────
+    let store = processor::MessageStore::new();
+
+    // ── 2. Start renderer ──────────────────────────────────────
+    let css_clone = css.clone();
+    let store_for_webview = store.clone(); // clone before store is moved into renderer
+    let renderer_handle = renderer::start_renderer(store, css_clone)
+        .await
+        .map_err(|e| format!("Failed to start renderer: {e}"))?;
+    let port = renderer_handle.port;
+    log::info!("[chat] Renderer started on port {port}");
+
+    // ── 4. Start hidden WebView chat ───────────────────────────
+    // The WebView's observer writes captured messages to
+    // `location.hash`. A Rust poll loop reads the hash, decodes
+    // messages, and pushes to the MessageStore → SSE broadcast.
+    webview_chat::start_webview_chat(&app, &video_id, &css, hide_atsign, store_for_webview).await?;
+
+    // ── 5. Store handles ───────────────────────────────────────
+    {
+        let mut s = state.lock().map_err(|e| e.to_string())?;
+        s.renderer_handle = Some(renderer_handle);
+        s.video_id = Some(video_id);
+    }
+
+    log::info!("[chat] All components started");
+    Ok(port)
+}
+
+/// Stop the chat system and clean up all resources.
+/// Live-update the renderer's CSS without restarting the stream.
+///
+/// Proxies the CSS to the renderer's HTTP endpoint from Rust, bypassing
+/// the WebView's Content-Security-Policy which blocks fetch to localhost.
+#[tauri::command]
+async fn update_renderer_css(
+    css: String,
+    state: tauri::State<'_, SharedChatState>,
+) -> Result<(), String> {
+    let port = {
+        let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
+        s.renderer_handle.as_ref().map(|h| h.port)
+    };
+    match port {
+        Some(port) => {
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(5))
+                .build()
+                .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
+            client
+                .post(format!("http://127.0.0.1:{port}/update-css"))
+                .body(css)
+                .send()
+                .await
+                .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
+            Ok(())
+        }
+        None => Err("No active renderer session".to_string()),
+    }
+}
+
+#[tauri::command]
+async fn stop_chat(app: AppHandle, state: tauri::State<'_, SharedChatState>) -> Result<(), String> {
+    // Close the WebView chat window first
+    if let Some(window) = app.get_webview_window("livicat-chat") {
+        let _ = window.close();
+    }
+    // Then shut down the renderer
+    let renderer_handle = {
+        let mut s = state.lock().map_err(|e| e.to_string())?;
+        s.renderer_handle.take()
+    };
+    if let Some(handle) = renderer_handle {
+        handle.shutdown().await;
+    }
+    log::info!("[chat] All components stopped");
+    Ok(())
+}
+
 #[tauri::command]
 fn get_app_version() -> String {
     // Read version from Cargo.toml at compile time — always matches the binary
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn track_feature_event(name: String) {
+    let version = env!("CARGO_PKG_VERSION");
+    let device_id = sentry::get_device_hash();
+    sentry::track_feature(&name, version, &device_id);
 }
 
 #[tauri::command]
@@ -257,6 +424,7 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
 fn inject_css_to_window(
     window: &WebviewWindow,
     css: &str,
+    auto_scroll: bool,
 ) -> Result<(), String> {
     println!("[Livicat] Attempting CSS injection ({} bytes)", css.len());
 
@@ -274,6 +442,31 @@ fn inject_css_to_window(
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
             }}
+
+            function __lc_scroll() {{
+                var s = document.querySelector('#item-scroller') || document.querySelector('yt-live-chat-item-list-renderer #item-scroller');
+                if (s) {{ s.scrollTop = s.scrollHeight; }}
+            }}
+            [0, 300, 1000, 2500].forEach(function(t) {{ setTimeout(__lc_scroll, t); }});
+            console.log('[Livicat] Scroll-to-bottom scheduled');
+
+            window.__lc_auto_scroll = {};
+            function __lc_click_show_more() {{
+                if (!window.__lc_auto_scroll) return;
+                var btn = document.querySelector('yt-icon-button#show-more button#button');
+                if (btn) {{
+                    btn.click();
+                    console.log('[Livicat] Auto-clicked show-more button');
+                }}
+            }}
+            if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
+                window.__livicat_show_more_obs = new MutationObserver(function() {{
+                    __lc_click_show_more();
+                }});
+                window.__livicat_show_more_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
+                console.log('[Livicat] Show-more auto-click observer active');
+            }}
+            __lc_click_show_more();
 
             function __lc_wm_cycle(el) {{
                 setTimeout(function() {{
@@ -372,13 +565,16 @@ fn inject_css_to_window(
             }}
         }})();"#,
         serde_json::to_string(css).map_err(|e| format!("JSON serialize error: {}", e))?,
+        auto_scroll,
     );
 
     window
         .eval(&script)
         .map_err(|e| format!("Failed to eval script: {}", e))?;
 
-    println!("[Livicat] CSS injection + punct observer + watermark executed");
+    println!(
+        "[Livicat] CSS injection + show-more auto-click + watermark + punct observer executed"
+    );
     Ok(())
 }
 
@@ -584,6 +780,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .setup(move |app| {
             app.manage(preview_state);
+            app.manage::<SharedChatState>(Arc::new(Mutex::new(ChatState::new())));
 
             // Move Sentry guard into Tauri state so it persists even on crash
             // This ensures Sentry flushes events even if the app crashes hard
@@ -591,6 +788,11 @@ pub fn run() {
 
             // Send test log to verify Sentry is working
             sentry::send_test_log();
+
+            // Track app launch for adoption metrics
+            let version = env!("CARGO_PKG_VERSION");
+            let device_id = sentry::get_device_hash();
+            sentry::track_feature("app.launched", version, &device_id);
 
             // Register a Sentry-compatible panic hook
             // We preserve any existing hook (Sentry's own) and add ours on top
@@ -629,8 +831,16 @@ pub fn run() {
             open_preview_window,
             inject_css,
             close_preview_window,
+            start_chat,
+            stop_chat,
+            update_renderer_css,
             get_app_version,
             trigger_crash_test,
+            track_feature_event,
+            obs::detect_streaming_app,
+            obs::obs_get_scenes,
+            obs::obs_send_browser_source,
+            obs::obs_remove_browser_source,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

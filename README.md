@@ -13,7 +13,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ![Windows](https://img.shields.io/badge/Windows-supported-brightgreen?logo=windows&logoColor=white)
 
 <p align="center">
-  <img src="readme.livicat.gif" alt="Livicat Demo" width="720">
+  <img src="Screenshot 2026-06-20 at 00.09.25.png" alt="Livicat Demo" width="720">
 </p>
 
 ---
@@ -34,6 +34,12 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 - ✨ **Message Animations** — Entrance animations for usernames and messages
 - 🪟 **Live Preview** — Real-time chat popup for OBS Window Capture
 - ⚡ **Real-Time Preview** — Popup window with gallery mode
+- 📤 **OBS & PRISM Direct Integration** — One-click browser source setup via OBS WebSocket
+- 🎥 **Headless Chat System** — Captures YouTube chat via hidden WebView, no preview window needed
+- 🔄 **CSS Hot-Reload During Stream** — Theme changes applied live without restarting OBS
+- 🛡️ **Safe Theme Switching** — Confirmation modal when switching themes during active stream
+- 🎯 **Lanczos Scale Filter** — Crisp chat overlay with high-quality downscaling
+- 🏷️ **Animated Watermark** — Lottie paw animation + brand badge on stream overlay
 - 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels
 - 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
 
@@ -57,7 +63,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📥 Download
 
-🎉 **[Latest Release: v0.9.1](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release: v0.9.3](https://github.com/kg20dev/livicat/releases)**
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
@@ -85,10 +91,11 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ## 📊 Stats
 
 - **Size:** ~8MB (93% smaller than Electron)
-- **Tests:** 239+ tests
+- **Tests:** 324+ (287 frontend + 37 Rust)
 - **Languages:** TypeScript, Rust, React
 - **Platforms:** macOS, Windows
 - **License:** GPL-3.0
+- **CI:** ESLint • Prettier • TypeScript • Vitest • cargo check • pre-commit hooks
 
 ---
 
@@ -104,22 +111,55 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 **Thanks to our contributors who make Livicat better!**
 
-<a href="https://github.com/migorengx" title="migorengx — Creator & Maintainer">
-  <img src="https://github.com/migorengx.png" width="72" height="72" alt="migorengx" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-</a>
-<a href="https://github.com/sutoberiii" title="sutoberiii — Collaborator">
-  <img src="https://github.com/sutoberiii.png" width="72" height="72" alt="sutoberiii" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-</a>
-<a href="https://github.com/Necromanchi" title="Necromanchi — Collaborator">
-  <img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-</a>
-<a href="https://github.com/yurisien" title="yurisien — Collaborator">
-  <img src="https://github.com/yurisien.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-</a>
-<a href="https://github.com/asahoy" title="asahoy — Collaborator">
-  <img src="https://github.com/asahoy.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-</a>
+<p align="center">
+  <a href="https://github.com/migorengx">
+    <img src="https://github.com/migorengx.png" width="80" height="80" alt="migorengx" style="border-radius: 50%; border: 3px solid #a855f7; box-shadow: 0 0 12px rgba(168,85,247,0.4);">
+  </a>
+  <br>
+  <strong>migorengx</strong>
+  <br>
+  <span style="display: inline-block; background: linear-gradient(135deg, #a855f7, #eab308); color: #fff; padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">🧙 Sage</span>
+  <br><br>
+</p>
 
+<p align="center">
+  <a href="https://github.com/sutoberiii"><img src="https://github.com/sutoberiii.png" width="72" height="72" alt="sutoberiii" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
+  <a href="https://github.com/Necromanchi"><img src="https://github.com/Necromanchi.png" width="72" height="72" alt="Necromanchi" style="border-radius: 50%; border: 2px solid #14b8a6; box-shadow: 0 0 8px rgba(20,184,166,0.3);"></a>
+  <a href="https://github.com/yurisien"><img src="https://github.com/yurisien.png" width="72" height="72" alt="yurisien" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
+  <a href="https://github.com/asahoy"><img src="https://github.com/asahoy.png" width="72" height="72" alt="asahoy" style="border-radius: 50%; border: 2px solid #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.3);"></a>
+  <a href="https://github.com/yamuyamcik"><img src="https://github.com/yamuyamcik.png" width="72" height="72" alt="yamuyamcik" style="border-radius: 50%; border: 2px solid #14b8a6; box-shadow: 0 0 8px rgba(20,184,166,0.3);"></a>
+  <a href="https://github.com/arale-afk"><img src="https://github.com/arale-afk.png" width="72" height="72" alt="arale-afk" style="border-radius: 50%; border: 2px solid #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.3);"></a>
+</p>
+
+<p align="center">
+  <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ sutoberiii</span>
+  <span style="display: inline-block; background: #14b8a6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🎵 Necromanchi</span>
+  <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ yurisien</span>
+  <span style="display: inline-block; background: #3b82f6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🛡️ asahoy</span>
+  <span style="display: inline-block; background: #14b8a6; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">🎵 yamuyamcik</span>
+  <span style="display: inline-block; background: #ef4444; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 2px;">⚔️ arale-afk</span>
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="140">
+      <strong>🧙 Sage</strong><br><span style="font-size:12px;color:#a855f7;">migorengx</span><br><small>Creator & Lead</small>
+    </td>
+    <td align="center" width="140">
+      <strong>🎵 Bards</strong><br><span style="font-size:12px;color:#14b8a6;">Necromanchi · yamuyamcik</span><br><small>Storytellers</small>
+    </td>
+    <td align="center" width="140">
+      <strong>⚔️ Warrior</strong><br><span style="font-size:12px;color:#ef4444;">arale-afk</span><br><small>Frontline</small>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="3">
+      <strong>🛡️ Defenders</strong><br>
+      <span style="font-size:12px;color:#3b82f6;">sutoberiii · yurisien · asahoy</span><br>
+      <small>Guardians of the stream</small>
+    </td>
+  </tr>
+</table>
 
 **Thank you to:**
 

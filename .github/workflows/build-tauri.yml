@@ -101,7 +101,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -130,7 +130,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Rust toolchain
@@ -232,7 +232,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Rust toolchain
@@ -339,6 +339,45 @@ jobs:
           echo ""
           echo "Windows artifacts:"
           find artifacts/windows -type f
+
+      - name: Install AWS CLI (for R2 upload)
+        run: |
+          curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          sudo ./aws/install
+          aws --version
+
+      - name: Upload artifacts to Cloudflare R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BUCKET="livicat-release"
+          PREFIX="v${VERSION}"
+
+          aws configure set aws_access_key_id "${{ secrets.R2_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.R2_SECRET_ACCESS_KEY }}"
+          aws configure set default.region auto
+
+          echo "☁️ Uploading to Cloudflare R2: s3://${BUCKET}/${PREFIX}/"
+
+          # macOS .dmg
+          for f in artifacts/macos/dmg/*.dmg; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
+          done
+
+          # Windows .msi
+          for f in artifacts/windows/msi/*.msi; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
+          done
+
+          # Windows .exe
+          for f in artifacts/windows/nsis/*.exe; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
+          done
+
+          echo "✅ All artifacts uploaded to R2: s3://${BUCKET}/${PREFIX}/"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

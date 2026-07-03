@@ -27,13 +27,15 @@ import { useResponsive } from '../../hooks/useResponsive'
 import { trackEventAsync } from '../../utils/analytics'
 import { validateYouTubeUrl } from '../../utils/youtubeValidation'
 import { buildCSSVariables } from '../../utils/buildCSSVariables'
+import { StreamSender } from '../ui/StreamSender'
+import { useStreamContext } from '../../hooks/useStreamState'
 
 /* ─── Platform Detection ──────────────────────────────────────── */
 const isMac =
   typeof window !== 'undefined'
     ? window.navigator.platform.toUpperCase().indexOf('MAC') >= 0
     : false
-const platformShortcutIcon = isMac ? 'keyboard_command_key' : 'keyboard_ctrl_key'
+const platformShortcutIcon = isMac ? 'keyboard_command_key' : 'keyboard_control_key'
 
 /* ─── Core sections (shared across themes) ───────────────────── */
 const CORE_SECTION_NAMES = new Set([
@@ -43,6 +45,7 @@ const CORE_SECTION_NAMES = new Set([
   'Typography',
   'Avatar',
   'Role Colors',
+  'Preview',
 ])
 
 /* ─── Section Name → Icon Mapping ──────────────────────────────── */
@@ -146,6 +149,8 @@ function groupRoleColors(items: ThemeBundle['scheme']): RoleGroup[] {
 export function WorkspaceX() {
   const [selectedThemeId, setSelectedThemeId] = useState(THEMES[0]?.manifest.id ?? '')
   const theme = useMemo(() => getThemeById(selectedThemeId), [selectedThemeId])
+  const { streamState, stopStream } = useStreamContext()
+  const [pendingTheme, setPendingTheme] = useState<string | null>(null)
 
   // Track which sections are open — persists across theme switches
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
@@ -178,6 +183,41 @@ export function WorkspaceX() {
       return updated
     })
   }, [])
+
+  // When a stream is active, show a confirmation before switching themes
+  const handleThemeSwitch = useCallback(
+    (newId: string) => {
+      if (streamState === 'websocket' || streamState === 'sending') {
+        setPendingTheme(newId)
+      } else {
+        setSelectedThemeId(newId)
+        updateRecentThemes(newId)
+      }
+    },
+    [streamState, updateRecentThemes]
+  )
+
+  const confirmStopAndSwitch = useCallback(async () => {
+    if (!pendingTheme) return
+    trackEventAsync('stream_theme_switch', {
+      action: 'confirmed',
+      target_theme: pendingTheme,
+    })
+    await stopStream()
+    setSelectedThemeId(pendingTheme)
+    updateRecentThemes(pendingTheme)
+    setPendingTheme(null)
+  }, [pendingTheme, stopStream, updateRecentThemes])
+
+  const cancelSwitch = useCallback(() => {
+    if (pendingTheme) {
+      trackEventAsync('stream_theme_switch', {
+        action: 'cancelled',
+        target_theme: pendingTheme,
+      })
+    }
+    setPendingTheme(null)
+  }, [pendingTheme])
 
   // Filtered themes for dropdown
   const filteredThemes = useMemo(() => {
@@ -218,8 +258,7 @@ export function WorkspaceX() {
           e.preventDefault()
           if (filteredThemes[selectedIndex]) {
             const theme = filteredThemes[selectedIndex]
-            setSelectedThemeId(theme.manifest.id)
-            updateRecentThemes(theme.manifest.id)
+            handleThemeSwitch(theme.manifest.id)
             setDropdownOpen(false)
             setDropdownSearch('')
             setSelectedIndex(0)
@@ -236,7 +275,7 @@ export function WorkspaceX() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes])
+  }, [dropdownOpen, selectedIndex, filteredThemes, updateRecentThemes, handleThemeSwitch])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -368,8 +407,7 @@ export function WorkspaceX() {
                         <button
                           key={t.manifest.id}
                           onClick={() => {
-                            setSelectedThemeId(t.manifest.id)
-                            updateRecentThemes(t.manifest.id)
+                            handleThemeSwitch(t.manifest.id)
                             setDropdownOpen(false)
                             setDropdownSearch('')
                             setSelectedIndex(0)
@@ -478,10 +516,7 @@ export function WorkspaceX() {
                     return (
                       <button
                         key={id}
-                        onClick={() => {
-                          setSelectedThemeId(id)
-                          updateRecentThemes(id)
-                        }}
+                        onClick={() => handleThemeSwitch(id)}
                         className={`
                           glass-liquid-card px-3 py-2 rounded-lg flex items-center gap-2
                           transition-all duration-200 hover:scale-[1.02] hover:border-primary/40
@@ -522,13 +557,41 @@ export function WorkspaceX() {
         </div>
       </div>
 
-      {/* ─── Body: settings + preview (keyed — remounts on theme switch) ── */}
-      <WorkspaceBody
-        key={selectedThemeId}
-        theme={theme}
-        openSections={openSections}
-        toggleSection={toggleSection}
-      />
+      {/* ─── Body: settings + preview (no key — preserves state across theme switch) ── */}
+      <WorkspaceBody theme={theme} openSections={openSections} toggleSection={toggleSection} />
+
+      {/* ─── Confirm: stop stream before switching theme ────────────────────── */}
+      {pendingTheme && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+        >
+          <div className="bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl max-w-sm w-full mx-4 p-5">
+            <h3 className="text-title-md text-on-surface font-semibold mb-1">
+              Stop stream before switching theme?
+            </h3>
+            <p className="text-body-sm text-on-surface-variant mb-5 leading-relaxed">
+              Your stream will end before switching to{' '}
+              <strong>{getThemeById(pendingTheme)?.manifest.name ?? pendingTheme}</strong>. You can
+              restart it afterward.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={cancelSwitch}
+                className="px-4 py-2 rounded-lg text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStopAndSwitch}
+                className="px-4 py-2 rounded-lg text-label-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
+              >
+                Stop &amp; Switch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -783,6 +846,9 @@ function WorkspaceBody({
       : [inlineCss, unscopedCss].join('\n\n')
   }, [settings, scheme, theme.css, theme.reset, manifest.id])
 
+  /* ─── Stable CSS for StreamSender ──────────────────────────────── */
+  const ytCss = useMemo(() => buildYoutubeCss(), [buildYoutubeCss])
+
   /* ─── YouTube preview ────────────────────────────────────────── */
 
   const validation = useMemo(() => validateYouTubeUrl(youtubeUrl), [youtubeUrl])
@@ -804,7 +870,7 @@ function WorkspaceBody({
       // injects it when YouTube's DOM is ready — 300ms after setPreviewOpen
       // is too early for YouTube's page to have finished loading.
       const css = buildYoutubeCss()
-      openPreview(videoId, css)
+      openPreview(videoId, css, false, settings['forced-auto-scroll'] as boolean)
       setPreviewOpen(true)
       setDemoPreviewHidden(true) // Hide demo preview when YouTube preview opens
       previewStartRef.current = Date.now()
@@ -813,17 +879,17 @@ function WorkspaceBody({
         video_provided: !!videoId,
       })
     }
-  }, [previewOpen, videoId, openPreview, closePreview, buildYoutubeCss])
+  }, [previewOpen, videoId, openPreview, closePreview, buildYoutubeCss, settings])
 
   /* ─── CSS re-injection on settings change ──────────────────── */
 
   useEffect(() => {
     if (!previewOpen) return
     const timer = setTimeout(() => {
-      updateCSS(buildYoutubeCss())
+      updateCSS(buildYoutubeCss(), false, settings['forced-auto-scroll'] as boolean)
     }, 300)
     return () => clearTimeout(timer)
-  }, [previewOpen, buildYoutubeCss, updateCSS])
+  }, [previewOpen, buildYoutubeCss, updateCSS, settings])
 
   /* ─── Layout ─────────────────────────────────────────────────── */
 
@@ -917,6 +983,13 @@ function WorkspaceBody({
                             />
                           </div>
                         ))}
+                      </div>
+                    ) : section === 'Preview' ? (
+                      <div className="space-y-3">
+                        <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
+                        <p className="text-[11px] text-on-surface-variant/50 italic leading-relaxed px-0.5">
+                          Changes require re-launching the LiveChat preview window.
+                        </p>
                       </div>
                     ) : (
                       <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
@@ -1028,6 +1101,17 @@ function WorkspaceBody({
                             </div>
                           ))}
                         </div>
+                      ) : section === 'Preview' ? (
+                        <div className="space-y-3">
+                          <SettingsPanel
+                            scheme={items}
+                            values={settings}
+                            onChange={updateSetting}
+                          />
+                          <p className="text-[11px] text-on-surface-variant/50 italic leading-relaxed px-0.5">
+                            Changes require re-launching the LiveChat preview window.
+                          </p>
+                        </div>
                       ) : (
                         <SettingsPanel scheme={items} values={settings} onChange={updateSetting} />
                       )}
@@ -1122,7 +1206,7 @@ function WorkspaceBody({
             >
               {previewMode === 'live' && (
                 <div
-                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full' : 'gap-2'}`}
+                  className={`flex items-center ${responsive.isPortrait ? 'gap-2 w-full flex-wrap' : 'gap-2'}`}
                 >
                   <input
                     type="text"
@@ -1150,6 +1234,13 @@ function WorkspaceBody({
                       <span className="material-symbols-outlined text-[12px]">close</span>
                     )}
                   </button>
+
+                  {/* Send to Stream */}
+                  <StreamSender
+                    videoId={videoId}
+                    injectedCSS={ytCss}
+                    hideAtsign={(settings['hide-username-atsign'] as boolean) ?? false}
+                  />
                 </div>
               )}
 

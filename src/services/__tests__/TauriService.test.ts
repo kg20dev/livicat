@@ -41,6 +41,8 @@ describe('TauriService', () => {
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('open_preview_window', {
         videoId: 'video123',
         css: '.chat { color: red }',
+        alwaysOnTop: false,
+        autoScroll: true,
       })
     })
 
@@ -63,6 +65,8 @@ describe('TauriService', () => {
       await expect(TauriService.injectCss('body {}')).resolves.toBe(true)
       expect(mockInvoke).toHaveBeenCalledExactlyOnceWith('inject_css', {
         css: 'body {}',
+        alwaysOnTop: false,
+        autoScroll: true,
       })
     })
 

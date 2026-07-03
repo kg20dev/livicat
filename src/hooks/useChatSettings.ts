@@ -72,6 +72,10 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   /* Chroma key */
   chromaKey: false,
 
+  /* Preview window */
+  alwaysOnTop: false,
+  forcedAutoScroll: true,
+
   /* IM-style bubble settings */
   bubbleBorderWidth: 2,
   bubbleTailOffset: -10,

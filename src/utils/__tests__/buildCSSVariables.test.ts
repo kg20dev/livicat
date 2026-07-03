@@ -273,6 +273,20 @@ describe('buildCSSVariables', () => {
     })
   })
 
+  describe('hide-username-atsign', () => {
+    it('emits min-width/centering rules when enabled', () => {
+      const css = buildCSSVariables({ 'hide-username-atsign': true }, [])
+      expect(css).toContain('#content #author-name')
+      expect(css).toContain('min-width: 2em !important')
+      expect(css).toContain('text-align: center !important')
+    })
+
+    it('does not emit rules when disabled', () => {
+      const css = buildCSSVariables({}, [])
+      expect(css).not.toContain('#content #author-name')
+    })
+  })
+
   describe('chroma key', () => {
     it('emits green background when enabled', () => {
       const css = buildCSSVariables({ 'chroma-key': true }, [])
