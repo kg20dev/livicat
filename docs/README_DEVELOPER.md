@@ -29,53 +29,47 @@ Livicat is a **cross-platform desktop application** built with **Tauri 2** that 
 | **Testing** | React Testing Library | 16.3+ | Component tests |
 | **Analytics** | Aptabase | 1.0+ | Usage tracking |
 | **Error Tracking** | Sentry | 0.48+ | Crash reporting |
-| **CI/CD** | GitHub Actions | — | CI pipeline, builds |
-| **Linting** | ESLint + Prettier | 8.55+ / 3.1+ | Code quality & formatting |
-| **Hooks** | Husky + lint-staged | 9.1+ / 17.0+ | Pre-commit checks |
 
 ### **Architecture**
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                         Livicat App                              │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  ┌──────────────────────┐         ┌─────────────────────────┐    │
-│  │   React Frontend     │ ◄──────► │   Tauri IPC Layer      │    │
-│  │                      │  JSON   │                         │    │
-│  │  • UI Components     │         │  • invoke() commands    │    │
-│  │  • CSS Generator     │         │  • Event system         │    │
-│  │  • StreamProvider    │         │  • File dialogs         │    │
-│  │  • useStreamState    │         │                         │    │
-│  └──────────────────────┘         └─────────────────────────┘    │
-│          │                                   │                    │
-│          ▼                                   ▼                    │
-│  ┌──────────────────┐          ┌──────────────────────────┐      │
-│  │   OBS WebSocket  │          │      Rust Backend        │      │
-│  │   (direct OBS    │          │                          │      │
-│  │    integration)  │          │  • WebView Management   │      │
-│  └──────────────────┘          │  • CSS Injection        │      │
-│                                │  • Headless Chat Engine │      │
-│  ┌──────────────────┐          │  • Renderer (SSE Server)│      │
-│  │   Aptabase +      │          │  • OBS Scale Filter    │      │
-│  │   Sentry Tracking │          │  • Analytics (Aptabase) │      │
-│  └──────────────────┘          │  • Error Tracking (Sentry)│    │
-│                                └──────────────────────────┘      │
-│                                            │                      │
-└────────────────────────────────────────────┼──────────────────────┘
-                                             ▼
-                    ┌──────────────────────────────────────┐
-                    │     Headless Chat Pipeline           │
-                    │                                      │
-                    │  ┌──────────┐   ┌──────────┐        │
-                    │  │  Hidden  │──►│ Renderer │──SSE──►│ OBS
-                    │  │ WebView  │   │ (axum)   │        │ Browser
-                    │  │ (YouTube)│   │ :PORT    │        │ Source
-                    │  └──────────┘   └──────────┘        │
-                    │                                      │
-                    │  • macOS: WKWebView                  │
-                    │  • Windows: WebView2                 │
-                    └──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                         Livicat App                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌──────────────────┐         ┌──────────────────┐         │
+│  │   React Frontend │ ◄──────► │  Tauri IPC Layer │         │
+│  │                  │  JSON   │                  │         │
+│  │  • UI Components │         │  • invoke()      │         │
+│  │  • CSS Generator │         │  • Commands      │         │
+│  │  • State Mgmt    │         │  • Events        │         │
+│  └──────────────────┘         └──────────────────┘         │
+│                                         │                    │
+│                                         ▼                    │
+│                    ┌──────────────────────────────┐         │
+│                    │      Rust Backend            │         │
+│                    │                              │         │
+│                    │  • WebView Management       │         │
+│                    │  • CSS Injection            │         │
+│                    │  • Window Control           │         │
+│                    │  • Analytics (Aptabase)     │         │
+│                    │  • Error Tracking (Sentry)  │         │
+│                    └──────────────────────────────┘         │
+│                                │                             │
+└────────────────────────────────┼─────────────────────────────┘
+                                 ▼
+                    ┌──────────────────────┐
+                    │   OS WebView         │
+                    │                      │
+                    │ • macOS: WKWebView   │
+                    │ • Windows: WebView2 │
+                    └──────────────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │  YouTube Live Chat   │
+                    │  (live_chat iframe)  │
+                    └──────────────────────┘
 ```
 
 ---
@@ -85,7 +79,7 @@ Livicat is a **cross-platform desktop application** built with **Tauri 2** that 
 ### **Prerequisites**
 
 #### **Required**
-- **Node.js** 22+ — https://nodejs.org/
+- **Node.js** 20+ — https://nodejs.org/
 - **npm** — Comes with Node.js
 - **Rust** (stable) — https://rustup.rs/
 
@@ -120,21 +114,6 @@ npm run lint        # ESLint check
 npm run tauri:dev
 ```
 
-### **Pre-Commit Hooks**
-
-The project uses **husky** + **lint-staged** to auto-format and lint staged files before every commit:
-
-```bash
-# Install hooks (runs automatically after npm install via "prepare" script)
-npm run prepare
-
-# What runs on commit:
-#   *.{ts,tsx} → eslint --fix → prettier --write (sequential)
-#   *.css     → prettier --write
-```
-
-This ensures all commits pass formatting and lint checks before reaching CI.
-
 ---
 
 ## 📁 Project Structure
@@ -149,10 +128,7 @@ livicat/
 │   │   │   ├── PreviewArea.tsx  # Chat preview area
 │   │   │   ├── Settings.tsx     # Settings modal
 │   │   │   ├── Sidebar.tsx      # Navigation sidebar
-│   │   │   ├── AssetsPage.tsx   # Assets management
-│   │   │   └── AssetsPage2.tsx  # Extended assets
-│   │   ├── theme/               # Theme components
-│   │   │   └── WorkspaceX.tsx   # Main workspace (theme switch, preview, stream)
+│   │   │   └── AssetsPage.tsx   # Assets management
 │   │   ├── chat/                # Chat components
 │   │   │   ├── ChatMessage.tsx  # Individual message
 │   │   │   ├── ChatPreview.tsx  # Preview container
@@ -164,28 +140,16 @@ livicat/
 │   │   └── ui/                  # UI components
 │   │       ├── ErrorBoundary.tsx
 │   │       └── UrlInputBar.tsx
-│   ├── hooks/                   # React hooks
-│   │   ├── useStreamState.tsx   # Stream context (start/stop/pushCssUpdate)
-│   │   ├── useThemeSettings.ts  # Theme settings + loadSettings
-│   │   ├── useCSSHotReload.ts  # Debounced OBS CSS update
-│   │   └── useOBSSettings.ts   # OBS connection settings
 │   ├── utils/                   # Utility functions
-│   │   ├── analytics.ts         # Aptabase tracking helper
-│   │   └── themeManager.ts     # Theme management utilities
-│   ├── services/
-│   │   └── TauriService.ts     # Tauri IPC wrapper
 │   ├── main.tsx                 # React entry point
-│   └── App.tsx                  # Root component (StreamProvider)
+│   └── App.tsx                  # Root component
 │
 ├── src-tauri/                   # Rust backend
 │   ├── src/
-│   │   ├── lib.rs               # Main Tauri logic + sentry tracking
+│   │   ├── lib.rs               # Main Tauri logic
 │   │   ├── main.rs              # Entry point
-│   │   ├── renderer.rs          # axum SSE renderer for OBS
-│   │   ├── webview_chat.rs      # Hidden WebView chat capture
-│   │   ├── obs.rs               # OBS WebSocket client + scale filter
 │   │   ├── sentry.rs            # Sentry integration
-│   │   └── saved_data.rs        # Settings persistence
+│   │   └── *.rs                 # Test modules
 │   ├── Cargo.toml               # Rust dependencies
 │   ├── tauri.conf.json          # Tauri configuration
 │   └── capabilities/            # Tauri permissions
@@ -193,16 +157,15 @@ livicat/
 ├── .github/                     # GitHub workflows
 │   ├── workflows/
 │   │   ├── ci.yml               # CI pipeline
-│   │   ├── build-tauri.yml      # Release builds
-│   │   ├── tag-release.yml     # Auto-release on tags
-│   │   └── build-windows-dev.yml
+│   │   └── build-tauri.yml      # Release builds
 │   └── ISSUE_TEMPLATE/          # Issue templates
 │
-├── .husky/                      # Git hooks
-│   └── pre-commit               # lint-staged on commit
-├── docs/                        # Documentation
-├── package.json                 # Node.js dependencies + lint-staged config
-└── vite.config.ts              # Vite configuration
+├── docs/                        # Documentation (if any)
+├── package.json                 # Node.js dependencies
+├── vite.config.ts              # Vite configuration
+├── tsconfig.json                # TypeScript configuration
+├── tailwind.config.js           # TailwindCSS configuration
+└── README.md                    # Main README
 ```
 
 ---
@@ -212,38 +175,28 @@ livicat/
 ### **Data Flow**
 
 ```
-┌───────────────────────────── Preview Flow ──────────────────────────┐
-
-User Interaction → React State → CSS Generator → Tauri IPC →
-Rust Backend → WebView Window → CSS Injection → Styled Chat
-
-┌───────────────────────── Stream Flow (Headless) ────────────────────┐
-
-User clicks "Stream to OBS"
+User Interaction
        │
        ▼
-Tauri IPC: start_chat(videoId, css)
+React Component (State Update)
        │
        ▼
-Rust: spawns headless WebView → loads YouTube live chat
+CSS Generator (Generate Custom CSS)
        │
        ▼
-Rust: spawns axum renderer (SSE server on localhost:{PORT})
+Tauri IPC (invoke() command)
        │
        ▼
-Frontend: TauriService.sendBrowserSource(obsUrl, proxyUrl, css)
+Rust Backend (Process Command)
        │
        ▼
-OBS WebSocket: SetInputSettings(proxyUrl, css) on Browser Source
+WebView Window (YouTube Live Chat)
        │
        ▼
-OBS: loads renderer HTML → SSE receives chat messages + CSS updates
+CSS Injection (Inject into YouTube iframe)
        │
        ▼
-Frontend: pushCssUpdate() → TauriService.updateRendererCss()
-       │
-       ▼
-Rust: renderer SSE sends css-update event → OBS replaces <style>
+Styled Chat Display
 ```
 
 ### **Key Components**
@@ -488,23 +441,14 @@ app.track_event('preview_opened', { videoId: '...' });
 ```
 
 **Available Events:**
-
-| Event | Properties | Description |
-|-------|-----------|-------------|
-| `app_launched` | — | App starts |
-| `session_duration` | `duration_seconds` | Total app session time |
-| `css_exported` | `format, method` | CSS exported |
-| `youtube_fetched` | — | Video metadata fetched |
-| `preview_opened` | — | Preview window opened |
-| `preview_duration` | `duration_seconds` | Time preview was open |
-| `preset_selected` | — | Theme preset applied |
-| `customization_changed` | — | Any setting changed |
-| `stream_sent_headless` | `mode, scale_filter, port` | Chat sent to OBS via headless system |
-| `stream_css_hot_reload` | `mode` | CSS hot-reloaded via OBS WebSocket |
-| `stream_css_live_update` | `mode` | CSS updated live via renderer SSE |
-| `stream_theme_switch` | `action, target_theme` | Theme switch confirm/cancel during stream |
-| `analytics_consent_given` | — | User consented to analytics |
-| `analytics_enabled_in_settings` | — | Analytics toggled in settings |
+- `app_launched` — App starts
+- `css_exported` — CSS exported
+- `youtube_fetched` — Video metadata fetched
+- `preview_opened` — Preview window opened
+- `preview_duration` — Time preview was open
+- `preset_selected` — Theme preset applied
+- `customization_changed` — Any setting changed
+- `session_duration` — Total app session time
 
 ---
 
@@ -557,7 +501,7 @@ sentry::trigger_test_panic();
 
 **Framework:** Vitest + React Testing Library
 
-**Total Tests:** 287 frontend + 37 Rust = 324 tests
+**Total Tests:** 170+ frontend + 13 Rust = 183 tests
 
 **Coverage Areas:**
 - Component rendering
@@ -566,10 +510,6 @@ sentry::trigger_test_panic();
 - Error boundary behavior
 - Rust IPC commands
 - Analytics events
-- Stream state management
-- OBS WebSocket integration
-- Theme switching flows
-- CSS hot-reload
 
 ### **Run Tests**
 
@@ -749,8 +689,7 @@ echo "SENTRY_DSN=..." > src-tauri/.env
 4. **Make Changes**
    - Follow coding standards
    - Write/update tests
-   - Pre-commit hooks auto-run lint-staged (eslint → prettier)
-   - Run `npm run lint` and `npm run type-check` manually for full checks
+   - Run `npm run lint` and `npm run type-check`
 
 5. **Commit**
    ```bash

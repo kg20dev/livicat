@@ -6,7 +6,7 @@ This guide covers how to build Livicat locally for production deployment across 
 
 ### Required
 
-- **Node.js** (v22+): https://nodejs.org/
+- **Node.js** (v20+): https://nodejs.org/
 - **npm** (comes with Node.js)
 - **Rust**: https://rustup.rs/
 

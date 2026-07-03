@@ -21,7 +21,7 @@ This workflow builds and releases Livicat (Tauri desktop app) for macOS and Wind
 │                                                              │
 │ 🌐 BUILD FRONTEND (ubuntu-latest)                             │
 │ ├─ Checkout code                                            │
-│ ├─ Setup Node.js 22 + cache npm                             │
+│ ├─ Setup Node.js 20 + cache npm                             │
 │ ├─ Install dependencies (npm ci)                             │
 │ ├─ Build production bundle (npm run build)                   │
 │ └─ Upload frontend artifacts (dist/)                         │
@@ -30,7 +30,7 @@ This workflow builds and releases Livicat (Tauri desktop app) for macOS and Wind
 │ ├─ needs: [setup, build-app]                               │
 │ ├─ Checkout code                                            │
 │ ├─ Download frontend artifacts                             │
-│ ├─ Setup Node.js 22 + Rust toolchain                       │
+│ ├─ Setup Node.js 20 + Rust toolchain                       │
 │ ├─ Cache Rust dependencies                                 │
 │ ├─ Install dependencies                                     │
 │ ├─ cargo clean (ensure fresh artifacts)                     │
@@ -41,7 +41,7 @@ This workflow builds and releases Livicat (Tauri desktop app) for macOS and Wind
 │ ├─ needs: [setup, build-app]                               │
 │ ├─ Checkout code                                            │
 │ ├─ Download frontend artifacts                             │
-│ ├─ Setup Node.js 22 + Rust toolchain                       │
+│ ├─ Setup Node.js 20 + Rust toolchain                       │
 │ ├─ Cache Rust dependencies                                 │
 │ ├─ Cache WiX binaries (installer tool)                    │
 │ ├─ Install dependencies                                     │
@@ -87,7 +87,7 @@ The workflow triggers on:
 │                                                              │
 │ 🌐 BUILD FRONTEND (ubuntu-latest)                             │
 │     ✓ Checkout code                                            │
-│     ✓ Setup Node.js 22 + cache npm                             │
+│     ✓ Setup Node.js 20 + cache npm                             │
 │     ✓ Install dependencies (npm ci)                             │
 │     ✓ Build production bundle (npm run build) → dist/           │
 │     ✓ Upload frontend artifacts (dist/)                         │
@@ -97,7 +97,7 @@ The workflow triggers on:
 │     ✓ Checkout code                                            │
 │     ✓ Download frontend artifacts (dist/) ← REUSES BUILD-APP     │
 │     ✓ Verify dist/ exists (validation step)                     │
-│     ✓ Setup Node.js 22 + Rust toolchain                       │
+│     ✓ Setup Node.js 20 + Rust toolchain                       │
 │     ✓ Install dependencies                                     │
 │     ✓ cargo clean (ensure fresh artifacts)                     │
 │     ✓ Build macOS app (uses existing dist/) ← NO REBUILD        │
@@ -108,7 +108,7 @@ The workflow triggers on:
 │     ✓ Checkout code                                            │
 │     ✓ Download frontend artifacts (dist/) ← REUSES BUILD-APP     │
 │     ✓ Verify dist/ exists (validation step)                     │
-│     ✓ Setup Node.js 22 + Rust toolchain                       │
+│     ✓ Setup Node.js 20 + Rust toolchain                       │
 │     ✓ Cache Rust dependencies + WiX                             │
 │     ✓ Install dependencies                                     │
 │     ✓ cargo clean (ensure fresh artifacts)                     │

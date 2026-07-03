@@ -1,33 +1,4 @@
 
-### [0.9.3] - 2026-07-03
-
-#### Features
-- **OBS & PRISM Direct Integration** (#183) — One-click browser source setup via OBS WebSocket
-- **Headless Chat System** (#183) — Captures YouTube chat via hidden WebView, streams via SSE renderer
-- **CSS Hot-Reload During Stream** — Theme changes applied live via renderer SSE without restarting OBS
-- **Safe Theme Switching** — Confirmation modal when switching themes during active stream (stop-stream or cancel)
-- **Lanczos Scale Filter** — High-quality downscaling on OBS browser source via `SetSceneItemTransform`
-- **Animated Watermark** — Lottie paw animation + brand badge on stream overlay
-- **Pre-Commit Hooks** — Husky + lint-staged auto-format files before every commit
-
-#### Bug Fixes
-- **CSS live-update in CEF** — Replace `<style>` element via `replaceWith()` instead of `textContent` to force full stylesheet re-parse
-- **"Configure OBS" button stuck disabled** (#194) — Stream button now always enabled; shows "Configure OBS" when OBS not configured
-- **loadSettings missing merged defaults** — `hide-username-atsign` and future keys now always merged onto defaults
-- **Browser source not updating** — Fixed by switching from Tauri IPC to `fetch` POST for renderer ingestion (Tauri v2 no `__TAURI__` on external URLs)
-- **lint-staged race condition** — Merged parallel globs into sequential eslint→prettier pipeline
-
-#### CI/Infrastructure
-- **CI Node 20→22** — All workflow files updated to Node 22 (lint-staged@17 requires >=22.22.1)
-- **Prettier + ESLint fixes** — `handleThemeSwitch` dep array, formatting on 4 files
-- **Lockfile sync** — `npm install` regenerated to include husky + lint-staged entries
-
-#### Analytics
-- **New events:** `stream_css_live_update`, `stream_theme_switch` (confirm/cancel)
-- **Enhanced event:** `stream_sent_headless` now includes `scale_filter: 'lanczos'`
-
----
-
 ### [0.7.2](https://github.com/kg20dev/livicat/compare/v0.7.3...v0.7.2) (2026-06-09)
 
 
