@@ -1,0 +1,37 @@
+name: Update R2 Latest Aliases
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-latest:
+    name: Copy versioned artifacts to latest/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload to R2 latest/
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BUCKET="livicat-release"
+          SRC="s3://${BUCKET}/v${VERSION}"
+          DST="s3://${BUCKET}/latest"
+
+          aws configure set aws_access_key_id "${{ secrets.R2_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.R2_SECRET_ACCESS_KEY }}"
+          aws configure set default.region auto
+
+          echo "🔁 Copying v${VERSION} → latest/"
+
+          aws s3 cp "${SRC}/Livicat_${VERSION}_aarch64.dmg"     "${DST}/Livicat_latest_aarch64.dmg"     --endpoint-url "$ENDPOINT" && echo "✅ macOS"
+          aws s3 cp "${SRC}/Livicat_${VERSION}_x64-setup.exe"   "${DST}/Livicat_latest_x64-setup.exe"   --endpoint-url "$ENDPOINT" && echo "✅ Windows exe"
+          aws s3 cp "${SRC}/Livicat_${VERSION}_x64.msi"         "${DST}/Livicat_latest_x64.msi"         --endpoint-url "$ENDPOINT" && echo "✅ Windows msi"
+
+          echo "✅ Done: s3://${BUCKET}/latest/"
