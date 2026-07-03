@@ -2,12 +2,18 @@ name: Update R2 Latest Aliases
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Tauri App"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   update-latest:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     name: Copy versioned artifacts to latest/
     runs-on: ubuntu-latest
     steps:
