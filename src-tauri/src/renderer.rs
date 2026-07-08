@@ -999,4 +999,100 @@ mod tests {
 
         handle.shutdown().await;
     }
+
+    #[tokio::test]
+    async fn test_css_update_preserves_import_statements() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        // CSS with Google Fonts @import
+        let css_with_import = r#"
+body { background: red; }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+"#;
+
+        let resp = client
+            .post(&format!("http://127.0.0.1:{port}/update-css"))
+            .body(css_with_import)
+            .send()
+            .await
+            .expect("POST /update-css should succeed");
+        assert_eq!(resp.status(), 200);
+
+        // Fetch /css to verify @import is preserved
+        let css_resp = client
+            .get(&format!("http://127.0.0.1:{port}/css"))
+            .send()
+            .await
+            .expect("GET /css should succeed");
+        let css_body = css_resp.text().await.unwrap();
+        assert!(
+            css_body.contains("@import"),
+            "@import should be preserved in /css endpoint"
+        );
+        assert!(
+            css_body.contains("Roboto"),
+            "Font family name should be present in @import"
+        );
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_health_check_returns_ok() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::new();
+
+        let resp = client
+            .get(&format!("http://127.0.0.1:{port}/health"))
+            .send()
+            .await
+            .expect("GET /health should succeed");
+        assert_eq!(resp.status(), 200);
+        let body = resp.text().await.unwrap();
+        assert_eq!(body, "ok", "health check should return 'ok'");
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_current_css_preserves_full_css() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::new();
+
+        // CSS with Google Fonts @import
+        let css_with_import = r#"
+body { background: red; }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+"#;
+
+        let resp = client
+            .post(&format!("http://127.0.0.1:{port}/update-css"))
+            .body(css_with_import)
+            .send()
+            .await
+            .expect("POST /update-css should succeed");
+        assert_eq!(resp.status(), 200);
+
+        // Fetch /current.css to verify @import is preserved
+        let css_resp = client
+            .get(&format!("http://127.0.0.1:{port}/current.css"))
+            .send()
+            .await
+            .expect("GET /current.css should succeed");
+        let css_body = css_resp.text().await.unwrap();
+        assert!(
+            css_body.contains("@import"),
+            "/current.css should preserve @import statements"
+        );
+        assert!(
+            css_body.contains("Roboto"),
+            "Font family should be present in /current.css"
+        );
+
+        handle.shutdown().await;
+    }
 }
