@@ -43,6 +43,14 @@ export const coreCssVarMap: Record<string, string> = {
  * a natural dark offset regardless of the source hue.
  */
 export const strokeMap: Record<string, DerivationEntry> = {
+  /**
+   * Default shadow derives from the message text color (ink).
+   * Always dark — a shadow should be darker than the source.
+   */
+  ink: {
+    target: 'shadow-color',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
   ownerInk: {
     target: 'ownerShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
@@ -103,13 +111,6 @@ export const scheme: SettingDef[] = [
     max: 16,
     default: 3,
     unit: 'px',
-  },
-  {
-    key: 'shadow-color',
-    section: 'Card',
-    type: 'color',
-    label: 'Shadow Color',
-    default: '#1a1a1a',
   },
   {
     key: 'chat-padding',
