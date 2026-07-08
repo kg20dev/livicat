@@ -111,6 +111,11 @@ export const FONT_OPTIONS: FontOption[] = [
     url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap',
   },
   {
+    value: '"Patrick Hand", cursive',
+    label: 'Patrick Hand',
+    url: 'https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap',
+  },
+  {
     value: '"Caveat", cursive',
     label: 'Caveat',
     url: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap',
