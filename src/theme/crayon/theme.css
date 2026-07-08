@@ -144,7 +144,7 @@
   margin-left: var(--chat-margin-left, 0px) !important;
   margin-right: 6px !important;
   padding: var(--chat-padding, 10px 14px) !important;
-  font-family: 'Gaegu', var(--chat-font-family, 'Kalam'), cursive !important;
+  font-family: var(--chat-font-family, 'Gaegu'), cursive !important;
   font-weight: var(--chat-message-font-weight, 700) !important;
   opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
   max-width: var(--chat-max-width, 400px) !important;
@@ -207,7 +207,7 @@
 /* ── Username — hand-drawn Kalam font ────────────────────────── */
 
 .theme-crayon yt-live-chat-text-message-renderer #author-name {
-  font-family: 'Kalam', 'Gaegu', var(--chat-font-family, 'Kalam'), cursive !important;
+  font-family: var(--chat-font-family, 'Kalam'), cursive !important;
   font-size: var(--usernameFontSize, 15px) !important;
   font-weight: var(--chat-username-font-weight, 700) !important;
   color: var(--usernameColor, #1a1a1a) !important;
@@ -223,7 +223,7 @@
 .theme-crayon yt-live-chat-text-message-renderer #message {
   color: var(--ink, #1a1a1a) !important;
   font-size: var(--messageFontSize, 15px) !important;
-  font-family: 'Gaegu', var(--chat-font-family, 'Kalam'), cursive !important;
+  font-family: var(--chat-font-family, 'Gaegu'), cursive !important;
   font-weight: var(--chat-message-font-weight, 700) !important;
   line-height: 1.5 !important;
   letter-spacing: var(--chat-letter-spacing, 0px) !important;
