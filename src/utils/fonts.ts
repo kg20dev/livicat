@@ -107,6 +107,16 @@ export const FONT_OPTIONS: FontOption[] = [
     url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap',
   },
   {
+    value: '"Caveat", cursive',
+    label: 'Caveat',
+    url: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap',
+  },
+  {
+    value: '"Coming Soon", cursive',
+    label: 'Coming Soon',
+    url: 'https://fonts.googleapis.com/css2?family=Coming+Soon&display=swap',
+  },
+  {
     value: '"Gaegu", sans-serif',
     label: 'Gaegu',
     url: 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap',
