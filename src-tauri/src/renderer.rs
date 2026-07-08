@@ -97,6 +97,7 @@ pub async fn start_renderer(store: MessageStore, css: String) -> Result<Renderer
         .route("/events", get(handle_events))
         .route("/ingest", post(handle_ingest))
         .route("/update-css", post(handle_update_css))
+        .route("/css", get(handle_get_css))
         .route("/debug", post(handle_debug))
         .layer(cors)
         .with_state(app_state);
@@ -252,6 +253,15 @@ fn strip_imports(css: &str) -> String {
         .filter(|line| !line.trim_start().starts_with("@import"))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+// ─── Route: GET /css ──────────────────────────────────────────────
+
+/// Returns the raw current CSS. Open `http://localhost:{PORT}/css` in a
+/// browser to verify the renderer has the latest CSS after changing a
+/// setting — refresh the page to see updates.
+async fn handle_get_css(State(state): State<RendererState>) -> String {
+    state.css.read().unwrap().clone()
 }
 
 // ─── Route: POST /debug ───────────────────────────────────────────
