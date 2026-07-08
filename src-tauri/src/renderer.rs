@@ -226,17 +226,32 @@ async fn handle_ingest(
 async fn handle_update_css(State(state): State<RendererState>, body: String) -> &'static str {
     let len = body.len();
     // Update the shared CSS so new SSE clients (new OBS source loads)
-    // get the latest CSS.
+    // get the latest CSS (with @import — needed for initial font load).
     if let Ok(mut css) = state.css.write() {
         *css = body.clone();
     }
-    // Broadcast to all connected SSE clients so they live-update.
+    // Strip @import lines before SSE broadcast. In CEF 109 (OBS),
+    // dynamically replaced <style> elements with @import at the top
+    // can cause stylesheet re-parse to fail or be deferred. The font
+    // was already loaded from the initial page load, and @font-face
+    // rules persist in the document even after the declaring
+    // stylesheet is removed.
+    let for_sse = strip_imports(&body);
     let receivers = state.css_updates.receiver_count();
-    let sent = state.css_updates.send(body).is_ok();
+    let sent = state.css_updates.send(for_sse).is_ok();
     log::info!(
         "[renderer] handle_update_css: stored {len} bytes, broadcast to {receivers} receivers (ok={sent})"
     );
     "ok"
+}
+
+/// Remove @import lines from CSS — used to avoid CEF stylesheet
+/// re-parse issues with dynamic <style> replacement.
+fn strip_imports(css: &str) -> String {
+    css.lines()
+        .filter(|line| !line.trim_start().starts_with("@import"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 // ─── Route: POST /debug ───────────────────────────────────────────
