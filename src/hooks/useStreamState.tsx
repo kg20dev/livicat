@@ -97,8 +97,15 @@ export function StreamProvider({ children }: { children: ReactNode }) {
 
         if (result === 'created' || result === 'updated') {
           setStreamState('websocket')
-          // Track last sent CSS so pushCssUpdate can skip duplicates
-          prevCssRef.current = injectedCSS
+          // Don't overwrite prevCssRef — pushCssUpdate may have cached a
+          // newer CSS during the 'sending' phase. Send it if changed.
+          if (prevCssRef.current && prevCssRef.current !== injectedCSS) {
+            TauriService.updateRendererCss(prevCssRef.current).then((ok) => {
+              console.log('[StreamProvider] flushed cached CSS to renderer after startup, ok=', ok)
+            })
+          } else {
+            prevCssRef.current = injectedCSS
+          }
           trackEventAsync('stream_sent_headless', {
             mode: result,
             scale_filter: 'lanczos',
