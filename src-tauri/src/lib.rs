@@ -315,6 +315,11 @@ async fn start_chat(
     let store = processor::MessageStore::new();
 
     // ── 2. Start renderer ──────────────────────────────────────
+    log::info!(
+        "[chat] Initial CSS: {} bytes (head: {})",
+        css.len(),
+        &css[..css.len().min(60)].replace('\n', "\\n")
+    );
     let css_clone = css.clone();
     let store_for_webview = store.clone(); // clone before store is moved into renderer
     let renderer_handle = renderer::start_renderer(store, css_clone)
@@ -457,9 +462,13 @@ fn inject_css_to_window(
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
-                console.log('[Livicat] CSS updated successfully', style.textContent.length + 'bytes');
+                console.log(
+                  '[preview-window] <style id="livicat-css"> replaced (' +
+                  style.textContent.length + ' bytes, head: ' +
+                  style.textContent.slice(0, 50).replace(/\\n/g, '\\\\n') + ')'
+                );
             }} catch(e) {{
-                console.error('[Livicat] CSS injection error:', e);
+                console.error('[preview-window] CSS injection error:', e);
             }}
 
             function __lc_scroll() {{

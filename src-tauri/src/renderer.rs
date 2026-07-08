@@ -442,10 +442,14 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     source.addEventListener('css-update', function(e) {{
       var old = document.getElementById('livicat-theme');
       if (!old) return;
+      console.log(
+        '[obs-browser-source] css-update received (' + e.data.length + ' bytes, head: ' + e.data.slice(0, 50).replace(/\\n/g, '\\\\n') + ')'
+      );
       var s = document.createElement('style');
       s.id = 'livicat-theme';
       s.textContent = e.data;
       old.replaceWith(s);
+      console.log('[obs-browser-source] <style id=\"livicat-theme\"> replaced');
     }});
 
     function detectRole(msg) {{

@@ -175,7 +175,11 @@ export function StreamProvider({ children }: { children: ReactNode }) {
       return
     }
     prevCssRef.current = css
-    console.log('[StreamProvider] pushCssUpdate: sending CSS (%d chars)', css.length)
+    console.log(
+      '[main-app] pushCssUpdate: sending to OBS renderer (%d chars, head: %s)',
+      css.length,
+      css.slice(0, 60).replace(/\n/g, '\\n')
+    )
     trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
     TauriService.updateRendererCss(css).then((ok) => {
       console.log('[StreamProvider] pushCssUpdate: updateRendererCss returned', ok)

@@ -107,6 +107,7 @@ export function useThemeSettings(storageKey: string, scheme: SettingDef[]) {
 
   const updateSetting = useCallback(
     (key: string, value: string | number | boolean) => {
+      console.log('[main-app] updateSetting: %s = %s', key, value)
       setSettings((prev) => {
         const next = { ...prev, [key]: value }
         saveSettings(storageKey, next, appVersion)
