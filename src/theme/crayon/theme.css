@@ -1,0 +1,254 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Crayon Chat Theme — scoped CSS for YouTube Live Chat          ║
+   ║                                                                ║
+   ║  Inspired by Crayon Chat (emergentagent.com)                   ║
+   ║  — hand-crayon soul: wobbly, papery, playful                   ║
+   ║                                                                ║
+   ║  ╔══════════════════════════════════════════════════════════╗   ║
+   ║  ║  CRITICAL RULE: If an element uses `transform` in       ║   ║
+   ║  ║  @keyframes, its base CSS must NOT have `!important`    ║   ║
+   ║  ║  on `transform`. CSS spec says keyframe declarations    ║   ║
+   ║  ║  can NEVER override `!important` — the animation        ║   ║
+   ║  ║  silently degrades to opacity-only.                     ║   ║
+   ║  ╚══════════════════════════════════════════════════════════╝   ║
+   ║                                                                ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-crayon stripped before YouTube injection.       ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Kalam:wght@400;700&display=swap');
+
+/* ── Animation Keyframes ─────────────────────────────────────── */
+
+/* Crayon drop-in: falls from above with a wobble overshoot */
+@keyframes theme-crayon-in {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) rotate(calc(var(--wobble-amount, -6deg) * -1)) scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) rotate(var(--wobble-amount, -6deg)) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+/* Crayon scribble — subtle horizontal jitter for username */
+@keyframes theme-crayon-scribble {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  30% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Theme: Crayon (scoped via .theme-crayon) ────────────────── */
+
+/* Message container — paper card with hand-drawn feel */
+.theme-crayon yt-live-chat-text-message-renderer {
+  background: var(--paper-bg, #ffffff) !important;
+  border: var(--stroke-width, 3px) solid var(--crayon-stroke, #1a1a1a) !important;
+  border-radius: var(--border-radius-tl, 22px) var(--border-radius-tr, 6px)
+    var(--border-radius-br, 26px) var(--border-radius-bl, 8px) / var(--border-radius-tr-bl, 8px)
+    var(--border-radius-tl-br, 24px) var(--border-radius-bl-tr, 6px)
+    var(--border-radius-br-tl, 22px) !important;
+  margin-bottom: var(--chat-message-spacing, 8px) !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  margin-right: 6px !important;
+  padding: var(--chat-padding, 8px 12px) !important;
+  font-family: 'Comic Neue', var(--chat-font-family, 'Patrick Hand'), cursive !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  box-shadow: var(--shadow-offset, 3px) var(--shadow-offset, 3px) 0 var(--shadow-color, #1a1a1a) !important;
+  opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
+  max-width: var(--chat-max-width, 400px) !important;
+  width: fit-content !important;
+  animation: theme-crayon-in var(--animation-duration, 0.52s) cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  position: relative !important;
+}
+
+/* ── Avatar ──────────────────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 2px solid var(--crayon-stroke, #1a1a1a) !important;
+  line-height: 0 !important;
+  margin-top: var(--chat-avatar-vertical-offset, 4px) !important;
+}
+
+.theme-crayon yt-live-chat-text-message-renderer #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* ── Username — hand-drawn Kalam font ────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #author-name {
+  font-family: 'Kalam', 'Comic Neue', cursive !important;
+  font-size: var(--usernameFontSize, 14px) !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
+  color: var(--usernameColor, #1a1a1a) !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  animation: theme-crayon-scribble 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+}
+
+/* ── Message text ────────────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #message {
+  color: var(--ink, #1a1a1a) !important;
+  font-size: var(--messageFontSize, 14px) !important;
+  font-family: 'Comic Neue', var(--chat-font-family, 'Patrick Hand'), cursive !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  line-height: 1.5 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+}
+
+/* ── Role Color Overrides ────────────────────────────────────── */
+
+/* Each role gets a pastel background + saturated border/ink */
+
+/* Owner — Red */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  background: var(--owner-bg, #ffeceb) !important;
+  border-color: var(--owner-ink, #ff3b30) !important;
+  --usernameColor: var(--owner-username-color, #ff3b30);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message {
+  color: var(--owner-ink, #ff3b30) !important;
+}
+
+/* Moderator — Green */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  background: var(--mod-bg, #e9fbee) !important;
+  border-color: var(--mod-ink, #34c759) !important;
+  --usernameColor: var(--mod-username-color, #34c759);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message {
+  color: var(--mod-ink, #34c759) !important;
+}
+
+/* Member — Gold/Yellow */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='member']
+) {
+  background: var(--member-bg, #fff7d6) !important;
+  border-color: var(--member-ink, #e5b800) !important;
+  --usernameColor: var(--member-username-color, #e5b800);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message {
+  color: var(--member-ink, #e5b800) !important;
+}
+
+/* Verified — Blue */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='verified'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='verified']
+) {
+  background: var(--verified-bg, #e6f1ff) !important;
+  border-color: var(--verified-ink, #007aff) !important;
+  --usernameColor: var(--verified-username-color, #007aff);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #message {
+  color: var(--verified-ink, #007aff) !important;
+}
+
+/* Super Chat — Amber */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  background: var(--superchat-bg, #fff3cd) !important;
+  border-color: var(--superchat-ink, #d4a700) !important;
+  --usernameColor: var(--superchat-username-color, #d4a700);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message {
+  color: var(--superchat-ink, #d4a700) !important;
+}
+
+/* Membership — Forest Green */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  background: var(--membership-bg, #e8f5e9) !important;
+  border-color: var(--membership-ink, #2e7d32) !important;
+  --usernameColor: var(--membership-username-color, #2e7d32);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message {
+  color: var(--membership-ink, #2e7d32) !important;
+}
+
+/* ── Chroma Key Support ───────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer[data-chroma='true'],
+.theme-crayon yt-live-chat-text-message-renderer[data-chroma-key] {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── Reduced Motion ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-crayon yt-live-chat-text-message-renderer {
+    animation: none !important;
+    transform: none !important;
+  }
+  .theme-crayon yt-live-chat-text-message-renderer #author-name {
+    animation: none !important;
+  }
+}

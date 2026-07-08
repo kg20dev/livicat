@@ -96,6 +96,16 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Playfair Display',
     url: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap',
   },
+  {
+    value: '"Comic Neue", "Patrick Hand", cursive',
+    label: 'Comic Neue',
+    url: 'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap',
+  },
+  {
+    value: 'Kalam, cursive',
+    label: 'Kalam',
+    url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap',
+  },
 ]
 
 /* ─── Lookup Helpers ────────────────────────────────────────────────── */

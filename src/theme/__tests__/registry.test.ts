@@ -20,10 +20,11 @@ const REQUIRED_MANIFEST_FIELDS: (keyof ThemeManifest)[] = [
 
 describe('Theme Registry', () => {
   describe('THEMES array', () => {
-    it('contains both "im" and "ink-sticker" themes', () => {
+    it('contains all built-in themes', () => {
       const ids = THEMES.map((t) => t.manifest.id)
       expect(ids).toContain('im')
       expect(ids).toContain('ink-sticker')
+      expect(ids).toContain('crayon')
     })
 
     it('each theme has a valid manifest with all required fields', () => {
