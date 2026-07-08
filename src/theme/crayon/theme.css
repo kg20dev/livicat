@@ -117,15 +117,18 @@
 
   /* ── Layered Crayon Strokes ─────────────────────────────────
      Multiple offset box-shadows simulate the uneven layering of
-     crayon on paper — like coloring slightly outside the lines. */
+     crayon on paper — like coloring slightly outside the lines.
+     The stroke color tracks --ink (text color) by default. */
+  --_crayon-stroke: var(--ink, #1a1a1a);
   box-shadow:
-    /* Layer 1: Main outline stroke */
+    /* Layer 1: Main outline stroke — tracks text color */
     0 0 0 var(--stroke-width, 3px) var(--_crayon-stroke, #1a1a1a),
-    /* Layer 2: Offset "crayon layer" — simulates overlapping strokes
-       with lighter opacity, giving the border a hand-drawn texture */ -1px
-      1px 0 calc(var(--stroke-width, 3px) - 1px) var(--_crayon-layer2, rgba(26, 26, 26, 0.45)),
-    /* Layer 3: Another offset in the opposite direction for depth */ 1px -0.5px 0
-      calc(var(--stroke-width, 3px) - 1px) var(--_crayon-layer3, rgba(26, 26, 26, 0.25)),
+    /* Layer 2: Offset crayon overlay at 45% (color-mix for dynamic tinting) */ -1px 1px 0
+      calc(var(--stroke-width, 3px) - 1px)
+      var(--_crayon-layer2, color-mix(in srgb, var(--ink, #1a1a1a) 45%, transparent)),
+    /* Layer 3: Opposite offset at 25% for depth */ 1px -0.5px 0
+      calc(var(--stroke-width, 3px) - 1px)
+      var(--_crayon-layer3, color-mix(in srgb, var(--ink, #1a1a1a) 25%, transparent)),
     /* Layer 4: Hard sticker shadow */ var(--shadow-offset, 3px) var(--shadow-offset, 3px) 0
       var(--shadow-color, #1a1a1a) !important;
 

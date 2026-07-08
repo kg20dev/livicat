@@ -96,13 +96,6 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
   {
-    key: 'crayon-stroke',
-    section: 'Card',
-    type: 'color',
-    label: 'Stroke Color',
-    default: '#1a1a1a',
-  },
-  {
     key: 'shadow-offset',
     section: 'Card',
     type: 'range',
