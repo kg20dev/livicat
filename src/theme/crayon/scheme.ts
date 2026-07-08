@@ -9,7 +9,7 @@ import type { DerivationEntry, SettingDef } from '../types'
  */
 
 export const coreCssVarMap: Record<string, string> = {
-  bg: 'paperBg',
+  bg: 'paper-bg',
   'text-color': 'ink',
   'username-color': 'usernameColor',
   'container-opacity': 'containerOpacity',
@@ -20,21 +20,21 @@ export const coreCssVarMap: Record<string, string> = {
   'font-weight-message': 'chat-message-font-weight',
   'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
   'letter-spacing': 'chat-letter-spacing',
-  'owner-bg': 'ownerBg',
-  'owner-text': 'ownerInk',
-  'mod-bg': 'modBg',
-  'mod-text': 'modInk',
-  'member-bg': 'memberBg',
-  'member-text': 'memberInk',
-  'superchat-bg': 'superchatBg',
-  'superchat-text': 'superchatInk',
-  'membership-bg': 'membershipBg',
-  'membership-text': 'membershipInk',
-  'chat-owner-username': 'ownerUsernameColor',
-  'chat-mod-username': 'modUsernameColor',
-  'chat-member-username': 'memberUsernameColor',
-  'chat-superchat-username': 'superchatUsernameColor',
-  'chat-membership-username': 'membershipUsernameColor',
+  'owner-bg': 'owner-bg',
+  'owner-text': 'owner-ink',
+  'mod-bg': 'mod-bg',
+  'mod-text': 'mod-ink',
+  'member-bg': 'member-bg',
+  'member-text': 'member-ink',
+  'superchat-bg': 'superchat-bg',
+  'superchat-text': 'superchat-ink',
+  'membership-bg': 'membership-bg',
+  'membership-text': 'membership-ink',
+  'chat-owner-username': 'owner-username-color',
+  'chat-mod-username': 'mod-username-color',
+  'chat-member-username': 'member-username-color',
+  'chat-superchat-username': 'superchat-username-color',
+  'chat-membership-username': 'membership-username-color',
 }
 
 /**
@@ -51,23 +51,23 @@ export const strokeMap: Record<string, DerivationEntry> = {
     target: 'shadow-color',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
-  ownerInk: {
+  'owner-ink': {
     target: 'ownerShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
-  modInk: {
+  'mod-ink': {
     target: 'modShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
-  memberInk: {
+  'member-ink': {
     target: 'memberShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
-  superchatInk: {
+  'superchat-ink': {
     target: 'superchatShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
-  membershipInk: {
+  'membership-ink': {
     target: 'membershipShadow',
     options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
   },
