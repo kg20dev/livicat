@@ -18,6 +18,16 @@ import {
   coreCssVarMap as inkCssVarMap,
   strokeMap as inkStrokeMap,
 } from './ink-sticker/scheme'
+import {
+  manifest as crayonManifest,
+  css as crayonCss,
+  reset as crayonReset,
+} from './crayon/manifest'
+import {
+  scheme as crayonScheme,
+  coreCssVarMap as crayonCssVarMap,
+  strokeMap as crayonStrokeMap,
+} from './crayon/scheme'
 
 /**
  * Merge core + theme-specific scheme into a single flat array.
@@ -46,6 +56,12 @@ const themes: ThemeBundle[] = [
     scheme: mergeScheme(inkScheme, inkCssVarMap, inkStrokeMap),
     css: inkCss,
     reset: inkReset,
+  },
+  {
+    manifest: crayonManifest,
+    scheme: mergeScheme(crayonScheme, crayonCssVarMap, crayonStrokeMap),
+    css: crayonCss,
+    reset: crayonReset,
   },
 ]
 
