@@ -40,6 +40,16 @@ export const coreCssVarMap: Record<string, string> = {
 export const scheme: SettingDef[] = [
   /* ── Card ──────────────────────────────────────────────────── */
   {
+    key: 'texture-intensity',
+    section: 'Card',
+    type: 'range',
+    label: 'Paper Grain',
+    min: 0,
+    max: 100,
+    default: 50,
+    unit: '%',
+  },
+  {
     key: 'stroke-width',
     section: 'Card',
     type: 'range',

@@ -106,6 +106,11 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Kalam',
     url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap',
   },
+  {
+    value: '"Gaegu", sans-serif',
+    label: 'Gaegu',
+    url: 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap',
+  },
 ]
 
 /* ─── Lookup Helpers ────────────────────────────────────────────────── */
