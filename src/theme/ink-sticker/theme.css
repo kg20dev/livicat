@@ -119,7 +119,7 @@
 
 /* Message container (styled card) */
 .theme-ink-sticker yt-live-chat-text-message-renderer {
-  padding: 10px 14px !important;
+  padding: var(--chat-padding, 10px 14px) !important;
   background: var(--messageBg, #1a1a2e) !important;
   border-radius: var(--chat-border-radius, 6px) !important;
   transform: skew(var(--skewAngle, 0deg));

@@ -105,27 +105,6 @@ export const scheme: SettingDef[] = [
     default: 3,
     unit: 'px',
   },
-  {
-    key: 'chat-padding',
-    section: 'Card',
-    type: 'range',
-    label: 'Padding',
-    min: 4,
-    max: 30,
-    default: 10,
-    unit: 'px',
-  },
-  {
-    key: 'chat-max-width',
-    section: 'Card',
-    type: 'range',
-    label: 'Max Width',
-    min: 200,
-    max: 800,
-    default: 400,
-    unit: 'px',
-  },
-
   /* ── Corners (asymmetric = hand-drawn feel) ────────────────── */
   {
     key: 'border-radius-tl',
