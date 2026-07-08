@@ -179,7 +179,17 @@ async fn handle_events(
         loop {
             match rx.recv().await {
                 Ok(css) => {
-                    let event = Event::default().event("css-update").data(css);
+                    // Deliver CSS updates via the same `message` event as chat
+                    // messages (using __type discriminator). Named SSE events
+                    // (like `css-update`) are unreliable in OBS CEF 109, but
+                    // the `message` event always works.
+                    let payload = serde_json::json!({
+                        "__type": "css",
+                        "data": css
+                    });
+                    let event = Event::default()
+                        .event("message")
+                        .data(payload.to_string());
                     return Some((Ok(event), rx));
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
@@ -390,6 +400,23 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     source.addEventListener('message', function(e) {{
       try {{
         var msg = JSON.parse(e.data);
+
+        /* CSS update from settings change — same event as chat messages
+           to avoid CEF issues with named SSE events like `css-update`. */
+        if (msg.__type === 'css') {{
+          var _old = document.getElementById('livicat-theme');
+          if (_old) {{
+            console.log(
+              '[obs-browser-source] CSS update via message event (' + msg.data.length + ' bytes)'
+            );
+            var _s = document.createElement('style');
+            _s.id = 'livicat-theme';
+            _s.textContent = msg.data;
+            _old.replaceWith(_s);
+          }}
+          return;
+        }}
+
         var el = document.createElement('yt-live-chat-text-message-renderer');
         el.setAttribute('data-role', detectRole(msg));
 
@@ -460,23 +487,6 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
     source.addEventListener('error', function() {{
       console.warn('[Livicat] SSE connection lost, retrying...');
-    }});
-
-    /* Live-update theme CSS when settings change.
-       REPLACES the entire <style> element to force CEF/OBS to fully
-       re-parse the stylesheet. Setting textContent alone can leave
-       stale rules active in some embedded browser engines. */
-    source.addEventListener('css-update', function(e) {{
-      var old = document.getElementById('livicat-theme');
-      if (!old) return;
-      console.log(
-        '[obs-browser-source] css-update received (' + e.data.length + ' bytes, head: ' + e.data.slice(0, 50).replace(/\\n/g, '\\\\n') + ')'
-      );
-      var s = document.createElement('style');
-      s.id = 'livicat-theme';
-      s.textContent = e.data;
-      old.replaceWith(s);
-      console.log('[obs-browser-source] <style id=\"livicat-theme\"> replaced');
     }});
 
     function detectRole(msg) {{
