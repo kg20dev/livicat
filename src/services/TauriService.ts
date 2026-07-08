@@ -213,15 +213,29 @@ export const TauriService = {
 
   /** Live-update the renderer's CSS without restarting the stream.
    *  Proxies CSS through Rust to bypass the WebView's CSP which
-   *  blocks direct fetch from the frontend to http://127.0.0.1:{port}. */
-  async updateRendererCss(css: string): Promise<boolean> {
+   *  blocks direct fetch from the frontend to http://127.0.0.1:{port}.
+   *  Returns the number of bytes the renderer confirmed storing. */
+  async updateRendererCss(css: string): Promise<number> {
+    const invoke = await getInvoke()
+    if (!invoke) return 0
+    try {
+      const stored: number = await invoke('update_renderer_css', { css })
+      return stored
+    } catch (e) {
+      console.error('[TauriService] updateRendererCss failed:', e)
+      return 0
+    }
+  },
+
+  /** Ping the renderer's /health endpoint. Returns true if alive. */
+  async checkRendererHealth(): Promise<boolean> {
     const invoke = await getInvoke()
     if (!invoke) return false
     try {
-      await invoke('update_renderer_css', { css })
-      return true
+      const alive: boolean = await invoke('check_renderer_health')
+      return alive
     } catch (e) {
-      console.error('[TauriService] updateRendererCss failed:', e)
+      console.error('[TauriService] checkRendererHealth failed:', e)
       return false
     }
   },
