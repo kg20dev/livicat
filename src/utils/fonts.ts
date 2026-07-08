@@ -126,7 +126,7 @@ export const FONT_OPTIONS: FontOption[] = [
     url: 'https://fonts.googleapis.com/css2?family=Coming+Soon&display=swap',
   },
   {
-    value: '"Chalkiez", cursive',
+    value: 'Chalkiez',
     label: 'Chalkiez',
     url: 'https://cdn.jsdelivr.net/gh/kg20dev/font-fc@main/Chalkiez-Font/Chalkiez-Regular.woff2',
     fontFace: `@font-face {
