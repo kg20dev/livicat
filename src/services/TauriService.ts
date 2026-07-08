@@ -226,4 +226,17 @@ export const TauriService = {
       return 0
     }
   },
+
+  /** Ping the renderer's /health endpoint. Returns true if alive. */
+  async checkRendererHealth(): Promise<boolean> {
+    const invoke = await getInvoke()
+    if (!invoke) return false
+    try {
+      const alive: boolean = await invoke('check_renderer_health')
+      return alive
+    } catch (e) {
+      console.error('[TauriService] checkRendererHealth failed:', e)
+      return false
+    }
+  },
 }

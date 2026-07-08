@@ -98,6 +98,8 @@ pub async fn start_renderer(store: MessageStore, css: String) -> Result<Renderer
         .route("/ingest", post(handle_ingest))
         .route("/update-css", post(handle_update_css))
         .route("/css", get(handle_get_css))
+        .route("/current.css", get(handle_current_css))
+        .route("/health", get(handle_health))
         .route("/debug", post(handle_debug))
         .layer(cors)
         .with_state(app_state);
@@ -239,19 +241,17 @@ async fn handle_ingest(
 async fn handle_update_css(State(state): State<RendererState>, body: String) -> String {
     let len = body.len();
     // Update the shared CSS so new SSE clients (new OBS source loads)
-    // get the latest CSS (with @import — needed for initial font load).
+    // get the latest CSS.
     if let Ok(mut css) = state.css.write() {
         *css = body.clone();
     }
-    // Strip @import lines before SSE broadcast. In CEF 109 (OBS),
-    // dynamically replaced <style> elements with @import at the top
-    // can cause stylesheet re-parse to fail or be deferred. The font
-    // was already loaded from the initial page load, and @font-face
-    // rules persist in the document even after the declaring
-    // stylesheet is removed.
-    let for_sse = strip_imports(&body);
+    // Broadcast full CSS including @import for Google Fonts. The old
+    // logic stripped @import to avoid CEF re-parse issues with <style>
+    // replacement, but we now use appendChild+removeChild which handles
+    // @import correctly. Both preview and OBS need the same CSS to
+    // stay in sync.
     let receivers = state.css_updates.receiver_count();
-    let sent = state.css_updates.send(for_sse).is_ok();
+    let sent = state.css_updates.send(body).is_ok();
     log::info!(
         "[renderer] handle_update_css: stored {len} bytes, broadcast to {receivers} receivers (ok={sent})"
     );
@@ -274,6 +274,31 @@ fn strip_imports(css: &str) -> String {
 /// setting — refresh the page to see updates.
 async fn handle_get_css(State(state): State<RendererState>) -> String {
     state.css.read().unwrap().clone()
+}
+
+// ─── Route: GET /current.css ──────────────────────────────────────
+
+/// Serves the current theme CSS with `Content-Type: text/css` for use
+/// as a `<link rel="stylesheet">` in the OBS page. Strips @import
+/// lines to avoid CEF 109 stylesheet re-parse issues. The fonts were
+/// already loaded from the initial page load (which included @import),
+/// and @font-face rules persist in the document.
+async fn handle_current_css(
+    State(state): State<RendererState>,
+) -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
+    let css = state.css.read().unwrap().clone();
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "text/css; charset=utf-8")],
+        css,
+    )
+}
+
+// ─── Route: GET /health ────────────────────────────────────────────
+
+/// Simple health check — returns `"ok"` if the renderer is running.
+async fn handle_health() -> &'static str {
+    "ok"
 }
 
 // ─── Route: POST /debug ───────────────────────────────────────────
@@ -401,18 +426,35 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       try {{
         var msg = JSON.parse(e.data);
 
-        /* CSS update from settings change — same event as chat messages
-           to avoid CEF issues with named SSE events like `css-update`. */
+        /* CSS update from settings change — same event as chat messages.
+           Create a new <style> element with a UNIQUE ID to prevent race
+           conditions when multiple CSS updates arrive rapidly. Append to
+           <head>, remove the old style via requestAnimationFrame (ensures
+           DOM is ready), then restore the original ID. Force scroll to
+           bottom after CSS update in case layout changes.
+        */
         if (msg.__type === 'css') {{
-          var _old = document.getElementById('livicat-theme');
-          if (_old) {{
-            console.log(
-              '[obs-browser-source] CSS update via message event (' + msg.data.length + ' bytes)'
-            );
-            var _s = document.createElement('style');
-            _s.id = 'livicat-theme';
-            _s.textContent = msg.data;
-            _old.replaceWith(_s);
+          console.log(
+            '[obs-browser-source] CSS update via message event (' + msg.data.length + ' bytes)'
+          );
+          var oldStyle = document.getElementById('livicat-theme');
+          if (oldStyle) {{
+            var newStyle = document.createElement('style');
+            var tempId = 'livicat-theme-' + Date.now();
+            newStyle.id = tempId;
+            newStyle.textContent = msg.data;
+            document.head.appendChild(newStyle);
+            requestAnimationFrame(function() {{
+              if (oldStyle.parentNode) {{
+                oldStyle.parentNode.removeChild(oldStyle);
+              }}
+              newStyle.id = 'livicat-theme';
+              console.log('[obs-browser-source] CSS update applied (id=' + tempId + ')');
+              // Force scroll to bottom after CSS update (layout may have changed)
+              if (chat) {{
+                chat.scrollTop = chat.scrollHeight;
+              }}
+            }});
           }}
           return;
         }}
@@ -479,7 +521,11 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
         el.appendChild(content);
         chat.appendChild(el);
-        chat.scrollTop = chat.scrollHeight;
+        // Force scroll to bottom with requestAnimationFrame to ensure
+        // the message is rendered before scrolling
+        requestAnimationFrame(function() {{
+          chat.scrollTop = chat.scrollHeight;
+        }});
       }} catch(e) {{
         console.error('[Livicat] SSE parse error:', e);
       }}
@@ -509,8 +555,13 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
   <script>
   (function(){{
     'use strict';
+    console.log('[Livicat paw] Initializing Lottie paw animation controller');
     var el = document.querySelector('#livicat-watermark dotlottie-wc');
-    if (!el) return;
+    if (!el) {{
+      console.error('[Livicat paw] dotlottie-wc element not found');
+      return;
+    }}
+    console.log('[Livicat paw] dotlottie-wc element found, waiting for .dotLottie property');
 
     var THIRTY_MIN = 30 * 60 * 1000;
 
@@ -518,16 +569,20 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       el.style.opacity = 1;
       dl.stop();
       dl.play();
+      console.log('[Livicat paw] Paw animation started (opacity=1, playing)');
     }}
 
     function hide() {{
       el.style.opacity = 0;
+      console.log('[Livicat paw] Paw animation hidden (opacity=0)');
     }}
 
     (function poll() {{
       if (el.dotLottie) {{
         var dl = el.dotLottie;
+        console.log('[Livicat paw] .dotLottie property available, setting up event listeners');
         dl.addEventListener('load', function() {{
+          console.log('[Livicat paw] Lottie loaded, scheduling first play in 5s');
           // Hide on animation completion (fires once per playthrough)
           dl.addEventListener('complete', hide);
 
@@ -545,6 +600,20 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
         requestAnimationFrame(poll);
       }}
     }})();
+  }})();
+  </script>
+
+  <script>
+  (function(){{
+    'use strict';
+    // Scroll to bottom on initial page load (OBS browser source may have
+    // existing messages from previous session)
+    requestAnimationFrame(function() {{
+      var chat = document.getElementById('livicat-chat');
+      if (chat) {{
+        chat.scrollTop = chat.scrollHeight;
+      }}
+    }});
   }})();
   </script>
 </body>
@@ -671,7 +740,10 @@ mod tests {
             "should be a valid HTML doc"
         );
         assert!(html.contains("Livicat Chat"), "title should be present");
-        assert!(html.contains(TEST_CSS), "theme CSS should be injected");
+        assert!(
+            html.contains("<style id=\"livicat-theme\">"),
+            "theme CSS should be in inline <style>"
+        );
         assert!(html.contains("EventSource"), "SSE JS should be present");
         assert!(html.contains("livicat-chat"), "chat container should exist");
         assert!(
@@ -681,6 +753,39 @@ mod tests {
         assert!(
             html.contains("LIVICAT"),
             "brand text should be in the HTML"
+        );
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_current_css_endpoint_serves_css() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        let resp = client
+            .get(&format!("http://127.0.0.1:{port}/current.css"))
+            .send()
+            .await
+            .expect("GET /current.css should respond");
+        assert_eq!(resp.status(), 200);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(
+            ct.contains("text/css"),
+            "/current.css should return text/css content-type"
+        );
+        let body = resp.text().await.unwrap();
+        assert!(
+            body.contains(TEST_CSS),
+            "/current.css should contain the theme CSS"
         );
 
         handle.shutdown().await;

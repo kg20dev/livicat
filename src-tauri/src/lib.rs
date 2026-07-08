@@ -218,11 +218,9 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
-            // Strip @import for live updates — font was loaded on
-            // initial preview open, and @import can cause WebView2
-            // to defer stylesheet re-parsing.
-            let stripped = strip_imports(&css);
-            inject_css_to_window(&window, &stripped, auto_scroll)?;
+            // Send full CSS with @import — each update might have new
+            // @font-face rules that need their @import statements.
+            inject_css_to_window(&window, &css, auto_scroll)?;
             log::info!("[inject_css] CSS successfully injected into preview window");
             return Ok(());
         } else {
@@ -398,6 +396,45 @@ async fn update_renderer_css(
         None => {
             log::warn!("[update_css] No active renderer session");
             Err("No active renderer session".to_string())
+        }
+    }
+}
+
+/// Ping the renderer's `/health` endpoint to verify the connection is alive.
+/// Returns `true` if the renderer responded with "ok".
+#[tauri::command]
+async fn check_renderer_health(
+    state: tauri::State<'_, SharedChatState>,
+) -> Result<bool, String> {
+    let port = {
+        let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
+        s.renderer_handle.as_ref().map(|h| h.port)
+    };
+    match port {
+        Some(port) => {
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(3))
+                .build()
+                .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
+            match client
+                .get(format!("http://127.0.0.1:{port}/health"))
+                .send()
+                .await
+            {
+                Ok(resp) => {
+                    let ok = resp.status().is_success() && resp.text().await.unwrap_or_default() == "ok";
+                    log::info!("[health] Renderer on port {port} alive={ok}");
+                    Ok(ok)
+                }
+                Err(e) => {
+                    log::warn!("[health] Renderer on port {port} unreachable: {e}");
+                    Ok(false)
+                }
+            }
+        }
+        None => {
+            log::warn!("[health] No active renderer session");
+            Ok(false)
         }
     }
 }
@@ -881,6 +918,7 @@ pub fn run() {
             start_chat,
             stop_chat,
             update_renderer_css,
+            check_renderer_health,
             get_app_version,
             trigger_crash_test,
             track_feature_event,

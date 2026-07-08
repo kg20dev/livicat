@@ -1,6 +1,7 @@
 import React from 'react'
 import { useOBSSettings } from '../../hooks/useOBSSettings'
 import { useStreamContext } from '../../hooks/useStreamState'
+import { TauriService } from '../../services/TauriService'
 import { OBSConnectionPanel } from '../layout/OBSConnectionPanel'
 
 interface StreamSenderProps {
@@ -15,6 +16,23 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   const [showSetup, setShowSetup] = React.useState(false)
   const [toastMsg, setToastMsg] = React.useState('')
   const [toastError, setToastError] = React.useState(false)
+
+  // ── Renderer health check ──────────────────────────────────────
+  const [rendererAlive, setRendererAlive] = React.useState(false)
+
+  React.useEffect(() => {
+    if (streamState !== 'websocket') {
+      setRendererAlive(false)
+      return
+    }
+    const check = async () => {
+      const alive = await TauriService.checkRendererHealth()
+      setRendererAlive(alive)
+    }
+    check()
+    const interval = setInterval(check, 30_000)
+    return () => clearInterval(interval)
+  }, [streamState])
 
   const showToast = (msg: string, isError = false) => {
     setToastMsg(msg)
@@ -60,10 +78,27 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   // ── Live CSS update: push theme changes to active stream ──────
 
   React.useEffect(() => {
-    pushCssUpdate(injectedCSS)
-    // Only re-run when CSS content changes, not on every streamState transition
+    console.log(
+      '[StreamSender] css effect fired (cssLen=%d, streamState=%s)',
+      injectedCSS.length,
+      streamState
+    )
+    let cancelled = false
+    const doPush = async () => {
+      const sent = await pushCssUpdate(injectedCSS)
+      console.log('[StreamSender] pushCssUpdate returned sent=%s, cancelled=%s', sent, cancelled)
+      if (sent && !cancelled) {
+        console.log('[StreamSender] showing CSS toast')
+        showToast('CSS pushed to OBS')
+      }
+    }
+    doPush()
+    return () => {
+      cancelled = true
+    }
+    // Only re-run when CSS content or stream state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [injectedCSS])
+  }, [injectedCSS, streamState])
 
   // ── Button rendering ─────────────────────────────────────────
 
@@ -136,6 +171,15 @@ export function StreamSender({ videoId, injectedCSS, hideAtsign }: StreamSenderP
   return (
     <>
       <div className="flex items-center gap-1 shrink-0">
+        {/* Renderer health indicator */}
+        {streamState === 'websocket' && (
+          <span
+            className={`w-2 h-2 rounded-full transition-colors ${
+              rendererAlive ? 'bg-success' : 'bg-error'
+            }`}
+            title={rendererAlive ? 'Renderer connected' : 'Renderer unreachable'}
+          />
+        )}
         {/* Single contextual button */}
         <button
           onClick={handleButtonClick}

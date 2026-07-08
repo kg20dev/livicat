@@ -25,8 +25,10 @@ interface StreamContextValue {
   /**
    * Push a CSS update to the active renderer (live theme change).
    * No-op if no stream is active. Deduplicates identical CSS strings.
+   * Returns true if the CSS was actually sent to the renderer (and broadcast
+   * via SSE to OBS), false if it was cached/skipped (no stream, or same CSS).
    */
-  pushCssUpdate: (css: string) => void
+  pushCssUpdate: (css: string) => Promise<boolean>
 }
 
 const StreamContext = createContext<StreamContextValue | null>(null)
@@ -164,7 +166,7 @@ export function StreamProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const pushCssUpdate = useCallback((css: string) => {
+  const pushCssUpdate = useCallback((css: string): Promise<boolean> => {
     if (!chatPortRef.current || streamStateRef.current !== 'websocket') {
       prevCssRef.current = css
       console.log(
@@ -172,11 +174,11 @@ export function StreamProvider({ children }: { children: ReactNode }) {
         streamStateRef.current,
         chatPortRef.current
       )
-      return
+      return Promise.resolve(false)
     }
     if (css === prevCssRef.current) {
       console.log('[StreamProvider] pushCssUpdate: skipped, same CSS')
-      return
+      return Promise.resolve(false)
     }
     prevCssRef.current = css
     console.log(
@@ -185,18 +187,20 @@ export function StreamProvider({ children }: { children: ReactNode }) {
       css.slice(0, 60).replace(/\n/g, '\\n')
     )
     trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
-    TauriService.updateRendererCss(css).then((stored) => {
+    return TauriService.updateRendererCss(css).then((stored) => {
       if (stored === css.length) {
         console.log(
           '[main-app] pushCssUpdate: ✓ renderer confirmed stored %d bytes (matches sent)',
           stored
         )
+        return true
       } else {
         console.error(
           '[main-app] pushCssUpdate: ✗ MISMATCH — sent %d, renderer stored %d',
           css.length,
           stored
         )
+        return true // still sent even if mismatch (renderer has the CSS)
       }
     })
   }, [])
