@@ -884,11 +884,25 @@ function WorkspaceBody({
   /* ─── CSS re-injection on settings change ──────────────────── */
 
   useEffect(() => {
-    if (!previewOpen) return
-    const timer = setTimeout(() => {
-      updateCSS(buildYoutubeCss(), false, settings['forced-auto-scroll'] as boolean)
+    if (!previewOpen) {
+      console.log('[WorkspaceX] preview CSS effect: skipped (preview not open)')
+      return
+    }
+    console.log('[WorkspaceX] preview CSS effect: scheduling update in 300ms')
+    const timer = setTimeout(async () => {
+      const css = buildYoutubeCss()
+      console.log('[WorkspaceX] preview CSS effect: calling updateCSS (%d chars)', css.length)
+      try {
+        await updateCSS(css, false, settings['forced-auto-scroll'] as boolean)
+        console.log('[WorkspaceX] preview CSS effect: updateCSS completed')
+      } catch (err) {
+        console.error('[WorkspaceX] preview CSS effect: updateCSS failed:', err)
+      }
     }, 300)
-    return () => clearTimeout(timer)
+    return () => {
+      console.log('[WorkspaceX] preview CSS effect: cleared pending timeout')
+      clearTimeout(timer)
+    }
   }, [previewOpen, buildYoutubeCss, updateCSS, settings])
 
   /* ─── Layout ─────────────────────────────────────────────────── */

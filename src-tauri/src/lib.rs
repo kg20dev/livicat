@@ -202,7 +202,11 @@ async fn inject_css(
 
     if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
-            println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
+            log::info!(
+                "[inject_css] Forwarding {} bytes to preview window '{}'",
+                css.len(),
+                label
+            );
 
             // Always on top — apply dynamically to already-open window
             let _ = window.set_always_on_top(always_on_top);
@@ -215,11 +219,19 @@ async fn inject_css(
             );
 
             inject_css_to_window(&window, &css, auto_scroll)?;
+            log::info!("[inject_css] CSS successfully injected into preview window");
             return Ok(());
+        } else {
+            log::warn!(
+                "[inject_css] Preview window '{}' not found (was it closed by user?)",
+                label
+            );
         }
+    } else {
+        log::warn!("[inject_css] No preview window label in state (never opened?)");
     }
 
-    println!("[Livicat Tauri] No preview window to inject CSS into");
+    log::info!("[inject_css] No preview window to inject CSS into — silently ok");
     Ok(())
 }
 
@@ -445,6 +457,7 @@ fn inject_css_to_window(
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
+                console.log('[Livicat] CSS updated successfully', style.textContent.length + 'bytes');
             }} catch(e) {{
                 console.error('[Livicat] CSS injection error:', e);
             }}
