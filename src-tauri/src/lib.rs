@@ -338,12 +338,14 @@ async fn update_renderer_css(
     css: String,
     state: tauri::State<'_, SharedChatState>,
 ) -> Result<(), String> {
+    let css_len = css.len();
     let port = {
         let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
         s.renderer_handle.as_ref().map(|h| h.port)
     };
     match port {
         Some(port) => {
+            log::info!("[update_css] Forwarding {css_len} bytes to renderer on port {port}");
             let client = reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(5))
                 .build()
@@ -354,9 +356,13 @@ async fn update_renderer_css(
                 .send()
                 .await
                 .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
+            log::info!("[update_css] Renderer responded OK");
             Ok(())
         }
-        None => Err("No active renderer session".to_string()),
+        None => {
+            log::warn!("[update_css] No active renderer session");
+            Err("No active renderer session".to_string())
+        }
     }
 }
 
