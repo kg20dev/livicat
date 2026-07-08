@@ -17,11 +17,13 @@
    ║  Prefix .theme-crayon stripped before YouTube injection.       ║
    ══════════════════════════════════════════════════════════════════ */
 
-/* ── Google Fonts ────────────────────────────────────────────── */
-
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Kalam:wght@400;700&display=swap');
-
 /* ── Animation Keyframes ─────────────────────────────────────── */
+
+/* Note: Gaegu and Kalam Google Fonts are loaded through the font-
+   selection pipeline (fonts.ts + buildCSSVariables), not via a
+   hardcoded @import here — because the theme CSS is concatenated
+   AFTER reset.css rules, leaving @import in an invalid position
+   (must precede all rules per CSS spec → browser silently drops it). */
 
 /* Crayon drop-in: falls from above with a wobble overshoot */
 @keyframes theme-crayon-in {
@@ -118,17 +120,21 @@
   /* ── Layered Crayon Strokes ─────────────────────────────────
      Multiple offset box-shadows simulate the uneven layering of
      crayon on paper — like coloring slightly outside the lines.
-     The stroke color tracks --ink (text color) by default. */
+     The stroke color tracks --ink (text color) by default.
+
+     Layer2/layer3 use static RGBA fallbacks instead of color-mix()
+     for OBS CEF compatibility (Chrome 109 — color-mix is 111+).
+     Role overrides already set these per-role with hardcoded RGBA. */
   --_crayon-stroke: var(--ink, #1a1a1a);
+  --_crayon-layer2: rgba(0, 0, 0, 0.45);
+  --_crayon-layer3: rgba(0, 0, 0, 0.25);
   box-shadow:
     /* Layer 1: Main outline stroke — tracks text color */
     0 0 0 var(--stroke-width, 3px) var(--_crayon-stroke, #1a1a1a),
-    /* Layer 2: Offset crayon overlay at 45% (color-mix for dynamic tinting) */ -1px 1px 0
-      calc(var(--stroke-width, 3px) - 1px)
-      var(--_crayon-layer2, color-mix(in srgb, var(--ink, #1a1a1a) 45%, transparent)),
+    /* Layer 2: Offset crayon overlay at 45% */ -1px 1px 0 calc(var(--stroke-width, 3px) - 1px)
+      var(--_crayon-layer2),
     /* Layer 3: Opposite offset at 25% for depth */ 1px -0.5px 0
-      calc(var(--stroke-width, 3px) - 1px)
-      var(--_crayon-layer3, color-mix(in srgb, var(--ink, #1a1a1a) 25%, transparent)),
+      calc(var(--stroke-width, 3px) - 1px) var(--_crayon-layer3),
     /* Layer 4: Hard sticker shadow */ var(--shadow-offset, 3px) var(--shadow-offset, 3px) 0
       var(--shadow-color, #1a1a1a) !important;
 
