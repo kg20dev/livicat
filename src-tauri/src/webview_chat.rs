@@ -116,7 +116,7 @@ pub async fn start_webview_chat(
     let window_clone = window.clone();
     let store_clone = store.clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_millis(500));
+        let mut interval = tokio::time::interval(Duration::from_millis(100));
         loop {
             interval.tick().await;
 
@@ -309,13 +309,13 @@ fn build_observer_script(hide_atsign: bool) -> String {
     }});
     window.__livicat_observer.observe(document.documentElement, {{ childList: true, subtree: true }});
 
-    /* Drain buffer every 500ms */
+    /* Drain buffer every 100ms */
     setInterval(function() {{
       var buf = window.__livicat_buffer;
       if (!buf || buf.length === 0) return;
       var copy = buf.splice(0);
       sendToRust(copy);
-    }}, 500);
+    }}, 100);
   }}
 
   init();
