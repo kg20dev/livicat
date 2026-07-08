@@ -204,7 +204,7 @@
 /* ── Username — hand-drawn Kalam font ────────────────────────── */
 
 .theme-crayon yt-live-chat-text-message-renderer #author-name {
-  font-family: 'Kalam', 'Gaegu', cursive !important;
+  font-family: 'Kalam', 'Gaegu', var(--chat-font-family, 'Kalam'), cursive !important;
   font-size: var(--usernameFontSize, 15px) !important;
   font-weight: var(--chat-username-font-weight, 700) !important;
   color: var(--usernameColor, #1a1a1a) !important;
@@ -247,7 +247,7 @@
   --_crayon-layer3: var(--owner-ink-layer3, rgba(255, 59, 48, 0.2));
   --_ink: var(--owner-ink, #ff3b30);
   --usernameColor: var(--owner-username-color, #ff3b30);
-  --shadow-color: var(--owner-ink, #ff3b30);
+  --shadow-color: var(--ownerShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='owner'],
@@ -268,7 +268,7 @@
   --_crayon-layer3: var(--mod-ink-layer3, rgba(52, 199, 89, 0.2));
   --_ink: var(--mod-ink, #34c759);
   --usernameColor: var(--mod-username-color, #34c759);
-  --shadow-color: var(--mod-ink, #34c759);
+  --shadow-color: var(--modShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='moderator'],
@@ -289,7 +289,7 @@
   --_crayon-layer3: var(--member-ink-layer3, rgba(229, 184, 0, 0.2));
   --_ink: var(--member-ink, #e5b800);
   --usernameColor: var(--member-username-color, #e5b800);
-  --shadow-color: var(--member-ink, #e5b800);
+  --shadow-color: var(--memberShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='member'],
@@ -310,7 +310,7 @@
   --_crayon-layer3: var(--verified-ink-layer3, rgba(0, 122, 255, 0.2));
   --_ink: var(--verified-ink, #007aff);
   --usernameColor: var(--verified-username-color, #007aff);
-  --shadow-color: var(--verified-ink, #007aff);
+  --shadow-color: var(--verifiedShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='verified'],
@@ -331,7 +331,7 @@
   --_crayon-layer3: var(--superchat-ink-layer3, rgba(212, 167, 0, 0.2));
   --_ink: var(--superchat-ink, #d4a700);
   --usernameColor: var(--superchat-username-color, #d4a700);
-  --shadow-color: var(--superchat-ink, #d4a700);
+  --shadow-color: var(--superchatShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='super-chat'],
@@ -352,7 +352,7 @@
   --_crayon-layer3: var(--membership-ink-layer3, rgba(46, 125, 50, 0.2));
   --_ink: var(--membership-ink, #2e7d32);
   --usernameColor: var(--membership-username-color, #2e7d32);
-  --shadow-color: var(--membership-ink, #2e7d32);
+  --shadow-color: var(--membershipShadow, #1a1a1a);
 }
 :is(
     .theme-crayon yt-live-chat-text-message-renderer[data-role='member-ship'],

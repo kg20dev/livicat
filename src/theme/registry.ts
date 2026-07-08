@@ -23,7 +23,11 @@ import {
   css as crayonCss,
   reset as crayonReset,
 } from './crayon/manifest'
-import { scheme as crayonScheme, coreCssVarMap as crayonCssVarMap } from './crayon/scheme'
+import {
+  scheme as crayonScheme,
+  coreCssVarMap as crayonCssVarMap,
+  strokeMap as crayonStrokeMap,
+} from './crayon/scheme'
 
 /**
  * Merge core + theme-specific scheme into a single flat array.
@@ -55,7 +59,7 @@ const themes: ThemeBundle[] = [
   },
   {
     manifest: crayonManifest,
-    scheme: mergeScheme(crayonScheme, crayonCssVarMap),
+    scheme: mergeScheme(crayonScheme, crayonCssVarMap, crayonStrokeMap),
     css: crayonCss,
     reset: crayonReset,
   },

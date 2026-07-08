@@ -1,4 +1,4 @@
-import type { SettingDef } from '../types'
+import type { DerivationEntry, SettingDef } from '../types'
 
 /**
  * Crayon — theme-specific settings only.
@@ -35,6 +35,34 @@ export const coreCssVarMap: Record<string, string> = {
   'chat-member-username': 'memberUsernameColor',
   'chat-superchat-username': 'superchatUsernameColor',
   'chat-membership-username': 'membershipUsernameColor',
+}
+
+/**
+ * Derive role shadow colors from role ink colors via harmony inversion.
+ * Always targets a dark result (l=0.18-0.25) so the shadow looks like
+ * a natural dark offset regardless of the source hue.
+ */
+export const strokeMap: Record<string, DerivationEntry> = {
+  ownerInk: {
+    target: 'ownerShadow',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
+  modInk: {
+    target: 'modShadow',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
+  memberInk: {
+    target: 'memberShadow',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
+  superchatInk: {
+    target: 'superchatShadow',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
+  membershipInk: {
+    target: 'membershipShadow',
+    options: { lightThreshold: 0.4, darkTargetL: 0.18, lightTargetL: 0.25, satScale: 0.5 },
+  },
 }
 
 export const scheme: SettingDef[] = [
