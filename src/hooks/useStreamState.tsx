@@ -156,12 +156,23 @@ export function StreamProvider({ children }: { children: ReactNode }) {
   const pushCssUpdate = useCallback((css: string) => {
     if (!chatPortRef.current || streamStateRef.current !== 'websocket') {
       prevCssRef.current = css
+      console.log(
+        '[StreamProvider] pushCssUpdate: cached, not sending (state=%s, port=%s)',
+        streamStateRef.current,
+        chatPortRef.current
+      )
       return
     }
-    if (css === prevCssRef.current) return
+    if (css === prevCssRef.current) {
+      console.log('[StreamProvider] pushCssUpdate: skipped, same CSS')
+      return
+    }
     prevCssRef.current = css
+    console.log('[StreamProvider] pushCssUpdate: sending CSS (%d chars)', css.length)
     trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
-    TauriService.updateRendererCss(css)
+    TauriService.updateRendererCss(css).then((ok) => {
+      console.log('[StreamProvider] pushCssUpdate: updateRendererCss returned', ok)
+    })
   }, [])
 
   return (

@@ -131,6 +131,12 @@ async fn handle_root(State(state): State<RendererState>) -> Html<String> {
     let initial = state.store.all();
     let css = state.css.read().unwrap().clone();
 
+    log::info!(
+        "[renderer] GET / — serving page with {} messages and {} CSS bytes",
+        initial.len(),
+        css.len()
+    );
+
     Html(build_page(&css, &initial))
 }
 
@@ -141,6 +147,11 @@ async fn handle_events(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let msg_rx = state.store.subscribe();
     let css_rx = state.css_updates.subscribe();
+
+    log::info!(
+        "[renderer] GET /events — SSE client connected (css_updates receivers: {})",
+        state.css_updates.receiver_count(),
+    );
 
     let msg_stream = unfold(msg_rx, |mut rx| async move {
         loop {
@@ -213,13 +224,18 @@ async fn handle_ingest(
 /// Receive updated theme CSS from the frontend and broadcast it to
 /// all SSE-connected OBS browser sources via a `css-update` event.
 async fn handle_update_css(State(state): State<RendererState>, body: String) -> &'static str {
+    let len = body.len();
     // Update the shared CSS so new SSE clients (new OBS source loads)
     // get the latest CSS.
     if let Ok(mut css) = state.css.write() {
         *css = body.clone();
     }
     // Broadcast to all connected SSE clients so they live-update.
-    let _ = state.css_updates.send(body);
+    let receivers = state.css_updates.receiver_count();
+    let sent = state.css_updates.send(body).is_ok();
+    log::info!(
+        "[renderer] handle_update_css: stored {len} bytes, broadcast to {receivers} receivers (ok={sent})"
+    );
     "ok"
 }
 
