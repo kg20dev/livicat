@@ -224,7 +224,9 @@ async fn handle_ingest(
 
 /// Receive updated theme CSS from the frontend and broadcast it to
 /// all SSE-connected OBS browser sources via a `css-update` event.
-async fn handle_update_css(State(state): State<RendererState>, body: String) -> &'static str {
+/// Returns the body length as a string so the caller can verify the
+/// stored CSS matches what was sent.
+async fn handle_update_css(State(state): State<RendererState>, body: String) -> String {
     let len = body.len();
     // Update the shared CSS so new SSE clients (new OBS source loads)
     // get the latest CSS (with @import — needed for initial font load).
@@ -243,7 +245,7 @@ async fn handle_update_css(State(state): State<RendererState>, body: String) -> 
     log::info!(
         "[renderer] handle_update_css: stored {len} bytes, broadcast to {receivers} receivers (ok={sent})"
     );
-    "ok"
+    len.to_string()
 }
 
 /// Remove @import lines from CSS — used to avoid CEF stylesheet

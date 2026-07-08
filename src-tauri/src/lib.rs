@@ -358,7 +358,7 @@ async fn start_chat(
 async fn update_renderer_css(
     css: String,
     state: tauri::State<'_, SharedChatState>,
-) -> Result<(), String> {
+) -> Result<usize, String> {
     let css_len = css.len();
     let port = {
         let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
@@ -371,14 +371,29 @@ async fn update_renderer_css(
                 .timeout(std::time::Duration::from_secs(5))
                 .build()
                 .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
-            client
+            let resp = client
                 .post(format!("http://127.0.0.1:{port}/update-css"))
                 .body(css)
                 .send()
                 .await
                 .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
-            log::info!("[update_css] Renderer responded OK");
-            Ok(())
+            let stored: usize = resp
+                .text()
+                .await
+                .map_err(|e| format!("Failed to read renderer response: {e}"))?
+                .parse()
+                .map_err(|e| format!("Failed to parse stored length: {e}"))?;
+            let ok = stored == css_len;
+            log::info!(
+                "[update_css] Renderer confirmed stored {stored} bytes (match={ok}, sent={css_len})"
+            );
+            if ok {
+                Ok(stored)
+            } else {
+                Err(format!(
+                    "CSS size mismatch: sent {css_len} but renderer stored {stored}"
+                ))
+            }
         }
         None => {
             log::warn!("[update_css] No active renderer session");

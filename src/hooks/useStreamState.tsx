@@ -100,8 +100,12 @@ export function StreamProvider({ children }: { children: ReactNode }) {
           // Don't overwrite prevCssRef — pushCssUpdate may have cached a
           // newer CSS during the 'sending' phase. Send it if changed.
           if (prevCssRef.current && prevCssRef.current !== injectedCSS) {
-            TauriService.updateRendererCss(prevCssRef.current).then((ok) => {
-              console.log('[StreamProvider] flushed cached CSS to renderer after startup, ok=', ok)
+            TauriService.updateRendererCss(prevCssRef.current).then((stored) => {
+              console.log(
+                '[StreamProvider] flushed cached CSS to renderer after startup, stored=%d, match=%s',
+                stored,
+                stored === prevCssRef.current.length ? 'yes' : 'no'
+              )
             })
           } else {
             prevCssRef.current = injectedCSS
@@ -181,8 +185,19 @@ export function StreamProvider({ children }: { children: ReactNode }) {
       css.slice(0, 60).replace(/\n/g, '\\n')
     )
     trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
-    TauriService.updateRendererCss(css).then((ok) => {
-      console.log('[StreamProvider] pushCssUpdate: updateRendererCss returned', ok)
+    TauriService.updateRendererCss(css).then((stored) => {
+      if (stored === css.length) {
+        console.log(
+          '[main-app] pushCssUpdate: ✓ renderer confirmed stored %d bytes (matches sent)',
+          stored
+        )
+      } else {
+        console.error(
+          '[main-app] pushCssUpdate: ✗ MISMATCH — sent %d, renderer stored %d',
+          css.length,
+          stored
+        )
+      }
     })
   }, [])
 
