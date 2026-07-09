@@ -340,7 +340,19 @@ jobs:
           echo "Windows artifacts:"
           find artifacts/windows -type f
 
-      - name: Upload artifacts to Cloudflare R2 (versioned)
+      - name: Install AWS CLI (if not present)
+        run: |
+          if command -v aws &>/dev/null; then
+            echo "✅ AWS CLI already installed: $(aws --version)"
+          else
+            echo "Installing AWS CLI..."
+            curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+            aws --version
+          fi
+
+      - name: Upload artifacts to Cloudflare R2
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
@@ -353,17 +365,24 @@ jobs:
           aws configure set aws_secret_access_key "${{ secrets.R2_SECRET_ACCESS_KEY }}"
           aws configure set default.region auto
 
-          echo "☁️ Uploading to R2: s3://${BUCKET}/${PREFIX}/"
+          echo "☁️ Uploading to Cloudflare R2: s3://${BUCKET}/${PREFIX}/"
 
+          # macOS .dmg
           for f in artifacts/macos/dmg/*.dmg; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
           done
+
+          # Windows .msi
           for f in artifacts/windows/msi/*.msi; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
           done
+
+          # Windows .exe
           for f in artifacts/windows/nsis/*.exe; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
           done
+
+          echo "✅ All artifacts uploaded to R2: s3://${BUCKET}/${PREFIX}/"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

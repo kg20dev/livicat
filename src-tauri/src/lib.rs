@@ -211,6 +211,9 @@ async fn inject_css(
             // Always on top — apply dynamically to already-open window
             let _ = window.set_always_on_top(always_on_top);
 
+            // Always on top — apply dynamically to already-open window
+            let _ = window.set_always_on_top(always_on_top);
+
             // Add breadcrumb for CSS injection
             sentry::add_breadcrumb(
                 "css_injection",
