@@ -12,10 +12,15 @@ import type {
   HarmonyInvertOptions,
   DerivationEntry,
 } from '../theme/types'
-import { getFontUrl } from './fonts'
+import { getFontUrl, getFontFace } from './fonts'
 
-/** Option value → Google Font @import rule, or null for system fonts. */
-function getGoogleFontImport(fontFamily: string): string | null {
+/** Option value → @import or @font-face rule, or null for system fonts. */
+function getFontImport(fontFamily: string): string | null {
+  // Self-hosted font → emit @font-face
+  const fontFace = getFontFace(fontFamily)
+  if (fontFace) return fontFace
+
+  // Google Font → emit @import
   const url = getFontUrl(fontFamily)
   if (!url) return null
   return `@import url('${url}');`
@@ -107,7 +112,7 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   // Check for Google Font import
   const fontFamily = settings['font-family'] as string | undefined
   if (fontFamily) {
-    const fontImport = getGoogleFontImport(fontFamily)
+    const fontImport = getFontImport(fontFamily)
     if (fontImport) imports.push(fontImport)
   }
   const lines: string[] = imports.length > 0 ? [...imports, '', ':root {'] : [':root {']

@@ -116,16 +116,6 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
   {
-    key: 'chat-max-width',
-    section: 'Effects',
-    type: 'range',
-    label: 'Max Width',
-    min: 200,
-    max: 800,
-    default: 400,
-    unit: 'px',
-  },
-  {
     key: 'chat-border-radius',
     section: 'Effects',
     type: 'range',

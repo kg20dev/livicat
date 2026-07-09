@@ -841,13 +841,31 @@ function WorkspaceBody({
     // YouTube's page has no .theme-{id} wrapper element, so selectors
     // like `.theme-im #author-photo` would never match.
     const unscopedCss = theme.css.replace(new RegExp(`\\.theme-${manifest.id}\\s`, 'g'), '')
-    return theme.reset
+    const result = theme.reset
       ? [inlineCss, theme.reset, unscopedCss].join('\n\n')
       : [inlineCss, unscopedCss].join('\n\n')
+    console.log(
+      '[main-app] buildYoutubeCss: CSS rebuilt (%d chars, head: %s)',
+      result.length,
+      result.slice(0, 60).replace(/\n/g, '\\n')
+    )
+    return result
   }, [settings, scheme, theme.css, theme.reset, manifest.id])
 
   /* ─── Stable CSS for StreamSender ──────────────────────────────── */
   const ytCss = useMemo(() => buildYoutubeCss(), [buildYoutubeCss])
+
+  /* ─── Log CSS changes for debugging ────────────────────────────── */
+  const cssFingerprint = `${ytCss.length}:${ytCss.slice(0, 40)}`
+  const prevFingerprintRef = useRef(cssFingerprint)
+  if (cssFingerprint !== prevFingerprintRef.current) {
+    console.log(
+      '[main-app] ytCss: CSS fingerprint CHANGED (%s -> %s)',
+      prevFingerprintRef.current,
+      cssFingerprint
+    )
+    prevFingerprintRef.current = cssFingerprint
+  }
 
   /* ─── YouTube preview ────────────────────────────────────────── */
 
@@ -884,11 +902,29 @@ function WorkspaceBody({
   /* ─── CSS re-injection on settings change ──────────────────── */
 
   useEffect(() => {
-    if (!previewOpen) return
-    const timer = setTimeout(() => {
-      updateCSS(buildYoutubeCss(), false, settings['forced-auto-scroll'] as boolean)
+    if (!previewOpen) {
+      console.log('[main-app] preview-window effect: skipped (preview not open)')
+      return
+    }
+    console.log('[main-app] preview-window effect: scheduling update in 300ms')
+    const timer = setTimeout(async () => {
+      const css = buildYoutubeCss()
+      console.log(
+        '[main-app] preview-window effect: calling updateCSS (%d chars, head: %s)',
+        css.length,
+        css.slice(0, 60).replace(/\n/g, '\\n')
+      )
+      try {
+        await updateCSS(css, false, settings['forced-auto-scroll'] as boolean)
+        console.log('[main-app] preview-window effect: updateCSS completed')
+      } catch (err) {
+        console.error('[main-app] preview-window effect: updateCSS failed:', err)
+      }
     }, 300)
-    return () => clearTimeout(timer)
+    return () => {
+      console.log('[main-app] preview-window effect: cleared pending timeout')
+      clearTimeout(timer)
+    }
   }, [previewOpen, buildYoutubeCss, updateCSS, settings])
 
   /* ─── Layout ─────────────────────────────────────────────────── */

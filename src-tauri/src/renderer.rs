@@ -97,6 +97,9 @@ pub async fn start_renderer(store: MessageStore, css: String) -> Result<Renderer
         .route("/events", get(handle_events))
         .route("/ingest", post(handle_ingest))
         .route("/update-css", post(handle_update_css))
+        .route("/css", get(handle_get_css))
+        .route("/current.css", get(handle_current_css))
+        .route("/health", get(handle_health))
         .route("/debug", post(handle_debug))
         .layer(cors)
         .with_state(app_state);
@@ -131,6 +134,12 @@ async fn handle_root(State(state): State<RendererState>) -> Html<String> {
     let initial = state.store.all();
     let css = state.css.read().unwrap().clone();
 
+    log::info!(
+        "[renderer] GET / — serving page with {} messages and {} CSS bytes",
+        initial.len(),
+        css.len()
+    );
+
     Html(build_page(&css, &initial))
 }
 
@@ -141,6 +150,11 @@ async fn handle_events(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let msg_rx = state.store.subscribe();
     let css_rx = state.css_updates.subscribe();
+
+    log::info!(
+        "[renderer] GET /events — SSE client connected (css_updates receivers: {})",
+        state.css_updates.receiver_count(),
+    );
 
     let msg_stream = unfold(msg_rx, |mut rx| async move {
         loop {
@@ -167,7 +181,17 @@ async fn handle_events(
         loop {
             match rx.recv().await {
                 Ok(css) => {
-                    let event = Event::default().event("css-update").data(css);
+                    // Deliver CSS updates via the same `message` event as chat
+                    // messages (using __type discriminator). Named SSE events
+                    // (like `css-update`) are unreliable in OBS CEF 109, but
+                    // the `message` event always works.
+                    let payload = serde_json::json!({
+                        "__type": "css",
+                        "data": css
+                    });
+                    let event = Event::default()
+                        .event("message")
+                        .data(payload.to_string());
                     return Some((Ok(event), rx));
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
@@ -212,14 +236,68 @@ async fn handle_ingest(
 
 /// Receive updated theme CSS from the frontend and broadcast it to
 /// all SSE-connected OBS browser sources via a `css-update` event.
-async fn handle_update_css(State(state): State<RendererState>, body: String) -> &'static str {
+/// Returns the body length as a string so the caller can verify the
+/// stored CSS matches what was sent.
+async fn handle_update_css(State(state): State<RendererState>, body: String) -> String {
+    let len = body.len();
     // Update the shared CSS so new SSE clients (new OBS source loads)
     // get the latest CSS.
     if let Ok(mut css) = state.css.write() {
         *css = body.clone();
     }
-    // Broadcast to all connected SSE clients so they live-update.
-    let _ = state.css_updates.send(body);
+    // Broadcast full CSS including @import for Google Fonts. The old
+    // logic stripped @import to avoid CEF re-parse issues with <style>
+    // replacement, but we now use appendChild+removeChild which handles
+    // @import correctly. Both preview and OBS need the same CSS to
+    // stay in sync.
+    let receivers = state.css_updates.receiver_count();
+    let sent = state.css_updates.send(body).is_ok();
+    log::info!(
+        "[renderer] handle_update_css: stored {len} bytes, broadcast to {receivers} receivers (ok={sent})"
+    );
+    len.to_string()
+}
+
+/// Remove @import lines from CSS — used to avoid CEF stylesheet
+/// re-parse issues with dynamic <style> replacement.
+fn strip_imports(css: &str) -> String {
+    css.lines()
+        .filter(|line| !line.trim_start().starts_with("@import"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+// ─── Route: GET /css ──────────────────────────────────────────────
+
+/// Returns the raw current CSS. Open `http://localhost:{PORT}/css` in a
+/// browser to verify the renderer has the latest CSS after changing a
+/// setting — refresh the page to see updates.
+async fn handle_get_css(State(state): State<RendererState>) -> String {
+    state.css.read().unwrap().clone()
+}
+
+// ─── Route: GET /current.css ──────────────────────────────────────
+
+/// Serves the current theme CSS with `Content-Type: text/css` for use
+/// as a `<link rel="stylesheet">` in the OBS page. Strips @import
+/// lines to avoid CEF 109 stylesheet re-parse issues. The fonts were
+/// already loaded from the initial page load (which included @import),
+/// and @font-face rules persist in the document.
+async fn handle_current_css(
+    State(state): State<RendererState>,
+) -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
+    let css = state.css.read().unwrap().clone();
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "text/css; charset=utf-8")],
+        css,
+    )
+}
+
+// ─── Route: GET /health ────────────────────────────────────────────
+
+/// Simple health check — returns `"ok"` if the renderer is running.
+async fn handle_health() -> &'static str {
     "ok"
 }
 
@@ -347,6 +425,40 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     source.addEventListener('message', function(e) {{
       try {{
         var msg = JSON.parse(e.data);
+
+        /* CSS update from settings change — same event as chat messages.
+           Create a new <style> element with a UNIQUE ID to prevent race
+           conditions when multiple CSS updates arrive rapidly. Append to
+           <head>, remove the old style via requestAnimationFrame (ensures
+           DOM is ready), then restore the original ID. Force scroll to
+           bottom after CSS update in case layout changes.
+        */
+        if (msg.__type === 'css') {{
+          console.log(
+            '[obs-browser-source] CSS update via message event (' + msg.data.length + ' bytes)'
+          );
+          var oldStyle = document.getElementById('livicat-theme');
+          if (oldStyle) {{
+            var newStyle = document.createElement('style');
+            var tempId = 'livicat-theme-' + Date.now();
+            newStyle.id = tempId;
+            newStyle.textContent = msg.data;
+            document.head.appendChild(newStyle);
+            requestAnimationFrame(function() {{
+              if (oldStyle.parentNode) {{
+                oldStyle.parentNode.removeChild(oldStyle);
+              }}
+              newStyle.id = 'livicat-theme';
+              console.log('[obs-browser-source] CSS update applied (id=' + tempId + ')');
+              // Force scroll to bottom after CSS update (layout may have changed)
+              if (chat) {{
+                chat.scrollTop = chat.scrollHeight;
+              }}
+            }});
+          }}
+          return;
+        }}
+
         var el = document.createElement('yt-live-chat-text-message-renderer');
         el.setAttribute('data-role', detectRole(msg));
 
@@ -409,7 +521,11 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
         el.appendChild(content);
         chat.appendChild(el);
-        chat.scrollTop = chat.scrollHeight;
+        // Force scroll to bottom with requestAnimationFrame to ensure
+        // the message is rendered before scrolling
+        requestAnimationFrame(function() {{
+          chat.scrollTop = chat.scrollHeight;
+        }});
       }} catch(e) {{
         console.error('[Livicat] SSE parse error:', e);
       }}
@@ -417,19 +533,6 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
     source.addEventListener('error', function() {{
       console.warn('[Livicat] SSE connection lost, retrying...');
-    }});
-
-    /* Live-update theme CSS when settings change.
-       REPLACES the entire <style> element to force CEF/OBS to fully
-       re-parse the stylesheet. Setting textContent alone can leave
-       stale rules active in some embedded browser engines. */
-    source.addEventListener('css-update', function(e) {{
-      var old = document.getElementById('livicat-theme');
-      if (!old) return;
-      var s = document.createElement('style');
-      s.id = 'livicat-theme';
-      s.textContent = e.data;
-      old.replaceWith(s);
     }});
 
     function detectRole(msg) {{
@@ -452,8 +555,13 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
   <script>
   (function(){{
     'use strict';
+    console.log('[Livicat paw] Initializing Lottie paw animation controller');
     var el = document.querySelector('#livicat-watermark dotlottie-wc');
-    if (!el) return;
+    if (!el) {{
+      console.error('[Livicat paw] dotlottie-wc element not found');
+      return;
+    }}
+    console.log('[Livicat paw] dotlottie-wc element found, waiting for .dotLottie property');
 
     var THIRTY_MIN = 30 * 60 * 1000;
 
@@ -461,16 +569,20 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       el.style.opacity = 1;
       dl.stop();
       dl.play();
+      console.log('[Livicat paw] Paw animation started (opacity=1, playing)');
     }}
 
     function hide() {{
       el.style.opacity = 0;
+      console.log('[Livicat paw] Paw animation hidden (opacity=0)');
     }}
 
     (function poll() {{
       if (el.dotLottie) {{
         var dl = el.dotLottie;
+        console.log('[Livicat paw] .dotLottie property available, setting up event listeners');
         dl.addEventListener('load', function() {{
+          console.log('[Livicat paw] Lottie loaded, scheduling first play in 5s');
           // Hide on animation completion (fires once per playthrough)
           dl.addEventListener('complete', hide);
 
@@ -488,6 +600,20 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
         requestAnimationFrame(poll);
       }}
     }})();
+  }})();
+  </script>
+
+  <script>
+  (function(){{
+    'use strict';
+    // Scroll to bottom on initial page load (OBS browser source may have
+    // existing messages from previous session)
+    requestAnimationFrame(function() {{
+      var chat = document.getElementById('livicat-chat');
+      if (chat) {{
+        chat.scrollTop = chat.scrollHeight;
+      }}
+    }});
   }})();
   </script>
 </body>
@@ -614,7 +740,10 @@ mod tests {
             "should be a valid HTML doc"
         );
         assert!(html.contains("Livicat Chat"), "title should be present");
-        assert!(html.contains(TEST_CSS), "theme CSS should be injected");
+        assert!(
+            html.contains("<style id=\"livicat-theme\">"),
+            "theme CSS should be in inline <style>"
+        );
         assert!(html.contains("EventSource"), "SSE JS should be present");
         assert!(html.contains("livicat-chat"), "chat container should exist");
         assert!(
@@ -624,6 +753,39 @@ mod tests {
         assert!(
             html.contains("LIVICAT"),
             "brand text should be in the HTML"
+        );
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_current_css_endpoint_serves_css() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        let resp = client
+            .get(&format!("http://127.0.0.1:{port}/current.css"))
+            .send()
+            .await
+            .expect("GET /current.css should respond");
+        assert_eq!(resp.status(), 200);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(
+            ct.contains("text/css"),
+            "/current.css should return text/css content-type"
+        );
+        let body = resp.text().await.unwrap();
+        assert!(
+            body.contains(TEST_CSS),
+            "/current.css should contain the theme CSS"
         );
 
         handle.shutdown().await;
@@ -833,6 +995,102 @@ mod tests {
         assert!(
             sse_text.contains("event: message"),
             "SSE event type should be 'message', got: {sse_text:?}"
+        );
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_css_update_preserves_import_statements() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        // CSS with Google Fonts @import
+        let css_with_import = r#"
+body { background: red; }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+"#;
+
+        let resp = client
+            .post(&format!("http://127.0.0.1:{port}/update-css"))
+            .body(css_with_import)
+            .send()
+            .await
+            .expect("POST /update-css should succeed");
+        assert_eq!(resp.status(), 200);
+
+        // Fetch /css to verify @import is preserved
+        let css_resp = client
+            .get(&format!("http://127.0.0.1:{port}/css"))
+            .send()
+            .await
+            .expect("GET /css should succeed");
+        let css_body = css_resp.text().await.unwrap();
+        assert!(
+            css_body.contains("@import"),
+            "@import should be preserved in /css endpoint"
+        );
+        assert!(
+            css_body.contains("Roboto"),
+            "Font family name should be present in @import"
+        );
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_health_check_returns_ok() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::new();
+
+        let resp = client
+            .get(&format!("http://127.0.0.1:{port}/health"))
+            .send()
+            .await
+            .expect("GET /health should succeed");
+        assert_eq!(resp.status(), 200);
+        let body = resp.text().await.unwrap();
+        assert_eq!(body, "ok", "health check should return 'ok'");
+
+        handle.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_current_css_preserves_full_css() {
+        let (port, handle) = start_test_renderer().await;
+        let client = Client::new();
+
+        // CSS with Google Fonts @import
+        let css_with_import = r#"
+body { background: red; }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+"#;
+
+        let resp = client
+            .post(&format!("http://127.0.0.1:{port}/update-css"))
+            .body(css_with_import)
+            .send()
+            .await
+            .expect("POST /update-css should succeed");
+        assert_eq!(resp.status(), 200);
+
+        // Fetch /current.css to verify @import is preserved
+        let css_resp = client
+            .get(&format!("http://127.0.0.1:{port}/current.css"))
+            .send()
+            .await
+            .expect("GET /current.css should succeed");
+        let css_body = css_resp.text().await.unwrap();
+        assert!(
+            css_body.contains("@import"),
+            "/current.css should preserve @import statements"
+        );
+        assert!(
+            css_body.contains("Roboto"),
+            "Font family should be present in /current.css"
         );
 
         handle.shutdown().await;

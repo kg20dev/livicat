@@ -25,8 +25,10 @@ interface StreamContextValue {
   /**
    * Push a CSS update to the active renderer (live theme change).
    * No-op if no stream is active. Deduplicates identical CSS strings.
+   * Returns true if the CSS was actually sent to the renderer (and broadcast
+   * via SSE to OBS), false if it was cached/skipped (no stream, or same CSS).
    */
-  pushCssUpdate: (css: string) => void
+  pushCssUpdate: (css: string) => Promise<boolean>
 }
 
 const StreamContext = createContext<StreamContextValue | null>(null)
@@ -97,8 +99,19 @@ export function StreamProvider({ children }: { children: ReactNode }) {
 
         if (result === 'created' || result === 'updated') {
           setStreamState('websocket')
-          // Track last sent CSS so pushCssUpdate can skip duplicates
-          prevCssRef.current = injectedCSS
+          // Don't overwrite prevCssRef — pushCssUpdate may have cached a
+          // newer CSS during the 'sending' phase. Send it if changed.
+          if (prevCssRef.current && prevCssRef.current !== injectedCSS) {
+            TauriService.updateRendererCss(prevCssRef.current).then((stored) => {
+              console.log(
+                '[StreamProvider] flushed cached CSS to renderer after startup, stored=%d, match=%s',
+                stored,
+                stored === prevCssRef.current.length ? 'yes' : 'no'
+              )
+            })
+          } else {
+            prevCssRef.current = injectedCSS
+          }
           trackEventAsync('stream_sent_headless', {
             mode: result,
             scale_filter: 'lanczos',
@@ -153,15 +166,43 @@ export function StreamProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const pushCssUpdate = useCallback((css: string) => {
+  const pushCssUpdate = useCallback((css: string): Promise<boolean> => {
     if (!chatPortRef.current || streamStateRef.current !== 'websocket') {
       prevCssRef.current = css
-      return
+      console.log(
+        '[StreamProvider] pushCssUpdate: cached, not sending (state=%s, port=%s)',
+        streamStateRef.current,
+        chatPortRef.current
+      )
+      return Promise.resolve(false)
     }
-    if (css === prevCssRef.current) return
+    if (css === prevCssRef.current) {
+      console.log('[StreamProvider] pushCssUpdate: skipped, same CSS')
+      return Promise.resolve(false)
+    }
     prevCssRef.current = css
+    console.log(
+      '[main-app] pushCssUpdate: sending to OBS renderer (%d chars, head: %s)',
+      css.length,
+      css.slice(0, 60).replace(/\n/g, '\\n')
+    )
     trackEventAsync('stream_css_live_update', { mode: 'renderer_sse' })
-    TauriService.updateRendererCss(css)
+    return TauriService.updateRendererCss(css).then((stored) => {
+      if (stored === css.length) {
+        console.log(
+          '[main-app] pushCssUpdate: ✓ renderer confirmed stored %d bytes (matches sent)',
+          stored
+        )
+        return true
+      } else {
+        console.error(
+          '[main-app] pushCssUpdate: ✗ MISMATCH — sent %d, renderer stored %d',
+          css.length,
+          stored
+        )
+        return true // still sent even if mismatch (renderer has the CSS)
+      }
+    })
   }, [])
 
   return (

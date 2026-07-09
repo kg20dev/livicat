@@ -202,7 +202,14 @@ async fn inject_css(
 
     if let Some(label) = state_guard.window_label.as_deref() {
         if let Some(window) = app.get_webview_window(label) {
-            println!("[Livicat Tauri] Injecting CSS, length: {}", css.len());
+            log::info!(
+                "[inject_css] Forwarding {} bytes to preview window '{}'",
+                css.len(),
+                label
+            );
+
+            // Always on top — apply dynamically to already-open window
+            let _ = window.set_always_on_top(always_on_top);
 
             // Always on top — apply dynamically to already-open window
             let _ = window.set_always_on_top(always_on_top);
@@ -214,12 +221,22 @@ async fn inject_css(
                 SentryLevel::Info,
             );
 
+            // Send full CSS with @import — each update might have new
+            // @font-face rules that need their @import statements.
             inject_css_to_window(&window, &css, auto_scroll)?;
+            log::info!("[inject_css] CSS successfully injected into preview window");
             return Ok(());
+        } else {
+            log::warn!(
+                "[inject_css] Preview window '{}' not found (was it closed by user?)",
+                label
+            );
         }
+    } else {
+        log::warn!("[inject_css] No preview window label in state (never opened?)");
     }
 
-    println!("[Livicat Tauri] No preview window to inject CSS into");
+    log::info!("[inject_css] No preview window to inject CSS into — silently ok");
     Ok(())
 }
 
@@ -303,6 +320,11 @@ async fn start_chat(
     let store = processor::MessageStore::new();
 
     // ── 2. Start renderer ──────────────────────────────────────
+    log::info!(
+        "[chat] Initial CSS: {} bytes (head: {})",
+        css.len(),
+        &css[..css.len().min(60)].replace('\n', "\\n")
+    );
     let css_clone = css.clone();
     let store_for_webview = store.clone(); // clone before store is moved into renderer
     let renderer_handle = renderer::start_renderer(store, css_clone)
@@ -337,7 +359,56 @@ async fn start_chat(
 async fn update_renderer_css(
     css: String,
     state: tauri::State<'_, SharedChatState>,
-) -> Result<(), String> {
+) -> Result<usize, String> {
+    let css_len = css.len();
+    let port = {
+        let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
+        s.renderer_handle.as_ref().map(|h| h.port)
+    };
+    match port {
+        Some(port) => {
+            log::info!("[update_css] Forwarding {css_len} bytes to renderer on port {port}");
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(5))
+                .build()
+                .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
+            let resp = client
+                .post(format!("http://127.0.0.1:{port}/update-css"))
+                .body(css)
+                .send()
+                .await
+                .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
+            let stored: usize = resp
+                .text()
+                .await
+                .map_err(|e| format!("Failed to read renderer response: {e}"))?
+                .parse()
+                .map_err(|e| format!("Failed to parse stored length: {e}"))?;
+            let ok = stored == css_len;
+            log::info!(
+                "[update_css] Renderer confirmed stored {stored} bytes (match={ok}, sent={css_len})"
+            );
+            if ok {
+                Ok(stored)
+            } else {
+                Err(format!(
+                    "CSS size mismatch: sent {css_len} but renderer stored {stored}"
+                ))
+            }
+        }
+        None => {
+            log::warn!("[update_css] No active renderer session");
+            Err("No active renderer session".to_string())
+        }
+    }
+}
+
+/// Ping the renderer's `/health` endpoint to verify the connection is alive.
+/// Returns `true` if the renderer responded with "ok".
+#[tauri::command]
+async fn check_renderer_health(
+    state: tauri::State<'_, SharedChatState>,
+) -> Result<bool, String> {
     let port = {
         let s = state.lock().map_err(|e| format!("State lock error: {e}"))?;
         s.renderer_handle.as_ref().map(|h| h.port)
@@ -345,18 +416,29 @@ async fn update_renderer_css(
     match port {
         Some(port) => {
             let client = reqwest::Client::builder()
-                .timeout(std::time::Duration::from_secs(5))
+                .timeout(std::time::Duration::from_secs(3))
                 .build()
                 .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
-            client
-                .post(format!("http://127.0.0.1:{port}/update-css"))
-                .body(css)
+            match client
+                .get(format!("http://127.0.0.1:{port}/health"))
                 .send()
                 .await
-                .map_err(|e| format!("Failed to send CSS to renderer: {e}"))?;
-            Ok(())
+            {
+                Ok(resp) => {
+                    let ok = resp.status().is_success() && resp.text().await.unwrap_or_default() == "ok";
+                    log::info!("[health] Renderer on port {port} alive={ok}");
+                    Ok(ok)
+                }
+                Err(e) => {
+                    log::warn!("[health] Renderer on port {port} unreachable: {e}");
+                    Ok(false)
+                }
+            }
         }
-        None => Err("No active renderer session".to_string()),
+        None => {
+            log::warn!("[health] No active renderer session");
+            Ok(false)
+        }
     }
 }
 
@@ -439,8 +521,13 @@ fn inject_css_to_window(
                 style.id = 'livicat-css';
                 style.textContent = {};
                 document.head.appendChild(style);
+                console.log(
+                  '[preview-window] <style id="livicat-css"> replaced (' +
+                  style.textContent.length + ' bytes, head: ' +
+                  style.textContent.slice(0, 50).replace(/\\n/g, '\\\\n') + ')'
+                );
             }} catch(e) {{
-                console.error('[Livicat] CSS injection error:', e);
+                console.error('[preview-window] CSS injection error:', e);
             }}
 
             function __lc_scroll() {{
@@ -834,6 +921,7 @@ pub fn run() {
             start_chat,
             stop_chat,
             update_renderer_css,
+            check_renderer_health,
             get_app_version,
             trigger_crash_test,
             track_feature_event,
@@ -846,4 +934,14 @@ pub fn run() {
         .expect("error while running tauri application");
 
     // Sentry guard is now managed by Tauri state - lives until app teardown
+}
+
+/// Remove @import lines from CSS — used to avoid WebView2/CEF
+/// stylesheet re-parse issues when dynamically replacing <style>
+/// elements during live CSS updates.
+fn strip_imports(css: &str) -> String {
+    css.lines()
+        .filter(|line| !line.trim_start().starts_with("@import"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }

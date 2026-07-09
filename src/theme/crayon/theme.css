@@ -1,0 +1,396 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Crayon Chat Theme — scoped CSS for YouTube Live Chat          ║
+   ║                                                                ║
+   ║  Inspired by Crayon Chat (emergentagent.com)                   ║
+   ║  — hand-crayon soul with paper texture, layered brush          ║
+   ║    strokes, and a warm wobbly feel                             ║
+   ║                                                                ║
+   ║  ╔══════════════════════════════════════════════════════════╗   ║
+   ║  ║  CRITICAL RULE: If an element uses `transform` in       ║   ║
+   ║  ║  @keyframes, its base CSS must NOT have `!important`    ║   ║
+   ║  ║  on `transform`. CSS spec says keyframe declarations    ║   ║
+   ║  ║  can NEVER override `!important` — the animation        ║   ║
+   ║  ║  silently degrades to opacity-only.                     ║   ║
+   ║  ╚══════════════════════════════════════════════════════════╝   ║
+   ║                                                                ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-crayon stripped before YouTube injection.       ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Animation Keyframes ─────────────────────────────────────── */
+
+/* Note: Gaegu and Kalam Google Fonts are loaded through the font-
+   selection pipeline (fonts.ts + buildCSSVariables), not via a
+   hardcoded @import here — because the theme CSS is concatenated
+   AFTER reset.css rules, leaving @import in an invalid position
+   (must precede all rules per CSS spec → browser silently drops it). */
+
+/* Crayon drop-in: falls from above with a wobble overshoot */
+@keyframes theme-crayon-in {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) rotate(calc(var(--wobble-amount, -6deg) * -1)) scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) rotate(var(--wobble-amount, -6deg)) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+/* Crayon scribble — subtle horizontal jitter for username */
+@keyframes theme-crayon-scribble {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  30% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Paper Grain Texture (inline SVG noise) ──────────────────── */
+
+/* A subtle paper grain that repeats across the card surface.
+   Uses repeating-conic-gradient instead of SVG filter for reliable
+   rendering inside OBS CEF and YouTube's injected DOM context. */
+@keyframes theme-crayon-grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-1px, 1px);
+  }
+  20% {
+    transform: translate(1px, -1px);
+  }
+  30% {
+    transform: translate(-1px, -1px);
+  }
+  40% {
+    transform: translate(1px, 1px);
+  }
+  50% {
+    transform: translate(-1px, 0);
+  }
+  60% {
+    transform: translate(0, 1px);
+  }
+  70% {
+    transform: translate(1px, 0);
+  }
+  80% {
+    transform: translate(0, -1px);
+  }
+  90% {
+    transform: translate(-1px, 0);
+  }
+}
+
+/* ── Theme: Crayon (scoped via .theme-crayon) ────────────────── */
+
+/* Message container — paper card with hand-drawn feel */
+.theme-crayon yt-live-chat-text-message-renderer {
+  /* ── Base Card ────────────────────────────────────────────── */
+  background:
+    /* Paper grain: tiny conic noise dots (subtle texture) */
+    repeating-conic-gradient(rgba(0, 0, 0, 0.025) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px,
+    /* Paper warmth base */ var(--paper-bg, #fdfbf7) !important;
+
+  /* No standard border — we use layered box-shadow for a
+     hand-drawn crayon stroke effect instead */
+  border: none !important;
+
+  border-radius: var(--border-radius-tl, 22px) var(--border-radius-tr, 6px)
+    var(--border-radius-br, 26px) var(--border-radius-bl, 8px) / var(--border-radius-tr-bl, 8px)
+    var(--border-radius-tl-br, 24px) var(--border-radius-bl-tr, 6px)
+    var(--border-radius-br-tl, 22px) !important;
+
+  /* ── Layered Crayon Strokes ─────────────────────────────────
+     Multiple offset box-shadows simulate the uneven layering of
+     crayon on paper — like coloring slightly outside the lines.
+     The stroke color tracks --ink (text color) by default.
+
+     Layer2/layer3 use static RGBA fallbacks instead of color-mix()
+     for OBS CEF compatibility (Chrome 109 — color-mix is 111+).
+     Role overrides already set these per-role with hardcoded RGBA. */
+  --_crayon-stroke: var(--ink, #1a1a1a);
+  --_crayon-layer2: rgba(0, 0, 0, 0.45);
+  --_crayon-layer3: rgba(0, 0, 0, 0.25);
+  box-shadow:
+    /* Layer 1: Main outline stroke — tracks text color */
+    0 0 0 var(--stroke-width, 3px) var(--_crayon-stroke, #1a1a1a),
+    /* Layer 2: Offset crayon overlay at 45% */ -1px 1px 0 calc(var(--stroke-width, 3px) - 1px)
+      var(--_crayon-layer2),
+    /* Layer 3: Opposite offset at 25% for depth */ 1px -0.5px 0
+      calc(var(--stroke-width, 3px) - 1px) var(--_crayon-layer3),
+    /* Layer 4: Hard sticker shadow */ var(--shadow-offset, 3px) var(--shadow-offset, 3px) 0
+      var(--shadow-color, #1a1a1a) !important;
+
+  /* ── Crayon Wax Text Shadow ─────────────────────────────────
+     A subtle red/blue bleed on text gives a waxy crayon feel */
+  --_wax-spread: 1px;
+  text-shadow:
+    calc(var(--_wax-spread) * -1) calc(var(--_wax-spread) * -1) 0 rgba(180, 120, 80, 0.08),
+    var(--_wax-spread) var(--_wax-spread) 0 rgba(100, 120, 180, 0.06) !important;
+
+  /* ── Layout & Typography ──────────────────────────────────── */
+  margin-bottom: var(--chat-message-spacing, 8px) !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  margin-right: 6px !important;
+  padding: var(--chat-padding, 10px 14px) !important;
+  font-family: var(--chat-font-family, 'Gaegu'), cursive !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
+  max-width: var(--chat-max-width, 400px) !important;
+  width: fit-content !important;
+
+  /* ── Animation ─────────────────────────────────────────────── */
+  animation: theme-crayon-in var(--animation-duration, 0.52s) cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  position: relative !important;
+
+  /* Paper grain drift — subtle animation makes the noise texture
+     slowly drift, like looking at paper from different angles */
+  animation:
+    theme-crayon-in var(--animation-duration, 0.52s) cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    theme-crayon-grain 240s linear infinite !important;
+}
+
+/* ── Paper grain overlay (extra texture layer) ───────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: calc(var(--texture-intensity, 50) / 100);
+
+  /* A second grain layer with a different pattern for depth */
+  background-image: repeating-radial-gradient(
+    circle at 1px 1px,
+    rgba(0, 0, 0, 0.03) 0px,
+    transparent 1px
+  ) !important;
+  background-size: 4px 4px !important;
+}
+
+/* ── Avatar ──────────────────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 2px solid var(--_crayon-stroke, #1a1a1a) !important;
+  line-height: 0 !important;
+  margin-top: var(--chat-avatar-vertical-offset, 4px) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.theme-crayon yt-live-chat-text-message-renderer #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* ── Username — hand-drawn Kalam font ────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #author-name {
+  font-family: var(--chat-font-family, 'Kalam'), cursive !important;
+  font-size: var(--usernameFontSize, 15px) !important;
+  font-weight: var(--chat-username-font-weight, 700) !important;
+  color: var(--usernameColor, #1a1a1a) !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  position: relative !important;
+  z-index: 1 !important;
+  animation: theme-crayon-scribble 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+}
+
+/* ── Message text ────────────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer #message {
+  color: var(--ink, #1a1a1a) !important;
+  font-size: var(--messageFontSize, 15px) !important;
+  font-family: var(--chat-font-family, 'Gaegu'), cursive !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  line-height: 1.5 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ── Role Color Overrides ────────────────────────────────────── */
+
+/* Each role gets a warm pastel paper background + saturated crayon ink.
+   We use CSS custom properties to control the stroke and paper colors,
+   so the layered box-shadow system picks them up automatically. */
+
+/* Owner — Crayon Red */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  --paper-bg: var(--owner-bg, #ffeceb);
+  --_crayon-stroke: var(--owner-ink, #ff3b30);
+  --_crayon-layer2: var(--owner-ink-layer2, rgba(255, 59, 48, 0.35));
+  --_crayon-layer3: var(--owner-ink-layer3, rgba(255, 59, 48, 0.2));
+  --_ink: var(--owner-ink, #ff3b30);
+  --usernameColor: var(--owner-username-color, #ff3b30);
+  --shadow-color: var(--ownerShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #message {
+  color: var(--owner-ink, #ff3b30) !important;
+}
+
+/* Moderator — Crayon Green */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  --paper-bg: var(--mod-bg, #e9fbee);
+  --_crayon-stroke: var(--mod-ink, #34c759);
+  --_crayon-layer2: var(--mod-ink-layer2, rgba(52, 199, 89, 0.35));
+  --_crayon-layer3: var(--mod-ink-layer3, rgba(52, 199, 89, 0.2));
+  --_ink: var(--mod-ink, #34c759);
+  --usernameColor: var(--mod-username-color, #34c759);
+  --shadow-color: var(--modShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #message {
+  color: var(--mod-ink, #34c759) !important;
+}
+
+/* Member — Crayon Gold */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='member']
+) {
+  --paper-bg: var(--member-bg, #fff7d6);
+  --_crayon-stroke: var(--member-ink, #e5b800);
+  --_crayon-layer2: var(--member-ink-layer2, rgba(229, 184, 0, 0.35));
+  --_crayon-layer3: var(--member-ink-layer3, rgba(229, 184, 0, 0.2));
+  --_ink: var(--member-ink, #e5b800);
+  --usernameColor: var(--member-username-color, #e5b800);
+  --shadow-color: var(--memberShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #message {
+  color: var(--member-ink, #e5b800) !important;
+}
+
+/* Verified — Crayon Blue */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='verified'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='verified']
+) {
+  --paper-bg: var(--verified-bg, #e6f1ff);
+  --_crayon-stroke: var(--verified-ink, #007aff);
+  --_crayon-layer2: var(--verified-ink-layer2, rgba(0, 122, 255, 0.35));
+  --_crayon-layer3: var(--verified-ink-layer3, rgba(0, 122, 255, 0.2));
+  --_ink: var(--verified-ink, #007aff);
+  --usernameColor: var(--verified-username-color, #007aff);
+  --shadow-color: var(--verifiedShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #message {
+  color: var(--verified-ink, #007aff) !important;
+}
+
+/* Super Chat — Crayon Amber */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  --paper-bg: var(--superchat-bg, #fff3cd);
+  --_crayon-stroke: var(--superchat-ink, #d4a700);
+  --_crayon-layer2: var(--superchat-ink-layer2, rgba(212, 167, 0, 0.35));
+  --_crayon-layer3: var(--superchat-ink-layer3, rgba(212, 167, 0, 0.2));
+  --_ink: var(--superchat-ink, #d4a700);
+  --usernameColor: var(--superchat-username-color, #d4a700);
+  --shadow-color: var(--superchatShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #message {
+  color: var(--superchat-ink, #d4a700) !important;
+}
+
+/* Membership — Forest Green */
+:is(
+  .theme-crayon yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-crayon yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  --paper-bg: var(--membership-bg, #e8f5e9);
+  --_crayon-stroke: var(--membership-ink, #2e7d32);
+  --_crayon-layer2: var(--membership-ink-layer2, rgba(46, 125, 50, 0.35));
+  --_crayon-layer3: var(--membership-ink-layer3, rgba(46, 125, 50, 0.2));
+  --_ink: var(--membership-ink, #2e7d32);
+  --usernameColor: var(--membership-username-color, #2e7d32);
+  --shadow-color: var(--membershipShadow, #1a1a1a);
+}
+:is(
+    .theme-crayon yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-crayon yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #message {
+  color: var(--membership-ink, #2e7d32) !important;
+}
+
+/* ── Chroma Key Support ───────────────────────────────────────── */
+
+.theme-crayon yt-live-chat-text-message-renderer[data-chroma='true'],
+.theme-crayon yt-live-chat-text-message-renderer[data-chroma-key] {
+  --paper-bg: transparent !important;
+  --_crayon-stroke: transparent !important;
+  --_crayon-layer2: transparent !important;
+  --_crayon-layer3: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ── Reduced Motion ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-crayon yt-live-chat-text-message-renderer {
+    animation: none !important;
+    transform: none !important;
+  }
+  .theme-crayon yt-live-chat-text-message-renderer #author-name {
+    animation: none !important;
+  }
+}

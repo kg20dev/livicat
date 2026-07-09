@@ -13,6 +13,10 @@ export interface FontOption {
   value: string
   label: string
   url: string
+  /** For self-hosted fonts (not Google Fonts). When set, this full @font-face CSS
+   *  is emitted instead of `@import url(...)`. The font is loaded via a style tag
+   *  in the preview instead of a <link> tag. */
+  fontFace?: string
 }
 
 export const FONT_OPTIONS: FontOption[] = [
@@ -96,6 +100,48 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Playfair Display',
     url: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap',
   },
+  {
+    value: '"Comic Neue", "Patrick Hand", cursive',
+    label: 'Comic Neue',
+    url: 'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap',
+  },
+  {
+    value: 'Kalam, cursive',
+    label: 'Kalam',
+    url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap',
+  },
+  {
+    value: '"Patrick Hand", cursive',
+    label: 'Patrick Hand',
+    url: 'https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap',
+  },
+  {
+    value: '"Caveat", cursive',
+    label: 'Caveat',
+    url: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap',
+  },
+  {
+    value: '"Coming Soon", cursive',
+    label: 'Coming Soon',
+    url: 'https://fonts.googleapis.com/css2?family=Coming+Soon&display=swap',
+  },
+  {
+    value: 'Chalkiez',
+    label: 'Chalkiez',
+    url: 'https://cdn.jsdelivr.net/gh/kg20dev/font-fc@main/Chalkiez-Font/Chalkiez-Regular.woff2',
+    fontFace: `@font-face {
+  font-family: 'Chalkiez';
+  src: url('https://cdn.jsdelivr.net/gh/kg20dev/font-fc@main/Chalkiez-Font/Chalkiez-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}`,
+  },
+  {
+    value: '"Gaegu", sans-serif',
+    label: 'Gaegu',
+    url: 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap',
+  },
 ]
 
 /* ─── Lookup Helpers ────────────────────────────────────────────────── */
@@ -109,25 +155,43 @@ export function getFontUrl(fontFamily: string): string {
   return font?.url ?? ''
 }
 
+/** Get the @font-face CSS for a self-hosted font, or '' for Google Fonts. */
+export function getFontFace(fontFamily: string): string {
+  const font = FONT_OPTIONS.find((f) => f.value === fontFamily)
+  return font?.fontFace ?? ''
+}
+
 /* ─── Font Loader ───────────────────────────────────────────────────── */
 
 /**
- * Dynamically inject a <link rel="stylesheet"> tag for a Google Font.
- * Skips if the font URL is already present in <head>.
+ * Dynamically inject a font for the live preview.
+ * - Google Fonts: injects a <link rel="stylesheet"> tag.
+ * - Self-hosted fonts: injects a <style> block with @font-face.
  *
- * Call this whenever the user changes the fontFamily setting
- * to ensure the font loads immediately in the preview.
+ * Skips if already loaded.
+ * Call whenever the user changes the fontFamily setting.
  */
 export function loadWebFont(fontFamily: string): void {
-  const url = getFontUrl(fontFamily)
-  if (!url) return
+  const font = FONT_OPTIONS.find((f) => f.value === fontFamily)
+  if (!font) return
 
-  // Check if this font URL is already loaded
-  const existing = document.querySelector(`link[href="${url}"]`)
+  // Self-hosted → inject @font-face via <style> tag
+  if (font.fontFace) {
+    const key = `font-${font.label}`
+    if (document.getElementById(key)) return
+    const style = document.createElement('style')
+    style.id = key
+    style.textContent = font.fontFace
+    document.head.appendChild(style)
+    return
+  }
+
+  // Google Font → inject <link>
+  if (!font.url) return
+  const existing = document.querySelector(`link[href="${font.url}"]`)
   if (existing) return
-
   const link = document.createElement('link')
   link.rel = 'stylesheet'
-  link.href = url
+  link.href = font.url
   document.head.appendChild(link)
 }

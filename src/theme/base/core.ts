@@ -142,6 +142,26 @@ export const CORE_SCHEME: SettingDef[] = [
     default: 0,
     unit: 'px',
   },
+  {
+    key: 'chat-padding',
+    section: 'Common',
+    type: 'range',
+    label: 'Padding',
+    min: 4,
+    max: 30,
+    default: 10,
+    unit: 'px',
+  },
+  {
+    key: 'chat-max-width',
+    section: 'Common',
+    type: 'range',
+    label: 'Max Width',
+    min: 200,
+    max: 800,
+    default: 400,
+    unit: 'px',
+  },
 
   /* ── YouTube ──────────────────────────────────────────── */
   {
