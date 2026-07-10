@@ -24,6 +24,7 @@ use axum::{
     Router,
 };
 use futures_util::stream::{select, unfold, Stream};
+use futures_util::StreamExt;
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
 
@@ -156,6 +157,31 @@ async fn handle_events(
         state.css_updates.receiver_count(),
     );
 
+    // ── History replay (fixes OBS blank-on-launch) ───────────────
+    // When OBS connects, the ring buffer may already contain messages
+    // that were scraped before the SSE client subscribed. The broadcast
+    // channel only delivers messages sent AFTER subscription, so those
+    // would be lost. We replay store.all() (oldest first) as
+    // `__type:"history"` events BEFORE live updates so a freshly-loaded
+    // OBS source shows existing messages immediately, instead of staying
+    // blank until the next new message arrives.
+    //
+    // The client de-dups by message ID (see build_page JS), so messages
+    // already baked into the GET / HTML are skipped — no double-render.
+    let history: Vec<ChatMessage> = state.store.all();
+    let history_count = history.len();
+    let history_stream = futures_util::stream::iter(history.into_iter().map(|msg| {
+        let payload = serde_json::json!({
+            "__type": "history",
+            "data": msg
+        });
+        Ok::<_, Infallible>(
+            Event::default()
+                .event("message")
+                .data(payload.to_string()),
+        )
+    }));
+
     let msg_stream = unfold(msg_rx, |mut rx| async move {
         loop {
             match rx.recv().await {
@@ -200,7 +226,13 @@ async fn handle_events(
         }
     });
 
-    let merged = select(msg_stream, css_stream);
+    // History first, then live (new messages + CSS updates merged).
+    let live = select(msg_stream, css_stream);
+    let merged = history_stream.chain(live);
+
+    log::info!(
+        "[renderer] GET /events — replaying {history_count} history message(s) before live stream"
+    );
 
     Sse::new(merged).keep_alive(KeepAlive::default())
 }
@@ -421,6 +453,109 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     var chat = document.getElementById('livicat-chat');
     if (!chat) return;
 
+    /* Track rendered message IDs to DE-DUPLICATE. The initial page (GET /)
+       bakes existing messages into the HTML, and the SSE stream replays
+       history on connect — without de-dup a message could render twice
+       (once from the baked HTML, once from the replay). Also protects
+       against any duplicate broadcast.
+
+       NOTE: baked-in messages don't carry an id attribute, so we can't
+       seed seenIds from the DOM. Instead the replay is idempotent in the
+       common case: when GET / already rendered the same ring buffer, the
+       replay re-renders the same N messages (a brief duplicate that
+       resolves on the next live message). To fully avoid duplicates, we
+       CLEAR the chat on the first history event and let the replay be the
+       single source of truth (see the history handler below). */
+    var seenIds = new Set();
+    var historyStarted = false;
+
+    function detectRole(msg) {{
+      if (msg.is_super_chat) return 'super-chat';
+      if (msg.is_moderator)  return 'moderator';
+      if (msg.is_member)     return 'member';
+      return 'default';
+    }}
+
+    function setPunctAttr(el, text) {{
+      if (!text) return;
+      var last = text[text.length - 1];
+      if (last === '?' || last === '!') {{
+        el.setAttribute('data-punct', last);
+      }}
+    }}
+
+    /* Render a single message DOM node and append it. Returns true if
+       rendered, false if skipped as a duplicate (by id). */
+    function renderMessage(msg) {{
+      // De-dup by id — skip if already on the page.
+      if (msg.id && seenIds.has(msg.id)) return false;
+      if (msg.id) seenIds.add(msg.id);
+
+      var el = document.createElement('yt-live-chat-text-message-renderer');
+      el.setAttribute('data-role', detectRole(msg));
+
+      /* Author photo (placeholder) */
+      var photo = document.createElement('yt-img-shadow');
+      photo.id = 'author-photo';
+      var img = document.createElement('img');
+      img.id = 'img';
+      img.src = msg.photo || 'about:blank';
+      img.alt = '';
+      photo.appendChild(img);
+      el.appendChild(photo);
+
+      /* Content wrapper */
+      var content = document.createElement('div');
+      content.id = 'content';
+
+      /* Timestamp (hidden by CSS) */
+      var ts = document.createElement('span');
+      ts.id = 'timestamp';
+      ts.textContent = new Date(msg.timestamp_ms).toLocaleTimeString();
+      content.appendChild(ts);
+
+      /* Author chip */
+      var chip = document.createElement('yt-live-chat-author-chip');
+      var name = document.createElement('span');
+      name.id = 'author-name';
+      name.textContent = msg.author;
+      if (msg.author_color) name.style.color = msg.author_color;
+      chip.appendChild(name);
+
+      /* Badges */
+      if (msg.badges && msg.badges.length) {{
+        var badges = document.createElement('span');
+        badges.id = 'chat-badges';
+        msg.badges.forEach(function(url) {{
+          var b = document.createElement('img');
+          b.src = url;
+          b.className = 'badge';
+          badges.appendChild(b);
+        }});
+        chip.appendChild(badges);
+      }}
+      content.appendChild(chip);
+
+      /* before-content-buttons (empty, hidden by CSS) */
+      var bcb = document.createElement('div');
+      bcb.id = 'before-content-buttons';
+      content.appendChild(bcb);
+
+      /* Message */
+      var msgCont = document.createElement('span');
+      msgCont.id = 'message-container';
+      var msgSpan = document.createElement('span');
+      msgSpan.id = 'message';
+      msgSpan.innerHTML = msg.text;
+      setPunctAttr(msgSpan, msg.text);
+      msgCont.appendChild(msgSpan);
+      content.appendChild(msgCont);
+
+      el.appendChild(content);
+      chat.appendChild(el);
+      return true;
+    }}
+
     var source = new EventSource('/events');
     source.addEventListener('message', function(e) {{
       try {{
@@ -459,73 +594,35 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
           return;
         }}
 
-        var el = document.createElement('yt-live-chat-text-message-renderer');
-        el.setAttribute('data-role', detectRole(msg));
-
-        /* Author photo (placeholder) */
-        var photo = document.createElement('yt-img-shadow');
-        photo.id = 'author-photo';
-        var img = document.createElement('img');
-        img.id = 'img';
-        img.src = msg.photo || 'about:blank';
-        img.alt = '';
-        photo.appendChild(img);
-        el.appendChild(photo);
-
-        /* Content wrapper */
-        var content = document.createElement('div');
-        content.id = 'content';
-
-        /* Timestamp (hidden by CSS) */
-        var ts = document.createElement('span');
-        ts.id = 'timestamp';
-        ts.textContent = new Date(msg.timestamp_ms).toLocaleTimeString();
-        content.appendChild(ts);
-
-        /* Author chip */
-        var chip = document.createElement('yt-live-chat-author-chip');
-        var name = document.createElement('span');
-        name.id = 'author-name';
-        name.textContent = msg.author;
-        if (msg.author_color) name.style.color = msg.author_color;
-        chip.appendChild(name);
-
-        /* Badges */
-        if (msg.badges && msg.badges.length) {{
-          var badges = document.createElement('span');
-          badges.id = 'chat-badges';
-          msg.badges.forEach(function(url) {{
-            var b = document.createElement('img');
-            b.src = url;
-            b.className = 'badge';
-            badges.appendChild(b);
+        /* History replay — server re-sends the ring buffer on connect so
+           a freshly-loaded OBS source shows existing messages (fixes the
+           blank-until-next-message bug). On the FIRST history event we
+           clear any messages baked into the GET / HTML so the replay is
+           the single source of truth (no duplicates). renderMessage()
+           also de-dups by id within the batch. After each, scroll to
+           bottom. */
+        if (msg.__type === 'history') {{
+          if (!historyStarted) {{
+            historyStarted = true;
+            // Clear baked-in messages — the replay is authoritative.
+            while (chat.firstChild) chat.removeChild(chat.firstChild);
+            seenIds = new Set();
+          }}
+          renderMessage(msg.data);
+          requestAnimationFrame(function() {{
+            chat.scrollTop = chat.scrollHeight;
           }});
-          chip.appendChild(badges);
+          return;
         }}
-        content.appendChild(chip);
 
-        /* before-content-buttons (empty, hidden by CSS) */
-        var bcb = document.createElement('div');
-        bcb.id = 'before-content-buttons';
-        content.appendChild(bcb);
-
-        /* Message */
-        var msgCont = document.createElement('span');
-        msgCont.id = 'message-container';
-        var msgSpan = document.createElement('span');
-        msgSpan.id = 'message';
-        msgSpan.innerHTML = msg.text;
-        setPunctAttr(msgSpan, msg.text);
-        msgCont.appendChild(msgSpan);
-        content.appendChild(msgCont);
-
-        el.appendChild(content);
-        chat.appendChild(el);
-        // Force scroll to bottom with requestAnimationFrame to ensure
-        // the message is rendered before scrolling
-        requestAnimationFrame(function() {{
-          chat.scrollTop = chat.scrollHeight;
-        }});
+        /* Live chat message */
+        if (renderMessage(msg)) {{
+          // Force scroll to bottom with requestAnimationFrame to ensure
+          // the message is rendered before scrolling
+          requestAnimationFrame(function() {{
+            chat.scrollTop = chat.scrollHeight;
+          }});
+        }}
       }} catch(e) {{
         console.error('[Livicat] SSE parse error:', e);
       }}
@@ -534,21 +631,6 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     source.addEventListener('error', function() {{
       console.warn('[Livicat] SSE connection lost, retrying...');
     }});
-
-    function detectRole(msg) {{
-      if (msg.is_super_chat) return 'super-chat';
-      if (msg.is_moderator)  return 'moderator';
-      if (msg.is_member)     return 'member';
-      return 'default';
-    }}
-
-    function setPunctAttr(el, text) {{
-      if (!text) return;
-      var last = text[text.length - 1];
-      if (last === '?' || last === '!') {{
-        el.setAttribute('data-punct', last);
-      }}
-    }}
   }})();
   </script>
 
@@ -1093,6 +1175,90 @@ body { background: red; }
             "Font family should be present in /current.css"
         );
 
+        handle.shutdown().await;
+    }
+
+    /// Regression test for #208: OBS blank-on-launch.
+    ///
+    /// The bug: messages ingested BEFORE an SSE client connects were
+    /// never delivered over SSE (broadcast only sends post-subscribe),
+    /// so OBS stayed blank until the next live message.
+    ///
+    /// The fix: handle_events replays store.all() as __type:"history"
+    /// events before live updates. This test ingests two messages
+    /// BEFORE opening the SSE connection and asserts both appear in the
+    /// first SSE chunk, tagged as history.
+    #[tokio::test]
+    async fn test_sse_replays_history_on_connect() {
+        let (port, handle) = start_test_renderer().await;
+        let ingest_client = Client::new();
+
+        // Build a real ChatMessage and push it directly to the store
+        // BEFORE any SSE client connects. We POST two via /ingest so they
+        // land in the ring buffer + broadcast (with no subscriber → dropped,
+        // which is exactly the bug scenario).
+        let payload = serde_json::json!([
+            { "author": "PreOne", "text": "before connect 1", "photo": null, "badges": [], "role": "default" },
+            { "author": "PreTwo", "text": "before connect 2", "photo": null, "badges": [], "role": "default" }
+        ]);
+        let resp = ingest_client
+            .post(&format!("http://127.0.0.1:{port}/ingest"))
+            .header("content-type", "text/plain")
+            .body(payload.to_string())
+            .send()
+            .await
+            .expect("POST /ingest should succeed");
+        assert_eq!(resp.status(), 200);
+
+        // Give the store a beat to process.
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+        // NOW open the SSE connection — after messages are in the buffer.
+        let sse_client = Client::builder()
+            .pool_max_idle_per_host(0)
+            .timeout(std::time::Duration::from_secs(8))
+            .build()
+            .unwrap();
+        let mut sse_resp = sse_client
+            .get(&format!("http://127.0.0.1:{port}/events"))
+            .send()
+            .await
+            .expect("SSE connection should succeed");
+        assert_eq!(sse_resp.status(), 200);
+
+        // Read chunks until we've seen BOTH history messages. SSE chunks
+        // arrive incrementally (each event may be its own chunk), so we
+        // accumulate text across a few reads.
+        let mut accumulated = String::new();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            match tokio::time::timeout(remaining, sse_resp.chunk()).await {
+                Ok(Ok(Some(chunk))) => accumulated.push_str(&String::from_utf8_lossy(&chunk)),
+                _ => break,
+            }
+            if accumulated.contains("PreOne") && accumulated.contains("PreTwo") {
+                break;
+            }
+        }
+
+        assert!(
+            accumulated.contains("__type\":\"history\""),
+            "first SSE events should be history replay, got: {accumulated:?}"
+        );
+        assert!(
+            accumulated.contains("PreOne"),
+            "history replay should contain first pre-connect message, got: {accumulated:?}"
+        );
+        assert!(
+            accumulated.contains("PreTwo"),
+            "history replay should contain second pre-connect message, got: {accumulated:?}"
+        );
+
+        drop(sse_resp);
         handle.shutdown().await;
     }
 }
