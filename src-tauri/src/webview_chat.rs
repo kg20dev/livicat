@@ -252,7 +252,7 @@ fn inject_css_to_window(window: &tauri::WebviewWindow, css: &str) -> Result<(), 
 ///   - `__TAURI__` IPC (unavailable on external URLs in Tauri v2)
 ///   - CSP `connect-src` (blocks fetch/XHR/WebSocket)
 ///   - CSP `img-src` (might block `<img>` tag workarounds)
-fn build_observer_script(hide_atsign: bool) -> String {
+pub(crate) fn build_observer_script(hide_atsign: bool) -> String {
     let strip_at_bool = if hide_atsign { "true" } else { "false" };
 
     format!(

@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod windows_webview_tests {
+    use super::strip_js_comments;
     use crate::PreviewState;
     use std::sync::Arc;
     use std::sync::Mutex;
@@ -180,4 +181,122 @@ mod windows_webview_tests {
             script_false
         );
     }
+
+    /// Windows compatibility: the throttle-proof scraper must not depend on
+    /// macOS-specific behavior, and must work alongside WebView2.
+    ///
+    /// Windows uses WebView2 (Chromium), which already disables timer
+    /// throttling via WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS (see lib.rs
+    /// `--disable-background-timer-throttling` / `--disable-backgrounding-
+    /// occluded-windows`). The Rust-driven scraper is a STRICT IMPROVEMENT
+    /// on Windows: the native tokio timer works identically cross-platform,
+    /// and removing the JS timers means capture no longer depends on those
+    /// flags at all. Both layers coexist without conflict.
+    ///
+    /// This test documents the contract: the scraper exposes a Rust-callable
+    /// function (platform-agnostic), and does NOT rely on any JS timer that
+    /// could behave differently per platform.
+    #[test]
+    fn test_scraper_is_cross_platform_compatible() {
+        let scraper = crate::webview_chat::build_observer_script(false);
+
+        // The Rust-driven entry point must exist regardless of platform.
+        assert!(
+            scraper.contains("window.__livicatScrape"),
+            "Windows: scraper must expose window.__livicatScrape (platform-agnostic \
+             native-timer entry point). Got:\n{scraper}"
+        );
+
+        // No platform-specific JS — the scrape function is pure DOM API,
+        // which WebView2 (Chromium) and WKWebView both support identically.
+        assert!(
+            !scraper.contains("webkit") && !scraper.contains("MSWebView"),
+            "Windows: scraper must use only standard DOM APIs (no platform-specific JS)"
+        );
+
+        // The location.hash side-channel works on both engines (it's the
+        // universal History API). This is the data-return path the Rust
+        // loop reads via window.url().fragment().
+        assert!(
+            scraper.contains("location.hash"),
+            "Windows: scraper must use location.hash (universal cross-engine side-channel)"
+        );
+    }
+
+    /// Windows compatibility: eval must never be called before navigation
+    /// completes. WebView2 CRASHES if eval() runs before NavigationCompleted
+    /// (see lib.rs:133). The Rust poll loop that evals __livicatScrape
+    /// starts only AFTER the page-load wait + CSS/observer injection, so
+    /// this constraint is respected. This test documents the ordering
+    /// invariant so a future change doesn't move eval before page load.
+    #[test]
+    fn test_eval_only_after_page_load_documented() {
+        // This is a documentation/contract test — the actual ordering is in
+        // webview_chat.rs::start_webview_chat:
+        //   1. wait for PageLoadEvent::Finished (line ~91)
+        //   2. inject CSS + observer
+        //   3. spawn the eval-driven poll loop (line ~118)
+        // The poll loop is the ONLY place that calls eval on a timer, and
+        // it starts after step 1. If this ordering changes such that eval
+        // runs before navigation completes, WebView2 will crash on Windows.
+        //
+        // The build_observer_script output itself must not SELF-INVOKE the
+        // scrape at injection time — it only DEFINES __livicatScrape. The
+        // Rust timer is the sole caller, and it starts post-load. We check
+        // the script doesn't end by calling the function (which would run
+        // during injection, racing navigation on WebView2).
+        let scraper = crate::webview_chat::build_observer_script(false);
+        // The script is an IIFE; it must NOT contain a top-level call that
+        // executes the scrape immediately. The only legitimate references
+        // are the definition ("= function") and comments. A self-call would
+        // look like "window.__livicatScrape();" as a statement (not in a
+        // comment, not in an assignment).
+        let stripped = strip_js_comments(&scraper);
+        assert!(
+            !stripped.contains("__livicatScrape();"),
+            "the injected script must not self-invoke __livicatScrape() at \
+             injection time — only the Rust timer calls it (after page load), \
+             otherwise a WebView2 crash is possible if injection races \
+             navigation. Got:\n{scraper}"
+        );
+    }
+}
+
+/// Naive JS comment stripper for test assertions — removes // line comments
+/// and /* */ block comments so we can check the script's executable text
+/// without false positives from explanatory comments.
+#[cfg(test)]
+fn strip_js_comments(src: &str) -> String {
+    let mut out = String::with_capacity(src.len());
+    let mut chars = src.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '/' {
+            match chars.peek() {
+                Some('/') => {
+                    // line comment — skip to end of line
+                    for c in chars.by_ref() {
+                        if c == '\n' {
+                            out.push('\n');
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                Some('*') => {
+                    // block comment — skip to */
+                    chars.next();
+                    while let Some(c) = chars.next() {
+                        if c == '*' && chars.peek() == Some(&'/') {
+                            chars.next();
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+        }
+        out.push(c);
+    }
+    out
 }
