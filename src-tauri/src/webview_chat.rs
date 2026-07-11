@@ -107,31 +107,47 @@ pub async fn start_webview_chat(
         .eval(&observer_script)
         .map_err(|e| format!("[webview-chat] Failed to inject observer: {e}"))?;
 
-    log::info!("[webview-chat] Observer injected, chat capture active");
+    log::info!("[webview-chat] Scraper injected, Rust-driven capture active");
 
-    // ── 5. Poll the WebView URL hash for captured data ────────
-    // Reads `location.hash` every 500ms, decodes messages from the
-    // `__livicat=` prefix, and pushes them to the MessageStore.
-    // The hash is cleared after reading to prevent double-processing.
+    // ── 5. Rust-driven poll loop (throttle-proof) ──────────────
+    // The webview's JS timers get suspended by macOS when the off-screen
+    // window is occluded (buried/minimized) — so we can't rely on a
+    // MutationObserver or setInterval inside the webview. Instead, this
+    // NATIVE tokio timer (which is never throttled by window occlusion)
+    // drives capture: each tick we (a) eval __livicatScrape() into the
+    // webview, which scans the DOM and writes new messages to
+    // location.hash, then (b) read the hash back and push to the store.
+    //
+    // window.eval() dispatched from native executes on the JS thread as
+    // a direct dispatch rather than via the throttled timer queue, so
+    // the scrape runs even while the webview would otherwise be paused.
     let window_clone = window.clone();
     let store_clone = store.clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_millis(100));
+        // 150ms cadence — frequent enough to feel live, cheap enough to
+        // be negligible. The webview only re-scans on our cue.
+        let mut interval = tokio::time::interval(Duration::from_millis(150));
         loop {
             interval.tick().await;
 
-            // Read the current URL fragment
+            // (a) Tell the webview to scrape now. This writes any new
+            // messages to location.hash (or queues them if the hash is
+            // still busy from a previous tick). Ignore eval errors —
+            // the window may be closing; we just skip this tick.
+            if window_clone.eval("window.__livicatScrape && window.__livicatScrape();").is_err() {
+                continue;
+            }
+
+            // (b) Read back whatever the scrape wrote.
             let hash = match window_clone.url() {
                 Ok(u) => u.fragment().unwrap_or("").to_string(),
                 Err(_) => continue,
             };
-
-            // Check if our data marker is present
             if !hash.starts_with("__livicat=") {
                 continue;
             }
 
-            // Decode Base64 → UTF-8 string → JSON
+            // Decode Base64 → UTF-8 → JSON
             let encoded = &hash["__livicat=".len()..];
             let decoded_bytes = match base64::engine::general_purpose::STANDARD.decode(encoded) {
                 Ok(b) => b,
@@ -152,11 +168,11 @@ pub async fn start_webview_chat(
                     }
                 }
                 if count > 0 {
-                    log::debug!("[webview-chat] Hash relay: {count} messages");
+                    log::debug!("[webview-chat] Scraped {count} message(s)");
                 }
             }
 
-            // Clear the hash so the observer can write the next batch
+            // Clear the hash so the next scrape can write a fresh batch
             let _ = window_clone.eval("history.replaceState(null, '', location.pathname);");
         }
     });
@@ -241,48 +257,35 @@ fn build_observer_script(hide_atsign: bool) -> String {
 
     format!(
         r#"(function() {{
-  if (window.__livicat_active) return;
+  if (window.__livicat_installed) return; // idempotent — safe to re-inject
+  window.__livicat_installed = true;
 
   var STRIP_AT = {};
 
-  /* ── Pending batch queue (fixes dropped initial/overflow batches) ─
-     The location.hash side-channel can only carry ONE batch at a time:
-     the Rust poll loop reads it (every 100ms) then clears it. The OLD
-     code DROPPED any batch that arrived while the hash was still
-     occupied — which lost the initial message scrape under load and
-     lost bursty new messages. Now we QUEUE batches and a drain timer
-     flushes them one at a time as the hash frees up. Nothing is lost.
+  /* ══ RUST-DRIVEN SCRAPING (throttle-proof) ════════════════════
+     The OLD design ran a MutationObserver + setInterval INSIDE this
+     webview to push messages. But when the off-screen window is
+     occluded/buried, macOS suspends the WKWebView's JS thread — so
+     those timers STOPPED firing and messages stopped reaching OBS
+     ("sometimes works sometimes not").
+
+     The fix: no self-running JS timers. Instead we expose a global
+     __livicatScrape() function and let RUST call it on a native
+     tokio timer (which is never throttled by window occlusion).
+     Each Rust-driven call scans the DOM for messages we haven't sent
+     yet (dedup'd via a fingerprint Set) and writes them to
+     location.hash, which Rust reads back. Initial + incremental
+     messages are handled by the SAME scan — the first call captures
+     everything already in the DOM; later calls capture only new ones.
+
+     Why this beats the observer: window.eval() injected from native
+     executes on the JS thread as a direct dispatch (not via the
+     throttled timer queue), so it runs even when the webview would
+     otherwise be suspended. Native Rust timers are the heartbeat.
   */
-  window.__livicat_pending = []; // queue of batches waiting for the hash
 
-  /* Send the NEXT pending batch if the hash is free. Returns true if
-     it wrote one. Safe to call repeatedly (drains one per call). */
-  function flushPending() {{
-    if (window.__livicat_pending.length === 0) return false;
-    if (location.hash.startsWith('#__livicat=')) return false; // still busy
-    var batch = window.__livicat_pending.shift();
-    if (!batch || batch.length === 0) return false;
-    var json = JSON.stringify(batch);
-    var b64 = btoa(unescape(encodeURIComponent(json)));
-    location.hash = '__livicat=' + b64;
-    return true;
-  }}
-
-  /* Queue a batch and try to send immediately (drains later if busy). */
-  function sendToRust(data) {{
-    if (!data || data.length === 0) return;
-    window.__livicat_pending.push(data);
-    flushPending();
-  }}
-
-  /* ── De-dup: fingerprint set of messages already sent ───────
-     Prevents the SAME message from being sent twice — both the
-     initial scrape AND the MutationObserver can see the same nodes
-     (YouTube re-renders existing rows, and rapid double-fire is
-     common). Fingerprint = author + '\u0001' + text, which is unique
-     enough for chat dedup without needing a DOM id. */
-  window.__livicat_seen = {{}};
-  window.__livicat_counter = 0; // per-page monotonic id for uniqueness
+  var STRIP_AT_LOCAL = STRIP_AT;
+  window.__livicat_seen = {{}}; // fingerprint set: author + separator + text
 
   function isDuplicate(msg) {{
     var key = msg.author + '\u0001' + msg.text;
@@ -291,62 +294,39 @@ fn build_observer_script(hide_atsign: bool) -> String {
     return false;
   }}
 
-  /* ── Extract message from a DOM element ──────────────── */
+  /* ── Role detection (multi-strategy, robust) ───────────── */
+  function detectRoleFromBadges(root) {{
+    if (!root) return '';
+    var badgeEls = root.querySelectorAll(
+      'yt-live-chat-author-badge-renderer, yt-live-chat-author-chip yt-live-chat-author-badge-renderer'
+    );
+    for (var i = 0; i < badgeEls.length; i++) {{
+      var b = badgeEls[i];
+      var icon = b.querySelector('yt-icon');
+      var label = (b.getAttribute('aria-label') || '') + ' ' +
+                  (icon ? (icon.getAttribute('aria-label') || '') : '') + ' ' +
+                  (icon ? (icon.getAttribute('icon') || icon.getAttribute('name') || '') : '');
+      label = label.toLowerCase();
+      if (label.indexOf('owner') >= 0 || label.indexOf('broadcaster') >= 0) return 'owner';
+      if (label.indexOf('moderator') >= 0 || label.indexOf('mod') >= 0) return 'moderator';
+      if (label.indexOf('member') >= 0 || label.indexOf('sponsor') >= 0) return 'member';
+      if (label.indexOf('verified') >= 0) return 'verified';
+    }}
+    return '';
+  }}
+
   function scrapeMessage(el) {{
     var authorEl = el.querySelector('#author-name');
     var msgEl = el.querySelector('#message');
     var photoEl = el.querySelector('#author-photo img');
     var badgesEl = el.querySelector('#chat-badges');
-
-    /* ── Role detection (multi-strategy, robust) ─────────────
-       YouTube exposes a message author's role in several places.
-       We try each in order of reliability so role styling works
-       regardless of which DOM representation the current YouTube
-       build uses:
-
-         1. author-type attribute on the renderer (owner/moderator/
-            member/verified) — the cleanest signal when present.
-         2. Badge iconType / aria-label — infer from the badge's
-            icon. YouTube renders role badges as <yt-icon> with an
-            icon name or an <img> with a recognizable src/alt. This
-            is the same proven approach the WebSocket parser uses.
-         3. data-role attribute — Livicat's own marker, set on
-            demo/rebuilt DOM (not by YouTube natively).
-
-       Previously this ONLY read data-role, which YouTube never sets,
-       so EVERY role was misclassified as default on live chat.
-    */
-    function detectRoleFromBadges(root) {{
-      if (!root) return '';
-      /* yt-live-chat-author-badge-renderer carries the role. Its
-         <yt-icon> child has an aria-label like "Moderator" / "Owner"
-         / "Member", and/or an icon name. Match loosely (lowercase
-         substring) so localized labels resolve correctly. */
-      var badgeEls = root.querySelectorAll(
-        'yt-live-chat-author-badge-renderer, yt-live-chat-author-chip yt-live-chat-author-badge-renderer'
-      );
-      for (var i = 0; i < badgeEls.length; i++) {{
-        var b = badgeEls[i];
-        var icon = b.querySelector('yt-icon');
-        var label = (b.getAttribute('aria-label') || '') + ' ' +
-                    (icon ? (icon.getAttribute('aria-label') || '') : '') + ' ' +
-                    (icon ? (icon.getAttribute('icon') || icon.getAttribute('name') || '') : '');
-        label = label.toLowerCase();
-        if (label.indexOf('owner') >= 0 || label.indexOf('broadcaster') >= 0) return 'owner';
-        if (label.indexOf('moderator') >= 0 || label.indexOf('mod') >= 0) return 'moderator';
-        if (label.indexOf('member') >= 0 || label.indexOf('sponsor') >= 0) return 'member';
-        if (label.indexOf('verified') >= 0) return 'verified';
-      }}
-      return '';
-    }}
-
     var role =
       el.getAttribute('author-type') ||
       detectRoleFromBadges(el) ||
       el.getAttribute('data-role') ||
       '';
     var author = authorEl ? authorEl.textContent.trim() : '';
-    if (STRIP_AT && author.charAt(0) === '@') {{
+    if (STRIP_AT_LOCAL && author.charAt(0) === '@') {{
       author = author.substring(1);
     }}
     return {{
@@ -358,47 +338,57 @@ fn build_observer_script(hide_atsign: bool) -> String {
     }};
   }}
 
-  /* ── Wait for chat to be ready, then activate ─────────── */
-  function init() {{
-    if (!document.querySelector('yt-live-chat-text-message-renderer')) {{
-      setTimeout(init, 500);
-      return;
-    }}
+  /* ── The function Rust calls each tick ───────────────────
+     Scans the whole chat, collects NEW (unseen) messages, and writes
+     them to location.hash for Rust to read. If the hash is still
+     occupied by a previous unread batch, it does NOT block — it
+     queues to window.__livicat_pending and a subsequent call (or the
+     pending-flush below) drains it. Returns the number written.
 
-    window.__livicat_active = true;
-    console.log('[Livicat] Chat detected, observer active');
+     This handles BOTH initial load (first call sees all existing
+     messages) and incremental updates (later calls see only new ones)
+     via the same dedup'd full scan. */
+  window.__livicat_pending = [];
 
-    /* Scrape existing messages — de-dup as we go */
-    var existing = [];
-    document.querySelectorAll('yt-live-chat-text-message-renderer').forEach(function(el) {{
-      var m = scrapeMessage(el);
-      if (!isDuplicate(m)) existing.push(m);
-    }});
-    sendToRust(existing);
-
-    /* MutationObserver for new messages */
-    window.__livicat_observer = new MutationObserver(function(mutations) {{
-      mutations.forEach(function(mut) {{
-        if (!mut.addedNodes) return;
-        for (var i = 0; i < mut.addedNodes.length; i++) {{
-          var node = mut.addedNodes[i];
-          if (node.nodeType !== 1) continue;
-          if (node.tagName === 'YT-LIVE-CHAT-TEXT-MESSAGE-RENDERER') {{
-            var m = scrapeMessage(node);
-            if (!isDuplicate(m)) sendToRust([m]);
-          }}
-        }}
-      }});
-    }});
-    window.__livicat_observer.observe(document.documentElement, {{ childList: true, subtree: true }});
-
-    /* Drain pending queue every 50ms — flushes batches as the hash
-       frees up (Rust clears it every 100ms). Faster than the Rust
-       poll so we catch a free slot promptly. */
-    setInterval(flushPending, 50);
+  function flushPending() {{
+    if (window.__livicat_pending.length === 0) return 0;
+    if (location.hash.indexOf('#__livicat=') === 0) return 0; // still busy
+    var batch = window.__livicat_pending.shift();
+    if (!batch || batch.length === 0) return 0;
+    var json = JSON.stringify(batch);
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    location.hash = '__livicat=' + b64;
+    return batch.length;
   }}
 
-  init();
+  /* Rust invokes this directly via window.eval on a native timer. */
+  window.__livicatScrape = function() {{
+    // First, drain anything queued from a previous busy-hash tick.
+    var flushed = flushPending();
+
+    // Full DOM scan for new messages.
+    var fresh = [];
+    var nodes = document.querySelectorAll('yt-live-chat-text-message-renderer');
+    for (var i = 0; i < nodes.length; i++) {{
+      var m = scrapeMessage(nodes[i]);
+      if (!isDuplicate(m)) fresh.push(m);
+    }}
+
+    if (fresh.length === 0) return flushed;
+
+    // Try to write immediately; if the hash is busy, queue for next tick.
+    if (location.hash.indexOf('#__livicat=') === 0) {{
+      window.__livicat_pending.push(fresh);
+    }} else {{
+      var json = JSON.stringify(fresh);
+      var b64 = btoa(unescape(encodeURIComponent(json)));
+      location.hash = '__livicat=' + b64;
+      flushed += fresh.length;
+    }}
+    return flushed;
+  }};
+
+  console.log('[Livicat] Rust-driven scraper installed (no JS timers)');
 }})();"#,
         strip_at_bool,
     )
