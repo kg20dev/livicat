@@ -142,6 +142,16 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Gaegu',
     url: 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap',
   },
+  {
+    value: '"Press Start 2P", cursive',
+    label: 'Press Start 2P',
+    url: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap',
+  },
+  {
+    value: '"Pixelify Sans", cursive',
+    label: 'Pixelify Sans',
+    url: 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap',
+  },
 ]
 
 /* ─── Lookup Helpers ────────────────────────────────────────────────── */

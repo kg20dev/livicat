@@ -1,0 +1,370 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Block Chat Theme — scoped CSS for YouTube Live Chat          ║
+   ║                                                                ║
+   ║  Authentic Minecraft chat aesthetic. The look comes from a few  ║
+   ║  signature details, not visual noise:                          ║
+   ║                                                                ║
+   ║    1. TRANSLUCENT rows — text floats over a dim backdrop, not  ║
+   ║       an opaque card. Real MC chat is see-through.             ║
+   ║    2. THE TEXT-SHADOW — every glyph gets a hard 2px 2px #000   ║
+   ║       drop shadow with zero blur. This single effect is what   ║
+   ║       makes text read as "Minecraft".                          ║
+   ║    3. ONE readable pixel font (Pixelify Sans) for everything.   ║
+   ║    4. BRIGHT Minecraft color codes for usernames — gold, aqua, ║
+   ║       red, green — not washed-out pastels.                     ║
+   ║    5. Restraint. No heavy grain, no marquee, no bevel spam.    ║
+   ║                                                                ║
+   ║  ╔══════════════════════════════════════════════════════════╗   ║
+   ║  ║  CRITICAL RULE: If an element uses `transform` in       ║   ║
+   ║  ║  @keyframes, its base CSS must NOT have `!important`    ║   ║
+   ║  ║  on `transform`. CSS spec says keyframe declarations    ║   ║
+   ║  ║  can NEVER override `!important` — the animation        ║   ║
+   ║  ║  silently degrades to opacity-only.                     ║   ║
+   ║  ╚══════════════════════════════════════════════════════════╝   ║
+   ║                                                                ║
+   ║  CEF-109 (OBS) safe: no color-mix(), no @import.              ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-block stripped before YouTube injection.        ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Animation Keyframes ─────────────────────────────────────── */
+
+/* Note: Pixelify Sans is loaded via the font pipeline (fonts.ts +
+   buildCSSVariables), not a hardcoded @import here — the theme CSS is
+   concatenated AFTER reset.css rules, leaving @import in an invalid
+   position (must precede all rules → browser silently drops it). */
+
+/* Fade-up-in: a subtle vertical rise + fade. Minecraft chat lines
+   appear by rising into place from below the fold. Kept gentle so a
+   fast chat doesn't feel jittery. The rise distance is driven by the
+   --drop-bounce setting (Rise Amount slider). */
+@keyframes theme-block-in {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--drop-bounce, 6px));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Grass sway — a gentle horizontal + skew wobble that makes the top
+   pixel-grass strip look like it's blowing in the wind. Subtle so it
+   doesn't distract: ~2px sway, ~3deg skew, slow 3.5s loop.
+   Gated on --animation-duration so it stops when Animation Speed=none. */
+@keyframes theme-block-grass {
+  0%,
+  100% {
+    transform: translateX(0) skewX(0deg);
+  }
+  50% {
+    transform: translateX(-2px) skewX(-3deg);
+  }
+}
+
+/* ── Theme: Block (scoped via .theme-block) ──────────────────── */
+
+/* Message row — translucent, full-width, no floating card.
+   reset.css already sets display:flex / row on the renderer. */
+.theme-block yt-live-chat-text-message-renderer {
+  /* ── Translucent backdrop ──────────────────────────────────── */
+  /* Real Minecraft chat floats over the world on a semi-transparent
+     dark pane — NOT an opaque card. We keep the row mostly transparent
+     so the stream shows through, with just enough darkening for text
+     legibility. The stone-bg var carries a user-tunable tint. */
+  background: var(--stone-bg, rgba(0, 0, 0, 0.35)) !important;
+
+  /* No border, no rounded corners, no bevel — flat translucent pane. */
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  /* ── Layout (full-width row) ───────────────────────────────── */
+  margin-bottom: 1px !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  margin-right: 0 !important;
+  /* Top padding reserves room for the grass strip so it never covers
+     the message content; bottom keeps the slim chat-row density. */
+  padding: calc(4px + var(--grass-height, 4px)) 8px 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 6px !important;
+  align-items: center !important;
+
+  /* ── Typography ────────────────────────────────────────────── */
+  /* ONE readable pixel font for the whole row. Pixelify Sans is far
+     more legible at small sizes than Press Start 2P, and keeps the
+     row visually unified (two pixel fonts looked inconsistent). */
+  font-family: var(--chat-font-family, 'Pixelify Sans'), monospace !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
+
+  /* ── Animation ─────────────────────────────────────────────── */
+  position: relative !important;
+  animation: theme-block-in var(--animation-duration, 0.4s) ease-out both !important;
+
+  /* Message text color — neutral white (like real MC default chat);
+     roles only tint the username so the body stays readable. */
+  --_block-ink: var(--stone-ink, #ffffff);
+}
+
+/* ── Optional pixel grain overlay ────────────────────────────── */
+/* Driven by the --grain-intensity setting (Pixel Grain slider).
+   Off by default (0%): the theme ships clean. Raising it adds a
+   subtle stone/pixel texture to the rows — a static 2px grid of
+   darkened dots that reads as a rough block surface. */
+.theme-block yt-live-chat-text-message-renderer::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: calc(var(--grain-intensity, 0) / 100);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.12) 0,
+      rgba(0, 0, 0, 0.12) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.12) 0,
+      rgba(0, 0, 0, 0.12) 1px,
+      transparent 1px,
+      transparent 2px
+    ) !important;
+}
+
+/* ── Procedural pixel-grass (animated top strip) ────────────── */
+/* Driven by --grass-height (Grass Height slider). 0 = hidden.
+   The grass is a tiny inline SVG pixel-art data URI — a 6px tile
+   with blades of varying height in two greens sitting on a darker
+   soil base. It repeats across the full row width, sits flush on the
+   top edge, and sways via theme-block-grass. Generated in code only,
+   no asset file shipped (matches the theme's no-asset approach).
+
+   NO OVERLAP: the strip lives INSIDE the row box (top:0) in the
+   padding-top space reserved by the renderer rule. It never extends
+   above the row, so it can't be clipped by or render over the
+   message above. height:var(--grass-height) sets the strip size; when
+   0 the element collapses and the sway animation has nothing to move. */
+.theme-block yt-live-chat-text-message-renderer::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: var(--grass-height, 4px) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  image-rendering: pixelated !important;
+  background-repeat: repeat-x !important;
+  background-size: 12px 100% !important;
+  background-position: top !important;
+  /* Inline SVG pixel grass — 12×4 grid, 9 blades per tile for a dense,
+     lush look (1.5x blade density over the old 6px/3-blade tile).
+     Three green tones give depth: #7dc842 highlight, #5fb84a mid,
+     #3a8c2a deep. Heights vary 1-4px so it reads like real grass, not
+     a ruler. Sits on a soil base #5a3a1b. */
+  background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%224%22%20shape-rendering%3D%22crispEdges%22%3E%3Crect%20width%3D%2212%22%20height%3D%224%22%20fill%3D%22%235a3a1b%22%2F%3E%3Crect%20x%3D%220%22%20width%3D%221%22%20height%3D%222%22%20fill%3D%22%235fb84a%22%2F%3E%3Crect%20x%3D%221%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%233a8c2a%22%2F%3E%3Crect%20x%3D%222%22%20width%3D%221%22%20height%3D%223%22%20fill%3D%22%237dc842%22%2F%3E%3Crect%20x%3D%223%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%235fb84a%22%2F%3E%3Crect%20x%3D%224%22%20width%3D%221%22%20height%3D%222%22%20fill%3D%22%233a8c2a%22%2F%3E%3Crect%20x%3D%225%22%20width%3D%221%22%20height%3D%224%22%20fill%3D%22%237dc842%22%2F%3E%3Crect%20x%3D%226%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%235fb84a%22%2F%3E%3Crect%20x%3D%227%22%20width%3D%221%22%20height%3D%222%22%20fill%3D%22%233a8c2a%22%2F%3E%3Crect%20x%3D%228%22%20width%3D%221%22%20height%3D%223%22%20fill%3D%22%235fb84a%22%2F%3E%3Crect%20x%3D%229%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%237dc842%22%2F%3E%3Crect%20x%3D%2210%22%20width%3D%221%22%20height%3D%222%22%20fill%3D%22%233a8c2a%22%2F%3E%3Crect%20x%3D%2211%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%235fb84a%22%2F%3E%3C%2Fsvg%3E') !important;
+  /* Wind sway — gated on --animation-duration (0s when Speed=none). */
+  animation: theme-block-grass calc(var(--animation-duration, 0.4s) * 9) ease-in-out infinite !important;
+}
+
+/* ── Avatar (inline mini pixel sprite) ───────────────────────── */
+
+.theme-block yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  width: var(--avatarSize, 24px) !important;
+  height: var(--avatarSize, 24px) !important;
+  /* Corner radius driven by --block-corner (Corner Radius slider).
+     0 = square (authentic), raise to soften the avatar. */
+  border-radius: var(--block-corner, 0px) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(0, 0, 0, 0.6) !important;
+  /* Solid pixel shadow for depth. */
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5) !important;
+  line-height: 0 !important;
+  margin-top: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.theme-block yt-live-chat-text-message-renderer #author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  /* THE 8-bit signature on the avatar: no anti-aliasing. */
+  image-rendering: pixelated !important;
+}
+
+/* ── Content column → single inline row ──────────────────────── */
+/* reset.css sets #content to flex column; we flip it to row so the
+   username and message sit on one line (in-game chat style). */
+.theme-block yt-live-chat-text-message-renderer #content {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ── Username — role-tinted, with the signature MC text-shadow ── */
+/* THE detail that sells the look: a hard 2px 2px black drop shadow
+   with zero blur. Minecraft renders every glyph this way — it's what
+   makes text legible over any background and gives it that crisp
+   pixel-game feel. We apply it here AND on #message below. */
+.theme-block yt-live-chat-text-message-renderer #author-name {
+  font-family: var(--chat-font-family, 'Pixelify Sans'), monospace !important;
+  font-size: var(--usernameFontSize, 16px) !important;
+  font-weight: 700 !important;
+  color: var(--usernameColor, #ffd83d) !important;
+  /* Shadow depth driven by --shadow-depth (Shadow Depth slider).
+     0 = flat, 2 = authentic Minecraft, 4 = heavy chunky. */
+  text-shadow: var(--shadow-depth, 2px) var(--shadow-depth, 2px) 0 #000 !important;
+  display: inline-block !important;
+  line-height: 1.2 !important;
+  /* Username never truncates — takes its natural width. */
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  z-index: 1 !important;
+  /* Suffix "> " via pseudo-element — mimics the <name> chat format. */
+}
+
+.theme-block yt-live-chat-text-message-renderer #author-name::after {
+  content: '> ' !important;
+  color: #ffffff !important;
+  text-shadow: var(--shadow-depth, 2px) var(--shadow-depth, 2px) 0 #000 !important;
+}
+
+/* ── Message text — wraps, clamped to N lines ───────────────── */
+/* #content prefix matches reset.css specificity so our rule wins.
+
+   LINE-CLAMP: long messages are capped to a few lines then show an
+   ellipsis (…). This keeps rows bounded so a wall-of-text message
+   can't push newer messages off the overlay in a fast live chat.
+   ~95% of real chat messages fit within 3 lines, so the cap is rarely
+   seen. -webkit-line-clamp is supported since Chrome 6 (CEF 109 safe).
+
+   Note: line-clamp REQUIRES display:-webkit-box + -webkit-box-orient
+   + overflow:hidden. white-space:pre-wrap must be dropped (it's
+   incompatible with the box clamp) — wrapping still happens via
+   word-break + overflow-wrap. */
+.theme-block yt-live-chat-text-message-renderer #content #message {
+  color: var(--_block-ink, #ffffff) !important;
+  font-size: var(--messageFontSize, 16px) !important;
+  font-family: var(--chat-font-family, 'Pixelify Sans'), monospace !important;
+  font-weight: var(--chat-message-font-weight, 700) !important;
+  line-height: 1.3 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
+  /* THE signature MC text-shadow — depth driven by --shadow-depth. */
+  text-shadow: var(--shadow-depth, 2px) var(--shadow-depth, 2px) 0 #000 !important;
+  /* Take the remaining space after the username. */
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  /* Line-clamp box model — REQUIRED trio for -webkit-line-clamp. */
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 3 !important;
+  overflow: hidden !important;
+  /* Wrapping within the column (replaces the pre-wrap we dropped). */
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ── Role Color Overrides (fully synced with core settings) ──── */
+/* Each role maps THREE core settings to the row:
+     --*-bg        (core "Bubble Background") → row --stone-bg
+     --*-ink       (core "Role Text")         → message body --_block-ink
+     --*-username-color (core "* Username")   → username --usernameColor
+   The CSS vars above are emitted by buildCSSVariables from the user's
+   Role Colors settings (see block/scheme.ts coreCssVarMap). Fallbacks
+   use Minecraft's bright color codes (§6 gold, §b aqua, §a green, …)
+   so the look is on-brand even at default core values.
+
+   BACKGROUND SYNC NOTE: Block rows are translucent for overlay use,
+   but we still honor the user's chosen role hue. We can't use
+   color-mix() (CEF 109), so for the default translucent rows we layer
+   the role bg at low opacity via rgba() fallbacks. When the user picks
+   a role background, that hex is applied directly (their explicit
+   choice wins — correct sync behavior). */
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  --usernameColor: var(--owner-username-color, #ffaa00);
+  --_block-ink: var(--owner-ink, #ffd9a0);
+  --stone-bg: var(--owner-bg, rgba(255, 170, 0, 0.18));
+}
+
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  --usernameColor: var(--mod-username-color, #55ffff);
+  --_block-ink: var(--mod-ink, #b8ffff);
+  --stone-bg: var(--mod-bg, rgba(85, 255, 255, 0.15));
+}
+
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='member']
+) {
+  --usernameColor: var(--member-username-color, #55ff55);
+  --_block-ink: var(--member-ink, #b8ffb8);
+  --stone-bg: var(--member-bg, rgba(85, 255, 85, 0.15));
+}
+
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='verified'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='verified']
+) {
+  --usernameColor: var(--verified-username-color, #ff55ff);
+  --_block-ink: var(--verified-ink, #ffb8ff);
+  --stone-bg: var(--verified-bg, rgba(255, 85, 255, 0.15));
+}
+
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  --usernameColor: var(--superchat-username-color, #ffff55);
+  --_block-ink: var(--superchat-ink, #ffffcc);
+  /* Superchat stands out with a warmer golden backdrop. */
+  --stone-bg: var(--superchat-bg, rgba(255, 215, 0, 0.3));
+}
+
+:is(
+  .theme-block yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-block yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  --usernameColor: var(--membership-username-color, #55ff55);
+  --_block-ink: var(--membership-ink, #b8ffb8);
+  --stone-bg: var(--membership-bg, rgba(0, 255, 102, 0.22));
+}
+
+/* ── Chroma Key Support ───────────────────────────────────────── */
+
+.theme-block yt-live-chat-text-message-renderer[data-chroma='true'],
+.theme-block yt-live-chat-text-message-renderer[data-chroma-key] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── Reduced Motion ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-block yt-live-chat-text-message-renderer,
+  .theme-block yt-live-chat-text-message-renderer::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
