@@ -297,7 +297,15 @@ fn build_observer_script(hide_atsign: bool) -> String {
     var msgEl = el.querySelector('#message');
     var photoEl = el.querySelector('#author-photo img');
     var badgesEl = el.querySelector('#chat-badges');
-    var role = el.getAttribute('data-role') || '';
+    /* Role: read YouTube's NATIVE author-type attribute (owner /
+       moderator / member / verified), which is what the real YouTube
+       DOM sets. Fall back to Livicat's data-role (set on demo/rebuilt
+       DOM). Previously this ONLY read data-role, which YouTube never
+       sets — so every role was misclassified as default on live chat. */
+    var role =
+      el.getAttribute('author-type') ||
+      el.getAttribute('data-role') ||
+      '';
     var author = authorEl ? authorEl.textContent.trim() : '';
     if (STRIP_AT && author.charAt(0) === '@') {{
       author = author.substring(1);

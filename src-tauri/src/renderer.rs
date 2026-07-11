@@ -470,6 +470,7 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
     var historyStarted = false;
 
     function detectRole(msg) {{
+      if (msg.is_owner)      return 'owner';
       if (msg.is_super_chat) return 'super-chat';
       if (msg.is_moderator)  return 'moderator';
       if (msg.is_member)     return 'member';
