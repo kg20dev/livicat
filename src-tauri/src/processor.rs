@@ -266,6 +266,17 @@ pub fn parse_dom_message(json: &str) -> Option<ChatMessage> {
         None
     };
 
+    // Diagnostic: log non-default role detection so we can confirm at
+    // runtime whether roles are being captured from the YouTube DOM.
+    // (Default-role messages are far more common, so we skip logging
+    // those to avoid spamming.)
+    if !entry.role.is_empty() && entry.role != "default" {
+        log::info!(
+            "[processor] Role detected: '{}' for author '{}' → owner={} mod={} member={} super={}",
+            entry.role, entry.author, is_owner, is_moderator, is_member, is_super_chat
+        );
+    }
+
     // Unique ID: timestamp + monotonic counter. The counter guarantees
     // uniqueness even when many messages are parsed in the same millisecond
     // (common during the initial scrape of existing chat messages).

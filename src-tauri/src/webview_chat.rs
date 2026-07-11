@@ -297,13 +297,52 @@ fn build_observer_script(hide_atsign: bool) -> String {
     var msgEl = el.querySelector('#message');
     var photoEl = el.querySelector('#author-photo img');
     var badgesEl = el.querySelector('#chat-badges');
-    /* Role: read YouTube's NATIVE author-type attribute (owner /
-       moderator / member / verified), which is what the real YouTube
-       DOM sets. Fall back to Livicat's data-role (set on demo/rebuilt
-       DOM). Previously this ONLY read data-role, which YouTube never
-       sets — so every role was misclassified as default on live chat. */
+
+    /* ── Role detection (multi-strategy, robust) ─────────────
+       YouTube exposes a message author's role in several places.
+       We try each in order of reliability so role styling works
+       regardless of which DOM representation the current YouTube
+       build uses:
+
+         1. author-type attribute on the renderer (owner/moderator/
+            member/verified) — the cleanest signal when present.
+         2. Badge iconType / aria-label — infer from the badge's
+            icon. YouTube renders role badges as <yt-icon> with an
+            icon name or an <img> with a recognizable src/alt. This
+            is the same proven approach the WebSocket parser uses.
+         3. data-role attribute — Livicat's own marker, set on
+            demo/rebuilt DOM (not by YouTube natively).
+
+       Previously this ONLY read data-role, which YouTube never sets,
+       so EVERY role was misclassified as default on live chat.
+    */
+    function detectRoleFromBadges(root) {{
+      if (!root) return '';
+      /* yt-live-chat-author-badge-renderer carries the role. Its
+         <yt-icon> child has an aria-label like "Moderator" / "Owner"
+         / "Member", and/or an icon name. Match loosely (lowercase
+         substring) so localized labels resolve correctly. */
+      var badgeEls = root.querySelectorAll(
+        'yt-live-chat-author-badge-renderer, yt-live-chat-author-chip yt-live-chat-author-badge-renderer'
+      );
+      for (var i = 0; i < badgeEls.length; i++) {{
+        var b = badgeEls[i];
+        var icon = b.querySelector('yt-icon');
+        var label = (b.getAttribute('aria-label') || '') + ' ' +
+                    (icon ? (icon.getAttribute('aria-label') || '') : '') + ' ' +
+                    (icon ? (icon.getAttribute('icon') || icon.getAttribute('name') || '') : '');
+        label = label.toLowerCase();
+        if (label.indexOf('owner') >= 0 || label.indexOf('broadcaster') >= 0) return 'owner';
+        if (label.indexOf('moderator') >= 0 || label.indexOf('mod') >= 0) return 'moderator';
+        if (label.indexOf('member') >= 0 || label.indexOf('sponsor') >= 0) return 'member';
+        if (label.indexOf('verified') >= 0) return 'verified';
+      }}
+      return '';
+    }}
+
     var role =
       el.getAttribute('author-type') ||
+      detectRoleFromBadges(el) ||
       el.getAttribute('data-role') ||
       '';
     var author = authorEl ? authorEl.textContent.trim() : '';
