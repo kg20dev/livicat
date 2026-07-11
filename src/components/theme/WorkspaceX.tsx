@@ -1253,10 +1253,16 @@ function WorkspaceBody({
                       urlError ? 'border-red-500/50' : 'border-outline-variant'
                     } ${responsive.isPortrait ? 'flex-1' : 'w-48'}`}
                   />
+                  {/* YouTube preview button — hidden (#210): the red YouTube-logo
+                      button next to the URL input was visually noisy; StreamSender
+                      covers the primary stream/OBS flow. Kept in the tree (not
+                      deleted) so handleYoutubePreview stays reachable — remove the
+                      `hidden` class to restore it. Layout-safe: the input + sender
+                      reflow with gap-2. */}
                   <button
                     onClick={handleYoutubePreview}
                     disabled={!videoId}
-                    className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
+                    className={`hidden p-1.5 rounded-md transition-colors flex items-center gap-1 ${
                       videoId
                         ? 'bg-red-600 text-white hover:bg-red-700'
                         : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
