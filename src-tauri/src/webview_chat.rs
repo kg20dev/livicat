@@ -393,3 +393,168 @@ fn build_observer_script(hide_atsign: bool) -> String {
         strip_at_bool,
     )
 }
+
+// ─── Tests ─────────────────────────────────────────────────────────
+//
+// These tests verify the throttle-proof scraping design (the fix for
+// messages stopping when the webview window is occluded/buried on macOS).
+// They inspect the generated observer script's structure — a real webview
+// requires a full Tauri environment, but the script is a generated string
+// whose invariants we can assert directly.
+//
+// The core contract being guarded:
+//   1. NO self-running JS timers (setInterval / MutationObserver) — these
+//      are what macOS suspends when the window is occluded, which caused
+//      the "sometimes works sometimes not" bug.
+//   2. A single window.__livicatScrape() function that Rust drives via
+//      eval on a native tokio timer.
+//   3. Dedup so the full-DOM scan doesn't re-send messages each tick.
+#[cfg(test)]
+mod tests {
+    use super::build_observer_script;
+
+    /// Returns the script body with the IIFE wrapper, for substring checks.
+    fn script(hide_atsign: bool) -> String {
+        build_observer_script(hide_atsign)
+    }
+
+    // ── The critical fix: no self-running JS timers ──────────────
+
+    /// Regression guard for the occlusion bug: the scrape script MUST NOT
+    /// CALL setInterval. setInterval runs inside the webview's JS thread,
+    /// which macOS suspends when the off-screen window is occluded. If this
+    /// test fails, someone reintroduced a JS-driven heartbeat and messages
+    /// will stall again when the window is buried.
+    ///
+    /// We match the CALL pattern `setInterval(` rather than the bare word,
+    /// because the script's explanatory comments legitimately mention
+    /// setInterval by name.
+    #[test]
+    fn test_scrape_script_does_not_call_set_interval() {
+        let s = script(false);
+        assert!(
+            !s.contains("setInterval("),
+            "scrape script must not call setInterval( — it gets suspended by \
+             macOS window occlusion, reintroducing the stalling bug. Got:\n{s}"
+        );
+    }
+
+    /// Regression guard for the occlusion bug: the scrape script MUST NOT
+    /// construct a MutationObserver to drive capture. Like setInterval, it
+    /// runs inside the (throttleable) webview JS thread.
+    #[test]
+    fn test_scrape_script_has_no_mutation_observer_for_capture() {
+        let s = script(false);
+        assert!(
+            !s.contains("new MutationObserver("),
+            "scrape script must not construct a MutationObserver to capture \
+             messages — it gets suspended by macOS window occlusion. Got:\n{s}"
+        );
+    }
+
+    // ── The replacement mechanism: Rust-driven scrape ────────────
+
+    /// The script MUST expose window.__livicatScrape as a function — this
+    /// is what the Rust poll loop evals each tick. Without it, Rust has no
+    /// scrape entry point and capture silently does nothing.
+    #[test]
+    fn test_exposes_livicat_scrape_function() {
+        let s = script(false);
+        assert!(
+            s.contains("window.__livicatScrape"),
+            "scrape script must expose window.__livicatScrape for the Rust \
+             timer to eval. Got:\n{s}"
+        );
+        assert!(
+            s.contains("window.__livicatScrape = function"),
+            "__livicatScrape must be assigned a function. Got:\n{s}"
+        );
+    }
+
+    /// The scrape function MUST do a full-DOM scan via querySelectorAll on
+    /// the message renderer — this is how a single function handles both
+    /// initial load (all existing messages) and incremental updates (only
+    /// new ones since last scan). If this regresses to only-scraping-new-
+    /// nodes, the initial message batch is lost.
+    #[test]
+    fn test_scrape_does_full_dom_scan() {
+        let s = script(false);
+        assert!(
+            s.contains("querySelectorAll('yt-live-chat-text-message-renderer'"),
+            "scrape must scan the full DOM for message elements each tick. Got:\n{s}"
+        );
+    }
+
+    /// Dedup MUST be present so the full-DOM scan doesn't re-send every
+    /// message on every tick (which would flood the store + OBS with
+    /// duplicates). Guards the __livicat_seen fingerprint set.
+    #[test]
+    fn test_scrape_dedups_seen_messages() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_seen"),
+            "scrape must maintain a __livicat_seen dedup set. Got:\n{s}"
+        );
+        assert!(
+            s.contains("isDuplicate"),
+            "scrape must call isDuplicate before sending. Got:\n{s}"
+        );
+    }
+
+    /// The pending-batch queue MUST be present so that when location.hash
+    /// is still occupied (Rust hasn't cleared the previous batch), a scrape
+    /// queues its fresh messages instead of dropping them.
+    #[test]
+    fn test_scrape_has_pending_queue_for_busy_hash() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_pending"),
+            "scrape must keep a __livicat_pending queue for the busy-hash case. Got:\n{s}"
+        );
+    }
+
+    // ── Configuration embedding ─────────────────────────────────
+
+    /// The hide_atsign flag must be embedded as a JS boolean. If it's
+    /// emitted as a Rust string or number, @-stripping silently misbehaves.
+    #[test]
+    fn test_hide_atsign_embedded_as_boolean() {
+        let on = script(true);
+        assert!(
+            on.contains("var STRIP_AT = true"),
+            "hide_atsign=true must emit 'var STRIP_AT = true'. Got:\n{on}"
+        );
+        let off = script(false);
+        assert!(
+            off.contains("var STRIP_AT = false"),
+            "hide_atsign=false must emit 'var STRIP_AT = false'. Got:\n{off}"
+        );
+    }
+
+    // ── Role detection structure ────────────────────────────────
+
+    /// The scrape MUST attempt author-type (YouTube's native attribute)
+    /// for role detection — reading data-role alone (the old, broken
+    /// behavior) classified every message as default on live chat.
+    #[test]
+    fn test_role_detection_reads_author_type() {
+        let s = script(false);
+        assert!(
+            s.contains("getAttribute('author-type')"),
+            "scrape must read author-type for role detection. Got:\n{s}"
+        );
+    }
+
+    /// The script must be idempotent (guard on __livicat_installed) so a
+    /// re-injection doesn't double-register globals or reset the dedup set
+    /// (which would re-send every message). The Rust loop evals the scrape
+    /// function repeatedly, but the installer runs once.
+    #[test]
+    fn test_script_is_idempotent() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_installed"),
+            "scrape installer must guard on __livicat_installed to be idempotent. Got:\n{s}"
+        );
+    }
+}
