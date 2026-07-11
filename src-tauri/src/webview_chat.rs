@@ -107,31 +107,47 @@ pub async fn start_webview_chat(
         .eval(&observer_script)
         .map_err(|e| format!("[webview-chat] Failed to inject observer: {e}"))?;
 
-    log::info!("[webview-chat] Observer injected, chat capture active");
+    log::info!("[webview-chat] Scraper injected, Rust-driven capture active");
 
-    // ── 5. Poll the WebView URL hash for captured data ────────
-    // Reads `location.hash` every 500ms, decodes messages from the
-    // `__livicat=` prefix, and pushes them to the MessageStore.
-    // The hash is cleared after reading to prevent double-processing.
+    // ── 5. Rust-driven poll loop (throttle-proof) ──────────────
+    // The webview's JS timers get suspended by macOS when the off-screen
+    // window is occluded (buried/minimized) — so we can't rely on a
+    // MutationObserver or setInterval inside the webview. Instead, this
+    // NATIVE tokio timer (which is never throttled by window occlusion)
+    // drives capture: each tick we (a) eval __livicatScrape() into the
+    // webview, which scans the DOM and writes new messages to
+    // location.hash, then (b) read the hash back and push to the store.
+    //
+    // window.eval() dispatched from native executes on the JS thread as
+    // a direct dispatch rather than via the throttled timer queue, so
+    // the scrape runs even while the webview would otherwise be paused.
     let window_clone = window.clone();
     let store_clone = store.clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_millis(100));
+        // 150ms cadence — frequent enough to feel live, cheap enough to
+        // be negligible. The webview only re-scans on our cue.
+        let mut interval = tokio::time::interval(Duration::from_millis(150));
         loop {
             interval.tick().await;
 
-            // Read the current URL fragment
+            // (a) Tell the webview to scrape now. This writes any new
+            // messages to location.hash (or queues them if the hash is
+            // still busy from a previous tick). Ignore eval errors —
+            // the window may be closing; we just skip this tick.
+            if window_clone.eval("window.__livicatScrape && window.__livicatScrape();").is_err() {
+                continue;
+            }
+
+            // (b) Read back whatever the scrape wrote.
             let hash = match window_clone.url() {
                 Ok(u) => u.fragment().unwrap_or("").to_string(),
                 Err(_) => continue,
             };
-
-            // Check if our data marker is present
             if !hash.starts_with("__livicat=") {
                 continue;
             }
 
-            // Decode Base64 → UTF-8 string → JSON
+            // Decode Base64 → UTF-8 → JSON
             let encoded = &hash["__livicat=".len()..];
             let decoded_bytes = match base64::engine::general_purpose::STANDARD.decode(encoded) {
                 Ok(b) => b,
@@ -152,11 +168,11 @@ pub async fn start_webview_chat(
                     }
                 }
                 if count > 0 {
-                    log::debug!("[webview-chat] Hash relay: {count} messages");
+                    log::debug!("[webview-chat] Scraped {count} message(s)");
                 }
             }
 
-            // Clear the hash so the observer can write the next batch
+            // Clear the hash so the next scrape can write a fresh batch
             let _ = window_clone.eval("history.replaceState(null, '', location.pathname);");
         }
     });
@@ -236,35 +252,81 @@ fn inject_css_to_window(window: &tauri::WebviewWindow, css: &str) -> Result<(), 
 ///   - `__TAURI__` IPC (unavailable on external URLs in Tauri v2)
 ///   - CSP `connect-src` (blocks fetch/XHR/WebSocket)
 ///   - CSP `img-src` (might block `<img>` tag workarounds)
-fn build_observer_script(hide_atsign: bool) -> String {
+pub(crate) fn build_observer_script(hide_atsign: bool) -> String {
     let strip_at_bool = if hide_atsign { "true" } else { "false" };
 
     format!(
         r#"(function() {{
-  if (window.__livicat_active) return;
+  if (window.__livicat_installed) return; // idempotent — safe to re-inject
+  window.__livicat_installed = true;
 
   var STRIP_AT = {};
 
-  /* ── Send data via location.hash (CSP-proof side-channel) ─ */
-  function sendToRust(data) {{
-    if (!data || data.length === 0) return;
-    /* Only write if the previous batch was consumed by Rust */
-    if (!location.hash.startsWith('#__livicat=')) {{
-      var json = JSON.stringify(data);
-      var b64 = btoa(unescape(encodeURIComponent(json)));
-      location.hash = '__livicat=' + b64;
-    }}
+  /* ══ RUST-DRIVEN SCRAPING (throttle-proof) ════════════════════
+     The OLD design ran a MutationObserver + setInterval INSIDE this
+     webview to push messages. But when the off-screen window is
+     occluded/buried, macOS suspends the WKWebView's JS thread — so
+     those timers STOPPED firing and messages stopped reaching OBS
+     ("sometimes works sometimes not").
+
+     The fix: no self-running JS timers. Instead we expose a global
+     __livicatScrape() function and let RUST call it on a native
+     tokio timer (which is never throttled by window occlusion).
+     Each Rust-driven call scans the DOM for messages we haven't sent
+     yet (dedup'd via a fingerprint Set) and writes them to
+     location.hash, which Rust reads back. Initial + incremental
+     messages are handled by the SAME scan — the first call captures
+     everything already in the DOM; later calls capture only new ones.
+
+     Why this beats the observer: window.eval() injected from native
+     executes on the JS thread as a direct dispatch (not via the
+     throttled timer queue), so it runs even when the webview would
+     otherwise be suspended. Native Rust timers are the heartbeat.
+  */
+
+  var STRIP_AT_LOCAL = STRIP_AT;
+  window.__livicat_seen = {{}}; // fingerprint set: author + separator + text
+
+  function isDuplicate(msg) {{
+    var key = msg.author + '\u0001' + msg.text;
+    if (window.__livicat_seen[key]) return true;
+    window.__livicat_seen[key] = true;
+    return false;
   }}
 
-  /* ── Extract message from a DOM element ──────────────── */
+  /* ── Role detection (multi-strategy, robust) ───────────── */
+  function detectRoleFromBadges(root) {{
+    if (!root) return '';
+    var badgeEls = root.querySelectorAll(
+      'yt-live-chat-author-badge-renderer, yt-live-chat-author-chip yt-live-chat-author-badge-renderer'
+    );
+    for (var i = 0; i < badgeEls.length; i++) {{
+      var b = badgeEls[i];
+      var icon = b.querySelector('yt-icon');
+      var label = (b.getAttribute('aria-label') || '') + ' ' +
+                  (icon ? (icon.getAttribute('aria-label') || '') : '') + ' ' +
+                  (icon ? (icon.getAttribute('icon') || icon.getAttribute('name') || '') : '');
+      label = label.toLowerCase();
+      if (label.indexOf('owner') >= 0 || label.indexOf('broadcaster') >= 0) return 'owner';
+      if (label.indexOf('moderator') >= 0 || label.indexOf('mod') >= 0) return 'moderator';
+      if (label.indexOf('member') >= 0 || label.indexOf('sponsor') >= 0) return 'member';
+      if (label.indexOf('verified') >= 0) return 'verified';
+    }}
+    return '';
+  }}
+
   function scrapeMessage(el) {{
     var authorEl = el.querySelector('#author-name');
     var msgEl = el.querySelector('#message');
     var photoEl = el.querySelector('#author-photo img');
     var badgesEl = el.querySelector('#chat-badges');
-    var role = el.getAttribute('data-role') || '';
+    var role =
+      el.getAttribute('author-type') ||
+      detectRoleFromBadges(el) ||
+      el.getAttribute('data-role') ||
+      '';
     var author = authorEl ? authorEl.textContent.trim() : '';
-    if (STRIP_AT && author.charAt(0) === '@') {{
+    if (STRIP_AT_LOCAL && author.charAt(0) === '@') {{
       author = author.substring(1);
     }}
     return {{
@@ -276,50 +338,223 @@ fn build_observer_script(hide_atsign: bool) -> String {
     }};
   }}
 
-  /* ── Wait for chat to be ready, then activate ─────────── */
-  function init() {{
-    if (!document.querySelector('yt-live-chat-text-message-renderer')) {{
-      setTimeout(init, 500);
-      return;
-    }}
+  /* ── The function Rust calls each tick ───────────────────
+     Scans the whole chat, collects NEW (unseen) messages, and writes
+     them to location.hash for Rust to read. If the hash is still
+     occupied by a previous unread batch, it does NOT block — it
+     queues to window.__livicat_pending and a subsequent call (or the
+     pending-flush below) drains it. Returns the number written.
 
-    window.__livicat_active = true;
-    console.log('[Livicat] Chat detected, observer active');
+     This handles BOTH initial load (first call sees all existing
+     messages) and incremental updates (later calls see only new ones)
+     via the same dedup'd full scan. */
+  window.__livicat_pending = [];
 
-    /* Scrape existing messages */
-    var existing = [];
-    document.querySelectorAll('yt-live-chat-text-message-renderer').forEach(function(el) {{
-      existing.push(scrapeMessage(el));
-    }});
-    sendToRust(existing);
-
-    /* MutationObserver for new messages */
-    window.__livicat_buffer = [];
-    window.__livicat_observer = new MutationObserver(function(mutations) {{
-      mutations.forEach(function(mut) {{
-        if (!mut.addedNodes) return;
-        for (var i = 0; i < mut.addedNodes.length; i++) {{
-          var node = mut.addedNodes[i];
-          if (node.nodeType !== 1) continue;
-          if (node.tagName === 'YT-LIVE-CHAT-TEXT-MESSAGE-RENDERER') {{
-            window.__livicat_buffer.push(scrapeMessage(node));
-          }}
-        }}
-      }});
-    }});
-    window.__livicat_observer.observe(document.documentElement, {{ childList: true, subtree: true }});
-
-    /* Drain buffer every 100ms */
-    setInterval(function() {{
-      var buf = window.__livicat_buffer;
-      if (!buf || buf.length === 0) return;
-      var copy = buf.splice(0);
-      sendToRust(copy);
-    }}, 100);
+  function flushPending() {{
+    if (window.__livicat_pending.length === 0) return 0;
+    if (location.hash.indexOf('#__livicat=') === 0) return 0; // still busy
+    var batch = window.__livicat_pending.shift();
+    if (!batch || batch.length === 0) return 0;
+    var json = JSON.stringify(batch);
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    location.hash = '__livicat=' + b64;
+    return batch.length;
   }}
 
-  init();
+  /* Rust invokes this directly via window.eval on a native timer. */
+  window.__livicatScrape = function() {{
+    // First, drain anything queued from a previous busy-hash tick.
+    var flushed = flushPending();
+
+    // Full DOM scan for new messages.
+    var fresh = [];
+    var nodes = document.querySelectorAll('yt-live-chat-text-message-renderer');
+    for (var i = 0; i < nodes.length; i++) {{
+      var m = scrapeMessage(nodes[i]);
+      if (!isDuplicate(m)) fresh.push(m);
+    }}
+
+    if (fresh.length === 0) return flushed;
+
+    // Try to write immediately; if the hash is busy, queue for next tick.
+    if (location.hash.indexOf('#__livicat=') === 0) {{
+      window.__livicat_pending.push(fresh);
+    }} else {{
+      var json = JSON.stringify(fresh);
+      var b64 = btoa(unescape(encodeURIComponent(json)));
+      location.hash = '__livicat=' + b64;
+      flushed += fresh.length;
+    }}
+    return flushed;
+  }};
+
+  console.log('[Livicat] Rust-driven scraper installed (no JS timers)');
 }})();"#,
         strip_at_bool,
     )
+}
+
+// ─── Tests ─────────────────────────────────────────────────────────
+//
+// These tests verify the throttle-proof scraping design (the fix for
+// messages stopping when the webview window is occluded/buried on macOS).
+// They inspect the generated observer script's structure — a real webview
+// requires a full Tauri environment, but the script is a generated string
+// whose invariants we can assert directly.
+//
+// The core contract being guarded:
+//   1. NO self-running JS timers (setInterval / MutationObserver) — these
+//      are what macOS suspends when the window is occluded, which caused
+//      the "sometimes works sometimes not" bug.
+//   2. A single window.__livicatScrape() function that Rust drives via
+//      eval on a native tokio timer.
+//   3. Dedup so the full-DOM scan doesn't re-send messages each tick.
+#[cfg(test)]
+mod tests {
+    use super::build_observer_script;
+
+    /// Returns the script body with the IIFE wrapper, for substring checks.
+    fn script(hide_atsign: bool) -> String {
+        build_observer_script(hide_atsign)
+    }
+
+    // ── The critical fix: no self-running JS timers ──────────────
+
+    /// Regression guard for the occlusion bug: the scrape script MUST NOT
+    /// CALL setInterval. setInterval runs inside the webview's JS thread,
+    /// which macOS suspends when the off-screen window is occluded. If this
+    /// test fails, someone reintroduced a JS-driven heartbeat and messages
+    /// will stall again when the window is buried.
+    ///
+    /// We match the CALL pattern `setInterval(` rather than the bare word,
+    /// because the script's explanatory comments legitimately mention
+    /// setInterval by name.
+    #[test]
+    fn test_scrape_script_does_not_call_set_interval() {
+        let s = script(false);
+        assert!(
+            !s.contains("setInterval("),
+            "scrape script must not call setInterval( — it gets suspended by \
+             macOS window occlusion, reintroducing the stalling bug. Got:\n{s}"
+        );
+    }
+
+    /// Regression guard for the occlusion bug: the scrape script MUST NOT
+    /// construct a MutationObserver to drive capture. Like setInterval, it
+    /// runs inside the (throttleable) webview JS thread.
+    #[test]
+    fn test_scrape_script_has_no_mutation_observer_for_capture() {
+        let s = script(false);
+        assert!(
+            !s.contains("new MutationObserver("),
+            "scrape script must not construct a MutationObserver to capture \
+             messages — it gets suspended by macOS window occlusion. Got:\n{s}"
+        );
+    }
+
+    // ── The replacement mechanism: Rust-driven scrape ────────────
+
+    /// The script MUST expose window.__livicatScrape as a function — this
+    /// is what the Rust poll loop evals each tick. Without it, Rust has no
+    /// scrape entry point and capture silently does nothing.
+    #[test]
+    fn test_exposes_livicat_scrape_function() {
+        let s = script(false);
+        assert!(
+            s.contains("window.__livicatScrape"),
+            "scrape script must expose window.__livicatScrape for the Rust \
+             timer to eval. Got:\n{s}"
+        );
+        assert!(
+            s.contains("window.__livicatScrape = function"),
+            "__livicatScrape must be assigned a function. Got:\n{s}"
+        );
+    }
+
+    /// The scrape function MUST do a full-DOM scan via querySelectorAll on
+    /// the message renderer — this is how a single function handles both
+    /// initial load (all existing messages) and incremental updates (only
+    /// new ones since last scan). If this regresses to only-scraping-new-
+    /// nodes, the initial message batch is lost.
+    #[test]
+    fn test_scrape_does_full_dom_scan() {
+        let s = script(false);
+        assert!(
+            s.contains("querySelectorAll('yt-live-chat-text-message-renderer'"),
+            "scrape must scan the full DOM for message elements each tick. Got:\n{s}"
+        );
+    }
+
+    /// Dedup MUST be present so the full-DOM scan doesn't re-send every
+    /// message on every tick (which would flood the store + OBS with
+    /// duplicates). Guards the __livicat_seen fingerprint set.
+    #[test]
+    fn test_scrape_dedups_seen_messages() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_seen"),
+            "scrape must maintain a __livicat_seen dedup set. Got:\n{s}"
+        );
+        assert!(
+            s.contains("isDuplicate"),
+            "scrape must call isDuplicate before sending. Got:\n{s}"
+        );
+    }
+
+    /// The pending-batch queue MUST be present so that when location.hash
+    /// is still occupied (Rust hasn't cleared the previous batch), a scrape
+    /// queues its fresh messages instead of dropping them.
+    #[test]
+    fn test_scrape_has_pending_queue_for_busy_hash() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_pending"),
+            "scrape must keep a __livicat_pending queue for the busy-hash case. Got:\n{s}"
+        );
+    }
+
+    // ── Configuration embedding ─────────────────────────────────
+
+    /// The hide_atsign flag must be embedded as a JS boolean. If it's
+    /// emitted as a Rust string or number, @-stripping silently misbehaves.
+    #[test]
+    fn test_hide_atsign_embedded_as_boolean() {
+        let on = script(true);
+        assert!(
+            on.contains("var STRIP_AT = true"),
+            "hide_atsign=true must emit 'var STRIP_AT = true'. Got:\n{on}"
+        );
+        let off = script(false);
+        assert!(
+            off.contains("var STRIP_AT = false"),
+            "hide_atsign=false must emit 'var STRIP_AT = false'. Got:\n{off}"
+        );
+    }
+
+    // ── Role detection structure ────────────────────────────────
+
+    /// The scrape MUST attempt author-type (YouTube's native attribute)
+    /// for role detection — reading data-role alone (the old, broken
+    /// behavior) classified every message as default on live chat.
+    #[test]
+    fn test_role_detection_reads_author_type() {
+        let s = script(false);
+        assert!(
+            s.contains("getAttribute('author-type')"),
+            "scrape must read author-type for role detection. Got:\n{s}"
+        );
+    }
+
+    /// The script must be idempotent (guard on __livicat_installed) so a
+    /// re-injection doesn't double-register globals or reset the dedup set
+    /// (which would re-send every message). The Rust loop evals the scrape
+    /// function repeatedly, but the installer runs once.
+    #[test]
+    fn test_script_is_idempotent() {
+        let s = script(false);
+        assert!(
+            s.contains("__livicat_installed"),
+            "scrape installer must guard on __livicat_installed to be idempotent. Got:\n{s}"
+        );
+    }
 }

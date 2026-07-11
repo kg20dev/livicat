@@ -13,7 +13,14 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::broadcast;
+
+/// Monotonic counter appended to DOM-scraped message IDs so that
+/// messages parsed within the same millisecond get distinct IDs.
+/// Without this, two messages sharing a `dom-{ms}` id would be treated
+/// as one by any id-based de-dup (renderer client Set, etc.).
+static DOM_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -53,6 +60,9 @@ pub struct ChatMessage {
     pub is_member: bool,
     /// Whether the author is a moderator.
     pub is_moderator: bool,
+    /// Whether the author is the channel owner / broadcaster.
+    #[serde(default)]
+    pub is_owner: bool,
     /// Whether this is a paid super-chat message.
     pub is_super_chat: bool,
     /// Monetary amount shown for super chats (e.g. "$5.00").
@@ -63,8 +73,11 @@ pub struct ChatMessage {
 
 impl ChatMessage {
     /// Derive a styling role from the message flags.
+    /// Owner takes precedence (a broadcaster outranks mod/member).
     pub fn role(&self) -> ChatRole {
-        if self.is_super_chat {
+        if self.is_owner {
+            ChatRole::Owner
+        } else if self.is_super_chat {
             ChatRole::SuperChat
         } else if self.is_moderator {
             ChatRole::Moderator
@@ -243,6 +256,7 @@ pub fn parse_dom_message(json: &str) -> Option<ChatMessage> {
         }
     };
 
+    let is_owner = entry.role == "owner";
     let is_moderator = entry.role == "moderator";
     let is_member = entry.role == "member";
     let is_super_chat = entry.role == "super-chat" || entry.role == "membership";
@@ -252,8 +266,24 @@ pub fn parse_dom_message(json: &str) -> Option<ChatMessage> {
         None
     };
 
+    // Diagnostic: log non-default role detection so we can confirm at
+    // runtime whether roles are being captured from the YouTube DOM.
+    // (Default-role messages are far more common, so we skip logging
+    // those to avoid spamming.)
+    if !entry.role.is_empty() && entry.role != "default" {
+        log::info!(
+            "[processor] Role detected: '{}' for author '{}' → owner={} mod={} member={} super={}",
+            entry.role, entry.author, is_owner, is_moderator, is_member, is_super_chat
+        );
+    }
+
+    // Unique ID: timestamp + monotonic counter. The counter guarantees
+    // uniqueness even when many messages are parsed in the same millisecond
+    // (common during the initial scrape of existing chat messages).
+    let seq = DOM_ID_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let now = current_timestamp_ms();
     Some(ChatMessage {
-        id: format!("dom-{}", current_timestamp_ms()),
+        id: format!("dom-{now}-{seq}"),
         author: entry.author,
         text: entry.text,
         photo: entry.photo.unwrap_or_default(),
@@ -261,6 +291,7 @@ pub fn parse_dom_message(json: &str) -> Option<ChatMessage> {
         badges: entry.badges,
         is_member,
         is_moderator,
+        is_owner,
         is_super_chat,
         super_chat_amount,
         timestamp_ms: current_timestamp_ms(),
@@ -304,6 +335,22 @@ fn parse_text_renderer(
         })
         .unwrap_or(false);
 
+    // Owner / broadcaster — detected via the OWNER or BROADCASTER badge
+    // iconType (YouTube uses OWNER on the main channel's live chat).
+    let is_owner = r
+        .pointer("/authorBadges")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter().any(|b| {
+                matches!(
+                    b.pointer("/liveChatAuthorBadgeRenderer/icon/iconType")
+                        .and_then(|v| v.as_str()),
+                    Some("OWNER") | Some("BROADCASTER")
+                )
+            })
+        })
+        .unwrap_or(false);
+
     let is_super_chat = super_chat_amount.is_some();
 
     ChatMessage {
@@ -315,6 +362,7 @@ fn parse_text_renderer(
         badges,
         is_member,
         is_moderator,
+        is_owner,
         is_super_chat,
         super_chat_amount,
         timestamp_ms: current_timestamp_ms(),
@@ -618,11 +666,51 @@ mod tests {
             badges: vec![],
             is_member: false,
             is_moderator: false,
+            is_owner: false,
             is_super_chat: false,
             super_chat_amount: None,
             timestamp_ms: 1000,
         };
         assert_eq!(msg.role(), ChatRole::Default);
+    }
+
+    #[test]
+    fn test_chat_role_owner() {
+        let msg = ChatMessage {
+            id: "r-owner".into(),
+            author: "Broadcaster".into(),
+            text: "Welcome!".into(),
+            photo: String::new(),
+            author_color: "#FFF".into(),
+            badges: vec![],
+            is_member: false,
+            is_moderator: false,
+            is_owner: true,
+            is_super_chat: false,
+            super_chat_amount: None,
+            timestamp_ms: 1000,
+        };
+        assert_eq!(msg.role(), ChatRole::Owner);
+    }
+
+    #[test]
+    fn test_chat_role_owner_takes_precedence_over_mod() {
+        // A broadcaster who is also a mod should still render as owner.
+        let msg = ChatMessage {
+            id: "r-owner-mod".into(),
+            author: "Broadcaster".into(),
+            text: "Hi".into(),
+            photo: String::new(),
+            author_color: "#FFF".into(),
+            badges: vec![],
+            is_member: true,
+            is_moderator: true,
+            is_owner: true,
+            is_super_chat: false,
+            super_chat_amount: None,
+            timestamp_ms: 1000,
+        };
+        assert_eq!(msg.role(), ChatRole::Owner);
     }
 
     #[test]
@@ -636,6 +724,7 @@ mod tests {
             badges: vec![],
             is_member: false,
             is_moderator: true,
+            is_owner: false,
             is_super_chat: false,
             super_chat_amount: None,
             timestamp_ms: 1000,
@@ -654,6 +743,7 @@ mod tests {
             badges: vec![],
             is_member: false,
             is_moderator: false,
+            is_owner: false,
             is_super_chat: true,
             super_chat_amount: Some("$5.00".into()),
             timestamp_ms: 1000,
@@ -672,6 +762,7 @@ mod tests {
             badges: vec![],
             is_member: true,
             is_moderator: false,
+            is_owner: false,
             is_super_chat: false,
             super_chat_amount: None,
             timestamp_ms: 1000,
@@ -704,6 +795,7 @@ mod tests {
             badges: vec![],
             is_member: false,
             is_moderator: false,
+            is_owner: false,
             is_super_chat: false,
             super_chat_amount: None,
             timestamp_ms: current_timestamp_ms(),
