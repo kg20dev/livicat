@@ -245,15 +245,50 @@ fn build_observer_script(hide_atsign: bool) -> String {
 
   var STRIP_AT = {};
 
-  /* ── Send data via location.hash (CSP-proof side-channel) ─ */
+  /* ── Pending batch queue (fixes dropped initial/overflow batches) ─
+     The location.hash side-channel can only carry ONE batch at a time:
+     the Rust poll loop reads it (every 100ms) then clears it. The OLD
+     code DROPPED any batch that arrived while the hash was still
+     occupied — which lost the initial message scrape under load and
+     lost bursty new messages. Now we QUEUE batches and a drain timer
+     flushes them one at a time as the hash frees up. Nothing is lost.
+  */
+  window.__livicat_pending = []; // queue of batches waiting for the hash
+
+  /* Send the NEXT pending batch if the hash is free. Returns true if
+     it wrote one. Safe to call repeatedly (drains one per call). */
+  function flushPending() {{
+    if (window.__livicat_pending.length === 0) return false;
+    if (location.hash.startsWith('#__livicat=')) return false; // still busy
+    var batch = window.__livicat_pending.shift();
+    if (!batch || batch.length === 0) return false;
+    var json = JSON.stringify(batch);
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    location.hash = '__livicat=' + b64;
+    return true;
+  }}
+
+  /* Queue a batch and try to send immediately (drains later if busy). */
   function sendToRust(data) {{
     if (!data || data.length === 0) return;
-    /* Only write if the previous batch was consumed by Rust */
-    if (!location.hash.startsWith('#__livicat=')) {{
-      var json = JSON.stringify(data);
-      var b64 = btoa(unescape(encodeURIComponent(json)));
-      location.hash = '__livicat=' + b64;
-    }}
+    window.__livicat_pending.push(data);
+    flushPending();
+  }}
+
+  /* ── De-dup: fingerprint set of messages already sent ───────
+     Prevents the SAME message from being sent twice — both the
+     initial scrape AND the MutationObserver can see the same nodes
+     (YouTube re-renders existing rows, and rapid double-fire is
+     common). Fingerprint = author + '\u0001' + text, which is unique
+     enough for chat dedup without needing a DOM id. */
+  window.__livicat_seen = {{}};
+  window.__livicat_counter = 0; // per-page monotonic id for uniqueness
+
+  function isDuplicate(msg) {{
+    var key = msg.author + '\u0001' + msg.text;
+    if (window.__livicat_seen[key]) return true;
+    window.__livicat_seen[key] = true;
+    return false;
   }}
 
   /* ── Extract message from a DOM element ──────────────── */
@@ -286,15 +321,15 @@ fn build_observer_script(hide_atsign: bool) -> String {
     window.__livicat_active = true;
     console.log('[Livicat] Chat detected, observer active');
 
-    /* Scrape existing messages */
+    /* Scrape existing messages — de-dup as we go */
     var existing = [];
     document.querySelectorAll('yt-live-chat-text-message-renderer').forEach(function(el) {{
-      existing.push(scrapeMessage(el));
+      var m = scrapeMessage(el);
+      if (!isDuplicate(m)) existing.push(m);
     }});
     sendToRust(existing);
 
     /* MutationObserver for new messages */
-    window.__livicat_buffer = [];
     window.__livicat_observer = new MutationObserver(function(mutations) {{
       mutations.forEach(function(mut) {{
         if (!mut.addedNodes) return;
@@ -302,20 +337,18 @@ fn build_observer_script(hide_atsign: bool) -> String {
           var node = mut.addedNodes[i];
           if (node.nodeType !== 1) continue;
           if (node.tagName === 'YT-LIVE-CHAT-TEXT-MESSAGE-RENDERER') {{
-            window.__livicat_buffer.push(scrapeMessage(node));
+            var m = scrapeMessage(node);
+            if (!isDuplicate(m)) sendToRust([m]);
           }}
         }}
       }});
     }});
     window.__livicat_observer.observe(document.documentElement, {{ childList: true, subtree: true }});
 
-    /* Drain buffer every 100ms */
-    setInterval(function() {{
-      var buf = window.__livicat_buffer;
-      if (!buf || buf.length === 0) return;
-      var copy = buf.splice(0);
-      sendToRust(copy);
-    }}, 100);
+    /* Drain pending queue every 50ms — flushes batches as the hash
+       frees up (Rust clears it every 100ms). Faster than the Rust
+       poll so we catch a free slot promptly. */
+    setInterval(flushPending, 50);
   }}
 
   init();

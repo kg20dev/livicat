@@ -13,7 +13,14 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::broadcast;
+
+/// Monotonic counter appended to DOM-scraped message IDs so that
+/// messages parsed within the same millisecond get distinct IDs.
+/// Without this, two messages sharing a `dom-{ms}` id would be treated
+/// as one by any id-based de-dup (renderer client Set, etc.).
+static DOM_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -252,8 +259,13 @@ pub fn parse_dom_message(json: &str) -> Option<ChatMessage> {
         None
     };
 
+    // Unique ID: timestamp + monotonic counter. The counter guarantees
+    // uniqueness even when many messages are parsed in the same millisecond
+    // (common during the initial scrape of existing chat messages).
+    let seq = DOM_ID_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let now = current_timestamp_ms();
     Some(ChatMessage {
-        id: format!("dom-{}", current_timestamp_ms()),
+        id: format!("dom-{now}-{seq}"),
         author: entry.author,
         text: entry.text,
         photo: entry.photo.unwrap_or_default(),
