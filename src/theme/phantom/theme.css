@@ -240,8 +240,8 @@
   /* Minimum height ensures visual presence for short usernames */
   min-height: var(--flag-min-height, 0px) !important;
 
-  /* Top margin for vertical positioning (negative = up, positive = down) */
-  margin: var(--flag-margin-top, 0px) 0 -0.6em 0.3em !important;
+  /* Margins control positioning and gap to message ribbon below */
+  margin: var(--flag-margin-top, 0px) 0 var(--flag-margin-bottom, -10px) 0.3em !important;
 
   /* Width grows with text content */
   white-space: nowrap !important;

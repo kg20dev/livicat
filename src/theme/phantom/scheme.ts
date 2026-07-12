@@ -199,6 +199,19 @@ export const scheme: SettingDef[] = [
     step: 1,
     unit: 'px',
   },
+  /* Bottom margin controls gap to message ribbon below.
+     Negative values pull flag down (overlap), positive values push it up (gap). */
+  {
+    key: 'flag-margin-bottom',
+    section: 'Name Flag',
+    type: 'range',
+    label: 'Margin Bottom',
+    min: -20,
+    max: 20,
+    default: -10,
+    step: 1,
+    unit: 'px',
+  },
   {
     key: 'flag-pad-left',
     section: 'Name Flag',
