@@ -240,8 +240,9 @@
   /* Minimum height ensures visual presence for short usernames */
   min-height: var(--flag-min-height, 0px) !important;
 
-  /* Margins control positioning and gap to message ribbon below */
-  margin: var(--flag-margin-top, 0px) 0 var(--flag-margin-bottom, -10px) 0.3em !important;
+  /* Overlap controls how much flag covers the message ribbon below.
+     Margin top for vertical positioning, bottom = negative overlap for overlap. */
+  margin: var(--flag-margin-top, 0px) 0 calc(var(--flag-overlap, 10px) * -1) 0.3em !important;
 
   /* Width grows with text content */
   white-space: nowrap !important;

@@ -185,7 +185,23 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Flag Margin ───────────────────────────────────────────── */
+  /* ── Flag Overlap ──────────────────────────────────────────── */
+  /* How much the username flag overlaps the message ribbon below.
+     0 = no gap (flag sits above ribbon)
+     Positive values = flag covers part of the ribbon (P5 style) */
+  {
+    key: 'flag-overlap',
+    section: 'Name Flag',
+    type: 'range',
+    label: 'Overlap',
+    min: 0,
+    max: 20,
+    default: 10,
+    step: 1,
+    unit: 'px',
+  },
+
+  /* ── Flag Margin Top ───────────────────────────────────────── */
   /* Top margin adjusts vertical spacing above the flag.
      Negative values pull it up, positive values push it down. */
   {
@@ -196,19 +212,6 @@ export const scheme: SettingDef[] = [
     min: -10,
     max: 20,
     default: 0,
-    step: 1,
-    unit: 'px',
-  },
-  /* Bottom margin controls gap to message ribbon below.
-     Negative values pull flag down (overlap), positive values push it up (gap). */
-  {
-    key: 'flag-margin-bottom',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Margin Bottom',
-    min: -20,
-    max: 20,
-    default: -10,
     step: 1,
     unit: 'px',
   },
