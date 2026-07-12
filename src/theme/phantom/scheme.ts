@@ -172,6 +172,18 @@ export const scheme: SettingDef[] = [
     step: 1,
     unit: 'px',
   },
+  /* Minimum height ensures the flag has visual presence even for short usernames. */
+  {
+    key: 'flag-min-height',
+    section: 'Name Flag',
+    type: 'range',
+    label: 'Min Height',
+    min: 0,
+    max: 60,
+    default: 0,
+    step: 2,
+    unit: 'px',
+  },
   {
     key: 'flag-pad-left',
     section: 'Name Flag',

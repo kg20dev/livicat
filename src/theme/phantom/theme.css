@@ -234,8 +234,11 @@
   text-shadow: none !important;
 
   /* Theme-configurable padding — individual sides */
-  padding: var(--flag-pad-top, 6px) var(--flag-pad-right, 14px) var(--flag-pad-bottom, 6px)
+  padding: var(--flag-pad-top, 12px) var(--flag-pad-right, 14px) var(--flag-pad-bottom, 12px)
     var(--flag-pad-left, 10px) !important;
+
+  /* Minimum height ensures visual presence for short usernames */
+  min-height: var(--flag-min-height, 0px) !important;
 
   /* Negative bottom-margin overlaps the ribbon below (P5 style) */
   margin: 0 0 -0.6em 0.3em !important;
