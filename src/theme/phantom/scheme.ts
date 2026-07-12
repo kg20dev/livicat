@@ -184,6 +184,32 @@ export const scheme: SettingDef[] = [
     step: 2,
     unit: 'px',
   },
+
+  /* ── Flag Offset ──────────────────────────────────────────── */
+  /* Horizontal/vertical offset for fine-tuning flag position.
+     Negative values move left/up, positive values move right/down. */
+  {
+    key: 'flag-offset-x',
+    section: 'Name Flag',
+    type: 'range',
+    label: 'Offset X',
+    min: -20,
+    max: 20,
+    default: 0,
+    step: 1,
+    unit: 'px',
+  },
+  {
+    key: 'flag-offset-y',
+    section: 'Name Flag',
+    type: 'range',
+    label: 'Offset Y',
+    min: -20,
+    max: 20,
+    default: 0,
+    step: 1,
+    unit: 'px',
+  },
   {
     key: 'flag-pad-left',
     section: 'Name Flag',
