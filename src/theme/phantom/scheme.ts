@@ -121,14 +121,14 @@ export const strokeMap: Record<string, DerivationEntry> = {
 export const scheme: SettingDef[] = [
   /* ── Motion (slide-in) ────────────────────────────────────── */
   /* How far a new message slides in from the left with a skew
-     overshoot — P5's kinetic entrance. 0 = pure fade. */
+      overshoot — P5's kinetic entrance. 0 = pure fade. */
   {
     key: 'slide-distance',
     section: 'Motion',
     type: 'range',
     label: 'Slide Distance',
     min: 0,
-    max: 36,
+    max: 72,
     default: 24,
     unit: 'px',
   },
