@@ -185,26 +185,15 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Flag Offset ──────────────────────────────────────────── */
-  /* Horizontal/vertical offset for fine-tuning flag position.
-     Negative values move left/up, positive values move right/down. */
+  /* ── Flag Margin ───────────────────────────────────────────── */
+  /* Top margin adjusts vertical spacing above the flag.
+     Negative values pull it up, positive values push it down. */
   {
-    key: 'flag-offset-x',
+    key: 'flag-margin-top',
     section: 'Name Flag',
     type: 'range',
-    label: 'Offset X',
-    min: -20,
-    max: 20,
-    default: 0,
-    step: 1,
-    unit: 'px',
-  },
-  {
-    key: 'flag-offset-y',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Offset Y',
-    min: -20,
+    label: 'Margin Top',
+    min: -10,
     max: 20,
     default: 0,
     step: 1,

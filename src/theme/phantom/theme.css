@@ -240,8 +240,8 @@
   /* Minimum height ensures visual presence for short usernames */
   min-height: var(--flag-min-height, 0px) !important;
 
-  /* Fine-tune flag position with X/Y offsets */
-  margin: calc(var(--flag-offset-y, 0px) - 0.6em) calc(0.3em + var(--flag-offset-x, 0px)) !important;
+  /* Top margin for vertical positioning (negative = up, positive = down) */
+  margin: var(--flag-margin-top, 0px) 0 -0.6em 0.3em !important;
 
   /* Width grows with text content */
   white-space: nowrap !important;
