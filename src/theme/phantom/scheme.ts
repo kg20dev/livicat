@@ -128,7 +128,7 @@ export const scheme: SettingDef[] = [
     type: 'range',
     label: 'Slide Distance',
     min: 0,
-    max: 72,
+    max: 100,
     default: 24,
     unit: 'px',
   },
