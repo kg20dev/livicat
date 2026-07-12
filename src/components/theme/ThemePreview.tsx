@@ -298,7 +298,9 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
       )}
       <div id="content">
         <yt-live-chat-author-chip>
-          <div id="author-name">{message.username}</div>
+          <div id="author-name">
+            <span className="flag-text">{message.username}</span>
+          </div>
         </yt-live-chat-author-chip>
         <div id="message-container">
           <div

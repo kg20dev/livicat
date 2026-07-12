@@ -1,0 +1,514 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Phantom Chat Theme — scoped CSS for YouTube Live Chat       ║
+   ║                                                                ║
+   ║  Persona 5-inspired, entirely CSS-based shapes. No SVG data-   ║
+   ║  URLs. The two-tone jagged P5 look comes from layered          ║
+   ║  clip-path polygons on each element and its ::before pseudo:   ║
+   ║                                                                ║
+   ║    1. NAME FLAG — Black outline + recolorable fill chip.       ║
+   ║       Parent (#author-name) is the BLACK outline layer with    ║
+   ║       a jagged clip-path. ::before is the recolorable fill     ║
+   ║       inset by 2px, z-index: -1, same clip-path. The parent's ║
+   ║       black background shows as a 2px outline around the fill. ║
+   ║       Tilted by --flag-tilt (default -13°).                    ║
+   ║                                                                ║
+   ║    2. MESSAGE RIBBON — White jagged edge + black fill body.    ║
+   ║       Parent (#message) is the WHITE outline layer with a      ║
+   ║       torn clip-path. ::before is the black fill inset by 3px, ║
+   ║       z-index: -1, same clip-path. Text sits white on black.   ║
+   ║                                                                ║
+   ║    3. RED / BLACK / WHITE — pure palette. Red #e3242b accents  ║
+   ║       moderator/owner names; everything else is mono.           ║
+   ║    4. AVATAR + THUNDER TAIL — round avatar on left, zigzag     ║
+   ║       white/black tail connects to the message ribbon.          ║
+   ║    5. KINETIC SLIDE-IN — enter from the left with a skew snap. ║
+   ║                                                                ║
+   ║  CEF-109 (OBS) safe: no color-mix(), no @import, no mask-image,║
+   ║  no @property. clip-path: polygon() is supported since Chrome  ║
+   ║  55; CEF-109 (= Chromium 109) has full support.                ║
+   ║  Fonts: Oswald (message) + Bebas Neue/Anton (flag) load via    ║
+   ║  FONT_OPTIONS → buildCSSVariables @import when selected.       ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-phantom stripped before YouTube injection.      ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Palette ──────────────────────────────────────────────── */
+/* :root ensures --p5-* vars are available in ALL rendering contexts:
+   Livicat renderer (no .theme-phantom class), YouTube (stripped prefix),
+   ThemePreview (.theme-phantom class present). Prefixed --p5-* avoids
+   collisions with other themes. */
+:root {
+  --p5-red: #e3242b;
+  --p5-black: #0d0d0d;
+  --p5-white: #ffffff;
+}
+
+/* ── Animation ────────────────────────────────────────────── */
+/* Kinetic slide-in: enter from the left with a skew overshoot, then
+   snap upright — P5's dynamic UI transition. --slide-distance drives
+   the travel. */
+@keyframes theme-phantom-in {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-distance, 24px) * -1.5)) skewX(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(calc(var(--slide-distance, 24px) * 0.25)) skewX(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0deg);
+  }
+}
+
+/* ── Chat container — near-black canvas like P5 menus ────── */
+.theme-phantom yt-live-chat-item-list-renderer,
+.theme-phantom #chat-messages,
+.theme-phantom #items,
+.theme-phantom yt-live-chat-message-renderer,
+.livicat-chat-messages.theme-phantom {
+  background: var(--p5-black) !important;
+}
+
+/* ── Message row — transparent shell, flex ROW ────────────── */
+/* Layout: [avatar] [zigzag tail] [name flag + message ribbon]
+   The renderer is transparent: avatar on left, content on right,
+   connected by a zigzag thunder tail drawn on #content::before. */
+.theme-phantom yt-live-chat-text-message-renderer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  margin-bottom: var(--chat-message-spacing, 8px) !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  margin-right: 6px !important;
+  padding: 4px 0 18px 0 !important;
+  font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
+  font-weight: var(--chat-message-font-weight, 500) !important;
+  opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
+  max-width: var(--chat-max-width, 400px) !important;
+  width: fit-content !important;
+
+  /* Row: avatar left, content right, connected by zigzag tail. */
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+
+  position: relative !important;
+  animation: theme-phantom-in var(--animation-duration, 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1) both !important;
+}
+
+/* ── Optional grain overlay (magazine texture) ────────────── */
+.theme-phantom yt-live-chat-text-message-renderer::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: calc(var(--grain-intensity, 0) / 100);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.08) 0,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  ) !important;
+}
+
+/* ── Avatar — left side, round, flex-shrink:0 ──────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  margin-right: 0 !important;
+}
+.theme-phantom yt-live-chat-text-message-renderer #author-photo img {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  vertical-align: middle !important;
+}
+
+/* ── Content container — right side, relative for tail ─────── */
+.theme-phantom yt-live-chat-text-message-renderer #content {
+  position: relative !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* ── Zigzag thunder tail — two-part connector ──────────────── */
+/* White outer shape (outline) + black inner shape (fill).
+   Derived from authentic P5 thunder tail SVG paths.
+   Controlled by --tail-offset-x, --tail-offset-y, --tail-scale. */
+.theme-phantom yt-live-chat-text-message-renderer #content::before {
+  content: '' !important;
+  position: absolute !important;
+  left: calc(var(--tail-offset-x, -24px) * var(--tail-scale, 1)) !important;
+  top: calc(50% + var(--tail-offset-y, 0px)) !important;
+  transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
+  width: 24px !important;
+  height: 14px !important;
+  background: var(--p5-white) !important;
+  z-index: 1 !important;
+
+  /* Outer path — white outline (behind black fill)
+     SVG: M 311,291 L 220,257 L 136,270 L 113,231 L 96,212 L 64,244
+          L 17,172 L -1,134 L 64,175 L 106,98 L 173,162 L 315,113 Z
+     Bbox: X -1→315 (316), Y 98→291 (193) */
+  clip-path: polygon(
+    100% 100%,
+    70% 82.4%,
+    43.4% 89.1%,
+    36.1% 68.9%,
+    30.7% 59.1%,
+    20.6% 75.6%,
+    5.7% 38.3%,
+    0% 18.7%,
+    20.6% 39.9%,
+    33.9% 0%,
+    55.1% 33.2%,
+    100% 7.8%
+  ) !important;
+}
+
+/* Black fill — inner path (on top of white outline) */
+.theme-phantom yt-live-chat-text-message-renderer #content::after {
+  content: '' !important;
+  position: absolute !important;
+  left: calc(var(--tail-offset-x, -24px) * var(--tail-scale, 1) + 2px) !important;
+  top: calc(50% + var(--tail-offset-y, 0px)) !important;
+  transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
+  width: 22px !important;
+  height: 12px !important;
+  background: var(--p5-black) !important;
+  z-index: 2 !important;
+
+  /* Inner path — black fill (sits on top of white outline)
+     SVG: M 308,129 L 171,177 L 115,117 L 65,191 L 40,183 L 65,229
+          L 97,195 L 143,265 L 215,243 L 307,274 Z
+     Same bbox as outer path. */
+  clip-path: polygon(
+    97.8% 16.1%,
+    54.4% 40.9%,
+    36.7% 9.8%,
+    20.9% 48.2%,
+    13% 44%,
+    20.9% 67.9%,
+    31% 50.3%,
+    45.6% 86.5%,
+    68.4% 75.1%,
+    97.5% 91.2%
+  ) !important;
+}
+
+/* ── Moderator / member badges — keep visible, mono ───────── */
+.theme-phantom yt-live-chat-author-badge-renderer {
+  filter: grayscale(1) contrast(1.5) !important;
+  vertical-align: middle !important;
+  margin-left: 4px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAME FLAG — recolorable P5 name tag
+   ═══════════════════════════════════════════════════════════════
+   Two-tone from SVG paths:
+     Parent (#author-name) = outer path (black outline).
+     ::before = inner path (fill color), inset by --msg-border-width,
+       z-index: -1. Gap between paths = visible outline.
+
+   Bbox: X 64→492 (428), Y 0→127 (127)
+   ───────────────────────────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #author-name {
+  display: inline-block !important;
+
+  /* Outer path = outline, auto black/white based on fill contrast */
+  background: var(--flagOutline, var(--p5-black)) !important;
+
+  /* Text color = per-role username color, or black by default. */
+  color: var(--usernameColor, var(--p5-black)) !important;
+
+  /* Font cluster — Bebas Neue for the aggressive P5 look */
+  font-family: var(--chat-font-family, 'Bebas Neue'), 'Anton', sans-serif !important;
+  font-size: var(--usernameFontSize, 21px) !important;
+  font-weight: var(--chat-username-font-weight, 400) !important;
+  letter-spacing: 1.5px !important;
+  text-shadow: none !important;
+
+  /* Theme-configurable padding — individual sides */
+  padding: var(--flag-pad-top, 6px) var(--flag-pad-right, 14px) var(--flag-pad-bottom, 6px)
+    var(--flag-pad-left, 10px) !important;
+
+  /* Negative bottom-margin overlaps the ribbon below (P5 style) */
+  margin: 0 0 -0.6em 0.3em !important;
+
+  /* Width grows with text content */
+  white-space: nowrap !important;
+  width: fit-content !important;
+
+  /* The signature P5 tilt (--flag-tilt, default -22°) */
+  transform: rotate(var(--flag-tilt, -22deg)) !important;
+  transform-origin: center !important;
+
+  /* Creates stacking context for ::before negative-z positioning */
+  position: relative !important;
+  z-index: 2 !important;
+
+  /* Outer path — the bigger shape (black outline)
+     SVG: M 212,119 L 492,74 L 481,54 L 441,0 L 64,103 L 75,127 Z
+     Bbox: X 64→492 (428), Y 0→127 (127) */
+  clip-path: polygon(
+    34.6% 93.7%,
+    100% 58.3%,
+    97.4% 42.5%,
+    88.1% 0%,
+    0% 81.1%,
+    2.6% 100%
+  ) !important;
+}
+
+/* Fill chip — inner path, behind the black outline.
+   Both paths share the same element dimensions (no inset).
+   The gap between the two different-shaped paths IS the outline.
+   Parent's clip-path clips ::before too, so ::before is visible
+   only within the outer path — and its own clip makes it the
+   inner path shape. The uncovered area = visible black outline. */
+.theme-phantom yt-live-chat-text-message-renderer #author-name::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background: var(--flagChipBg, var(--p5-white)) !important;
+
+  /* Inner path — the smaller shape (fill body)
+     SVG: M 474,64 L 436,10 L 77,110 L 81,118 L 214,110 Z
+     Same bbox as outer path. Since both paths share the same
+     element dimensions, percentages align correctly. */
+  clip-path: polygon(95.8% 50.4%, 86.9% 7.9%, 3% 86.6%, 4% 92.9%, 35% 86.6%) !important;
+}
+
+/* Text inside the flag — rotates independently from the plate.
+   --text-rotate adjusts text angle without tilting the ribbon shape. */
+.theme-phantom yt-live-chat-text-message-renderer #author-name .flag-text {
+  display: inline-block !important;
+  rotate: var(--text-rotate, 0deg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MESSAGE RIBBON — P5 dialogue box, two-tone from SVG paths
+   ═══════════════════════════════════════════════════════════════
+   Strategy:
+     #message — clipped to OUTER path (white background). Text is
+       clipped to this shape, which is larger than the inner path.
+     #message::before — clipped to INNER path (black background),
+       positioned behind. Creates the black fill inside the white
+       angular border. The gap between outer and inner paths IS
+       the visible white outline.
+
+   Both paths grow dynamically with content:
+     - clip-path percentages scale with element dimensions
+     - #message has fit-content width + auto height
+     - padding is theme-configurable (msg-pad-y, msg-pad-x)
+     - border width is theme-configurable (msg-border-width)
+
+   ───────────────────────────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message {
+  display: block !important;
+
+  /* Outer path = white outline body */
+  background: var(--p5-white) !important;
+  color: var(--phantom-ink, var(--p5-white)) !important;
+
+  font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
+  font-weight: var(--chat-message-font-weight, 500) !important;
+  font-size: var(--messageFontSize, 16px) !important;
+  line-height: 1.35 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
+  text-shadow: none !important;
+
+  /* Theme-configurable padding — individual sides (right is fixed) */
+  padding: var(--msg-pad-top, 14px) 20px var(--msg-pad-bottom, 14px) var(--msg-pad-left, 20px) !important;
+  min-height: 58px !important;
+  width: fit-content !important;
+  max-width: 90% !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+
+  position: relative !important;
+  z-index: 1 !important;
+
+  /* Outer path — the bigger shape (white visible around edges)
+     SVG: M 172,239 L 864,283 L 904,54 L 212,119 Z
+     Bbox: X 172→904 (732), Y 54→283 (229)
+     Percentages scale with element — path grows with content. */
+  clip-path: polygon(0% 80.8%, 94.5% 100%, 100% 0%, 5.5% 28.4%) !important;
+}
+
+/* Black fill — inner path, behind #message's white body.
+   The gap between this shape and the outer path creates the
+   visible white angular border. Border width is configurable
+   via --msg-border-width (default 4px). */
+.theme-phantom yt-live-chat-text-message-renderer #content #message::before {
+  content: '' !important;
+  position: absolute !important;
+  /* inset = border width. Controls the gap between outer (white)
+     and inner (black) paths — the visible outline thickness. */
+  inset: var(--msg-border-width, 4px) !important;
+  z-index: -1 !important;
+  background: var(--p5-black) !important;
+
+  /* Inner path — the smaller shape (black fill body)
+     SVG: M 852,272 L 847,86 L 220,128 L 186,229 Z
+     Same bbox as outer path. Because ::before is inset by
+     --msg-border-width, the percentage polygon automatically
+     scales to the smaller box, producing a uniform outline. */
+  clip-path: polygon(92.9% 95.2%, 92.2% 14%, 6.6% 32.3%, 1.9% 76.4%) !important;
+}
+
+/* ── Emoji sizing inside the ribbon ───────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message img.emoji {
+  height: 1.15em !important;
+  width: 1.15em !important;
+  vertical-align: middle !important;
+  margin: 0 1px !important;
+}
+
+/* ── Links — P5 red ───────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message a {
+  color: var(--p5-red) !important;
+  text-decoration: underline !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROLE OVERRIDES — per-role flag fill + name color
+   ═══════════════════════════════════════════════════════════════
+   Each role uses its OWN derived flag-chip background
+   (*FlagChipBg, from strokeMap on the role's username-color),
+   switching the chip fill to contrast with the role's name text.
+
+   Owner / moderator also get the P5 red authority accent + thin
+   black text stroke; superchat gets a red glow on the plate.
+   ───────────────────────────────────────────────────────────── */
+
+/* Owner */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name {
+  color: var(--owner-username-color, var(--p5-red)) !important;
+  background: var(--ownerFlagOutline, var(--p5-black)) !important;
+  -webkit-text-stroke: 0.4px var(--p5-black) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name::before {
+  background: var(--ownerFlagChipBg, var(--p5-white)) !important;
+}
+
+/* Moderator — P5 highlights authority in red */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name {
+  color: var(--mod-username-color, var(--p5-red)) !important;
+  background: var(--modFlagOutline, var(--p5-black)) !important;
+  -webkit-text-stroke: 0.4px var(--p5-black) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name::before {
+  background: var(--modFlagChipBg, var(--p5-white)) !important;
+}
+
+/* Member */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name {
+  color: var(--member-username-color, var(--p5-black)) !important;
+  background: var(--memberFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name::before {
+  background: var(--memberFlagChipBg, var(--p5-white)) !important;
+}
+
+/* Verified */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name {
+  color: var(--p5-black) !important;
+}
+
+/* Super Chat — red glow on the plate */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name {
+  color: var(--superchat-username-color, var(--p5-black)) !important;
+  background: var(--superchatFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name::before {
+  background: var(--superchatFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content
+  #message {
+  color: var(--superchat-ink, var(--p5-white)) !important;
+  box-shadow: 0 0 12px rgba(227, 36, 43, 0.6) !important;
+}
+
+/* Membership */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name {
+  color: var(--membership-username-color, var(--p5-black)) !important;
+  background: var(--membershipFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name::before {
+  background: var(--membershipFlagChipBg, var(--p5-white)) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHROMA KEY SUPPORT
+   ═══════════════════════════════════════════════════════════════ */
+.theme-phantom yt-live-chat-text-message-renderer[data-chroma='true'],
+.theme-phantom yt-live-chat-text-message-renderer[data-chroma-key] {
+  background: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION — disable slide-in animation
+   ═══════════════════════════════════════════════════════════════
+   Only the slide-in entrance is disabled; the static flag tilt
+   (--flag-tilt) and ribbon artwork remain. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-phantom yt-live-chat-text-message-renderer {
+    animation: none !important;
+    transform: none !important;
+  }
+}

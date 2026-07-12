@@ -759,7 +759,7 @@ fn render_message(msg: &ChatMessage) -> String {
     <div id="content">
       <span id="timestamp">{timestamp}</span>
       <yt-live-chat-author-chip>
-        <span id="author-name"{color_style}>{author}</span>
+        <span id="author-name"{color_style}><span class="flag-text">{author}</span></span>
         <span id="chat-badges">{badges}</span>
       </yt-live-chat-author-chip>
       <div id="before-content-buttons"></div>

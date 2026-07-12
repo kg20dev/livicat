@@ -181,6 +181,34 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   // Close :root block
   lines.push('}')
 
+  // ── Post-derivations: derive variables from other derived variables ──
+  // Runs after the main loop so source variables are already emitted.
+  // e.g. flagOutline derived from flagChipBg (which was derived from usernameColor).
+  const postDerivations = (
+    scheme as {
+      postDerivations?: Record<string, { source: string; options?: HarmonyInvertOptions }>
+    }
+  ).postDerivations
+  if (postDerivations) {
+    const postLines: string[] = []
+    for (const [target, { source, options }] of Object.entries(postDerivations)) {
+      // Find the source value from the already-emitted CSS lines
+      const sourceRe = new RegExp(`--${source}:\\s*(#[0-9a-fA-F]{6})`)
+      const sourceMatch = lines.find((l) => sourceRe.test(l))
+      if (sourceMatch) {
+        const hex = sourceMatch.match(sourceRe)?.[1]
+        if (hex) {
+          postLines.push(`  --${target}: ${harmonyInvertColor(hex, options)};`)
+        }
+      }
+    }
+    if (postLines.length > 0) {
+      // Insert post-derivations into the :root block (before the closing })
+      const closingIdx = lines.lastIndexOf('}')
+      lines.splice(closingIdx, 0, ...postLines)
+    }
+  }
+
   // ── Animation-name rules (IM theme only) ───────────────────────
   // Emitted as direct CSS rules (NOT CSS variables) because
   // var(--foo) in animation-name doesn't always resolve inside
