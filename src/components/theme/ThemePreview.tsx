@@ -307,7 +307,7 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
             id="message"
             data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}
           >
-            {message.message}
+            <span className="message-text">{message.message}</span>
           </div>
         </div>
       </div>

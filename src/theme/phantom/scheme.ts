@@ -59,8 +59,6 @@ export const coreCssVarMap: Record<string, string> = {
   'message-spacing': 'chat-message-spacing',
   'animation-speed': 'animationSpeed',
   'username-bold': 'chat-username-font-weight',
-  'font-weight-message': 'chat-message-font-weight',
-  'chat-avatar-vertical-offset': 'chat-avatar-vertical-offset',
   'letter-spacing': 'chat-letter-spacing',
   'owner-bg': 'owner-bg',
   'owner-text': 'owner-ink',
@@ -133,13 +131,13 @@ export const scheme: SettingDef[] = [
     unit: 'px',
   },
 
-  /* ── Name Flag ────────────────────────────────────────────── */
+  /* ── Flag Shape ────────────────────────────────────────────── */
   /* The flag plate's rotation — the signature P5 tilt. Applied to
      the SVG name flag (#author-name). Default -22° = authentic P5
      angle; 0 = flat. This is the single authoritative rotation. */
   {
     key: 'flag-tilt',
-    section: 'Name Flag',
+    section: 'Flag Shape',
     type: 'range',
     label: 'Flag Tilt',
     min: -30,
@@ -149,102 +147,12 @@ export const scheme: SettingDef[] = [
     unit: 'deg',
   },
 
-  /* Individual padding inside the username ribbon (text ↔ edges). */
-  {
-    key: 'flag-pad-top',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Top Padding',
-    min: 0,
-    max: 20,
-    default: 12,
-    step: 1,
-    unit: 'px',
-  },
-  {
-    key: 'flag-pad-bottom',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Bottom Padding',
-    min: 0,
-    max: 20,
-    default: 12,
-    step: 1,
-    unit: 'px',
-  },
-  /* Minimum height ensures the flag has visual presence even for short usernames. */
-  {
-    key: 'flag-min-height',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Min Height',
-    min: 0,
-    max: 100,
-    default: 0,
-    step: 2,
-    unit: 'px',
-  },
-
-  /* ── Flag Overlap ──────────────────────────────────────────── */
-  /* How much the username flag overlaps the message ribbon below.
-     0 = no gap (flag sits above ribbon)
-     Positive values = flag covers part of the ribbon (P5 style) */
-  {
-    key: 'flag-overlap',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Overlap',
-    min: 0,
-    max: 20,
-    default: 10,
-    step: 1,
-    unit: 'px',
-  },
-
-  /* ── Flag Margin Top ───────────────────────────────────────── */
-  /* Top margin adjusts vertical spacing above the flag.
-     Negative values pull it up, positive values push it down. */
-  {
-    key: 'flag-margin-top',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Margin Top',
-    min: -10,
-    max: 20,
-    default: 0,
-    step: 1,
-    unit: 'px',
-  },
-  {
-    key: 'flag-pad-left',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Left Padding',
-    min: 0,
-    max: 30,
-    default: 10,
-    step: 1,
-    unit: 'px',
-  },
-  {
-    key: 'flag-pad-right',
-    section: 'Name Flag',
-    type: 'range',
-    label: 'Right Padding',
-    min: 0,
-    max: 30,
-    default: 14,
-    step: 1,
-    unit: 'px',
-  },
-
-  /* ── Text Rotation ──────────────────────────────────────────── */
   /* Rotation of the text inside the name flag, independent from
      --flag-tilt (which rotates the whole plate). Applied to the
      inner .flag-text span, not the ribbon element. */
   {
     key: 'text-rotate',
-    section: 'Name Flag',
+    section: 'Flag Shape',
     type: 'range',
     label: 'Text Rotation',
     min: -30,
@@ -254,20 +162,17 @@ export const scheme: SettingDef[] = [
     unit: 'deg',
   },
 
-  /* ── Flag Clearance ───────────────────────────────────────── */
-  /* Extra horizontal padding inside the flag SVG so the name text
-     clears the pointed tail. Scales with font-size automatically
-     (em-based). 0 = tight, 1.5 = generous. */
+  /* Minimum height ensures the flag has visual presence even for short usernames. */
   {
-    key: 'flag-clearance',
-    section: 'Name Flag',
+    key: 'flag-min-height',
+    section: 'Flag Shape',
     type: 'range',
-    label: 'Text Clearance',
+    label: 'Min Height',
     min: 0,
-    max: 1.5,
-    default: 0.6,
-    step: 0.1,
-    unit: '',
+    max: 100,
+    default: 0,
+    step: 2,
+    unit: 'px',
   },
 
   /* ── Thunder Tail ────────────────────────────────────────── */
@@ -308,6 +213,20 @@ export const scheme: SettingDef[] = [
   },
 
   /* ── Message Box ────────────────────────────────────────── */
+  /* Gap between the outer white outline and inner black fill.
+     Controls the visible spacing between ::before (outline) and
+     .message-text (fill). Larger = wider visible border. */
+  {
+    key: 'msg-outline-gap',
+    section: 'Message Box',
+    type: 'range',
+    label: 'Outline Gap',
+    min: 0,
+    max: 20,
+    default: 4,
+    step: 1,
+    unit: 'px',
+  },
   /* Individual padding around text inside the message ribbon. */
   {
     key: 'msg-pad-top',
@@ -342,24 +261,10 @@ export const scheme: SettingDef[] = [
     step: 1,
     unit: 'px',
   },
-  /* Width of the white angular outline around the black message body.
-     This is the visual gap between the outer path (white) and inner
-     path (black fill). Larger = thicker white border. */
-  {
-    key: 'msg-border-width',
-    section: 'Message Box',
-    type: 'range',
-    label: 'Outline Width',
-    min: 0,
-    max: 12,
-    default: 4,
-    step: 1,
-    unit: 'px',
-  },
 
   /* ── Texture (magazine grain) ─────────────────────────────── */
   /* Subtle noise evoking P5's picaresque-novel print texture.
-     Off by default — the SVG artwork already carries the look. */
+     Applied as a blended overlay via mix-blend-mode: overlay. */
   {
     key: 'grain-intensity',
     section: 'Texture',

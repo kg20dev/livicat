@@ -99,20 +99,24 @@
   animation: theme-phantom-in var(--animation-duration, 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1) both !important;
 }
 
-/* ── Optional grain overlay (magazine texture) ────────────── */
-.theme-phantom yt-live-chat-text-message-renderer::before {
+/* ── Grain overlay (magazine texture) ───────────────────── */
+/* Applied as ::after with mix-blend-mode so it blends WITH content
+   instead of sitting behind it. Uses a repeating diagonal line
+   pattern evoking P5's picaresque-novel print texture. */
+.theme-phantom yt-live-chat-text-message-renderer::after {
   content: '' !important;
   position: absolute !important;
   inset: 0 !important;
   pointer-events: none !important;
-  z-index: 0 !important;
-  opacity: calc(var(--grain-intensity, 0) / 100);
+  z-index: 999 !important;
+  opacity: calc(var(--grain-intensity, 0) / 100) !important;
+  mix-blend-mode: overlay !important;
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(0, 0, 0, 0.08) 0,
-    rgba(0, 0, 0, 0.08) 1px,
+    rgba(0, 0, 0, 0.15) 0,
+    rgba(0, 0, 0, 0.15) 1px,
     transparent 1px,
-    transparent 3px
+    transparent 4px
   ) !important;
 }
 
@@ -120,10 +124,11 @@
 .theme-phantom yt-live-chat-text-message-renderer #author-photo {
   flex-shrink: 0 !important;
   margin-right: 0 !important;
+  transform: translateY(var(--chat-avatar-vertical-offset, 0px)) !important;
 }
 .theme-phantom yt-live-chat-text-message-renderer #author-photo img {
-  width: 28px !important;
-  height: 28px !important;
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
   border-radius: 50% !important;
   vertical-align: middle !important;
 }
@@ -210,18 +215,27 @@
 /* ═══════════════════════════════════════════════════════════════
    NAME FLAG — recolorable P5 name tag
    ═══════════════════════════════════════════════════════════════
-   Two-tone from SVG paths:
-     Parent (#author-name) = outer path (black outline).
-     ::before = inner path (fill color), inset by --msg-border-width,
-       z-index: -1. Gap between paths = visible outline.
+   Two-layer approach (inner fill + outer outline):
+
+     #author-name         — transparent container, no clip-path.
+                             Holds layout, padding, tilt, margin.
+     #author-name::before — OUTER path (outline color). Sits behind
+                             via z-index:-1. Clip-path defines the
+                             bigger jagged shape.
+     #author-name .flag-text — INNER path (fill color). Contains the
+                             actual username text. Clip-path defines
+                             the smaller jagged shape. Text is clipped
+                             to THIS shape, so it never bleeds into
+                             the outline area.
+
+   Gap between outer and inner paths = visible outline.
 
    Bbox: X 64→492 (428), Y 0→127 (127)
    ───────────────────────────────────────────────────────────── */
 .theme-phantom yt-live-chat-text-message-renderer #author-name {
-  display: inline-block !important;
-
-  /* Outer path = outline, auto black/white based on fill contrast */
-  background: var(--flagOutline, var(--p5-black)) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 
   /* Text color = per-role username color, or black by default. */
   color: var(--usernameColor, var(--p5-black)) !important;
@@ -234,15 +248,14 @@
   text-shadow: none !important;
 
   /* Theme-configurable padding — individual sides */
-  padding: var(--flag-pad-top, 12px) var(--flag-pad-right, 14px) var(--flag-pad-bottom, 12px)
-    var(--flag-pad-left, 10px) !important;
+  padding: 12px 14px 12px 10px !important;
 
   /* Minimum height ensures visual presence for short usernames */
   min-height: var(--flag-min-height, 0px) !important;
 
   /* Overlap controls how much flag covers the message ribbon below.
      Margin top for vertical positioning, bottom = negative overlap for overlap. */
-  margin: var(--flag-margin-top, 0px) 0 calc(var(--flag-overlap, 10px) * -1) 0.3em !important;
+  margin: 0 0 -10px 0.3em !important;
 
   /* Width grows with text content */
   white-space: nowrap !important;
@@ -256,43 +269,31 @@
   position: relative !important;
   z-index: 2 !important;
 
-  /* Outer path — the bigger shape (black outline)
-     SVG: M 212,119 L 492,74 L 481,54 L 441,0 L 64,103 L 75,127 Z
-     Bbox: X 64→492 (428), Y 0→127 (127) */
-  clip-path: polygon(
-    34.6% 93.7%,
-    100% 58.3%,
-    97.4% 42.5%,
-    88.1% 0%,
-    0% 81.1%,
-    2.6% 100%
-  ) !important;
+  /* NO clip-path here — the container is transparent.
+     Outer shape is on ::before, inner shape is on .flag-text. */
 }
 
-/* Fill chip — inner path, behind the black outline.
-   Both paths share the same element dimensions (no inset).
-   The gap between the two different-shaped paths IS the outline.
-   Parent's clip-path clips ::before too, so ::before is visible
-   only within the outer path — and its own clip makes it the
-   inner path shape. The uncovered area = visible black outline. */
+/* Outer outline — sits behind the fill via z-index:-1.
+   Clip-path defines the bigger jagged shape (the outline).
+   The gap between this shape and .flag-text's inner shape
+   IS the visible outline. */
 .theme-phantom yt-live-chat-text-message-renderer #author-name::before {
   content: '' !important;
   position: absolute !important;
   inset: 0 !important;
   z-index: -1 !important;
-  background: var(--flagChipBg, var(--p5-white)) !important;
+  background: var(--flagOutline, var(--p5-black)) !important;
 
-  /* Inner path — the smaller shape (fill body)
-     SVG: M 474,64 L 436,10 L 77,110 L 81,118 L 214,110 Z
-     Same bbox as outer path. Since both paths share the same
-     element dimensions, percentages align correctly. */
-  clip-path: polygon(95.8% 50.4%, 86.9% 7.9%, 3% 86.6%, 4% 92.9%, 35% 86.6%) !important;
+  /* Outer path — the bigger shape (outline) */
+  clip-path: polygon(50% 80%, 100% 50%, 100% 50%, 91% 2%, 1% 60%, 10.6% 100%) !important;
 }
 
-/* Text inside the flag — rotates independently from the plate.
-   --text-rotate adjusts text angle without tilting the ribbon shape. */
+/* Inner fill — contains the username text.
+   Background provides the fill color. No clip-path here —
+   the outer outline on ::before handles the shape. */
 .theme-phantom yt-live-chat-text-message-renderer #author-name .flag-text {
   display: inline-block !important;
+  background: var(--flagChipBg, var(--p5-white)) !important;
   rotate: var(--text-rotate, 0deg) !important;
 }
 
@@ -311,14 +312,33 @@
      - clip-path percentages scale with element dimensions
      - #message has fit-content width + auto height
      - padding is theme-configurable (msg-pad-y, msg-pad-x)
-     - border width is theme-configurable (msg-border-width)
+      - outline gap is theme-configurable (msg-outline-gap)
 
    ───────────────────────────────────────────────────────────── */
 .theme-phantom yt-live-chat-text-message-renderer #content #message {
   display: block !important;
+  position: relative !important;
+  z-index: 1 !important;
+  width: fit-content !important;
+  max-width: 90% !important;
+}
 
-  /* Outer path = white outline body */
+.theme-phantom yt-live-chat-text-message-renderer #content #message::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: calc(var(--msg-outline-gap, 4px) * -1) !important;
   background: var(--p5-white) !important;
+  clip-path: polygon(8% 89.8%, 96.5% 95%, 99% 5%, 7.5% 10.4%) !important;
+  z-index: -1 !important;
+}
+
+.theme-phantom yt-live-chat-text-message-renderer #content #message .message-text {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--p5-black) !important;
   color: var(--phantom-ink, var(--p5-white)) !important;
 
   font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
@@ -328,43 +348,10 @@
   letter-spacing: var(--chat-letter-spacing, 0px) !important;
   text-shadow: none !important;
 
-  /* Theme-configurable padding — individual sides (right is fixed) */
   padding: var(--msg-pad-top, 14px) 20px var(--msg-pad-bottom, 14px) var(--msg-pad-left, 20px) !important;
   min-height: 58px !important;
-  width: fit-content !important;
-  max-width: 90% !important;
   overflow-wrap: anywhere !important;
   word-break: break-word !important;
-
-  position: relative !important;
-  z-index: 1 !important;
-
-  /* Outer path — the bigger shape (white visible around edges)
-     SVG: M 172,239 L 864,283 L 904,54 L 212,119 Z
-     Bbox: X 172→904 (732), Y 54→283 (229)
-     Percentages scale with element — path grows with content. */
-  clip-path: polygon(0% 80.8%, 94.5% 100%, 100% 0%, 5.5% 28.4%) !important;
-}
-
-/* Black fill — inner path, behind #message's white body.
-   The gap between this shape and the outer path creates the
-   visible white angular border. Border width is configurable
-   via --msg-border-width (default 4px). */
-.theme-phantom yt-live-chat-text-message-renderer #content #message::before {
-  content: '' !important;
-  position: absolute !important;
-  /* inset = border width. Controls the gap between outer (white)
-     and inner (black) paths — the visible outline thickness. */
-  inset: var(--msg-border-width, 4px) !important;
-  z-index: -1 !important;
-  background: var(--p5-black) !important;
-
-  /* Inner path — the smaller shape (black fill body)
-     SVG: M 852,272 L 847,86 L 220,128 L 186,229 Z
-     Same bbox as outer path. Because ::before is inset by
-     --msg-border-width, the percentage polygon automatically
-     scales to the smaller box, producing a uniform outline. */
-  clip-path: polygon(92.9% 95.2%, 92.2% 14%, 6.6% 32.3%, 1.9% 76.4%) !important;
 }
 
 /* ── Emoji sizing inside the ribbon ───────────────────────── */
@@ -399,14 +386,20 @@
   )
   #author-name {
   color: var(--owner-username-color, var(--p5-red)) !important;
-  background: var(--ownerFlagOutline, var(--p5-black)) !important;
-  -webkit-text-stroke: 0.4px var(--p5-black) !important;
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
   )
   #author-name::before {
+  background: var(--ownerFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name
+  .flag-text {
   background: var(--ownerFlagChipBg, var(--p5-white)) !important;
 }
 
@@ -417,14 +410,20 @@
   )
   #author-name {
   color: var(--mod-username-color, var(--p5-red)) !important;
-  background: var(--modFlagOutline, var(--p5-black)) !important;
-  -webkit-text-stroke: 0.4px var(--p5-black) !important;
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
   )
   #author-name::before {
+  background: var(--modFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name
+  .flag-text {
   background: var(--modFlagChipBg, var(--p5-white)) !important;
 }
 
@@ -435,13 +434,20 @@
   )
   #author-name {
   color: var(--member-username-color, var(--p5-black)) !important;
-  background: var(--memberFlagOutline, var(--p5-black)) !important;
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
   )
   #author-name::before {
+  background: var(--memberFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name
+  .flag-text {
   background: var(--memberFlagChipBg, var(--p5-white)) !important;
 }
 
@@ -453,6 +459,21 @@
   #author-name {
   color: var(--p5-black) !important;
 }
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name::before {
+  background: var(--p5-black) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name
+  .flag-text {
+  background: var(--p5-white) !important;
+}
 
 /* Super Chat — red glow on the plate */
 :is(
@@ -461,13 +482,20 @@
   )
   #author-name {
   color: var(--superchat-username-color, var(--p5-black)) !important;
-  background: var(--superchatFlagOutline, var(--p5-black)) !important;
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #author-name::before {
+  background: var(--superchatFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name
+  .flag-text {
   background: var(--superchatFlagChipBg, var(--p5-white)) !important;
 }
 :is(
@@ -475,7 +503,8 @@
     .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #content
-  #message {
+  #message
+  .message-text {
   color: var(--superchat-ink, var(--p5-white)) !important;
   box-shadow: 0 0 12px rgba(227, 36, 43, 0.6) !important;
 }
@@ -487,13 +516,20 @@
   )
   #author-name {
   color: var(--membership-username-color, var(--p5-black)) !important;
-  background: var(--membershipFlagOutline, var(--p5-black)) !important;
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
   )
   #author-name::before {
+  background: var(--membershipFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name
+  .flag-text {
   background: var(--membershipFlagChipBg, var(--p5-white)) !important;
 }
 

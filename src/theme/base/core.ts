@@ -154,6 +154,7 @@ export const CORE_SCHEME: SettingDef[] = [
   },
   {
     key: 'chat-max-width',
+    cssVar: 'chat-max-width',
     section: 'Common',
     type: 'range',
     label: 'Max Width',
