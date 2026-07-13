@@ -764,13 +764,13 @@ fn render_message(msg: &ChatMessage) -> String {
     <div id="content">
       <span id="timestamp">{timestamp}</span>
       <yt-live-chat-author-chip>
-        <span id="author-name"{color_style}><span class="flag-text">{author}</span></span>
+        <div id="author-name"{color_style}><span class="flag-text">{author}</span></div>
         <span id="chat-badges">{badges}</span>
       </yt-live-chat-author-chip>
       <div id="before-content-buttons"></div>
-      <span id="message-container">
-        <span id="message"{punct}><span class="message-text">{text}</span></span>
-      </span>
+      <div id="message-container">
+        <div id="message"{punct}><span class="message-text">{text}</span></div>
+      </div>
       {super_chat}
     </div>
   </yt-live-chat-text-message-renderer>"#,

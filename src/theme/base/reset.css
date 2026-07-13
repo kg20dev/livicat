@@ -6,9 +6,9 @@
  *
  * Matches YouTube's native DOM exactly:
  *   <yt-live-chat-text-message-renderer>         ← container (flex row)
- *     <div id="author-photo">                     ← avatar wrapper
- *       <img src="..." />
- *     </div>
+ *     <yt-img-shadow id="author-photo">           ← avatar wrapper (YouTube Custom Element)
+ *       <img id="img" src="..." />
+ *     </yt-img-shadow>
  *     <div id="content">                          ← content column
  *       <div id="author-name">Username</div>       ← or inside <yt-live-chat-author-chip>
  *       <div id="message-container">              ← message wrapper
