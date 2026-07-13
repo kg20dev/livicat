@@ -178,7 +178,7 @@ export function WorkspaceX() {
   const updateRecentThemes = useCallback((themeId: string) => {
     setRecentThemes((prev) => {
       const filtered = prev.filter((id) => id !== themeId)
-      const updated = [themeId, ...filtered].slice(0, 5)
+      const updated = [themeId, ...filtered].slice(0, 2)
       localStorage.setItem('livicat-recent-themes', JSON.stringify(updated))
       return updated
     })
