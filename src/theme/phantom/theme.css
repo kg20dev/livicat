@@ -1,0 +1,706 @@
+/* ══════════════════════════════════════════════════════════════════
+   ║  Phantom Chat Theme — scoped CSS for YouTube Live Chat       ║
+   ║                                                                ║
+   ║  Persona 5-inspired, entirely CSS-based shapes. No SVG data-   ║
+   ║  URLs. The two-tone jagged P5 look comes from layered          ║
+   ║  clip-path polygons on each element and its ::before pseudo:   ║
+   ║                                                                ║
+   ║    1. NAME FLAG — Black outline + recolorable fill chip.       ║
+   ║       Parent (#author-name) is the BLACK outline layer with    ║
+   ║       a jagged clip-path. ::before is the recolorable fill     ║
+   ║       inset by 2px, z-index: -1, same clip-path. The parent's ║
+   ║       black background shows as a 2px outline around the fill. ║
+   ║       Tilted by --flag-tilt (default -13°).                    ║
+   ║                                                                ║
+   ║    2. MESSAGE RIBBON — White jagged edge + black fill body.    ║
+   ║       Parent (#message) is the WHITE outline layer with a      ║
+   ║       torn clip-path. ::before is the black fill inset by 3px, ║
+   ║       z-index: -1, same clip-path. Text sits white on black.   ║
+   ║                                                                ║
+   ║    3. RED / BLACK / WHITE — pure palette. Red #e3242b accents  ║
+   ║       moderator/owner names; everything else is mono.           ║
+   ║    4. AVATAR + THUNDER TAIL — round avatar on left, zigzag     ║
+   ║       white/black tail connects to the message ribbon.          ║
+   ║    5. KINETIC SLIDE-IN — enter from the left with a skew snap. ║
+   ║                                                                ║
+   ║  CEF-109 (OBS) safe: no color-mix(), no @import, no mask-image,║
+   ║  no @property. clip-path: polygon() is supported since Chrome  ║
+   ║  55; CEF-109 (= Chromium 109) has full support.                ║
+   ║  Fonts: Oswald (message) + Bebas Neue/Anton (flag) load via    ║
+   ║  FONT_OPTIONS → buildCSSVariables @import when selected.       ║
+   ║  Matches YouTube's native DOM exactly (see base/reset.css).    ║
+   ║  Prefix .theme-phantom stripped before YouTube injection.      ║
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Palette ──────────────────────────────────────────────── */
+/* :root ensures --p5-* vars are available in ALL rendering contexts:
+   Livicat renderer (no .theme-phantom class), YouTube (stripped prefix),
+   ThemePreview (.theme-phantom class present). Prefixed --p5-* avoids
+   collisions with other themes. */
+:root {
+  --p5-red: #e3242b;
+  --p5-black: #0d0d0d;
+  --p5-white: #ffffff;
+}
+
+/* ── Animation ────────────────────────────────────────────── */
+/* Kinetic slide-in: enter from the left with a skew overshoot, then
+   snap upright — P5's dynamic UI transition. --slide-distance drives
+   the travel. */
+@keyframes theme-phantom-in {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-distance, 24px) * -1.5)) skewX(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(calc(var(--slide-distance, 24px) * 0.25)) skewX(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0deg);
+  }
+}
+
+/* ── Chat container — near-black canvas like P5 menus ────── */
+.theme-phantom yt-live-chat-item-list-renderer,
+.theme-phantom #chat-messages,
+.theme-phantom #items,
+.theme-phantom yt-live-chat-message-renderer,
+.livicat-chat-messages.theme-phantom {
+  background: var(--p5-black) !important;
+}
+
+/* ── Message row — transparent shell, flex ROW ────────────── */
+/* Layout: [avatar] [zigzag tail] [name flag + message ribbon]
+   The renderer is transparent: avatar on left, content on right,
+   connected by a zigzag thunder tail drawn on #content::before. */
+.theme-phantom yt-live-chat-text-message-renderer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  margin-bottom: var(--chat-message-spacing, 8px) !important;
+  margin-left: var(--chat-margin-left, 0px) !important;
+  margin-right: 6px !important;
+  padding: 4px 0 18px 0 !important;
+  font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
+  font-weight: var(--chat-message-font-weight, 500) !important;
+  opacity: calc(var(--containerOpacity, 100) / 100 * var(--messageOpacity, 100) / 100) !important;
+  max-width: var(--chat-max-width, 400px) !important;
+  width: fit-content !important;
+
+  /* Row: avatar left, content right, connected by zigzag tail. */
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+
+  position: relative !important;
+  animation: theme-phantom-in var(--animation-duration, 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1) both !important;
+}
+
+/* ── Grain overlay (magazine texture) ───────────────────── */
+/* Applied as ::after with mix-blend-mode so it blends WITH content
+   instead of sitting behind it. Uses a repeating diagonal line
+   pattern evoking P5's picaresque-novel print texture. */
+.theme-phantom yt-live-chat-text-message-renderer::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 999 !important;
+  opacity: calc(var(--grain-intensity, 0) / 100) !important;
+  mix-blend-mode: overlay !important;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.15) 0,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 4px
+  ) !important;
+}
+
+/* ── Avatar — left side, round, flex-shrink:0 ──────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #author-photo {
+  flex-shrink: 0 !important;
+  margin-right: 0 !important;
+  transform: translateY(var(--chat-avatar-vertical-offset, 0px)) !important;
+}
+.theme-phantom yt-live-chat-text-message-renderer #author-photo img {
+  width: var(--avatarSize, 28px) !important;
+  height: var(--avatarSize, 28px) !important;
+  border-radius: 50% !important;
+  vertical-align: middle !important;
+}
+
+/* ── Content container — right side, relative for tail ─────── */
+.theme-phantom yt-live-chat-text-message-renderer #content {
+  position: relative !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* ── Zigzag thunder tail — two-part connector ──────────────── */
+/* White outer shape (outline) + black inner shape (fill).
+   Derived from authentic P5 thunder tail SVG paths.
+   Controlled by --tail-offset-x, --tail-offset-y, --tail-scale. */
+.theme-phantom yt-live-chat-text-message-renderer #content::before {
+  content: '' !important;
+  position: absolute !important;
+  left: calc(var(--tail-offset-x, -24px) * var(--tail-scale, 1)) !important;
+  top: calc(50% + var(--tail-offset-y, 0px)) !important;
+  transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
+  width: 24px !important;
+  height: 14px !important;
+  background: var(--defaultOuter, #ffffff) !important;
+  z-index: 1 !important;
+
+  /* Outer path — white outline (behind black fill)
+     SVG: M 311,291 L 220,257 L 136,270 L 113,231 L 96,212 L 64,244
+          L 17,172 L -1,134 L 64,175 L 106,98 L 173,162 L 315,113 Z
+     Bbox: X -1→315 (316), Y 98→291 (193) */
+  clip-path: polygon(
+    100% 100%,
+    70% 82.4%,
+    43.4% 89.1%,
+    36.1% 68.9%,
+    30.7% 59.1%,
+    20.6% 75.6%,
+    5.7% 38.3%,
+    0% 18.7%,
+    20.6% 39.9%,
+    33.9% 0%,
+    55.1% 33.2%,
+    100% 7.8%
+  ) !important;
+}
+
+/* Black fill — inner path (on top of white outline) */
+.theme-phantom yt-live-chat-text-message-renderer #content::after {
+  content: '' !important;
+  position: absolute !important;
+  left: calc(var(--tail-offset-x, -24px) * var(--tail-scale, 1) + 2px) !important;
+  top: calc(50% + var(--tail-offset-y, 0px)) !important;
+  transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
+  width: 22px !important;
+  height: 12px !important;
+  background: var(--phantom-bg, #000000) !important;
+  z-index: 2 !important;
+
+  /* Inner path — black fill (sits on top of white outline)
+     SVG: M 308,129 L 171,177 L 115,117 L 65,191 L 40,183 L 65,229
+          L 97,195 L 143,265 L 215,243 L 307,274 Z
+     Same bbox as outer path. */
+  clip-path: polygon(
+    97.8% 16.1%,
+    54.4% 40.9%,
+    36.7% 9.8%,
+    20.9% 48.2%,
+    13% 44%,
+    20.9% 67.9%,
+    31% 50.3%,
+    45.6% 86.5%,
+    68.4% 75.1%,
+    97.5% 91.2%
+  ) !important;
+}
+
+/* ── Moderator / member badges — keep visible, mono ───────── */
+.theme-phantom yt-live-chat-author-badge-renderer {
+  filter: grayscale(1) contrast(1.5) !important;
+  vertical-align: middle !important;
+  margin-left: 4px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAME FLAG — recolorable P5 name tag
+   ═══════════════════════════════════════════════════════════════
+   Two-layer approach (inner fill + outer outline):
+
+     #author-name         — transparent container, no clip-path.
+                             Holds layout, padding, tilt, margin.
+     #author-name::before — OUTER path (outline color). Sits behind
+                             via z-index:-1. Clip-path defines the
+                             bigger jagged shape.
+     #author-name .flag-text — INNER path (fill color). Contains the
+                             actual username text. Clip-path defines
+                             the smaller jagged shape. Text is clipped
+                             to THIS shape, so it never bleeds into
+                             the outline area.
+
+   Gap between outer and inner paths = visible outline.
+
+   Bbox: X 64→492 (428), Y 0→127 (127)
+   ───────────────────────────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #author-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  /* Text color = per-role username color, or black by default. */
+  color: var(--usernameColor, var(--p5-black)) !important;
+
+  /* Font cluster — Bebas Neue for the aggressive P5 look */
+  font-family: var(--chat-font-family, 'Bebas Neue'), 'Anton', sans-serif !important;
+  font-size: var(--usernameFontSize, 21px) !important;
+  font-weight: var(--chat-username-font-weight, 400) !important;
+  letter-spacing: 1.5px !important;
+  text-shadow: none !important;
+
+  /* Theme-configurable padding — individual sides */
+  padding: 12px 14px 12px 10px !important;
+
+  /* Minimum height ensures visual presence for short usernames */
+  min-height: var(--flag-min-height, 0px) !important;
+
+  /* Overlap controls how much flag covers the message ribbon below.
+     Margin top for vertical positioning, bottom = negative overlap for overlap. */
+  margin: 0 0 -10px 0.3em !important;
+
+  /* Width grows with text content */
+  white-space: nowrap !important;
+  width: fit-content !important;
+
+  /* The signature P5 tilt (--flag-tilt, default -22°) */
+  transform: rotate(var(--flag-tilt, -22deg)) !important;
+  transform-origin: center !important;
+
+  /* Creates stacking context for ::before negative-z positioning */
+  position: relative !important;
+  z-index: 2 !important;
+
+  /* NO clip-path here — the container is transparent.
+     Outer shape is on ::before, inner shape is on .flag-text. */
+}
+
+/* Outer outline — sits behind the fill via z-index:-1.
+   Clip-path defines the bigger jagged shape (the outline).
+   The gap between this shape and .flag-text's inner shape
+   IS the visible outline. */
+.theme-phantom yt-live-chat-text-message-renderer #author-name::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background: var(--flagOutline, var(--p5-black)) !important;
+
+  /* Outer path — the bigger shape (outline) */
+  clip-path: polygon(6% 67%, 95% 50%, 80% 0%, 2% 40%) !important;
+}
+
+/* Inner fill — contains the username text.
+   Background provides the fill color. No clip-path here —
+   the outer outline on ::before handles the shape. */
+.theme-phantom yt-live-chat-text-message-renderer #author-name .flag-text {
+  display: inline-block !important;
+  background: var(--flagChipBg, var(--p5-white)) !important;
+  padding: 4px !important;
+  transform: rotate(var(--text-rotate, 0deg)) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MESSAGE RIBBON — P5 dialogue box, two-tone from SVG paths
+   ═══════════════════════════════════════════════════════════════
+   Strategy:
+     #message — clipped to OUTER path (white background). Text is
+       clipped to this shape, which is larger than the inner path.
+     #message::before — clipped to INNER path (black background),
+       positioned behind. Creates the black fill inside the white
+       angular border. The gap between outer and inner paths IS
+       the visible white outline.
+
+   Both paths grow dynamically with content:
+     - clip-path percentages scale with element dimensions
+     - #message has fit-content width + auto height
+     - padding is theme-configurable (msg-pad-y, msg-pad-x)
+      - outline gap is theme-configurable (msg-outline-gap)
+
+   ───────────────────────────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message {
+  display: block !important;
+  position: relative !important;
+  z-index: 1 !important;
+  width: fit-content !important;
+  max-width: 90% !important;
+}
+
+.theme-phantom yt-live-chat-text-message-renderer #content #message::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: calc(var(--msg-outline-gap, 4px) * -1) !important;
+  background: var(--defaultOuter, #ffffff) !important;
+  clip-path: polygon(8% 81.8%, 95.5% 87%, 97% 4%, 6.5% 15.4%) !important;
+  z-index: -1 !important;
+}
+.theme-phantom yt-live-chat-text-message-renderer #content #message .message-text {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--phantom-bg, #000000) !important;
+  color: var(--phantom-ink, var(--p5-white)) !important;
+
+  font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
+  font-weight: var(--chat-message-font-weight, 500) !important;
+  font-size: var(--messageFontSize, 16px) !important;
+  line-height: 1.35 !important;
+  letter-spacing: var(--chat-letter-spacing, 0px) !important;
+  text-shadow: none !important;
+
+  padding: var(--msg-pad-top, 14px) 20px var(--msg-pad-bottom, 14px) var(--msg-pad-left, 20px) !important;
+  min-width: 120px !important;
+  min-height: 58px !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* ── Emoji sizing inside the ribbon ───────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message img.emoji {
+  height: 1.15em !important;
+  width: 1.15em !important;
+  vertical-align: middle !important;
+  margin: 0 1px !important;
+}
+
+/* ── Links — P5 red ───────────────────────────────────────── */
+.theme-phantom yt-live-chat-text-message-renderer #content #message a {
+  color: var(--p5-red) !important;
+  text-decoration: underline !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROLE OVERRIDES — per-role flag fill + name color + message ribbon
+   ═══════════════════════════════════════════════════════════════
+   Each role uses its OWN derived flag-chip background
+   (*FlagChipBg, from strokeMap on the role's username-color),
+   switching the chip fill to contrast with the role's name text.
+
+   Per-role --usernameColor override on the renderer element ensures
+   the name flag picks up the role's color. Per-role --phantom-ink
+   and background overrides ensure the message ribbon uses the role's
+   text color and background (not the global defaults).
+
+   Owner / moderator also get the P5 red authority accent + thin
+   black text stroke; superchat gets a red glow on the plate.
+   ───────────────────────────────────────────────────────────── */
+
+/* Owner — orange-gold accent */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  --usernameColor: var(--owner-username-color, #ffb347);
+  --phantom-ink: var(--owner-ink, var(--p5-white));
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name::before {
+  background: var(--ownerFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #author-name
+  .flag-text {
+  background: var(--ownerFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content
+  #message::before {
+  background: var(--ownerOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--owner-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content::before {
+  background: var(--ownerOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content::after {
+  background: var(--owner-bg, #000000) !important;
+}
+
+/* Moderator — P5 highlights authority in red */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  --usernameColor: var(--mod-username-color, #47b5ff);
+  --phantom-ink: var(--mod-ink, var(--p5-white));
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name::before {
+  background: var(--modFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #author-name
+  .flag-text {
+  background: var(--modFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content
+  #message::before {
+  background: var(--modOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--mod-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content::before {
+  background: var(--modOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content::after {
+  background: var(--mod-bg, #000000) !important;
+}
+
+/* Member — purple accent */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+) {
+  --usernameColor: var(--member-username-color, #ce93d8);
+  --phantom-ink: var(--member-ink, var(--p5-white));
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name::before {
+  background: var(--memberFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #author-name
+  .flag-text {
+  background: var(--memberFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content
+  #message::before {
+  background: var(--memberOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--member-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content::before {
+  background: var(--memberOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content::after {
+  background: var(--member-bg, #000000) !important;
+}
+
+/* Verified — black/white only */
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name {
+  color: var(--p5-black) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name::before {
+  background: var(--p5-black) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
+  )
+  #author-name
+  .flag-text {
+  background: var(--p5-white) !important;
+}
+
+/* Super Chat — red glow on the plate */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  --usernameColor: var(--superchat-username-color, #ffd700);
+  --phantom-ink: var(--superchat-ink, var(--p5-white));
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name::before {
+  background: var(--superchatFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #author-name
+  .flag-text {
+  background: var(--superchatFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content
+  #message::before {
+  background: var(--superchatOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--superchat-bg, #000000) !important;
+  box-shadow: 0 0 12px rgba(227, 36, 43, 0.6) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content::before {
+  background: var(--superchatOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content::after {
+  background: var(--superchat-bg, #000000) !important;
+}
+
+/* Membership */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  --usernameColor: var(--membership-username-color, #ffffff);
+  --phantom-ink: var(--membership-ink, var(--p5-white));
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name::before {
+  background: var(--membershipFlagOutline, var(--p5-black)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #author-name
+  .flag-text {
+  background: var(--membershipFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content
+  #message::before {
+  background: var(--membershipOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--membership-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content::before {
+  background: var(--membershipOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content::after {
+  background: var(--membership-bg, #000000) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHROMA KEY SUPPORT
+   ═══════════════════════════════════════════════════════════════ */
+.theme-phantom yt-live-chat-text-message-renderer[data-chroma='true'],
+.theme-phantom yt-live-chat-text-message-renderer[data-chroma-key] {
+  background: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION — disable slide-in animation
+   ═══════════════════════════════════════════════════════════════
+   Only the slide-in entrance is disabled; the static flag tilt
+   (--flag-tilt) and ribbon artwork remain. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-phantom yt-live-chat-text-message-renderer {
+    animation: none !important;
+    transform: none !important;
+  }
+}

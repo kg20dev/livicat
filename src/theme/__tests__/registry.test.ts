@@ -26,6 +26,7 @@ describe('Theme Registry', () => {
       expect(ids).toContain('ink-sticker')
       expect(ids).toContain('crayon')
       expect(ids).toContain('block')
+      expect(ids).toContain('phantom')
     })
 
     it('each theme has a valid manifest with all required fields', () => {

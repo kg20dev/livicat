@@ -134,6 +134,15 @@ export function ThemePreview({
 }: ThemePreviewProps) {
   const inlineCss = useMemo(() => buildCSSVariables(settings, scheme), [settings, scheme])
 
+  const cssHash = useMemo(() => {
+    // Simple hash of inlineCss to force style element recreation
+    let hash = 0
+    for (let i = 0; i < inlineCss.length; i++) {
+      hash = ((hash << 5) - hash + inlineCss.charCodeAt(i)) | 0
+    }
+    return Math.abs(hash).toString(36)
+  }, [inlineCss])
+
   const fullCss = resetCss
     ? [inlineCss, resetCss, themeCss].join('\n\n')
     : [inlineCss, themeCss].join('\n\n')
@@ -149,44 +158,74 @@ export function ThemePreview({
   const isGallery = mode === 'gallery'
 
   return (
-    <div className="w-full h-full flex items-start overflow-auto">
+    <div className={`w-full h-full flex flex-col theme-${themeId}`}>
       {/* Injected theme CSS */}
-      <style id={`theme-css-${themeId}`}>{fullCss}</style>
+      <style key={cssHash} id={`theme-css-${themeId}`}>
+        {fullCss}
+      </style>
 
       {/* Gallery-specific layout styles */}
       {isGallery && (
         <style>{`
-          /* ── Gallery Grid Layout ────────────────────────────────────── */
+          /* ── Bento-style Gallery Grid ───────────────────────────────── */
           .livicat-gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-            gap: 1.5rem;
-            padding: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.75rem;
+            padding: 1rem;
             align-content: start;
+            grid-auto-rows: min-content;
           }
 
-          /* Responsive breakpoints */
+          /* Mobile-first responsive breakpoints */
+          @media (min-width: 480px) {
+            .livicat-gallery-grid {
+              grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+              gap: 1rem;
+              padding: 1.25rem;
+            }
+          }
+
+          @media (min-width: 640px) {
+            .livicat-gallery-grid {
+              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+              gap: 1.25rem;
+            }
+          }
+
           @media (min-width: 768px) {
             .livicat-gallery-grid {
-              grid-template-columns: repeat(2, 1fr);
+              grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+              gap: 1.5rem;
+              padding: 1.5rem;
             }
           }
 
           @media (min-width: 1024px) {
             .livicat-gallery-grid {
-              grid-template-columns: repeat(3, 1fr);
+              grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+              gap: 1.75rem;
+              padding: 1.75rem;
+            }
+          }
+
+          @media (min-width: 1280px) {
+            .livicat-gallery-grid {
+              grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+              gap: 2rem;
+              padding: 2rem;
             }
           }
 
           /* ── Gallery Message Card ───────────────────────────────────── */
           .livicat-gallery-card {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
-                        0 1px 2px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
+                        0 4px 16px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-            overflow: visible;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
             display: grid;
             grid-template-rows: auto 1fr;
             align-items: center;
@@ -195,47 +234,88 @@ export function ThemePreview({
             padding: 0.75rem;
           }
 
+          /* Bento box: Some cards span multiple cells */
+          .livicat-gallery-card:nth-child(4n) {
+            grid-column: span 1;
+            grid-row: span 1;
+          }
+
+          @media (min-width: 640px) {
+            .livicat-gallery-card:nth-child(5n) {
+              grid-column: span 2;
+              aspect-ratio: 16 / 9;
+            }
+
+            .livicat-gallery-card:nth-child(3n) {
+              grid-row: span 2;
+              aspect-ratio: 9 / 16;
+            }
+          }
+
+          @media (min-width: 1024px) {
+            .livicat-gallery-card:nth-child(7n) {
+              grid-column: span 2;
+              grid-row: span 2;
+              aspect-ratio: 1 / 1;
+            }
+          }
+
           /* ── Gallery Role Label ─────────────────────────────────────── */
           .livicat-gallery-label {
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: rgba(255, 255, 255, 0.55);
-            background: rgba(255, 255, 255, 0.08);
-            padding: 3px 12px;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 8px;
             border-radius: 4px;
-            line-height: 1.5;
+            line-height: 1.4;
             white-space: nowrap;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            backdrop-filter: blur(4px);
           }
 
           .livicat-gallery-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
-                        0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+                        0 4px 8px rgba(0, 0, 0, 0.08);
             border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
           }
 
-          /* Scale chat message to fit within card using transform */
+          /* Scale chat message to fit within card */
           .livicat-gallery-card > yt-live-chat-text-message-renderer {
             transform-origin: center center;
-            transform: scale(0.6);
-            width: 500px;
+            transform: scale(0.4);
+            width: 100%;
+            max-width: 350px;
             flex-shrink: 0;
           }
 
-          /* Responsive scaling for different screen sizes */
+          /* Responsive scaling */
+          @media (min-width: 480px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.45);
+            }
+          }
+
+          @media (min-width: 640px) {
+            .livicat-gallery-card > yt-live-chat-text-message-renderer {
+              transform: scale(0.5);
+            }
+          }
+
           @media (min-width: 768px) {
             .livicat-gallery-card > yt-live-chat-text-message-renderer {
-              transform: scale(0.75);
-              width: 500px;
+              transform: scale(0.55);
+              max-width: 400px;
             }
           }
 
           @media (min-width: 1024px) {
             .livicat-gallery-card > yt-live-chat-text-message-renderer {
-              transform: scale(0.85);
-              width: 500px;
+              transform: scale(0.6);
+              max-width: 450px;
             }
           }
         `}</style>
@@ -243,14 +323,14 @@ export function ThemePreview({
 
       {/* Chat messages container */}
       <div
-        className="w-full h-full flex flex-col"
+        className="w-full flex flex-col"
         style={{
           backgroundColor: backgroundColor ?? 'transparent',
         }}
       >
         {isGallery ? (
-          /* Gallery mode: Grid layout with themed cards */
-          <div className="livicat-gallery-grid overflow-y-auto h-full">
+          /* Gallery mode: Bento grid layout with themed cards */
+          <div className="livicat-gallery-grid h-full">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`livicat-gallery-card theme-${themeId}`}>
                 <span className="livicat-gallery-label">
@@ -262,7 +342,7 @@ export function ThemePreview({
           </div>
         ) : (
           /* Live mode: Vertical stack (original layout) */
-          <div className={`livicat-chat-messages theme-${themeId} overflow-y-auto h-full`}>
+          <div className="livicat-chat-messages w-full h-full flex flex-col items-center overflow-auto">
             {chatMessages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} showAvatar={showAvatars} />
             ))}
@@ -298,14 +378,16 @@ function ChatMessage({ message, showAvatar }: { message: PreviewMessage; showAva
       )}
       <div id="content">
         <yt-live-chat-author-chip>
-          <div id="author-name">{message.username}</div>
+          <div id="author-name">
+            <span className="flag-text">{message.username}</span>
+          </div>
         </yt-live-chat-author-chip>
         <div id="message-container">
           <div
             id="message"
             data-punct={/^.*[?!]$/.test(message.message) ? message.message.slice(-1) : undefined}
           >
-            {message.message}
+            <span className="message-text">{message.message}</span>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@
  * with its own theme-specific scheme.
  */
 
-import type { DerivationEntry, SettingDef, ThemeBundle } from './types'
+import type { DerivationEntry, HarmonyInvertOptions, SettingDef, ThemeBundle } from './types'
 import { CORE_SCHEME } from './base/core'
 import { manifest as imManifest, css as imCss, reset as imReset } from './im/manifest'
 import { scheme as imScheme, coreCssVarMap as imCssVarMap } from './im/scheme'
@@ -34,6 +34,18 @@ import {
   coreCssVarMap as blockCssVarMap,
   strokeMap as blockStrokeMap,
 } from './block/scheme'
+import {
+  manifest as phantomManifest,
+  css as phantomCss,
+  reset as phantomReset,
+} from './phantom/manifest'
+import {
+  scheme as phantomScheme,
+  coreCssVarMap as phantomCssVarMap,
+  strokeMap as phantomStrokeMap,
+  postDerivations as phantomPostDerivations,
+  outerMap as phantomOuterMap,
+} from './phantom/scheme'
 
 /**
  * Merge core + theme-specific scheme into a single flat array.
@@ -43,7 +55,9 @@ import {
 function mergeScheme(
   themeScheme: ThemeBundle['scheme'],
   cssVarMap: Record<string, string>,
-  strokeMap?: Record<string, DerivationEntry>
+  strokeMap?: Record<string, DerivationEntry>,
+  postDerivations?: Record<string, { source: string; options?: HarmonyInvertOptions }>,
+  outerMap?: Record<string, string>
 ): ThemeBundle['scheme'] {
   const mappedCore = CORE_SCHEME.map((def) => {
     const cssVar = cssVarMap[def.key]
@@ -52,6 +66,8 @@ function mergeScheme(
   })
   const result = [...mappedCore, ...themeScheme]
   if (strokeMap) Object.assign(result, { strokeMap })
+  if (postDerivations) Object.assign(result, { postDerivations })
+  if (outerMap) Object.assign(result, { outerMap })
   return result
 }
 
@@ -74,6 +90,18 @@ const themes: ThemeBundle[] = [
     scheme: mergeScheme(blockScheme, blockCssVarMap, blockStrokeMap),
     css: blockCss,
     reset: blockReset,
+  },
+  {
+    manifest: phantomManifest,
+    scheme: mergeScheme(
+      phantomScheme,
+      phantomCssVarMap,
+      phantomStrokeMap,
+      phantomPostDerivations,
+      phantomOuterMap
+    ),
+    css: phantomCss,
+    reset: phantomReset,
   },
 ]
 

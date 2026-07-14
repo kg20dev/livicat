@@ -496,10 +496,9 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       el.setAttribute('data-role', detectRole(msg));
 
       /* Author photo (placeholder) */
-      var photo = document.createElement('yt-img-shadow');
+      var photo = document.createElement('div');
       photo.id = 'author-photo';
       var img = document.createElement('img');
-      img.id = 'img';
       img.src = msg.photo || 'about:blank';
       img.alt = '';
       photo.appendChild(img);
@@ -517,9 +516,12 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
 
       /* Author chip */
       var chip = document.createElement('yt-live-chat-author-chip');
-      var name = document.createElement('span');
+      var name = document.createElement('div');
       name.id = 'author-name';
-      name.textContent = msg.author;
+      var flagText = document.createElement('span');
+      flagText.className = 'flag-text';
+      flagText.textContent = msg.author;
+      name.appendChild(flagText);
       if (msg.author_color) name.style.color = msg.author_color;
       chip.appendChild(name);
 
@@ -543,11 +545,14 @@ fn build_page(css: &str, messages: &[ChatMessage]) -> String {
       content.appendChild(bcb);
 
       /* Message */
-      var msgCont = document.createElement('span');
+      var msgCont = document.createElement('div');
       msgCont.id = 'message-container';
-      var msgSpan = document.createElement('span');
+      var msgSpan = document.createElement('div');
       msgSpan.id = 'message';
-      msgSpan.innerHTML = msg.text;
+      var msgText = document.createElement('span');
+      msgText.className = 'message-text';
+      msgText.innerHTML = msg.text;
+      msgSpan.appendChild(msgText);
       setPunctAttr(msgSpan, msg.text);
       msgCont.appendChild(msgSpan);
       content.appendChild(msgCont);
@@ -759,13 +764,13 @@ fn render_message(msg: &ChatMessage) -> String {
     <div id="content">
       <span id="timestamp">{timestamp}</span>
       <yt-live-chat-author-chip>
-        <span id="author-name"{color_style}>{author}</span>
+        <div id="author-name"{color_style}><span class="flag-text">{author}</span></div>
         <span id="chat-badges">{badges}</span>
       </yt-live-chat-author-chip>
       <div id="before-content-buttons"></div>
-      <span id="message-container">
-        <span id="message"{punct}>{text}</span>
-      </span>
+      <div id="message-container">
+        <div id="message"{punct}><span class="message-text">{text}</span></div>
+      </div>
       {super_chat}
     </div>
   </yt-live-chat-text-message-renderer>"#,
