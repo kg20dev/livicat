@@ -163,14 +163,20 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
   const animSpeed = (settings['animation-speed'] as string) ?? 'normal'
   if (animSpeed === 'none') {
     lines.push('  --animation-duration: 0s;')
+    lines.push('  --flag-duration: 0s;')
+    lines.push('  --message-duration: 0s;')
     lines.push('  --chip-duration: 0s;')
     lines.push('  --chip-delay: 0s;')
   } else if (animSpeed === 'slow') {
     lines.push('  --animation-duration: 0.6s;')
+    lines.push('  --flag-duration: 0.4s;')
+    lines.push('  --message-duration: 0.8s;')
     lines.push('  --chip-duration: 0.5s;')
     lines.push('  --chip-delay: 0.05s;')
   } else {
     lines.push('  --animation-duration: 0.4s;')
+    lines.push('  --flag-duration: 0.25s;')
+    lines.push('  --message-duration: 0.5s;')
     lines.push('  --chip-duration: 0.35s;')
     lines.push('  --chip-delay: 0.05s;')
   }
