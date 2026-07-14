@@ -933,3 +933,12 @@ pub fn run() {
     // Sentry guard is now managed by Tauri state - lives until app teardown
 }
 
+/// Remove @import lines from CSS — used to avoid WebView2/CEF
+/// stylesheet re-parse issues when dynamically replacing <style>
+/// elements during live CSS updates.
+fn strip_imports(css: &str) -> String {
+    css.lines()
+        .filter(|line| !line.trim_start().starts_with("@import"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
