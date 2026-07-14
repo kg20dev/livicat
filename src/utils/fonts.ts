@@ -142,6 +142,31 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Gaegu',
     url: 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap',
   },
+  {
+    value: '"Press Start 2P", cursive',
+    label: 'Press Start 2P',
+    url: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap',
+  },
+  {
+    value: '"Pixelify Sans", cursive',
+    label: 'Pixelify Sans',
+    url: 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap',
+  },
+  {
+    value: '"Anton", sans-serif',
+    label: 'Anton',
+    url: 'https://fonts.googleapis.com/css2?family=Anton&display=swap',
+  },
+  {
+    value: '"Bebas Neue", sans-serif',
+    label: 'Bebas Neue',
+    url: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap',
+  },
+  {
+    value: '"Oswald", sans-serif',
+    label: 'Oswald',
+    url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&display=swap',
+  },
 ]
 
 /* ─── Lookup Helpers ────────────────────────────────────────────────── */
