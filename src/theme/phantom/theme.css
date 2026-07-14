@@ -45,9 +45,27 @@
 
 /* ── Animation ────────────────────────────────────────────── */
 /* Kinetic slide-in: enter from the left with a skew overshoot, then
-   snap upright — P5's dynamic UI transition. --slide-distance drives
-   the travel. */
-@keyframes theme-phantom-in {
+    snap upright — P5's dynamic UI transition. --slide-distance drives
+    the travel. */
+
+/* Username flag slide-in - faster timing for punchier entrance */
+@keyframes theme-phantom-flag-in {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-distance, 24px) * -1.5)) skewX(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(calc(var(--slide-distance, 24px) * 0.25)) skewX(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0deg);
+  }
+}
+
+/* Message ribbon slide-in - slower timing for smoother entrance */
+@keyframes theme-phantom-message-in {
   0% {
     opacity: 0;
     transform: translateX(calc(var(--slide-distance, 24px) * -1.5)) skewX(-10deg);
@@ -96,7 +114,7 @@
   align-items: flex-start !important;
 
   position: relative !important;
-  animation: theme-phantom-in var(--animation-duration, 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1) both !important;
+  /* Animation applied to children (#author-name and #message) separately */
 }
 
 /* ── Grain overlay (magazine texture) ───────────────────── */
@@ -269,9 +287,12 @@
   position: relative !important;
   z-index: 2 !important;
 
-  /* NO clip-path here — the container is transparent.
-     Outer shape is on ::before, inner shape is on .flag-text. */
+  /* Username flag animation - faster entrance */
+  animation: theme-phantom-flag-in var(--flag-duration, 0.25s) cubic-bezier(0.2, 0.7, 0.3, 1) both !important;
 }
+
+/* NO clip-path here — the container is transparent.
+     Outer shape is on ::before, inner shape is on .flag-text. */
 
 /* Outer outline — sits behind the fill via z-index:-1.
    Clip-path defines the bigger jagged shape (the outline).
@@ -322,6 +343,10 @@
   z-index: 1 !important;
   width: fit-content !important;
   max-width: 90% !important;
+
+  /* Message ribbon animation - slower entrance */
+  animation: theme-phantom-message-in var(--message-duration, 0.5s) cubic-bezier(0.2, 0.7, 0.3, 1)
+    both !important;
 }
 
 .theme-phantom yt-live-chat-text-message-renderer #content #message::before {
