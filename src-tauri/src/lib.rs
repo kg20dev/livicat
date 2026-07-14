@@ -526,6 +526,7 @@ fn inject_css_to_window(
             }} catch(e) {{
                 console.error('[preview-window] CSS injection error:', e);
             }}
+            __lc_click_show_more();
 
             function __lc_scroll() {{
                 var s = document.querySelector('#item-scroller') || document.querySelector('yt-live-chat-item-list-renderer #item-scroller');
