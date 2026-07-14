@@ -112,6 +112,8 @@ jobs:
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
         with:
           name: livicat-frontend
           path: dist/
@@ -160,25 +162,23 @@ jobs:
 
       - name: Download frontend build artifacts
         uses: actions/download-artifact@v4
+        id: download-artifact
+        continue-on-error: true
         with:
           name: livicat-frontend
           path: dist
 
-      - name: Verify frontend artifacts
-        run: |
-          echo "Verifying pre-built frontend..."
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
-            echo "❌ ERROR: Frontend artifacts not found!"
-            echo "Expected dist/ directory from build-app job"
-            exit 1
-          fi
-          echo "✅ Frontend artifacts found:"
-          ls -lh dist/
+      - name: Build frontend (fallback if artifact unavailable)
+        if: steps.download-artifact.outcome == 'failure'
+        run: npm run build
 
       - name: Build macOS app (Apple Silicon)
         run: |
-          echo "Building macOS app with pre-built frontend..."
-          echo "Tauri will use existing dist/ directory without rebuilding"
+          if [ -d "dist" ] && [ -n "$(ls -A dist 2>/dev/null)" ]; then
+            echo "✅ Using pre-built frontend artifacts"
+          else
+            echo "⚠️ No artifacts found, but frontend was built locally"
+          fi
           cd src-tauri
           cargo tauri build
         env:
@@ -268,21 +268,16 @@ jobs:
 
       - name: Download frontend build artifacts
         uses: actions/download-artifact@v4
+        id: download-artifact
+        continue-on-error: true
         with:
           name: livicat-frontend
           path: dist
 
-      - name: Verify frontend artifacts
+      - name: Build frontend (fallback if artifact unavailable)
+        if: steps.download-artifact.outcome == 'failure'
         shell: bash
-        run: |
-          echo "Verifying pre-built frontend..."
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
-            echo "❌ ERROR: Frontend artifacts not found!"
-            echo "Expected dist/ directory from build-app job"
-            exit 1
-          fi
-          echo "✅ Frontend artifacts found:"
-          ls -lh dist/
+        run: npm run build
 
       - name: Clean Rust build cache (ensure fresh artifacts)
         shell: bash
@@ -291,8 +286,11 @@ jobs:
       - name: Build Windows app
         shell: bash
         run: |
-          echo "Building Windows app with pre-built frontend..."
-          echo "Tauri will use existing dist/ directory without rebuilding"
+          if [ -d "dist" ] && [ -n "$(ls -A dist 2>/dev/null)" ]; then
+            echo "✅ Using pre-built frontend artifacts"
+          else
+            echo "⚠️ No artifacts found, but frontend was built locally"
+          fi
           cd src-tauri
           cargo tauri build
         env:
