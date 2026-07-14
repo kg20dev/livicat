@@ -553,31 +553,6 @@ fn inject_css_to_window(
             }}
             __lc_click_show_more();
 
-            function __lc_scroll() {{
-                var s = document.querySelector('#item-scroller') || document.querySelector('yt-live-chat-item-list-renderer #item-scroller');
-                if (s) {{ s.scrollTop = s.scrollHeight; }}
-            }}
-            [0, 300, 1000, 2500].forEach(function(t) {{ setTimeout(__lc_scroll, t); }});
-            console.log('[Livicat] Scroll-to-bottom scheduled');
-
-            window.__lc_auto_scroll = {};
-            function __lc_click_show_more() {{
-                if (!window.__lc_auto_scroll) return;
-                var btn = document.querySelector('yt-icon-button#show-more button#button');
-                if (btn) {{
-                    btn.click();
-                    console.log('[Livicat] Auto-clicked show-more button');
-                }}
-            }}
-            if (window.__lc_auto_scroll && !window.__livicat_show_more_obs) {{
-                window.__livicat_show_more_obs = new MutationObserver(function() {{
-                    __lc_click_show_more();
-                }});
-                window.__livicat_show_more_obs.observe(document.documentElement, {{ childList: true, subtree: true }});
-                console.log('[Livicat] Show-more auto-click observer active');
-            }}
-            __lc_click_show_more();
-
             function __lc_wm_cycle(el) {{
                 setTimeout(function() {{
                     el.style.animation = '__lc_exit 0.9s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards';
@@ -959,12 +934,3 @@ pub fn run() {
     // Sentry guard is now managed by Tauri state - lives until app teardown
 }
 
-/// Remove @import lines from CSS — used to avoid WebView2/CEF
-/// stylesheet re-parse issues when dynamically replacing <style>
-/// elements during live CSS updates.
-fn strip_imports(css: &str) -> String {
-    css.lines()
-        .filter(|line| !line.trim_start().starts_with("@import"))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
