@@ -289,16 +289,6 @@ async fn handle_update_css(State(state): State<RendererState>, body: String) -> 
     );
     len.to_string()
 }
-
-/// Remove @import lines from CSS — used to avoid CEF stylesheet
-/// re-parse issues with dynamic <style> replacement.
-fn strip_imports(css: &str) -> String {
-    css.lines()
-        .filter(|line| !line.trim_start().starts_with("@import"))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
 // ─── Route: GET /css ──────────────────────────────────────────────
 
 /// Returns the raw current CSS. Open `http://localhost:{PORT}/css` in a
