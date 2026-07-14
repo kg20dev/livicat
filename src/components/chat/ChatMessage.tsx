@@ -33,6 +33,23 @@ interface ChatMessageProps {
  * The CSS generator targets these exact tag/ID combinations, so styling in demo mode
  * behaves identically to real YouTube chat.
  */
+
+/**
+ * Detects if a message is "insignignificant" (short, no spaces/breaklines)
+ * and truncates it with ellipsis to prevent layout issues.
+ */
+function truncateInsignificantMessage(message: string): string {
+  // Check if message is > 15 chars and has no spaces/breaklines
+  const isInsignificant = message.length > 15 && !/\s/.test(message)
+
+  if (isInsignificant) {
+    // Truncate to 15 chars with ellipsis
+    return message.slice(0, 15) + '...'
+  }
+
+  return message
+}
+
 export default function ChatMessage({
   username,
   message,
@@ -155,6 +172,8 @@ export default function ChatMessage({
   )
 
   // Message text
+  const displayMessage = truncateInsignificantMessage(message)
+
   contentChildren.push(
     createElement(
       'span',
@@ -170,7 +189,7 @@ export default function ChatMessage({
           dir: 'auto',
           className: 'style-scope yt-live-chat-text-message-renderer',
         },
-        message
+        displayMessage
       )
     )
   )
