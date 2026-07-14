@@ -933,3 +933,4 @@ pub fn run() {
     // Sentry guard is now managed by Tauri state - lives until app teardown
 }
 
+
