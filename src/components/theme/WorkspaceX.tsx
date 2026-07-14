@@ -1189,7 +1189,19 @@ function WorkspaceBody({
 
       {/* ─── Right Panel: Preview ────────────────────────────── */}
       {!demoPreviewHidden && (
-        <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0 transition-all duration-300">
+        <section className="flex-1 flex flex-col bg-surface-container-lowest relative min-w-0 transition-all duration-300 livicat-preview-bg">
+          {/* Checkerboard background for demo visibility */}
+          <style>{`
+            .livicat-preview-bg {
+              background-image:
+                linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.03) 75%);
+              background-size: 20px 20px;
+              background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            }
+          `}</style>
           {/* Toolbar */}
           <div
             className={`absolute top-4 z-10 flex items-center justify-between transition-all duration-300 ${
