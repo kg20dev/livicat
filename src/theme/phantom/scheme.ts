@@ -116,6 +116,21 @@ export const strokeMap: Record<string, DerivationEntry> = {
   },
 }
 
+/**
+ * Outer color derivation — pure black or white via contrastColor().
+ * Maps source CSS variable (role bg) → target variable name.
+ * buildCSSVariables reads the source hex, applies WCAG luminance,
+ * and emits the target as #000000 or #ffffff.
+ */
+export const outerMap: Record<string, string> = {
+  'phantom-bg': 'defaultOuter',
+  'owner-bg': 'ownerOuter',
+  'mod-bg': 'modOuter',
+  'member-bg': 'memberOuter',
+  'superchat-bg': 'superchatOuter',
+  'membership-bg': 'membershipOuter',
+}
+
 export const scheme: SettingDef[] = [
   /* ── Motion (slide-in) ────────────────────────────────────── */
   /* How far a new message slides in from the left with a skew

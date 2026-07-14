@@ -44,6 +44,7 @@ import {
   coreCssVarMap as phantomCssVarMap,
   strokeMap as phantomStrokeMap,
   postDerivations as phantomPostDerivations,
+  outerMap as phantomOuterMap,
 } from './phantom/scheme'
 
 /**
@@ -55,7 +56,8 @@ function mergeScheme(
   themeScheme: ThemeBundle['scheme'],
   cssVarMap: Record<string, string>,
   strokeMap?: Record<string, DerivationEntry>,
-  postDerivations?: Record<string, { source: string; options?: HarmonyInvertOptions }>
+  postDerivations?: Record<string, { source: string; options?: HarmonyInvertOptions }>,
+  outerMap?: Record<string, string>
 ): ThemeBundle['scheme'] {
   const mappedCore = CORE_SCHEME.map((def) => {
     const cssVar = cssVarMap[def.key]
@@ -65,6 +67,7 @@ function mergeScheme(
   const result = [...mappedCore, ...themeScheme]
   if (strokeMap) Object.assign(result, { strokeMap })
   if (postDerivations) Object.assign(result, { postDerivations })
+  if (outerMap) Object.assign(result, { outerMap })
   return result
 }
 
@@ -90,7 +93,13 @@ const themes: ThemeBundle[] = [
   },
   {
     manifest: phantomManifest,
-    scheme: mergeScheme(phantomScheme, phantomCssVarMap, phantomStrokeMap, phantomPostDerivations),
+    scheme: mergeScheme(
+      phantomScheme,
+      phantomCssVarMap,
+      phantomStrokeMap,
+      phantomPostDerivations,
+      phantomOuterMap
+    ),
     css: phantomCss,
     reset: phantomReset,
   },

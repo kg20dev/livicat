@@ -152,7 +152,7 @@
   transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
   width: 24px !important;
   height: 14px !important;
-  background: var(--p5-white) !important;
+  background: var(--defaultOuter, #ffffff) !important;
   z-index: 1 !important;
 
   /* Outer path — white outline (behind black fill)
@@ -184,7 +184,7 @@
   transform: translateY(-50%) scale(var(--tail-scale, 1)) !important;
   width: 22px !important;
   height: 12px !important;
-  background: var(--p5-black) !important;
+  background: var(--phantom-bg, #000000) !important;
   z-index: 2 !important;
 
   /* Inner path — black fill (sits on top of white outline)
@@ -294,7 +294,8 @@
 .theme-phantom yt-live-chat-text-message-renderer #author-name .flag-text {
   display: inline-block !important;
   background: var(--flagChipBg, var(--p5-white)) !important;
-  rotate: var(--text-rotate, 0deg) !important;
+  padding: 4px !important;
+  transform: rotate(var(--text-rotate, 0deg)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -327,18 +328,17 @@
   content: '' !important;
   position: absolute !important;
   inset: calc(var(--msg-outline-gap, 4px) * -1) !important;
-  background: var(--p5-white) !important;
-  clip-path: polygon(8% 89.8%, 96.5% 95%, 99% 5%, 7.5% 10.4%) !important;
+  background: var(--defaultOuter, #ffffff) !important;
+  clip-path: polygon(8% 81.8%, 95.5% 87%, 97% 4%, 6.5% 15.4%) !important;
   z-index: -1 !important;
 }
-
 .theme-phantom yt-live-chat-text-message-renderer #content #message .message-text {
   position: relative !important;
   z-index: 1 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: var(--p5-black) !important;
+  background: var(--phantom-bg, #000000) !important;
   color: var(--phantom-ink, var(--p5-white)) !important;
 
   font-family: var(--chat-font-family, 'Oswald'), sans-serif !important;
@@ -349,6 +349,7 @@
   text-shadow: none !important;
 
   padding: var(--msg-pad-top, 14px) 20px var(--msg-pad-bottom, 14px) var(--msg-pad-left, 20px) !important;
+  min-width: 120px !important;
   min-height: 58px !important;
   overflow-wrap: anywhere !important;
   word-break: break-word !important;
@@ -369,23 +370,28 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ROLE OVERRIDES — per-role flag fill + name color
+   ROLE OVERRIDES — per-role flag fill + name color + message ribbon
    ═══════════════════════════════════════════════════════════════
    Each role uses its OWN derived flag-chip background
    (*FlagChipBg, from strokeMap on the role's username-color),
    switching the chip fill to contrast with the role's name text.
 
+   Per-role --usernameColor override on the renderer element ensures
+   the name flag picks up the role's color. Per-role --phantom-ink
+   and background overrides ensure the message ribbon uses the role's
+   text color and background (not the global defaults).
+
    Owner / moderator also get the P5 red authority accent + thin
    black text stroke; superchat gets a red glow on the plate.
    ───────────────────────────────────────────────────────────── */
 
-/* Owner */
+/* Owner — orange-gold accent */
 :is(
-    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
-    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
-  )
-  #author-name {
-  color: var(--owner-username-color, var(--p5-red)) !important;
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+) {
+  --usernameColor: var(--owner-username-color, #ffb347);
+  --phantom-ink: var(--owner-ink, var(--p5-white));
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
@@ -402,14 +408,45 @@
   .flag-text {
   background: var(--ownerFlagChipBg, var(--p5-white)) !important;
 }
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content
+  #message::before {
+  background: var(--ownerOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--owner-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content::before {
+  background: var(--ownerOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='owner'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='owner']
+  )
+  #content::after {
+  background: var(--owner-bg, #000000) !important;
+}
 
 /* Moderator — P5 highlights authority in red */
 :is(
-    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
-    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
-  )
-  #author-name {
-  color: var(--mod-username-color, var(--p5-red)) !important;
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+) {
+  --usernameColor: var(--mod-username-color, #47b5ff);
+  --phantom-ink: var(--mod-ink, var(--p5-white));
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
@@ -426,14 +463,45 @@
   .flag-text {
   background: var(--modFlagChipBg, var(--p5-white)) !important;
 }
-
-/* Member */
 :is(
-    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
-    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
   )
-  #author-name {
-  color: var(--member-username-color, var(--p5-black)) !important;
+  #content
+  #message::before {
+  background: var(--modOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--mod-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content::before {
+  background: var(--modOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='moderator'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='moderator']
+  )
+  #content::after {
+  background: var(--mod-bg, #000000) !important;
+}
+
+/* Member — purple accent */
+:is(
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+) {
+  --usernameColor: var(--member-username-color, #ce93d8);
+  --phantom-ink: var(--member-ink, var(--p5-white));
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
@@ -450,8 +518,39 @@
   .flag-text {
   background: var(--memberFlagChipBg, var(--p5-white)) !important;
 }
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content
+  #message::before {
+  background: var(--memberOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--member-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content::before {
+  background: var(--memberOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member']
+  )
+  #content::after {
+  background: var(--member-bg, #000000) !important;
+}
 
-/* Verified */
+/* Verified — black/white only */
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='verified'],
     .theme-phantom yt-live-chat-text-message-renderer[author-type='verified']
@@ -477,11 +576,11 @@
 
 /* Super Chat — red glow on the plate */
 :is(
-    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
-    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
-  )
-  #author-name {
-  color: var(--superchat-username-color, var(--p5-black)) !important;
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+) {
+  --usernameColor: var(--superchat-username-color, #ffd700);
+  --phantom-ink: var(--superchat-ink, var(--p5-white));
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
@@ -503,19 +602,41 @@
     .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
   )
   #content
+  #message::before {
+  background: var(--superchatOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content
   #message
   .message-text {
-  color: var(--superchat-ink, var(--p5-white)) !important;
+  background: var(--superchat-bg, #000000) !important;
   box-shadow: 0 0 12px rgba(227, 36, 43, 0.6) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content::before {
+  background: var(--superchatOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='super-chat'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='super-chat']
+  )
+  #content::after {
+  background: var(--superchat-bg, #000000) !important;
 }
 
 /* Membership */
 :is(
-    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
-    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
-  )
-  #author-name {
-  color: var(--membership-username-color, var(--p5-black)) !important;
+  .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+  .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+) {
+  --usernameColor: var(--membership-username-color, #ffffff);
+  --phantom-ink: var(--membership-ink, var(--p5-white));
 }
 :is(
     .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
@@ -531,6 +652,37 @@
   #author-name
   .flag-text {
   background: var(--membershipFlagChipBg, var(--p5-white)) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content
+  #message::before {
+  background: var(--membershipOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content
+  #message
+  .message-text {
+  background: var(--membership-bg, #000000) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content::before {
+  background: var(--membershipOuter, #ffffff) !important;
+}
+:is(
+    .theme-phantom yt-live-chat-text-message-renderer[data-role='member-ship'],
+    .theme-phantom yt-live-chat-text-message-renderer[author-type='member-ship']
+  )
+  #content::after {
+  background: var(--membership-bg, #000000) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════

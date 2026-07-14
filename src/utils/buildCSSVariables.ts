@@ -13,6 +13,7 @@ import type {
   DerivationEntry,
 } from '../theme/types'
 import { getFontUrl, getFontFace } from './fonts'
+import { contrastColor } from './contrast'
 
 /** Option value → @import or @font-face rule, or null for system fonts. */
 function getFontImport(fontFamily: string): string | null {
@@ -206,6 +207,29 @@ export function buildCSSVariables(settings: ThemeSettings, scheme: SettingDef[])
       // Insert post-derivations into the :root block (before the closing })
       const closingIdx = lines.lastIndexOf('}')
       lines.splice(closingIdx, 0, ...postLines)
+    }
+  }
+
+  // ── Outer color derivation (contrastColor utility) ──────────────
+  // Maps source CSS variable → target variable name.
+  // Reads the source hex from already-emitted lines, computes pure
+  // black or white via WCAG luminance, emits the target variable.
+  const outerMap = (scheme as { outerMap?: Record<string, string> }).outerMap
+  if (outerMap) {
+    const outerLines: string[] = []
+    for (const [source, target] of Object.entries(outerMap)) {
+      const sourceRe = new RegExp(`--${source}:\\s*(#[0-9a-fA-F]{6})`)
+      const sourceMatch = lines.find((l) => sourceRe.test(l))
+      if (sourceMatch) {
+        const hex = sourceMatch.match(sourceRe)?.[1]
+        if (hex) {
+          outerLines.push(`  --${target}: ${contrastColor(hex)};`)
+        }
+      }
+    }
+    if (outerLines.length > 0) {
+      const closingIdx = lines.lastIndexOf('}')
+      lines.splice(closingIdx, 0, ...outerLines)
     }
   }
 
