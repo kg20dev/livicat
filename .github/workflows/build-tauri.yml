@@ -210,16 +210,24 @@ jobs:
             fi
           done
 
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload macOS to R2
         if: always()
         continue-on-error: true
-        with:
-          name: livicat-macos
-          path: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/macos/*.app
-          retention-days: 3
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BUCKET="livicat-release"
+          PREFIX="v${VERSION}"
+
+          echo "☁️ Uploading macOS to R2: s3://${BUCKET}/${PREFIX}/"
+
+          for f in src-tauri/target/release/bundle/dmg/*.dmg; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+          done
 
   build-windows:
     name: Build Windows App
@@ -301,16 +309,28 @@ jobs:
           SENTRY_DSN: ${{ vars.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
 
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Windows to R2
         if: always()
         continue-on-error: true
-        with:
-          name: livicat-windows
-          path: |
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*.exe
-          retention-days: 3
+        shell: bash
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BUCKET="livicat-release"
+          PREFIX="v${VERSION}"
+
+          echo "☁️ Uploading Windows to R2: s3://${BUCKET}/${PREFIX}/"
+
+          for f in src-tauri/target/release/bundle/msi/*.msi; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+          done
+          for f in src-tauri/target/release/bundle/nsis/*.exe; do
+            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ $(basename "$f")"
+          done
 
   release:
     name: Create Release
@@ -322,79 +342,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: livicat-macos
-          path: artifacts/macos
-
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: livicat-windows
-          path: artifacts/windows
-
-      - name: Debug artifact structure
-        run: |
-          echo "macOS artifacts:"
-          find artifacts/macos -type f
-          echo ""
-          echo "Windows artifacts:"
-          find artifacts/windows -type f
-
-      - name: Install AWS CLI (if not present)
-        run: |
-          if command -v aws &>/dev/null; then
-            echo "✅ AWS CLI already installed: $(aws --version)"
-          else
-            echo "Installing AWS CLI..."
-            curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip -q awscliv2.zip
-            sudo ./aws/install
-            aws --version
-          fi
-
-      - name: Upload artifacts to Cloudflare R2
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          VERSION="${{ needs.setup.outputs.version }}"
-          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
-          BUCKET="livicat-release"
-          PREFIX="v${VERSION}"
-
-          aws configure set aws_access_key_id "${{ secrets.R2_ACCESS_KEY_ID }}"
-          aws configure set aws_secret_access_key "${{ secrets.R2_SECRET_ACCESS_KEY }}"
-          aws configure set default.region auto
-
-          echo "☁️ Uploading to Cloudflare R2: s3://${BUCKET}/${PREFIX}/"
-
-          # macOS .dmg
-          for f in artifacts/macos/dmg/*.dmg; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
-          done
-
-          # Windows .msi
-          for f in artifacts/windows/msi/*.msi; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
-          done
-
-          # Windows .exe
-          for f in artifacts/windows/nsis/*.exe; do
-            [ -f "$f" ] && aws s3 cp "$f" "s3://${BUCKET}/${PREFIX}/$(basename "$f")" --endpoint-url "$ENDPOINT" && echo "✅ Uploaded: $(basename "$f")"
-          done
-
-          echo "✅ All artifacts uploaded to R2: s3://${BUCKET}/${PREFIX}/"
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.version }}
           name: Livicat v${{ needs.setup.outputs.version }}
-          files: |
-            artifacts/macos/dmg/*.dmg
-            artifacts/windows/msi/*.msi
-            artifacts/windows/nsis/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -402,8 +354,11 @@ jobs:
             ## 🎉 Livicat v${{ needs.setup.outputs.version }}
 
             ### Downloads
-            - **macOS (Apple Silicon)**: `Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg`
-            - **Windows (x64)**: `Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe` or `Livicat_${{ needs.setup.outputs.version }}_x64.msi`
+
+            All installers are available on [Cloudflare R2](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/):
+
+            - **macOS (Apple Silicon)**: [Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg)
+            - **Windows (x64)**: [Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe) or [Livicat_${{ needs.setup.outputs.version }}_x64.msi](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64.msi)
 
             ### What's New
 
