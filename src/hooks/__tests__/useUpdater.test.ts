@@ -122,7 +122,7 @@ describe('useUpdater', () => {
       callback({ event: 'Started', data: { contentLength: 1000 } })
       callback({ event: 'Progress', data: { chunkLength: 500 } })
       callback({ event: 'Progress', data: { chunkLength: 500 } })
-      callback({ event: 'Finished' })
+      callback({ event: 'Finished', data: {} })
       return Promise.resolve()
     })
 
@@ -232,7 +232,7 @@ describe('useUpdater', () => {
     expect(result.current.downloadProgress).toBe(50)
 
     await act(async () => {
-      progressCallback!({ event: 'Finished' })
+      progressCallback!({ event: 'Finished', data: {} })
       await installPromise!
     })
   })
