@@ -11,20 +11,30 @@ permissions:
 
 jobs:
   sync-to-main:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'release/app'
+    if: github.event.workflow_run.conclusion == 'success'
     name: Sync release/app → main
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check triggering run branch
+        id: check-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TRIGGERING_ID="${{ github.event.workflow_run.id }}"
+          BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "Triggering run $TRIGGERING_ID branch: $BRANCH"
+
       - name: Checkout main
+        if: steps.check-branch.outputs.branch == 'release/app'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Check if sync needed
+        if: steps.check-branch.outputs.branch == 'release/app'
         id: check
         run: |
           git fetch origin release/app
@@ -38,7 +48,7 @@ jobs:
           fi
 
       - name: Create sync PR
-        if: steps.check.outputs.sync_needed == 'true'
+        if: steps.check-branch.outputs.branch == 'release/app' && steps.check.outputs.sync_needed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
