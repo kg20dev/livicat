@@ -45,7 +45,7 @@ jobs:
         id: check
         run: |
           git fetch origin release/app
-          DIFF=$(git rev-list main..origin/release/app --diff-filter=ACMRT --count)
+          DIFF=$(git rev-list main..origin/release/app --count)
           if [ "$DIFF" -eq 0 ]; then
             echo "needed=false" >> $GITHUB_OUTPUT
             echo "✅ Already in sync"
