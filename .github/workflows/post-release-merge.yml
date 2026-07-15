@@ -55,23 +55,57 @@ jobs:
             echo "📦 $DIFF commit(s) to sync from release/app"
           fi
 
-      - name: Create sync PR
+      - name: Create sync branch
         if: steps.check-branch.outputs.branch == 'release/app' && steps.check.outputs.sync_needed == 'true'
+        id: create-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Create a branch for the sync
           BRANCH="sync/release-app-to-main-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
-          # Merge release/app (no-edit handles conflict messages)
-          if git merge origin/release/app --no-edit; then
-            git push origin "$BRANCH"
+          # Merge release/app — accept conflicts for version files (keep main's)
+          git merge origin/release/app --no-edit || true
 
-            # Create PR
-            PR_URL=$(gh pr create \
-              --title "chore: Sync release/app → main" \
-              --body "## Post-Release Sync
+          # Resolve version conflicts by keeping main's versions
+          CONFLICTS=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
+          if [ -n "$CONFLICTS" ]; then
+            echo "⚠️ Resolving conflicts in: $CONFLICTS"
+            for f in $CONFLICTS; do
+              case "$f" in
+                package.json|src-tauri/Cargo.toml|src-tauri/tauri.conf.json)
+                  # Keep main's version — checkout ours
+                  git checkout --ours "$f"
+                  echo "  ✅ Kept main's version for $f"
+                  ;;
+                package-lock.json|src-tauri/Cargo.lock)
+                  # Regenerate lock files
+                  git checkout --ours "$f"
+                  echo "  ✅ Kept main's lock file for $f"
+                  ;;
+                *)
+                  # Accept release/app's changes for everything else
+                  git checkout --theirs "$f"
+                  echo "  ✅ Accepted release/app's version for $f"
+                  ;;
+              esac
+              git add "$f"
+            done
+            git commit --no-edit
+          fi
+
+          git push origin "$BRANCH"
+
+      - name: Create sync PR
+        if: steps.create-branch.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.create-branch.outputs.branch }}"
+          PR_URL=$(gh pr create \
+            --title "chore: Sync release/app → main" \
+            --body "## Post-Release Sync
 
           Auto-generated after successful release build.
 
@@ -86,24 +120,14 @@ jobs:
           - Version numbers (main keeps its own version, builds only run on \`release/**`)
 
           ---" \
-              --base main \
-              --head "$BRANCH")
+            --base main \
+            --head "$BRANCH")
 
-            echo "📋 PR created: $PR_URL"
+          echo "📋 PR created: $PR_URL"
 
-            # Auto-merge if no conflicts
-            if gh pr merge "$PR_URL" --squash --auto; then
-              echo "✅ Auto-merge enabled — will merge when CI passes"
-            else
-              echo "⚠️ Auto-merge failed — may need manual review"
-            fi
+          # Auto-merge
+          if gh pr merge "$PR_URL" --squash --auto; then
+            echo "✅ Auto-merge enabled — will merge when CI passes"
           else
-            echo "❌ Merge conflict detected — manual resolution needed"
-            echo ""
-            echo "To resolve locally:"
-            echo "  git checkout main"
-            echo "  git merge origin/release/app"
-            echo "  # resolve conflicts"
-            echo "  git push origin main"
-            exit 1
+            echo "⚠️ Auto-merge failed — may need manual review"
           fi
