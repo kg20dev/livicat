@@ -1,6 +1,7 @@
 name: Post-Release Sync to Main
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Build Tauri App"]
     types: [completed]
