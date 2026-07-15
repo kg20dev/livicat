@@ -456,6 +456,17 @@ jobs:
           aws s3 cp /tmp/latest.json "s3://${BUCKET}/latest.json" --endpoint-url "$ENDPOINT"
           echo "✅ latest.json uploaded to R2"
 
+          # Verify upload by downloading and validating
+          curl -sf "${R2_BASE}/latest.json" | jq -e '.version' > /dev/null
+          if [ $? -eq 0 ]; then
+            echo "✅ latest.json verified on R2"
+            echo "Version: $(curl -sf "${R2_BASE}/latest.json" | jq -r '.version')"
+            echo "Platforms: $(curl -sf "${R2_BASE}/latest.json" | jq -r '.platforms | keys | join(", ")')"
+          else
+            echo "❌ latest.json verification failed!"
+            exit 1
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
