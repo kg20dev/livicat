@@ -240,7 +240,7 @@ jobs:
           APP_TAR=$(ls src-tauri/target/release/bundle/macos/*.app.tar.gz 2>/dev/null | head -1)
           APP_SIG=$(ls src-tauri/target/release/bundle/macos/*.app.tar.gz.sig 2>/dev/null | head -1)
           if [ -n "$APP_TAR" ] && [ -n "$APP_SIG" ]; then
-            echo "url=https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/${PREFIX}/$(basename "$APP_TAR")" > /tmp/updater-info/macos.env
+            echo "url=https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/${PREFIX}/$(basename "$APP_TAR")" > /tmp/updater-info/macos.env
             echo "signature=$(cat "$APP_SIG")" >> /tmp/updater-info/macos.env
             echo "✅ macOS updater info collected"
           fi
@@ -368,7 +368,7 @@ jobs:
           MSI_ZIP=$(ls src-tauri/target/release/bundle/msi/*.msi.zip 2>/dev/null | head -1)
           MSI_SIG=$(ls src-tauri/target/release/bundle/msi/*.msi.zip.sig 2>/dev/null | head -1)
           if [ -n "$MSI_ZIP" ] && [ -n "$MSI_SIG" ]; then
-            echo "url=https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/${PREFIX}/$(basename "$MSI_ZIP")" > /tmp/updater-info/windows.env
+            echo "url=https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/${PREFIX}/$(basename "$MSI_ZIP")" > /tmp/updater-info/windows.env
             echo "signature=$(cat "$MSI_SIG")" >> /tmp/updater-info/windows.env
             echo "✅ Windows updater info collected"
           fi
@@ -415,7 +415,7 @@ jobs:
           VERSION="${{ needs.setup.outputs.version }}"
           ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
           BUCKET="livicat-release"
-          R2_BASE="https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev"
+          R2_BASE="https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev"
 
           # Build platforms JSON
           PLATFORMS="{}"
@@ -480,10 +480,10 @@ jobs:
 
             ### Downloads
 
-            All installers are available on [Cloudflare R2](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/):
+            All installers are available on [Cloudflare R2](https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/v${{ needs.setup.outputs.version }}/):
 
-            - **macOS (Apple Silicon)**: [Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg)
-            - **Windows (x64)**: [Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe) or [Livicat_${{ needs.setup.outputs.version }}_x64.msi](https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64.msi)
+            - **macOS (Apple Silicon)**: [Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg](https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_aarch64.dmg)
+            - **Windows (x64)**: [Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe](https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64-setup.exe) or [Livicat_${{ needs.setup.outputs.version }}_x64.msi](https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/v${{ needs.setup.outputs.version }}/Livicat_${{ needs.setup.outputs.version }}_x64.msi)
 
             ### What's New
 

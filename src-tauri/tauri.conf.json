@@ -43,9 +43,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "PLACEHOLDER_PUBLIC_KEY_REPLACE_ME",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5QTJCOThCOTczOEIwODYKUldTR3NEaVhpN21pK1pEYk1aYnZ3UE8rcUdWZ1c3ZXQyZUZyZll5SWhmaHdYamNTRjRWVGxXbWUK",
       "endpoints": [
-        "https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/latest.json"
+        "https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/latest.json"
       ],
       "dialog": true
     }
