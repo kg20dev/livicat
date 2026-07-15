@@ -1,0 +1,91 @@
+name: Post-Release Sync to Main
+
+on:
+  workflow_run:
+    workflows: ["Build Tauri App"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-to-main:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'release/app'
+    name: Sync release/app → main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check if sync needed
+        id: check
+        run: |
+          git fetch origin release/app
+          DIFF=$(git rev-list main..origin/release/app --count)
+          if [ "$DIFF" -eq 0 ]; then
+            echo "sync_needed=false" >> $GITHUB_OUTPUT
+            echo "✅ main is already in sync with release/app"
+          else
+            echo "sync_needed=true" >> $GITHUB_OUTPUT
+            echo "📦 $DIFF commit(s) to sync from release/app"
+          fi
+
+      - name: Create sync PR
+        if: steps.check.outputs.sync_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create a branch for the sync
+          BRANCH="sync/release-app-to-main-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH"
+
+          # Merge release/app (no-edit handles conflict messages)
+          if git merge origin/release/app --no-edit; then
+            git push origin "$BRANCH"
+
+            # Create PR
+            PR_URL=$(gh pr create \
+              --title "chore: Sync release/app → main" \
+              --body "## Post-Release Sync
+
+          Auto-generated after successful release build.
+
+          This PR merges all changes from \`release/app\` back to \`main\` to keep branches in sync.
+
+          **What gets synced:**
+          - Code changes, features, and fixes
+          - Workflow updates
+          - Configuration changes
+
+          **What stays different:**
+          - Version numbers (main keeps its own version, builds only run on \`release/**`)
+
+          ---" \
+              --base main \
+              --head "$BRANCH")
+
+            echo "📋 PR created: $PR_URL"
+
+            # Auto-merge if no conflicts
+            if gh pr merge "$PR_URL" --squash --auto; then
+              echo "✅ Auto-merge enabled — will merge when CI passes"
+            else
+              echo "⚠️ Auto-merge failed — may need manual review"
+            fi
+          else
+            echo "❌ Merge conflict detected — manual resolution needed"
+            echo ""
+            echo "To resolve locally:"
+            echo "  git checkout main"
+            echo "  git merge origin/release/app"
+            echo "  # resolve conflicts"
+            echo "  git push origin main"
+            exit 1
+          fi
