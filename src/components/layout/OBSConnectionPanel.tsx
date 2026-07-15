@@ -211,7 +211,7 @@ export function OBSConnectionPanel({ onConnected, onCancel }: OBSConnectionPanel
             <strong className="text-on-surface">Enable WebSocket Server</strong>
           </p>
           <p className="text-label-xs text-on-surface-variant/60">
-            PRISM: Settings → Broadcast → OBS WebSocket → Enable
+            {`PRISM: Tools -> Websocket Server Setting -> Enable Websocket Server -> Enable`}
           </p>
         </div>
 
