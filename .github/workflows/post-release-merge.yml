@@ -12,7 +12,9 @@ permissions:
 
 jobs:
   sync-to-main:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     name: Sync release/app → main
     runs-on: ubuntu-latest
 
@@ -22,10 +24,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TRIGGERING_ID="${{ github.event.workflow_run.id }}"
-          BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "Triggering run $TRIGGERING_ID branch: $BRANCH"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "branch=release/app" >> $GITHUB_OUTPUT
+            echo "Manual trigger — defaulting to release/app"
+          else
+            TRIGGERING_ID="${{ github.event.workflow_run.id }}"
+            BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+            echo "Triggering run $TRIGGERING_ID branch: $BRANCH"
+          fi
 
       - name: Checkout main
         if: steps.check-branch.outputs.branch == 'release/app'
