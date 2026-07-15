@@ -186,6 +186,8 @@ jobs:
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
           SENTRY_DSN: ${{ vars.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
 
       - name: Ad-hoc sign and prepare macOS bundle
         run: |
@@ -333,6 +335,8 @@ jobs:
           APTABASE_APP_KEY: ${{ vars.APTABASE_APP_KEY }}
           SENTRY_DSN: ${{ vars.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
 
       - name: Upload Windows to R2
         if: always()
