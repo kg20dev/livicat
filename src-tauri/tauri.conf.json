@@ -28,6 +28,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,6 +39,15 @@
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": "-"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "PLACEHOLDER_PUBLIC_KEY_REPLACE_ME",
+      "endpoints": [
+        "https://pub-9f1250cf5f894e18a38b83a91b15c6f5.r2.dev/latest.json"
+      ],
+      "dialog": true
     }
   }
 }

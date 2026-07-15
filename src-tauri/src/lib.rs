@@ -862,6 +862,7 @@ pub fn run() {
         .plugin(tauri_plugin_aptabase::Builder::new(&app_key).build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             app.manage(preview_state);
             app.manage::<SharedChatState>(Arc::new(Mutex::new(ChatState::new())));
