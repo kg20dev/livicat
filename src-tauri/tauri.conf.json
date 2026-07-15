@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Livicat",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "identifier": "com.livicat.app",
   "build": {
     "frontendDist": "../dist",
@@ -28,6 +28,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,6 +39,15 @@
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": "-"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5QTJCOThCOTczOEIwODYKUldTR3NEaVhpN21pK1pEYk1aYnZ3UE8rcUdWZ1c3ZXQyZUZyZll5SWhmaHdYamNTRjRWVGxXbWUK",
+      "endpoints": [
+        "https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev/latest.json"
+      ],
+      "dialog": true
     }
   }
 }

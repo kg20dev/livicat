@@ -9,6 +9,7 @@
     "core:default",
     "aptabase:allow-track-event",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "updater:default"
   ]
 }

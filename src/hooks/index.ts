@@ -8,4 +8,5 @@ export {
   clearStoredSettings,
 } from './useChatSettings'
 export { useElectronPreview } from './useElectronPreview'
+export { useUpdater } from './useUpdater'
 export type { ChatSettings, Preset, MessageSpacing, AnimationSpeed, Theme } from '../types'

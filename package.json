@@ -1,7 +1,7 @@
 {
   "name": "livicat",
   "private": true,
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "YouTube Live Chat styling editor for OBS browser source overlay — CSS customization, Tauri preview window, and export tools.",
   "author": "kg20dev <migorengx@users.noreply.github.com>",
   "license": "GPL-3.0-only",
@@ -107,6 +107,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-dialog": "^2.7.1",
-    "@tauri-apps/plugin-fs": "^2.5.1"
+    "@tauri-apps/plugin-fs": "^2.5.1",
+    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0"
   }
 }
