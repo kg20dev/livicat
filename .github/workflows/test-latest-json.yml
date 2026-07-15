@@ -1,0 +1,139 @@
+name: Test latest.json
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to test (e.g. 0.9.8)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test-latest-json:
+    name: Generate & Verify latest.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate latest.json
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          R2_BASE="https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev"
+          PREFIX="v${VERSION}"
+
+          # Build platforms JSON
+          PLATFORMS="{}"
+
+          # macOS
+          MACOS_URL="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.app.tar.gz"
+          MACOS_DMG="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.dmg"
+          MACOS_SIG_URL="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.app.tar.gz.sig"
+
+          # Windows
+          WIN_URL="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64_en-US.msi.zip"
+          WIN_EXE="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64-setup.exe"
+          WIN_SIG_URL="${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64_en-US.msi.zip.sig"
+
+          # Generate latest.json (signatures would come from .sig files in real release)
+          PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          cat > /tmp/latest.json << EOF
+          {
+            "version": "v${VERSION}",
+            "notes": "Livicat v${VERSION} - Test",
+            "pub_date": "${PUB_DATE}",
+            "platforms": {
+              "darwin-aarch64": {
+                "url": "${MACOS_URL}",
+                "signature": "test_signature_macos_replace_me"
+              },
+              "windows-x86_64": {
+                "url": "${WIN_URL}",
+                "signature": "test_signature_windows_replace_me"
+              }
+            }
+          }
+          EOF
+
+          # Pretty-print
+          jq '.' /tmp/latest.json > /tmp/latest-pretty.json
+          mv /tmp/latest-pretty.json /tmp/latest.json
+
+          echo "📋 Generated latest.json:"
+          cat /tmp/latest.json
+
+      - name: Verify all download links
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          R2_BASE="https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev"
+          PREFIX="v${VERSION}"
+
+          echo "🔍 Verifying download links for v${VERSION}..."
+          echo ""
+
+          PASS=0
+          FAIL=0
+
+          check_url() {
+            local url="$1"
+            local name="$2"
+            local status
+
+            status=$(curl -sI -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+
+            if [ "$status" = "200" ]; then
+              echo "  ✅ ${name} — HTTP ${status}"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ ${name} — HTTP ${status}"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "📦 Download artifacts:"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.dmg" "macOS DMG"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64-setup.exe" "Windows EXE"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64_en-US.msi" "Windows MSI"
+
+          echo ""
+          echo "🔐 Updater artifacts:"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.app.tar.gz" "macOS .app.tar.gz"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_aarch64.app.tar.gz.sig" "macOS .sig"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64_en-US.msi.zip" "Windows .msi.zip"
+          check_url "${R2_BASE}/${PREFIX}/Livicat_${VERSION}_x64_en-US.msi.zip.sig" "Windows .sig"
+
+          echo ""
+          echo "📋 latest.json endpoint:"
+          check_url "${R2_BASE}/latest.json" "latest.json"
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Results: ${PASS} passed, ${FAIL} failed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "❌ Some links are broken!"
+            exit 1
+          fi
+
+          echo "✅ All links verified!"
+
+      - name: Upload latest.json to R2
+        if: success()
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BUCKET="livicat-release"
+
+          echo "☁️ Uploading latest.json to R2 root..."
+          aws s3 cp /tmp/latest.json "s3://${BUCKET}/latest.json" --endpoint-url "$ENDPOINT"
+          echo "✅ latest.json uploaded"
+
+          # Verify upload
+          R2_BASE="https://pub-2a6e7087960e444c858cbb8adfebe109.r2.dev"
+          curl -sf "${R2_BASE}/latest.json" | jq -e '.version' > /dev/null
+          echo "✅ Verified on R2: $(curl -sf "${R2_BASE}/latest.json" | jq -r '.version')"
