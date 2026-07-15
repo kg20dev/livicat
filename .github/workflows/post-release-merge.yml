@@ -19,115 +19,71 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check triggering run branch
-        id: check-branch
+      - name: Determine source branch
+        id: source
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "branch=release/app" >> $GITHUB_OUTPUT
-            echo "Manual trigger — defaulting to release/app"
           else
             TRIGGERING_ID="${{ github.event.workflow_run.id }}"
             BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
             echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-            echo "Triggering run $TRIGGERING_ID branch: $BRANCH"
+            echo "Triggering run branch: $BRANCH"
           fi
 
       - name: Checkout main
-        if: steps.check-branch.outputs.branch == 'release/app'
+        if: steps.source.outputs.branch == 'release/app'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Check if sync needed
-        if: steps.check-branch.outputs.branch == 'release/app'
+        if: steps.source.outputs.branch == 'release/app'
         id: check
         run: |
           git fetch origin release/app
-          DIFF=$(git rev-list main..origin/release/app --count)
+          DIFF=$(git rev-list main..origin/release/app --diff-filter=ACMRT --count)
           if [ "$DIFF" -eq 0 ]; then
-            echo "sync_needed=false" >> $GITHUB_OUTPUT
-            echo "✅ main is already in sync with release/app"
+            echo "needed=false" >> $GITHUB_OUTPUT
+            echo "✅ Already in sync"
           else
-            echo "sync_needed=true" >> $GITHUB_OUTPUT
-            echo "📦 $DIFF commit(s) to sync from release/app"
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "📦 $DIFF commit(s) to sync"
           fi
 
-      - name: Create sync branch
-        if: steps.check-branch.outputs.branch == 'release/app' && steps.check.outputs.sync_needed == 'true'
-        id: create-branch
+      - name: Create sync PR
+        if: steps.source.outputs.branch == 'release/app' && steps.check.outputs.needed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="sync/release-app-to-main-$(date +%Y%m%d%H%M%S)"
+          BRANCH="sync/release-to-main-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
-          # Merge release/app — accept conflicts for version files (keep main's)
-          git merge origin/release/app --no-edit || true
+          # Merge release/app, accept theirs for conflicts
+          git merge origin/release/app --no-edit -X theirs || true
 
-          # Resolve version conflicts by keeping main's versions
-          CONFLICTS=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
-          if [ -n "$CONFLICTS" ]; then
-            echo "⚠️ Resolving conflicts in: $CONFLICTS"
-            for f in $CONFLICTS; do
-              case "$f" in
-                package.json|src-tauri/Cargo.toml|src-tauri/tauri.conf.json)
-                  # Keep main's version — checkout ours
-                  git checkout --ours "$f"
-                  echo "  ✅ Kept main's version for $f"
-                  ;;
-                package-lock.json|src-tauri/Cargo.lock)
-                  # Regenerate lock files
-                  git checkout --ours "$f"
-                  echo "  ✅ Kept main's lock file for $f"
-                  ;;
-                *)
-                  # Accept release/app's changes for everything else
-                  git checkout --theirs "$f"
-                  echo "  ✅ Accepted release/app's version for $f"
-                  ;;
-              esac
+          # Resolve version files — keep main's versions
+          for f in package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json; do
+            if git diff --name-only --diff-filter=U | grep -q "^$f$"; then
+              git checkout main -- "$f"
               git add "$f"
-            done
-            git commit --no-edit
-          fi
+            fi
+          done
+
+          # Regenerate lock files on main's version
+          git checkout main -- package-lock.json src-tauri/Cargo.lock 2>/dev/null || true
+          git add package-lock.json src-tauri/Cargo.lock 2>/dev/null || true
+
+          # Commit if there are changes
+          git diff --cached --quiet || git commit --no-edit
 
           git push origin "$BRANCH"
 
-      - name: Create sync PR
-        if: steps.create-branch.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BRANCH="${{ steps.create-branch.outputs.branch }}"
-          PR_URL=$(gh pr create \
-            --title "chore: Sync release/app → main" \
-            --body "## Post-Release Sync
-
-          Auto-generated after successful release build.
-
-          This PR merges all changes from \`release/app\` back to \`main\` to keep branches in sync.
-
-          **What gets synced:**
-          - Code changes, features, and fixes
-          - Workflow updates
-          - Configuration changes
-
-          **What stays different:**
-          - Version numbers (main keeps its own version, builds only run on \`release/**`)
-
-          ---" \
+          gh pr create \
+            --title "chore: Sync release/app to main" \
+            --body "Automated sync after release build." \
             --base main \
-            --head "$BRANCH")
-
-          echo "📋 PR created: $PR_URL"
-
-          # Auto-merge
-          if gh pr merge "$PR_URL" --squash --auto; then
-            echo "✅ Auto-merge enabled — will merge when CI passes"
-          else
-            echo "⚠️ Auto-merge failed — may need manual review"
-          fi
+            --head "$BRANCH"
