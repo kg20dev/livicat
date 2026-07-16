@@ -70,19 +70,11 @@ jobs:
           echo "=== Files changed by merge ==="
           git diff --name-only HEAD~1 HEAD || true
 
-          # Restore main's version files (these should always differ)
-          git checkout main -- package.json
-          git checkout main -- src-tauri/Cargo.toml
-          git checkout main -- src-tauri/tauri.conf.json
-          git checkout main -- package-lock.json
-          git checkout main -- src-tauri/Cargo.lock
-
-          echo "=== Staged changes ==="
+          # Keep release/app's version files (version tracks latest release)
           git add -A
-          git diff --cached --stat
 
           if git diff --cached --quiet; then
-            echo "No changes to sync after restoring versions"
+            echo "No changes to sync"
             echo "pushed=false" >> $GITHUB_OUTPUT
           else
             git commit -m "chore: sync release/app to main"
