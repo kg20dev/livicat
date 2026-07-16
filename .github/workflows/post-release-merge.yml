@@ -1,7 +1,6 @@
 name: Post-Release Sync to Main
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows: ["Build Tauri App"]
     types: [completed]
@@ -12,26 +11,20 @@ permissions:
 
 jobs:
   sync-to-main:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
     name: Sync release/app → main
     runs-on: ubuntu-latest
 
     steps:
-      - name: Determine source branch
+      - name: Check triggering branch
         id: source
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "branch=release/app" >> $GITHUB_OUTPUT
-          else
-            TRIGGERING_ID="${{ github.event.workflow_run.id }}"
-            BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
-            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-            echo "Triggering run branch: $BRANCH"
-          fi
+          TRIGGERING_ID="${{ github.event.workflow_run.id }}"
+          BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "Triggering run branch: $BRANCH"
 
       - name: Checkout main
         if: steps.source.outputs.branch == 'release/app'
@@ -46,7 +39,6 @@ jobs:
         run: |
           git fetch origin release/app
           DIFF=$(git rev-list main..origin/release/app --count)
-          echo "Diff: $DIFF commits"
           if [ "$DIFF" -eq 0 ]; then
             echo "needed=false" >> $GITHUB_OUTPUT
             echo "✅ Already in sync"
@@ -55,44 +47,24 @@ jobs:
             echo "📦 $DIFF commit(s) to sync"
           fi
 
-      - name: Create sync branch and push
+      - name: Create sync PR
         if: steps.source.outputs.branch == 'release/app' && steps.check.outputs.needed == 'true'
-        id: sync
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="sync/release-to-main-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH"
-
-          # Merge release/app — accept theirs for conflicts
           git merge origin/release/app --no-edit -X theirs || true
-
-          echo "=== Files changed by merge ==="
-          git diff --name-only HEAD~1 HEAD || true
-
-          # Keep release/app's version files (version tracks latest release)
           git add -A
 
           if git diff --cached --quiet; then
             echo "No changes to sync"
-            echo "pushed=false" >> $GITHUB_OUTPUT
           else
             git commit -m "chore: sync release/app to main"
             git push origin "$BRANCH"
-            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-            echo "pushed=true" >> $GITHUB_OUTPUT
-            echo "✅ Pushed $BRANCH"
+            gh pr create \
+              --title "chore: Sync release/app to main" \
+              --body "Automated sync after release build." \
+              --base main \
+              --head "$BRANCH"
           fi
-
-      - name: Create PR
-        if: steps.sync.outputs.pushed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BRANCH="${{ steps.sync.outputs.branch }}"
-          PR_URL=$(gh pr create \
-            --title "chore: Sync release/app to main" \
-            --body "Automated sync after release build." \
-            --base main \
-            --head "$BRANCH")
-          echo "📋 PR: $PR_URL"
