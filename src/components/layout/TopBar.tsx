@@ -15,7 +15,7 @@ interface TopBarRootProps {
 export default function TopBar({ children, className = '' }: TopBarRootProps) {
   return (
     <header
-      className={`h-16 fixed top-0 right-0 left-0 z-50 glass-heavy flex items-center justify-between px-container-margin ${className}`}
+      className={`h-16 fixed top-0 right-0 left-0 z-50 glass-heavy flex items-center justify-between px-container-margin topbar-seamless ${className}`}
     >
       {children}
     </header>
@@ -34,15 +34,11 @@ TopBar.LogoButton = function TopBarLogoButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2 pr-4 rounded-lg glass-light hover:glass-medium transition-all active:scale-95 group logo-luminous-hover"
+      className="flex items-center gap-2 p-2 pr-4 rounded-lg glass-light hover:glass-medium transition-all active:scale-95"
       title={title}
       aria-label={title}
     >
-      <img
-        src="/livicat-icon.png"
-        alt="Livicat"
-        className="w-8 h-8 transition-transform group-hover:rotate-12 logo-icon"
-      />
+      <img src="/livicat-icon.png" alt="Livicat" className="w-8 h-8" />
       <span className="font-headline-sm text-headline-sm font-black text-on-surface leading-tight logo-text">
         Livicat
       </span>
