@@ -30,18 +30,17 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## ✨ Features
 
-- 🎨 **Theme Packages** — Colour Bubble (IM-style) and Neon Sticker (vibrant sticker-style)
+- 🎨 **5 Built-in Themes** — Colour Bubble, Neon Sticker, Crayon, Block, and Phantom
 - ✨ **Message Animations** — Entrance animations for usernames and messages
 - 🪟 **Live Preview** — Real-time chat popup for OBS Window Capture
-- ⚡ **Real-Time Preview** — Popup window with gallery mode
 - 📤 **OBS & PRISM Direct Integration** — One-click browser source setup via OBS WebSocket
 - 🎥 **Headless Chat System** — Captures YouTube chat via hidden WebView, no preview window needed
 - 🔄 **CSS Hot-Reload During Stream** — Theme changes applied live without restarting OBS
 - 🛡️ **Safe Theme Switching** — Confirmation modal when switching themes during active stream
-- 🎯 **Lanczos Scale Filter** — Crisp chat overlay with high-quality downscaling
 - 🏷️ **Animated Watermark** — Lottie paw animation + brand badge on stream overlay
 - 📱 **Responsive Portrait Layout** — Floating sidebar, collapsible panels
-- 🎯 **Username Vertical Offset** — Fine-tune username position (-20px to +20px)
+- 🎯 **Avatar Vertical Offset** — Fine-tune avatar position per theme
+- 🎯 **Lanczos Scale Filter** — Crisp chat overlay with high-quality downscaling
 
 ---
 
@@ -63,7 +62,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 
 ## 📥 Download
 
-🎉 **[Latest Release: v0.9.3](https://github.com/kg20dev/livicat/releases)**
+🎉 **[Latest Release: v0.9.13](https://github.com/kg20dev/livicat/releases)**
 
 - **macOS (Apple Silicon):** `.dmg` installer
 - **Windows:** `.exe` installer
@@ -91,7 +90,7 @@ A desktop app for customizing YouTube Live Chat appearance for OBS overlays.
 ## 📊 Stats
 
 - **Size:** ~8MB (93% smaller than Electron)
-- **Tests:** 324+ (287 frontend + 37 Rust)
+- **Tests:** 354 (299 frontend + 55 Rust)
 - **Languages:** TypeScript, Rust, React
 - **Platforms:** macOS, Windows
 - **License:** GPL-3.0
