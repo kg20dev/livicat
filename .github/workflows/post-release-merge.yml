@@ -16,86 +16,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check triggering run branch
-        id: check-branch
+      - name: Check triggering branch
+        id: source
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TRIGGERING_ID="${{ github.event.workflow_run.id }}"
           BRANCH=$(gh api "repos/${{ github.repository }}/actions/runs/${TRIGGERING_ID}" --jq '.head_branch')
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "Triggering run $TRIGGERING_ID branch: $BRANCH"
+          echo "Triggering run branch: $BRANCH"
 
       - name: Checkout main
-        if: steps.check-branch.outputs.branch == 'release/app'
+        if: steps.source.outputs.branch == 'release/app'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Check if sync needed
-        if: steps.check-branch.outputs.branch == 'release/app'
+        if: steps.source.outputs.branch == 'release/app'
         id: check
         run: |
           git fetch origin release/app
           DIFF=$(git rev-list main..origin/release/app --count)
           if [ "$DIFF" -eq 0 ]; then
-            echo "sync_needed=false" >> $GITHUB_OUTPUT
-            echo "✅ main is already in sync with release/app"
+            echo "needed=false" >> $GITHUB_OUTPUT
+            echo "✅ Already in sync"
           else
-            echo "sync_needed=true" >> $GITHUB_OUTPUT
-            echo "📦 $DIFF commit(s) to sync from release/app"
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "📦 $DIFF commit(s) to sync"
           fi
 
       - name: Create sync PR
-        if: steps.check-branch.outputs.branch == 'release/app' && steps.check.outputs.sync_needed == 'true'
+        if: steps.source.outputs.branch == 'release/app' && steps.check.outputs.needed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Create a branch for the sync
-          BRANCH="sync/release-app-to-main-$(date +%Y%m%d%H%M%S)"
+          BRANCH="sync/release-to-main-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH"
+          git merge origin/release/app --no-edit -X theirs || true
+          git add -A
 
-          # Merge release/app (no-edit handles conflict messages)
-          if git merge origin/release/app --no-edit; then
-            git push origin "$BRANCH"
-
-            # Create PR
-            PR_URL=$(gh pr create \
-              --title "chore: Sync release/app → main" \
-              --body "## Post-Release Sync
-
-          Auto-generated after successful release build.
-
-          This PR merges all changes from \`release/app\` back to \`main\` to keep branches in sync.
-
-          **What gets synced:**
-          - Code changes, features, and fixes
-          - Workflow updates
-          - Configuration changes
-
-          **What stays different:**
-          - Version numbers (main keeps its own version, builds only run on \`release/**`)
-
-          ---" \
-              --base main \
-              --head "$BRANCH")
-
-            echo "📋 PR created: $PR_URL"
-
-            # Auto-merge if no conflicts
-            if gh pr merge "$PR_URL" --squash --auto; then
-              echo "✅ Auto-merge enabled — will merge when CI passes"
-            else
-              echo "⚠️ Auto-merge failed — may need manual review"
-            fi
+          if git diff --cached --quiet; then
+            echo "No changes to sync"
           else
-            echo "❌ Merge conflict detected — manual resolution needed"
-            echo ""
-            echo "To resolve locally:"
-            echo "  git checkout main"
-            echo "  git merge origin/release/app"
-            echo "  # resolve conflicts"
-            echo "  git push origin main"
-            exit 1
+            git commit -m "chore: sync release/app to main"
+            git push origin "$BRANCH"
+            gh pr create \
+              --title "chore: Sync release/app to main" \
+              --body "Automated sync after release build." \
+              --base main \
+              --head "$BRANCH"
           fi
