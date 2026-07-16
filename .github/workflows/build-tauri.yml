@@ -112,8 +112,6 @@ jobs:
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
-        if: always()
-        continue-on-error: true
         with:
           name: livicat-frontend
           path: dist/
@@ -212,8 +210,6 @@ jobs:
           done
 
       - name: Upload macOS to R2
-        if: always()
-        continue-on-error: true
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -247,8 +243,6 @@ jobs:
           fi
 
       - name: Upload macOS updater info
-        if: always()
-        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: updater-macos
@@ -337,8 +331,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
 
       - name: Upload Windows to R2
-        if: always()
-        continue-on-error: true
         shell: bash
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -376,8 +368,6 @@ jobs:
           fi
 
       - name: Upload Windows updater info
-        if: always()
-        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: updater-windows
