@@ -54,36 +54,50 @@ jobs:
             echo "📦 $DIFF commit(s) to sync"
           fi
 
-      - name: Create sync PR
+      - name: Create sync branch and push
         if: steps.source.outputs.branch == 'release/app' && steps.check.outputs.needed == 'true'
+        id: sync
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           BRANCH="sync/release-to-main-$(date +%Y%m%d%H%M%S)"
+          echo "Creating branch: $BRANCH"
           git checkout -b "$BRANCH"
 
-          # Merge release/app, accept theirs for conflicts
+          # Merge release/app — accept theirs for non-version files
+          echo "Merging release/app..."
           git merge origin/release/app --no-edit -X theirs || true
 
-          # Resolve version files — keep main's versions
-          for f in package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json; do
-            if git diff --name-only --diff-filter=U | grep -q "^$f$"; then
-              git checkout main -- "$f"
-              git add "$f"
-            fi
-          done
-
-          # Regenerate lock files on main's version
+          # Keep main's version files
+          echo "Restoring main's version files..."
+          git checkout main -- package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json 2>/dev/null || true
           git checkout main -- package-lock.json src-tauri/Cargo.lock 2>/dev/null || true
-          git add package-lock.json src-tauri/Cargo.lock 2>/dev/null || true
+          git add -A
 
-          # Commit if there are changes
-          git diff --cached --quiet || git commit --no-edit
+          # Commit if there are staged changes
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: sync release/app to main"
+            echo "Pushing $BRANCH..."
+            git push origin "$BRANCH"
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+            echo "pushed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes to sync"
+            echo "pushed=false" >> $GITHUB_OUTPUT
+          fi
 
-          git push origin "$BRANCH"
-
-          gh pr create \
+      - name: Create PR
+        if: steps.sync.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          BRANCH="${{ steps.sync.outputs.branch }}"
+          echo "Creating PR from $BRANCH to main..."
+          PR_URL=$(gh pr create \
             --title "chore: Sync release/app to main" \
             --body "Automated sync after release build." \
             --base main \
-            --head "$BRANCH"
+            --head "$BRANCH")
+          echo "📋 PR: $PR_URL"
