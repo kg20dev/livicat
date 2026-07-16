@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "theme": {
+    "id": "phantom",
+    "name": "Phantom",
+    "author": "Livicat"
+  },
+  "variables": {
+    "p5-red": "#e3242b",
+    "p5-black": "#0d0d0d",
+    "p5-white": "#ffffff",
+    "p5-gold": "#ffd400",
+    "flag-outline": "#e3242b",
+    "flag-fill": "#0d0d0d",
+    "spacing-xs": 4,
+    "spacing-sm": 8,
+    "spacing-md": 12,
+    "spacing-lg": 16,
+    "spacing-xl": 24
+  },
+  "chat": {
+    "direction": "bottom-up",
+    "spacing": 8,
+    "maxMessages": 10
+  },
+  "scene": {
+    "type": "ChatRoot",
+    "children": [
+      {
+        "type": "MessageList",
+        "children": [
+          {
+            "type": "Message",
+            "children": [
+              {
+                "type": "Avatar",
+                "props": {
+                  "size": 40,
+                  "shape": "circle"
+                }
+              },
+              {
+                "type": "AuthorBubble",
+                "props": {
+                  "skin": "skins/phantom-flag.svg",
+                  "padding": [12, 16, 12, 16]
+                }
+              },
+              {
+                "type": "MessageBubble",
+                "props": {
+                  "skin": "skins/phantom-message.svg",
+                  "padding": [18, 24, 18, 24],
+                  "animation": "phantom-enter"
+                }
+              },
+              {
+                "type": "Timestamp",
+                "props": {
+                  "format": "HH:MM",
+                  "opacity": 0.5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
