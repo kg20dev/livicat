@@ -142,6 +142,7 @@ function SidebarNavItems({
 }) {
   const mainItems: { id: string; label: string; icon: string }[] = [
     { id: 'workspace-x', label: 'Workspace', icon: 'magic_button' },
+    { id: 'monkey-workspace', label: 'Monkey Workspace', icon: 'code' },
   ]
 
   const settingsItems = [{ id: 'settings', label: 'Settings', icon: 'settings' }]

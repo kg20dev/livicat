@@ -4,6 +4,7 @@ use tauri::{AppHandle, Manager};
 use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_aptabase::EventTracker;
 
+pub mod monkeywork;
 mod obs;
 mod processor;
 mod renderer;
@@ -500,6 +501,91 @@ async fn trigger_crash_test(crash_type: String) -> Result<(), String> {
     }
 }
 
+// ─── Monkeywork Engine Commands ─────────────────────────────────
+
+#[tauri::command]
+fn validate_scene(scene_json: String) -> Result<serde_json::Value, String> {
+    use crate::monkeywork::{scene_graph::SceneGraph, validation};
+
+    let scene: SceneGraph = serde_json::from_str(&scene_json)
+        .map_err(|e| format!("Parse error: {}", e))?;
+
+    match validation::validate(&scene) {
+        Ok(result) => Ok(serde_json::json!({
+            "valid": true,
+            "errors": result.errors,
+            "warnings": result.warnings,
+        })),
+        Err(errors) => Ok(serde_json::json!({
+            "valid": false,
+            "errors": errors,
+            "warnings": Vec::<String>::new(),
+        })),
+    }
+}
+
+#[tauri::command]
+fn render_css(scene_json: String) -> Result<String, String> {
+    use crate::monkeywork::{
+        scene_graph::SceneGraph,
+        tokens::ThemeContext,
+        layout,
+        renderer,
+    };
+
+    let scene: SceneGraph = serde_json::from_str(&scene_json)
+        .map_err(|e| format!("Parse error: {}", e))?;
+
+    let ctx = ThemeContext::from_variables(&scene.variables);
+    let render_tree = layout::layout_scene(&scene, &ctx, 400.0, 600.0);
+    let (_html, css) = renderer::render(&render_tree);
+
+    Ok(css)
+}
+
+#[tauri::command]
+fn render_scene(scene_json: String) -> Result<serde_json::Value, String> {
+    use crate::monkeywork::{
+        scene_graph::SceneGraph,
+        tokens::ThemeContext,
+        layout,
+        renderer,
+    };
+
+    let scene: SceneGraph = serde_json::from_str(&scene_json)
+        .map_err(|e| format!("Parse error: {}", e))?;
+
+    let ctx = ThemeContext::from_variables(&scene.variables);
+    let render_tree = layout::layout_scene(&scene, &ctx, 400.0, 600.0);
+    let (html, css) = renderer::render(&render_tree);
+
+    Ok(serde_json::json!({
+        "html": html,
+        "css": css,
+    }))
+}
+
+#[tauri::command]
+fn get_component_registry() -> Result<serde_json::Value, String> {
+    use crate::monkeywork::components::ComponentRegistry;
+
+    let reg = ComponentRegistry::default();
+    let mut components = serde_json::Map::new();
+
+    for (name, comp) in reg.all() {
+        components.insert(name.clone(), serde_json::json!({
+            "name": comp.name,
+            "slots": comp.slots,
+            "properties": comp.properties,
+            "allowedChildren": comp.allowed_children,
+        }));
+    }
+
+    Ok(serde_json::json!({
+        "components": components,
+    }))
+}
+
 fn inject_css_to_window(
     window: &WebviewWindow,
     css: &str,
@@ -927,6 +1013,10 @@ pub fn run() {
             obs::obs_get_scenes,
             obs::obs_send_browser_source,
             obs::obs_remove_browser_source,
+            validate_scene,
+            render_css,
+            render_scene,
+            get_component_registry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

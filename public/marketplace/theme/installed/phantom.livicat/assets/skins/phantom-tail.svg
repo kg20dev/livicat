@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!--
+    Phantom Thunder Tail — two-layer zigzag connector.
+    Outer outline (white) + inner fill (black).
+    Connects avatar to message ribbon.
+    
+    Outer: polygon(100% 100%, 70% 82.4%, 43.4% 89.1%, 36.1% 68.9%,
+                   30.7% 59.1%, 20.6% 75.6%, 5.7% 38.3%, 0% 18.7%,
+                   20.6% 39.9%, 33.9% 0%, 55.1% 33.2%, 100% 7.8%)
+    Inner: polygon(97.8% 16.1%, 54.4% 40.9%, 36.7% 9.8%, 20.9% 48.2%,
+                   13% 44%, 20.9% 67.9%, 31% 50.3%, 45.6% 86.5%,
+                   68.4% 75.1%, 97.5% 91.2%)
+  -->
+  <!-- Outer outline — white -->
+  <polygon points="100,100 70,82.4 43.4,89.1 36.1,68.9 30.7,59.1 20.6,75.6 5.7,38.3 0,18.7 20.6,39.9 33.9,0 55.1,33.2 100,7.8" fill="#ffffff"/>
+  <!-- Inner fill — black -->
+  <polygon points="97.8,16.1 54.4,40.9 36.7,9.8 20.9,48.2 13,44 20.9,67.9 31,50.3 45.6,86.5 68.4,75.1 97.5,91.2" fill="#000000"/>
+</svg>
