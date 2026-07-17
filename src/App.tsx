@@ -8,6 +8,7 @@ import Settings from './components/layout/Settings'
 import LoadingScreen from './components/loading/LoadingScreen'
 import AnalyticsConsent from './components/analytics/AnalyticsConsent'
 import { WorkspaceX } from './components/theme/WorkspaceX'
+import { MonkeyWorkspace } from './components/layout/MonkeyWorkspace'
 import type { ChatMode } from './components/layout/PreviewArea'
 import { generateOBSCSS, downloadCSSFile } from './utils/cssExport'
 import { validateYouTubeUrl } from './utils/youtubeValidation'
@@ -304,6 +305,8 @@ export default function App() {
             <Settings />
           ) : activeNav === 'workspace-x' ? (
             <WorkspaceX />
+          ) : activeNav === 'monkey-workspace' ? (
+            <MonkeyWorkspace />
           ) : activeNav === 'workspace' ? (
             <>
               <div className="flex gap-4">

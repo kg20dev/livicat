@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!--
+    Phantom Message Ribbon — two-layer jagged shape.
+    Outer outline (white) + inner fill (black).
+    Derived from real theme.css clip-path: polygon(8% 81.8%, 95.5% 87%, 97% 4%, 6.5% 15.4%)
+    Inset: 3px (approx 3% of 100px viewBox)
+  -->
+  <!-- Outer outline — white background -->
+  <polygon points="8,81.8 95.5,87 97,4 6.5,15.4" fill="#ffffff"/>
+  <!-- Inner fill — black, inset by ~3% -->
+  <polygon points="10,80 93,84 94,7 9,17" fill="#000000"/>
+</svg>

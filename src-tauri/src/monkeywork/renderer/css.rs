@@ -13,28 +13,67 @@ use crate::monkeywork::render_tree::{RenderBackground, RenderNode};
 pub fn render(root: &RenderNode) -> (String, String) {
     let html = render_node_html(root);
     let css = render_all_css(root);
-    (wrap_html(&html, &css), css)
+    let fonts = collect_fonts(root);
+    (wrap_html(&html, &css, &fonts), css)
+}
+
+/// Collect all unique font families used across the render tree.
+fn collect_fonts(node: &RenderNode) -> Vec<String> {
+    let mut fonts = Vec::new();
+    collect_fonts_recursive(node, &mut fonts);
+    fonts.sort();
+    fonts.dedup();
+    fonts
+}
+
+fn collect_fonts_recursive(node: &RenderNode, fonts: &mut Vec<String>) {
+    if let Some(ref text) = node.text {
+        if !text.font.is_empty() && text.font != "font" {
+            fonts.push(text.font.clone());
+        }
+    }
+    for child in &node.children {
+        collect_fonts_recursive(child, fonts);
+    }
 }
 
 /// Wrap inner HTML body content and CSS into a full HTML document.
-fn wrap_html(inner: &str, css: &str) -> String {
+fn wrap_html(inner: &str, css: &str, fonts: &[String]) -> String {
+    let font_links = if fonts.is_empty() {
+        String::new()
+    } else {
+        let families: Vec<String> = fonts
+            .iter()
+            .map(|f| {
+                // Convert space-separated names to + for Google Fonts URL
+                let encoded = f.replace(' ', "+");
+                format!("family={}:wght@400;500;600;700", encoded)
+            })
+            .collect();
+        format!(
+            "<link href=\"https://fonts.googleapis.com/css2?{}&display=swap\" rel=\"stylesheet\">",
+            families.join("&")
+        )
+    };
+
     format!(
         r#"<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+{font_links}
 <style>
 {css}
 </style>
 </head>
-<body>
-<div class="lc-chat">
+<body style="margin:0;padding:0;overflow:hidden;background:#000">
+<div class="lc-chat" style="position:relative;width:100%;height:100vh">
 {inner}
 </div>
 </body>
 </html>"#,
+        font_links = font_links,
         css = css,
         inner = inner,
     )
@@ -47,14 +86,26 @@ pub fn render_node_html(node: &RenderNode) -> String {
     let class = component_to_class(&node.component_type);
 
     let text_html = if let Some(ref text) = node.text {
-        if text.content.is_empty() {
-            String::new()
+        // Always emit a span so the DOM element has visible content.
+        // For empty content (Author/Content nodes filled at runtime), output
+        // an empty span that mock data injection or live chat can populate.
+        let spacing_attr = if text.letter_spacing > 0.0 {
+            format!(" letter-spacing:{}px", text.letter_spacing)
         } else {
-            format!(
-                "<span style=\"font-family:{};font-size:{}px;font-weight:{};color:{};line-height:{}\">{}</span>",
-                text.font, text.font_size, text.font_weight, text.color, text.line_height, text.content
-            )
-        }
+            String::new()
+        };
+        // Wrap token-based colors in CSS variable references so inline
+        // styles don't override the class-level CSS rules.
+        let color_value = if looks_like_css_color(&text.color) {
+            text.color.clone()
+        } else {
+            format!("var(--{}, {})", text.color, default_for_token(&node.component_type))
+        };
+        format!(
+            "<span style=\"font-family:{};font-size:{}px;font-weight:{};color:{};line-height:{};{}\">{}</span>",
+            text.font, text.font_size, text.font_weight, color_value, text.line_height,
+            spacing_attr, text.content
+        )
     } else {
         String::new()
     };
@@ -105,6 +156,14 @@ pub fn render_node_css(node: &RenderNode, depth: usize) -> String {
         ));
     }
 
+    // Overflow handling for bubble containers
+    match node.component_type.as_str() {
+        "AuthorBubble" | "MessageBubble" => {
+            lines.push(format!("{}  overflow:hidden;", indent));
+        }
+        _ => {}
+    }
+
     // Background
     if let Some(ref bg) = node.background {
         match bg {
@@ -113,7 +172,7 @@ pub fn render_node_css(node: &RenderNode, depth: usize) -> String {
             }
             RenderBackground::Svg(path, _insets) => {
                 lines.push(format!("{}  background:url({});", indent, path));
-                lines.push(format!("{}  background-size:contain;", indent));
+                lines.push(format!("{}  background-size:100% 100%;", indent));
                 lines.push(format!("{}  background-repeat:no-repeat;", indent));
             }
             RenderBackground::NineSlice { asset, .. } => {
@@ -135,14 +194,35 @@ pub fn render_node_css(node: &RenderNode, depth: usize) -> String {
         }
     }
 
-    // Text styles
+    // Text styles — always emit when a TextRun is present (even with empty
+    // content) so that the DOM elements inherit the correct font/color. Mock
+    // data injection populates the text at runtime.
     if let Some(ref text) = node.text {
-        if !text.content.is_empty() {
-            lines.push(format!("{}  font-family:{};", indent, text.font));
-            lines.push(format!("{}  font-size:{}px;", indent, text.font_size));
-            lines.push(format!("{}  font-weight:{};", indent, text.font_weight));
-            lines.push(format!("{}  color:{};", indent, text.color));
-            lines.push(format!("{}  line-height:{};", indent, text.line_height));
+        lines.push(format!("{}  font-family:'{}',sans-serif;", indent, text.font));
+        lines.push(format!("{}  font-size:{}px;", indent, text.font_size));
+        lines.push(format!("{}  font-weight:{};", indent, text.font_weight));
+        // If the color doesn't look like a CSS color value, wrap it in a
+        // CSS variable reference with a sensible fallback.
+        let color_css = if looks_like_css_color(&text.color) {
+            text.color.clone()
+        } else {
+            format!("var(--{}, {})", text.color, default_for_token(&node.component_type))
+        };
+        lines.push(format!("{}  color:{};", indent, color_css));
+        lines.push(format!("{}  line-height:{};", indent, text.line_height));
+        if text.letter_spacing > 0.0 {
+            lines.push(format!("{}  letter-spacing:{}px;", indent, text.letter_spacing));
+        }
+        // Component-specific text styling
+        match node.component_type.as_str() {
+            "Author" => {
+                lines.push(format!("{}  white-space:nowrap;", indent));
+            }
+            "Content" => {
+                lines.push(format!("{}  word-break:break-word;", indent));
+                lines.push(format!("{}  overflow-wrap:anywhere;", indent));
+            }
+            _ => {}
         }
     }
 
@@ -180,6 +260,21 @@ fn to_kebab_case(s: &str) -> String {
     result
 }
 
+/// Returns `true` when a string looks like a CSS color value.
+fn looks_like_css_color(s: &str) -> bool {
+    let t = s.trim();
+    t.starts_with('#') || t.starts_with("rgb") || t.starts_with("hsl")
+}
+
+/// Provide a sensible default fallback color for a component type's text token.
+fn default_for_token(component_type: &str) -> &'static str {
+    match component_type {
+        "Author" => "#0d0d0d",
+        "Content" => "#ffffff",
+        _ => "#ffffff",
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -214,6 +309,7 @@ mod tests {
                     font_size: 14.0,
                     font_weight: 400,
                     line_height: 1.4,
+                    letter_spacing: 0.0,
                 }),
             }],
             text: None,
@@ -251,6 +347,7 @@ mod tests {
         };
         let css = render_node_css(&node, 0);
         assert!(css.contains("background:url(skins/bubble.svg)"));
+        assert!(css.contains("background-size:100% 100%"));
     }
 
     #[test]
@@ -271,6 +368,7 @@ mod tests {
                 font_size: 14.0,
                 font_weight: 400,
                 line_height: 1.4,
+                letter_spacing: 0.0,
             }),
         };
         let html = render_node_html(&node);

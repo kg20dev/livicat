@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "theme": {
+    "id": "phantom",
+    "name": "Phantom",
+    "author": "Livicat"
+  },
+  "variables": {
+    "p5-red": "#e3242b",
+    "p5-black": "#0d0d0d",
+    "p5-white": "#ffffff",
+
+    "phantom-bg": "#000000",
+    "phantom-ink": "#ffffff",
+    "flag-outline": "#0d0d0d",
+    "flag-chip-bg": "#ffffff",
+    "default-outer": "#ffffff",
+
+    "flag-tilt": -22,
+    "slide-distance": 24,
+
+    "tail-offset-x": -24,
+    "tail-offset-y": 0,
+    "tail-scale": 1,
+
+    "msg-pad-top": 14,
+    "msg-pad-bottom": 14,
+    "msg-pad-left": 20,
+
+    "avatar-size": 28,
+
+    "spacing-xs": 4,
+    "spacing-sm": 8,
+    "spacing-md": 12,
+    "spacing-lg": 16,
+    "spacing-xl": 24
+  },
+  "chat": {
+    "direction": "bottom-up",
+    "spacing": 8,
+    "maxMessages": 10
+  },
+  "scene": {
+    "type": "ChatRoot",
+    "props": {
+      "background": { "type": "solid", "color": "#0d0d0d" }
+    },
+    "children": [
+      {
+        "type": "MessageList",
+        "children": [
+          {
+            "type": "Message",
+            "style": {
+              "background": { "type": "solid", "color": "transparent" }
+            },
+            "behavior": {
+              "enterAnimation": "phantom-slide-in"
+            },
+            "children": [
+              {
+                "type": "Avatar",
+                "props": {
+                  "size": 28,
+                  "shape": "circle"
+                }
+              },
+              {
+                "type": "Decoration",
+                "id": "thunder-tail",
+                "props": {
+                  "asset": "assets/skins/phantom-tail.svg",
+                  "anchor": "content-left",
+                  "offsetX": -24,
+                  "offsetY": 0,
+                  "opacity": 1
+                }
+              },
+              {
+                "type": "AuthorBubble",
+                "props": {
+                  "skin": "assets/skins/phantom-flag.svg",
+                  "padding": [12, 14, 12, 10]
+                },
+                "children": [
+                  {
+                    "type": "Author",
+                    "props": {
+                      "color": "usernameColor",
+                      "font": "Bebas Neue",
+                      "weight": 400,
+                      "spacing": 1.5
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "MessageBubble",
+                "props": {
+                  "skin": "assets/skins/phantom-message.svg",
+                  "padding": [14, 20, 14, 20]
+                },
+                "children": [
+                  {
+                    "type": "Content",
+                    "props": {
+                      "color": "phantom-ink",
+                      "font": "Oswald",
+                      "lineHeight": 1.35
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "Timestamp",
+                "props": {
+                  "format": "HH:MM",
+                  "opacity": 0.5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

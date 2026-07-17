@@ -38,8 +38,24 @@ pub fn layout_node(
     y: f64,
     available_width: f64,
 ) -> RenderNode {
+    // Special-case: Avatar uses its `size` prop for both width and height.
+    if node.component_type == "Avatar" {
+        let size = get_f64_prop(node, "size").unwrap_or(32.0);
+        return RenderNode {
+            component_type: node.component_type.clone(),
+            x,
+            y,
+            width: size,
+            height: size,
+            background: None,
+            padding: [0.0, 0.0, 0.0, 0.0],
+            children: vec![],
+            text: None,
+        };
+    }
+
     let padding = extract_padding(&node.props);
-    let bg = extract_background(&node.props);
+    let bg = extract_background(node);
 
     let content_x = x + padding[3]; // left
     let content_y = y + padding[0]; // top
@@ -113,40 +129,114 @@ fn extract_padding(props: &HashMap<String, PropValue>) -> [f64; 4] {
     }
 }
 
-/// Extract a background from a component's props.
+/// Extract a background from a component's style or props.
 ///
-/// Currently recognizes a `skin` prop (treated as an SVG skin). Solid and
-/// gradient backgrounds will be resolved from the `background` style object in
-/// a later phase.
-fn extract_background(props: &HashMap<String, PropValue>) -> Option<RenderBackground> {
-    if let Some(PropValue::String(skin)) = props.get("skin") {
+/// Checks (in order):
+/// 1. `style.skin` → SVG skin
+/// 2. `style.background` → structured BackgroundConfig (solid color, asset, etc.)
+/// 3. `props.skin` → SVG skin (legacy)
+/// 4. `props.asset` → SVG skin (Decoration component)
+/// 5. `props.background` → PropValue::Object with `{ type, color }`
+fn extract_background(node: &ComponentNode) -> Option<RenderBackground> {
+    // 1. style.skin (structured)
+    if let Some(ref style) = node.style {
+        if let Some(ref skin) = style.skin {
+            return Some(RenderBackground::Svg(skin.clone(), Insets::default()));
+        }
+        if let Some(ref bg) = style.background {
+            match bg.bg_type.as_str() {
+                "solid" => {
+                    if let Some(ref color) = bg.color {
+                        return Some(RenderBackground::Solid(color.clone()));
+                    }
+                }
+                "gradient" => {
+                    // TODO: extract gradient stops from background config
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // 2. props.skin (legacy)
+    if let Some(PropValue::String(skin)) = node.props.get("skin") {
         return Some(RenderBackground::Svg(skin.clone(), Insets::default()));
     }
+
+    // 3. props.asset (Decoration component — treat as SVG skin)
+    if let Some(PropValue::String(asset)) = node.props.get("asset") {
+        return Some(RenderBackground::Svg(asset.clone(), Insets::default()));
+    }
+
+    // 4. props.background as PropValue::Object { type: "solid", color: "..." }
+    if let Some(PropValue::Object(obj)) = node.props.get("background") {
+        if let Some(PropValue::String(bg_type)) = obj.get("type") {
+            match bg_type.as_str() {
+                "solid" => {
+                    if let Some(PropValue::String(color)) = obj.get("color") {
+                        return Some(RenderBackground::Solid(color.clone()));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
     None
 }
 
 /// Produce a [`TextRun`] for known text component types.
 ///
-/// The `content` field is left empty; it is filled at render time from live
-/// chat data. Returns `None` for non-text components.
+/// Reads font, color, weight, lineHeight, and letter-spacing from the
+/// component's `props` map, resolving color values through the
+/// [`ThemeContext`]. The `content` field is left empty; it is filled at
+/// render time from live chat data.
+///
+/// Returns `None` for non-text components.
 fn extract_text(node: &ComponentNode, ctx: &ThemeContext) -> Option<TextRun> {
     match node.component_type.as_str() {
-        "Author" => Some(TextRun {
-            content: String::new(), // filled at render time
-            font: ctx.resolve_font("font"),
-            color: ctx.resolve_token_with_default("color", "#FFFFFF"),
-            font_size: 14.0,
-            font_weight: 600,
-            line_height: 1.0,
-        }),
-        "Content" => Some(TextRun {
-            content: String::new(),
-            font: ctx.resolve_font("font"),
-            color: ctx.resolve_token_with_default("text", "#FFFFFF"),
-            font_size: 14.0,
-            font_weight: 400,
-            line_height: 1.4,
-        }),
+        "Author" => {
+            let font = get_string_prop(node, "font")
+                .map(|f| ctx.resolve_font(&f))
+                .unwrap_or_else(|| ctx.resolve_font("font"));
+            let color = get_string_prop(node, "color")
+                .map(|c| ctx.resolve_token(&c))
+                .unwrap_or_else(|| ctx.resolve_token_with_default("color", "#FFFFFF"));
+            let font_weight = get_f64_prop(node, "weight").unwrap_or(600.0) as u32;
+            let line_height = get_f64_prop(node, "lineHeight").unwrap_or(1.0);
+            let letter_spacing = get_f64_prop(node, "spacing").unwrap_or(0.0);
+            let font_size = get_f64_prop(node, "fontSize").unwrap_or(14.0);
+            Some(TextRun {
+                content: String::new(),
+                font,
+                color,
+                font_size,
+                font_weight,
+                line_height,
+                letter_spacing,
+            })
+        }
+        "Content" => {
+            let font = get_string_prop(node, "font")
+                .map(|f| ctx.resolve_font(&f))
+                .unwrap_or_else(|| ctx.resolve_font("font"));
+            let color = get_string_prop(node, "color")
+                .map(|c| ctx.resolve_token(&c))
+                .unwrap_or_else(|| ctx.resolve_token_with_default("text", "#FFFFFF"));
+            let font_weight = get_f64_prop(node, "weight").unwrap_or(400.0) as u32;
+            let line_height = get_f64_prop(node, "lineHeight").unwrap_or(1.4);
+            let letter_spacing = get_f64_prop(node, "spacing").unwrap_or(0.0);
+            let font_size = get_f64_prop(node, "fontSize").unwrap_or(14.0);
+            Some(TextRun {
+                content: String::new(),
+                font,
+                color,
+                font_size,
+                font_weight,
+                line_height,
+                letter_spacing,
+            })
+        }
         _ => None,
     }
 }
@@ -156,6 +246,22 @@ fn to_f64(v: &PropValue) -> f64 {
     match v {
         PropValue::Number(n) => *n,
         _ => 0.0,
+    }
+}
+
+/// Extract a string value from a component's props map.
+fn get_string_prop(node: &ComponentNode, key: &str) -> Option<String> {
+    match node.props.get(key) {
+        Some(PropValue::String(s)) => Some(s.clone()),
+        _ => None,
+    }
+}
+
+/// Extract a numeric value from a component's props map.
+fn get_f64_prop(node: &ComponentNode, key: &str) -> Option<f64> {
+    match node.props.get(key) {
+        Some(PropValue::Number(n)) => Some(*n),
+        _ => None,
     }
 }
 

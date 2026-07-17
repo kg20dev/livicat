@@ -48,8 +48,8 @@ fn validate_node(
 ) {
     // Look up the component definition. If unknown, record an error but still
     // recurse into the children to surface additional problems.
-    let allowed = match registry.get(&node.component_type) {
-        Some(c) => &c.allowed_children,
+    let def = match registry.get(&node.component_type) {
+        Some(c) => c,
         None => {
             errors.push(format!("Unknown component type: {}", node.component_type));
             for child in &node.children {
@@ -60,8 +60,12 @@ fn validate_node(
     };
 
     // Check allowed children. An empty list means no children are permitted.
+    // Slot children (named slots like "Author" inside "AuthorBubble") are always
+    // allowed — they are the component's designated content areas.
     for child in &node.children {
-        if !allowed.contains(&child.component_type) {
+        let is_slot = def.slots.contains(&child.component_type);
+        let allowed = &def.allowed_children;
+        if !is_slot && !allowed.contains(&child.component_type) {
             if registry.get(&child.component_type).is_some() {
                 // Valid component but wrong parent — error
                 errors.push(format!(

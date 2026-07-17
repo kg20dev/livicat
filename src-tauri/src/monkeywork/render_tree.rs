@@ -50,6 +50,8 @@ pub struct TextRun {
     pub font_weight: u32,
     /// Line height multiplier.
     pub line_height: f64,
+    /// Letter spacing in pixels (e.g. 1.5).
+    pub letter_spacing: f64,
 }
 
 /// A resolved background for a render node.
@@ -121,6 +123,7 @@ mod tests {
                 font_size: 14.0,
                 font_weight: 400,
                 line_height: 1.4,
+                letter_spacing: 0.0,
             }),
             ..Default::default()
         };

@@ -107,4 +107,54 @@ mod tests {
         assert!(css.contains("skins/phantom-flag.svg"));
         assert!(css.contains("skins/phantom-message.svg"));
     }
+
+    /// Dump the engine HTML/CSS output for manual inspection.
+    #[test]
+    #[ignore] // run with --ignored to see output
+    fn dump_phantom_output() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../src/marketplace/theme/installed/phantom.livicat/project.livi"
+        );
+        let json = std::fs::read_to_string(path).expect("Failed to read project.livi");
+        let scene: SceneGraph = serde_json::from_str(&json).expect("Failed to parse");
+        let ctx = ThemeContext::from_variables(&scene.variables);
+        let render_tree = layout::layout_scene(&scene, &ctx, 400.0, 600.0);
+        let (html, css) = renderer::render(&render_tree);
+        eprintln!("=== ENGINE HTML ===");
+        eprintln!("{}", html);
+        eprintln!("\n=== ENGINE CSS ===");
+        eprintln!("{}", css);
+    }
+
+    /// Read and render the marketplace .livicat project.livi for comparison
+    /// against the real Phantom theme.css.
+    #[test]
+    fn marketplace_phantom_project_livi() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../src/marketplace/theme/installed/phantom.livicat/project.livi"
+        );
+        let json = std::fs::read_to_string(path)
+            .expect("Failed to read project.livi");
+
+        let scene: SceneGraph = serde_json::from_str(&json)
+            .expect("Failed to parse project.livi");
+
+        assert_eq!(scene.version, 1);
+        assert_eq!(scene.theme.id, "phantom");
+
+        let result = validation::validate(&scene).expect("Validation failed");
+        assert!(result.valid, "Validation errors: {:?}", result.errors);
+
+        let ctx = ThemeContext::from_variables(&scene.variables);
+        let render_tree = layout::layout_scene(&scene, &ctx, 400.0, 600.0);
+        let (_html, css) = renderer::render(&render_tree);
+
+        // Verify skins rendered
+        assert!(css.contains("skins/phantom-flag.svg"));
+        assert!(css.contains("skins/phantom-message.svg"));
+        // phantom-tail.svg is extracted via props.asset (Decoration component)
+        assert!(css.contains("skins/phantom-tail.svg"));
+    }
 }

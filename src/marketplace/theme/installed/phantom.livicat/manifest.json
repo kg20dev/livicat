@@ -1,0 +1,12 @@
+{
+  "id": "phantom",
+  "name": "Phantom",
+  "author": "Livicat",
+  "description": "Persona 5 — jagged ribbon message plates with a tilted name flag, pure red/black/white palette",
+  "version": "1.0.0",
+  "engine": "monkeywork-v1",
+  "preview": "assets/preview.png",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17",
+  "license": "MIT"
+}
